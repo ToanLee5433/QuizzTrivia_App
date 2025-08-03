@@ -1,0 +1,185 @@
+﻿import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { setRole } from '../../auth/store';
+import { AuthUser } from '../../auth/types';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '../../../lib/firebase/config';
+import { toast } from 'react-toastify';
+
+interface RoleSelectionProps {
+  user: AuthUser;
+  onRoleSelected: () => void;
+}
+
+const RoleSelection: React.FC<RoleSelectionProps> = ({ user, onRoleSelected }) => {
+  const [selectedRole, setSelectedRole] = useState<'user' | 'creator' | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useDispatch();
+
+  const handleRoleSelection = async (role: 'user' | 'creator') => {
+    
+    try {
+      // Thử cập nhật Firestore trước
+      const userDocRef = doc(db, 'users', user.uid);
+      await setDoc(userDocRef, { 
+        role: role,
+        roleSelectedAt: new Date(),
+        status: 'active',
+        email: user.email,
+        displayName: user.displayName,
+        updatedAt: new Date()
+      }, { merge: true });
+
+      // Cập nhật Redux store
+      dispatch(setRole(role));
+      console.log('Role updated in Redux:', role);
+      
+      // Lưu vào localStorage như backup
+      localStorage.setItem(`user_role_${user.uid}`, role);
+      
+      // Force một small delay để đảm bảo Redux state được update
+      setTimeout(() => {
+        console.log('Calling onRoleSelected callback');
+        onRoleSelected();
+      }, 100);
+      
+    } catch (error: any) {
+      console.error('Error updating user role:', error);
+      
+      // Nếu Firestore fail, vẫn lưu role vào localStorage và Redux
+      console.warn('Firestore update failed, using localStorage fallback');
+      
+      // Cập nhật Redux store
+      dispatch(setRole(role));
+      console.log('Role updated in Redux (fallback):', role);
+      
+      // Lưu vào localStorage 
+      localStorage.setItem(`user_role_${user.uid}`, role);
+      
+      // Force một small delay để đảm bảo Redux state được update
+      setTimeout(() => {
+        console.log('Calling onRoleSelected callback (fallback)');
+        onRoleSelected();
+      }, 100);
+      
+      // Hiển thị thông báo nhẹ nhàng
+      setTimeout(() => {
+        toast.info('Vai trò đã được chọn. Dữ liệu sẽ được đồng bộ khi kết nối ổn định.');
+      }, 1000);
+      
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl">
+        <div className="text-center mb-6">
+          <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Chọn vai trò của bạn</h2>
+          <p className="text-gray-600">Hãy chọn vai trò phù hợp để bắt đầu sử dụng Quiz Trivia</p>
+        </div>
+
+        <div className="space-y-4">
+          {/* User Role */}
+          <div 
+            className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
+              selectedRole === 'user' 
+                ? 'border-blue-500 bg-blue-50' 
+                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+            }`}
+            onClick={() => setSelectedRole('user')}
+          >
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                </div>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-800 mb-1">User (Người dùng)</h3>
+                <p className="text-sm text-gray-600">
+                  Tham gia làm quiz, xem kết quả và theo dõi tiến độ học tập của bạn
+                </p>
+                <ul className="mt-2 text-xs text-gray-500 space-y-1">
+                  <li>• Làm các quiz có sẵn</li>
+                  <li>• Xem lịch sử kết quả</li>
+                  <li>• Theo dõi tiến độ học tập</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Creator Role */}
+          <div 
+            className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
+              selectedRole === 'creator' 
+                ? 'border-purple-500 bg-purple-50' 
+                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+            }`}
+            onClick={() => setSelectedRole('creator')}
+          >
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-800 mb-1">Creator (Người tạo)</h3>
+                <p className="text-sm text-gray-600">
+                  Tạo quiz cho cộng đồng, bao gồm tất cả quyền của User
+                </p>
+                <ul className="mt-2 text-xs text-gray-500 space-y-1">
+                  <li>• Tất cả quyền của User</li>
+                  <li>• Tạo quiz mới</li>
+                  <li>• Quản lý quiz đã tạo</li>
+                  <li>• Quiz cần admin phê duyệt</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 flex space-x-3">
+          <button
+            onClick={() => selectedRole && handleRoleSelection(selectedRole)}
+            disabled={!selectedRole || isLoading}
+            className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-200 ${
+              selectedRole && !isLoading
+                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            {isLoading ? (
+              <div className="flex items-center justify-center">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                Đang cập nhật...
+              </div>
+            ) : (
+              'Xác nhận vai trò'
+            )}
+          </button>
+        </div>
+
+        <div className="mt-4 text-center">
+          <p className="text-xs text-gray-500">
+            Bạn có thể thay đổi vai trò sau trong phần cài đặt tài khoản
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default RoleSelection;
+
