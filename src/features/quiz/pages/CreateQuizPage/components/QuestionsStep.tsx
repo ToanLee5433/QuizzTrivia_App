@@ -20,8 +20,7 @@ import { QuizFormData } from '../types';
 import { Question } from '../types';
 import SortableItem from './SortableItem';
 import QuizBulkImport from './QuizBulkImport';
-import AdvancedFileUpload from './AdvancedFileUpload';
-import { ModernAIQuestionGenerator } from './ModernAIQuestionGenerator';
+import { ModernGeminiAIGenerator } from '../../../components/ModernGeminiAIGenerator';
 
 interface QuestionsStepProps {
   quiz: QuizFormData;
@@ -40,8 +39,8 @@ const QuestionsStep: React.FC<QuestionsStepProps> = ({
   deleteQuestion,
   moveQuestion,
 }) => {
-  const [showAIGenerator, setShowAIGenerator] = useState(false);
-  
+  const [showGeminiAI, setShowGeminiAI] = useState(false);
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -75,7 +74,7 @@ const QuestionsStep: React.FC<QuestionsStepProps> = ({
       ...prev,
       questions: [...prev.questions, ...questions]
     }));
-    setShowAIGenerator(false);
+    setShowGeminiAI(false);
   };
 
   return (
@@ -83,16 +82,17 @@ const QuestionsStep: React.FC<QuestionsStepProps> = ({
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold">Danh sách câu hỏi</h2>
         <div className="flex space-x-3">
+          <Button onClick={addQuestion} className="bg-blue-600 hover:bg-blue-700 text-white">
+            + Thêm câu hỏi
+          </Button>
+          <QuizBulkImport onQuestionsImported={handleBulkImport} />
           <Button
-            onClick={() => setShowAIGenerator(true)}
+            onClick={() => setShowGeminiAI(true)}
             className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white flex items-center space-x-2"
           >
             <Sparkles className="w-4 h-4" />
-            <span>Tạo bằng AI</span>
+            <span>🤖 Gemini AI</span>
           </Button>
-          <QuizBulkImport onQuestionsImported={handleBulkImport} />
-          <AdvancedFileUpload onQuestionsImported={handleBulkImport} />
-          <Button onClick={addQuestion}>+ Thêm câu hỏi</Button>
         </div>
       </div>
       {quiz.questions.length === 0 && <div className="text-gray-500">Chưa có câu hỏi nào.</div>}
@@ -122,25 +122,22 @@ const QuestionsStep: React.FC<QuestionsStepProps> = ({
         </SortableContext>
       </DndContext>
 
-      {/* AI Question Generator Modal */}
-      {showAIGenerator && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-screen overflow-auto m-4">
+      {/* Gemini AI Generator Modal */}
+      {showGeminiAI && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-auto">
             <div className="flex justify-between items-center p-6 border-b border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900">Tạo câu hỏi bằng AI</h3>
+              <h3 className="text-2xl font-bold text-gray-900">🤖 Gemini AI Generator</h3>
               <button
-                onClick={() => setShowAIGenerator(false)}
-                className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+                onClick={() => setShowGeminiAI(false)}
+                className="text-gray-400 hover:text-gray-600 text-3xl font-bold transition-colors"
               >
                 ×
               </button>
             </div>
             <div className="p-6">
-              <ModernAIQuestionGenerator
-                content={`${quiz.title} - ${quiz.description}`}
+              <ModernGeminiAIGenerator
                 onQuestionsGenerated={handleAIQuestionsGenerated}
-                isOpen={showAIGenerator}
-                onClose={() => setShowAIGenerator(false)}
               />
             </div>
           </div>

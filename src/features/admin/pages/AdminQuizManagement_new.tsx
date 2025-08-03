@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
 import { 
@@ -40,7 +39,6 @@ interface Quiz {
 }
 
 const AdminQuizManagement: React.FC = () => {
-  const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);

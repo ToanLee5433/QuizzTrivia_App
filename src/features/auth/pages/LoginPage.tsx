@@ -68,11 +68,12 @@ export const LoginPage: React.FC = () => {
         await setDoc(doc(db, 'users', userCredential.user.uid), {
           email: formData.email,
           displayName: formData.displayName,
-          role: 'user',
+          // Don't set role here - let user choose in RoleSelection
+          needsRoleSelection: true,
           createdAt: new Date(),
           isActive: true
         });
-        toast.success('Đăng ký thành công!');
+        toast.success('Đăng ký thành công! Hãy chọn vai trò của bạn.');
         
         // Let App routing handle the redirect automatically
         console.log('🔐 LoginPage: Registration complete, App will handle redirect');

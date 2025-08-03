@@ -89,6 +89,16 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
           
           if (userDoc.exists()) {
             userData = userDoc.data();
+            
+            // Check if user is deleted or inactive
+            if (userData.isDeleted || userData.isActive === false) {
+              console.log('🚫 User account is deleted/inactive, logging out');
+              await auth.signOut();
+              dispatch(logout());
+              dispatch(authCheckComplete());
+              return;
+            }
+            
             role = userData.role || 'user';
             console.log('✅ Found user document:', { uid: user.uid, role, userData });
           } else if (user.email === 'admin123@gmail.com') {
@@ -107,19 +117,30 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
               console.error('Error creating admin document:', createError);
             }
           } else {
-            // User mới chưa có document trong Firestore, tạo mặc định
-            console.log('🆕 Creating default user document for:', user.email);
-            try {
-              await setDoc(userDocRef, {
-                email: user.email,
-                displayName: user.displayName || 'User',
-                role: 'user',
-                createdAt: new Date(),
-                isActive: true
-              });
-              role = 'user';
-            } catch (createError) {
-              console.error('Error creating user document:', createError);
+            // User mới chưa có document trong Firestore - có thể là user vừa đăng ký
+            console.log('🆕 User document not found for:', user.email);
+            
+            // Không tự động tạo document nữa, để LoginPage xử lý
+            // Chỉ fallback nếu là admin email đặc biệt
+            if (user.email === 'admin123@gmail.com') {
+              console.log('👑 Creating admin user document');
+              try {
+                await setDoc(userDocRef, {
+                  email: user.email,
+                  displayName: user.displayName || 'Admin',
+                  role: 'admin',
+                  createdAt: new Date(),
+                  isActive: true
+                });
+                role = 'admin';
+              } catch (createError) {
+                console.error('Error creating admin document:', createError);
+              }
+            } else {
+              // User thường không có document - có thể chưa hoàn thành đăng ký
+              console.log('⚠️ Regular user without document, might need role selection');
+              // Không set role, để component xử lý
+              role = undefined as any;
             }
           }
 
@@ -130,6 +151,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             photoURL: user.photoURL,
             emailVerified: user.emailVerified,
             role: role,
+            needsRoleSelection: userData?.needsRoleSelection || !role, // Set needsRoleSelection if no role or flag is true
           };
           
           console.log('📝 Dispatching loginSuccess with:', authUser);
@@ -172,13 +194,14 @@ const LoadingFallback = () => (
 
 // Cập nhật AppContent để đảm bảo mọi lazy component đều được bọc trong Suspense
 const AppContent: React.FC = () => {
-  const { user, isLoading, authChecked, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { user, isLoading, authChecked, isAuthenticated, needsRoleSelection } = useSelector((state: RootState) => state.auth);
 
   console.log('📱 AppContent render:', {
     user: user ? { uid: user.uid, email: user.email, role: user.role } : null,
     isLoading,
     authChecked,
-    isAuthenticated
+    isAuthenticated,
+    needsRoleSelection
   });
 
   // Show loading while checking authentication
@@ -194,6 +217,12 @@ const AppContent: React.FC = () => {
         </div>
       </div>
     );
+  }
+
+  // Show role selection if user needs to choose a role
+  if (isAuthenticated && user && needsRoleSelection) {
+    console.log('📱 App: Showing role selection screen');
+    return <RoleSelection user={user} onRoleSelected={() => window.location.reload()} />;
   }
 
   return (

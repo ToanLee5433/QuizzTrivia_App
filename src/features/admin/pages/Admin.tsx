@@ -267,12 +267,6 @@ const Admin: React.FC = () => {
               👥 Danh sách người dùng
             </Link>
             <Link 
-              to="/admin/users/creators" 
-              className="w-full text-left p-2 md:p-3 hover:bg-gray-50 rounded border block text-sm md:text-base"
-            >
-              ✏️ Quản lý Creator
-            </Link>
-            <Link 
               to="/admin/roles" 
               className="w-full text-left p-2 md:p-3 hover:bg-gray-50 rounded border block text-sm md:text-base"
             >

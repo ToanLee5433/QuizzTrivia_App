@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
-import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 import AdminLayout from '../components/AdminLayout';
 import Modal from '../../../shared/components/ui/Modal';
@@ -36,10 +36,12 @@ const AdminUserManagement: React.FC = () => {
   const fetchUsers = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, 'users'));
-      const usersData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as User[];
+      const usersData = querySnapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        .filter((user: any) => !user.isDeleted) as User[]; // Filter out deleted users
       setUsers(usersData);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -91,9 +93,16 @@ const AdminUserManagement: React.FC = () => {
     }
     setLoading(true);
     try {
-      await deleteDoc(doc(db, 'users', userId));
+      // Instead of deleting, mark user as deleted and inactive
+      await updateDoc(doc(db, 'users', userId), {
+        isActive: false,
+        isDeleted: true,
+        deletedAt: new Date(),
+        deletedBy: user?.uid
+      });
+      
       setUsers(prev => prev.filter(u => u.id !== userId));
-      toast.success('Đã xóa người dùng!');
+      toast.success('Đã vô hiệu hóa tài khoản người dùng!');
     } catch (error) {
       console.error('Error deleting user:', error);
       toast.error('Có lỗi xảy ra khi xóa người dùng!');

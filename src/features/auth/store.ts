@@ -24,11 +24,12 @@ const authSlice = createSlice({
       state.user = action.payload;
       state.isAuthenticated = true;
       state.error = null;
-      // Kiểm tra xem user đã chọn role chưa
-      state.needsRoleSelection = !action.payload.role;
+      // Kiểm tra xem user đã chọn role chưa (ưu tiên needsRoleSelection từ payload)
+      state.needsRoleSelection = action.payload.needsRoleSelection ?? !action.payload.role;
       console.log('🎯 Auth state after loginSuccess:', {
         isAuthenticated: state.isAuthenticated,
         user: state.user,
+        needsRoleSelection: state.needsRoleSelection,
         isLoading: state.isLoading
       });
     },

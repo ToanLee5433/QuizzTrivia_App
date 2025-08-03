@@ -214,7 +214,49 @@ const Profile: React.FC = () => {
   );
 
   const renderQuizHistoryItem = (result: QuizResult) => {
-    const percentage = Math.round((result.correctAnswers / result.totalQuestions) * 100);
+    console.log('🔍 Rendering quiz result (RAW DATA):', {
+      id: result.id,
+      correctAnswers: result.correctAnswers,
+      totalQuestions: result.totalQuestions,
+      score: result.score,
+      quizId: result.quizId,
+      rawResult: result
+    });
+    
+    // Handle different ways score might be calculated with extensive debugging
+    let percentage = 0;
+    let calculationMethod = 'none';
+    
+    if (result.score !== undefined && result.score !== null) {
+      // Check if score is a percentage (0-100) or decimal (0-1)
+      if (result.score <= 1) {
+        // Score is in decimal format (0-1), convert to percentage
+        percentage = Math.round(result.score * 100);
+        calculationMethod = 'score_decimal';
+      } else {
+        // Score is already a percentage (0-100)
+        percentage = Math.round(result.score);
+        calculationMethod = 'score_percentage';
+      }
+    } else if (result.correctAnswers !== undefined && result.totalQuestions !== undefined && result.totalQuestions > 0) {
+      // Calculate percentage from correct answers
+      percentage = Math.round((result.correctAnswers / result.totalQuestions) * 100);
+      calculationMethod = 'answers_calculation';
+    } else {
+      // No valid data for calculation
+      console.warn('⚠️ No valid score data found for result:', result.id);
+      calculationMethod = 'fallback_zero';
+      percentage = 0;
+    }
+    
+    console.log('💯 Score calculation result:', {
+      method: calculationMethod,
+      finalPercentage: percentage,
+      rawScore: result.score,
+      correctAnswers: result.correctAnswers,
+      totalQuestions: result.totalQuestions
+    });
+    
     const getScoreColor = (percent: number) => {
       if (percent >= 90) return 'text-green-600 bg-green-50';
       if (percent >= 70) return 'text-blue-600 bg-blue-50';
@@ -255,7 +297,7 @@ const Profile: React.FC = () => {
               <RotateCcw className="w-4 h-4" />
             </Link>
             <Link
-              to={`/quiz/${result.quizId}/result/${result.id}`}
+              to={`/results/${result.id}`}
               className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
               title="Xem kết quả"
             >

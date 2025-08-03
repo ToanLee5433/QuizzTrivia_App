@@ -5,6 +5,7 @@ export interface AuthUser {
   photoURL: string | null;
   emailVerified: boolean;
   role?: 'admin' | 'creator' | 'user';
+  needsRoleSelection?: boolean;
 }
 
 export interface LoginCredentials {

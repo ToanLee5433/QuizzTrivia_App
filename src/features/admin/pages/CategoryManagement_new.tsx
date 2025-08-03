@@ -10,8 +10,7 @@ import {
   deleteDoc, 
   doc,
   query,
-  where,
-  orderBy
+  where
 } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 import {
@@ -25,8 +24,7 @@ import {
   BookOpen,
   User,
   BarChart3,
-  Eye,
-  Settings
+  Eye
 } from 'lucide-react';
 
 interface Category {

@@ -1,23 +1,17 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../lib/store';
 import Header from './Header';
-import Sidebar from './Sidebar';
 // import Footer from './Footer';
 
 const Layout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
-  const { user } = useSelector((state: RootState) => state.auth);
-
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
       <Header />
-      <div className="flex flex-1">
-        {user && <Sidebar />}
-        <main className={`flex-1 p-6 ${user ? 'ml-64' : ''}`}>
+      <main className="flex-1">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
           {children || <Outlet />}
-        </main>
-      </div>
+        </div>
+      </main>
       {/* <Footer /> */}
     </div>
   );

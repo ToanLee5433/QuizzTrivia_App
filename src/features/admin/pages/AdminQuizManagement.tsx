@@ -137,10 +137,10 @@ const AdminQuizManagement: React.FC = () => {
       console.log('✅ Loaded quizzes:', loadedQuizzes.length);
       setQuizzes(loadedQuizzes);
       
-      // Nếu không có quiz, tạo dữ liệu mẫu để test
+      // Nếu không có quiz, hiển thị empty state
       if (loadedQuizzes.length === 0) {
         console.log('⚠️ No quizzes found, showing empty state');
-        toast.info('Chưa có quiz nào. Bạn có thể tạo quiz test từ Admin Utilities');
+        toast.info('Chưa có quiz nào trong hệ thống');
       }
       
     } catch (error) {
@@ -236,12 +236,15 @@ const AdminQuizManagement: React.FC = () => {
     }
 
     try {
+      console.log('🗑️ Deleting quiz from database:', quizId);
       await deleteDoc(doc(db, 'quizzes', quizId));
+      console.log('✅ Quiz deleted from database successfully');
+      
       setQuizzes(prev => prev.filter(quiz => quiz.id !== quizId));
-      toast.success('Quiz đã được xóa');
+      toast.success('Quiz đã được xóa khỏi database');
     } catch (error) {
-      console.error('Error deleting quiz:', error);
-      toast.error('Không thể xóa quiz');
+      console.error('❌ Error deleting quiz:', error);
+      toast.error('Không thể xóa quiz: ' + error);
     }
   };
 
@@ -325,41 +328,43 @@ const AdminQuizManagement: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Modern Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">{/* Modern Responsive Header */}
+      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 shadow-xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            {/* Title Section */}
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 lg:w-14 lg:h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center ring-2 ring-white/30 shadow-lg">
+                <BookOpen className="w-6 h-6 lg:w-7 lg:h-7 text-white drop-shadow-sm" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Quản lý Quiz</h1>
-                <p className="text-gray-600">Duyệt và quản lý tất cả quiz trong hệ thống</p>
+                <h1 className="text-2xl lg:text-3xl font-bold text-white drop-shadow-sm">Quản lý Quiz</h1>
+                <p className="text-blue-100 text-sm lg:text-base mt-1">Duyệt và quản lý tất cả quiz trong hệ thống</p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => window.open('/admin/utilities', '_blank')}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                title="Tạo quiz test để thử nghiệm"
-              >
-                <BookOpen className="w-4 h-4" />
-                Quiz Test
-              </button>
+            
+            {/* Actions & User Info */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 lg:gap-4">
               <button
                 onClick={loadQuizzes}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
+                className="w-full sm:w-auto px-4 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl transition-all duration-200 flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 shadow-lg hover:shadow-xl"
                 title="Làm mới danh sách"
               >
                 <RotateCcw className="w-4 h-4" />
-                Làm mới
+                <span className="font-medium">Làm mới</span>
               </button>
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <User className="w-4 h-4" />
-                <span>{user?.email}</span>
-                <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">Admin</span>
+              
+              {/* User Badge */}
+              <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2.5 border border-white/20 shadow-lg">
+                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center ring-2 ring-white/30">
+                  <User className="w-4 h-4 text-white" />
+                </div>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                  <span className="text-white text-sm font-medium truncate max-w-32 lg:max-w-none">{user?.email}</span>
+                  <span className="px-2 py-1 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 rounded-full text-xs font-bold shadow-sm">
+                    Admin
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -493,24 +498,17 @@ const AdminQuizManagement: React.FC = () => {
             <p className="text-gray-600 mb-8 max-w-md mx-auto">
               {searchTerm 
                 ? 'Thử thay đổi từ khóa tìm kiếm hoặc bộ lọc để xem thêm quiz.'
-                : 'Hiện tại chưa có quiz nào trong hệ thống. Bạn có thể tạo một số quiz test để thử nghiệm tính năng duyệt.'
+                : 'Hiện tại chưa có quiz nào trong hệ thống. Người tạo có thể tạo quiz từ trang Creator.'
               }
             </p>
             {!searchTerm && (
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button
-                  onClick={() => window.open('/admin/utilities', '_blank')}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                >
-                  <BookOpen className="w-5 h-5" />
-                  Tạo Quiz Test
-                </button>
+              <div className="flex justify-center">
                 <button
                   onClick={() => window.open('/creator', '_blank')}
                   className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
                 >
                   <BookOpen className="w-5 h-5" />
-                  Tạo Quiz Thực
+                  Đi đến trang Creator
                 </button>
               </div>
             )}

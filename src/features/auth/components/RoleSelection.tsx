@@ -24,6 +24,7 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({ user, onRoleSelected }) =
       await setDoc(userDocRef, { 
         role: role,
         roleSelectedAt: new Date(),
+        needsRoleSelection: false, // Clear the flag
         status: 'active',
         email: user.email,
         displayName: user.displayName,
