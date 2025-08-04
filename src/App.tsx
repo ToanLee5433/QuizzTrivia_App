@@ -22,7 +22,6 @@ const QuizList = React.lazy(() => import('./features/quiz/pages/QuizList'));
 const QuizPage = React.lazy(() => import('./features/quiz/pages/QuizPage'));
 const QuizPreviewPage = React.lazy(() => import('./features/quiz/pages/QuizPreviewPage'));
 const QuizReviewsPage = React.lazy(() => import('./features/quiz/pages/QuizReviewsPage'));
-const ReviewTestPage = React.lazy(() => import('./features/quiz/pages/ReviewTestPage'));
 const RealQuizListPage = React.lazy(() => import('./features/quiz/pages/RealQuizListPage'));
 const ResultPage = React.lazy(() => import('./features/quiz/pages/ResultPage'));
 const Profile = React.lazy(() => import('./features/auth/pages/Profile'));
@@ -298,14 +297,6 @@ const AppContent: React.FC = () => {
           <ProtectedRoute>
             <Suspense fallback={<LoadingFallback />}>
               <QuizReviewsPage />
-            </Suspense>
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/test-reviews/:quizId" element={
-          <ProtectedRoute>
-            <Suspense fallback={<LoadingFallback />}>
-              <ReviewTestPage />
             </Suspense>
           </ProtectedRoute>
         } />

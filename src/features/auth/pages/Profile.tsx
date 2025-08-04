@@ -92,9 +92,33 @@ const Profile: React.FC = () => {
       setQuizTitles({});
     }
     
-    // Calculate comprehensive stats
+    // Debug: Log actual result data to see what we're working with
+    console.log('🔍 Profile Debug - User Results:', userResults);
+    if (userResults.length > 0) {
+      console.log('🔍 Sample result data:', {
+        sampleResult: userResults[0],
+        scoreField: userResults[0]?.score,
+        correctAnswers: userResults[0]?.correctAnswers,
+        totalQuestions: userResults[0]?.totalQuestions
+      });
+    }
+    
+    // Calculate comprehensive stats with more accurate scoring
     const totalQuizzes = userResults.length;
-    const totalScore = userResults.reduce((sum, r) => sum + (r.score || 0), 0);
+    
+    // Calculate scores more accurately - prioritize correctAnswers/totalQuestions
+    const accurateScores = userResults.map(r => {
+      if (r.correctAnswers !== undefined && r.totalQuestions !== undefined && r.totalQuestions > 0) {
+        // Calculate percentage from answers (most accurate)
+        return (r.correctAnswers / r.totalQuestions) * 100;
+      } else if (r.score !== undefined && r.score !== null) {
+        // Use provided score, convert if needed
+        return r.score <= 1 ? r.score * 100 : r.score;
+      }
+      return 0;
+    });
+    
+    const totalScore = accurateScores.reduce((sum, score) => sum + score, 0);
     const totalCorrect = userResults.reduce((sum, r) => sum + (r.correctAnswers || 0), 0);
     const totalQuestions = userResults.reduce((sum, r) => sum + (r.totalQuestions || 0), 0);
     const totalTime = userResults.reduce((sum, r) => sum + (r.timeSpent || 0), 0);
@@ -103,9 +127,18 @@ const Profile: React.FC = () => {
     const accuracy = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
     const averageTime = totalQuizzes > 0 ? totalTime / totalQuizzes : 0;
     
-    // Performance grades
-    const perfectScores = userResults.filter(r => (r.correctAnswers / r.totalQuestions) === 1).length;
-    const highScores = userResults.filter(r => (r.correctAnswers / r.totalQuestions) >= 0.8).length;
+    // Performance grades - use accurate scores
+    const perfectScores = accurateScores.filter(score => score >= 100).length;
+    const highScores = accurateScores.filter(score => score >= 80).length;
+    
+    console.log('📊 Calculated Stats:', {
+      totalQuizzes,
+      averageScore: averageScore.toFixed(1),
+      accuracy: accuracy.toFixed(1),
+      perfectScores,
+      highScores,
+      accurateScores: accurateScores.slice(0, 3) // Show first 3 for debugging
+    });
     
     setStats({
       totalQuizzes,
@@ -267,25 +300,23 @@ const Profile: React.FC = () => {
       rawResult: result
     });
     
-    // Handle different ways score might be calculated with extensive debugging
+    // Handle different ways score might be calculated with improved logic
     let percentage = 0;
     let calculationMethod = 'none';
     
-    if (result.score !== undefined && result.score !== null) {
-      // Check if score is a percentage (0-100) or decimal (0-1)
+    // Prioritize correctAnswers/totalQuestions calculation (most accurate)
+    if (result.correctAnswers !== undefined && result.totalQuestions !== undefined && result.totalQuestions > 0) {
+      percentage = Math.round((result.correctAnswers / result.totalQuestions) * 100);
+      calculationMethod = 'answers_calculation';
+    } else if (result.score !== undefined && result.score !== null) {
+      // Use score as fallback, check if it's decimal (0-1) or percentage (0-100)
       if (result.score <= 1) {
-        // Score is in decimal format (0-1), convert to percentage
         percentage = Math.round(result.score * 100);
         calculationMethod = 'score_decimal';
       } else {
-        // Score is already a percentage (0-100)
         percentage = Math.round(result.score);
         calculationMethod = 'score_percentage';
       }
-    } else if (result.correctAnswers !== undefined && result.totalQuestions !== undefined && result.totalQuestions > 0) {
-      // Calculate percentage from correct answers
-      percentage = Math.round((result.correctAnswers / result.totalQuestions) * 100);
-      calculationMethod = 'answers_calculation';
     } else {
       // No valid data for calculation
       console.warn('⚠️ No valid score data found for result:', result.id);

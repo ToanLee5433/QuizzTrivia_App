@@ -62,6 +62,26 @@ const AdminDashboard: React.FC = () => {
     totalCategories: 0
   });
 
+  // Function to calculate and update stats from actual data
+  const updateStatsFromData = (users: User[], quizzes: Quiz[], categories: Category[]) => {
+    const pending = quizzes.filter(q => q.status === 'pending').length;
+    const approved = quizzes.filter(q => q.status === 'approved').length;
+    
+    setStats({
+      totalUsers: users.length,
+      pendingQuizzes: pending,
+      approvedQuizzes: approved,
+      totalCategories: categories.length
+    });
+    
+    console.log('📊 Stats updated:', {
+      totalUsers: users.length,
+      pendingQuizzes: pending,
+      approvedQuizzes: approved,
+      totalCategories: categories.length
+    });
+  };
+
   // New category form
   const [newCategory, setNewCategory] = useState({ name: '', description: '' });
   const [showAddCategory, setShowAddCategory] = useState(false);
@@ -88,25 +108,8 @@ const AdminDashboard: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      await Promise.all([
-        loadUsers(),
-        loadQuizzes(),
-        loadCategories()
-      ]);
-      setLastUpdate(new Date());
-      console.log('Data refreshed at:', new Date().toLocaleTimeString());
-    } catch (error) {
-      console.error('Error loading data:', error);
-      toast.error('Có lỗi khi tải dữ liệu!');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadUsers = async () => {
+  // Data loading functions that return data instead of updating state
+  const loadUsersData = async (): Promise<User[]> => {
     try {
       const usersQuery = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(usersQuery);
@@ -114,29 +117,15 @@ const AdminDashboard: React.FC = () => {
         id: doc.id,
         ...doc.data()
       } as User));
-      setUsers(usersData);
-      setStats(prev => ({ ...prev, totalUsers: usersData.length }));
       console.log('Loaded users:', usersData.length);
+      return usersData;
     } catch (error) {
       console.error('Error loading users:', error);
-      // Fallback with sample data
-      const fallbackUsers = [
-        {
-          id: '1',
-          email: 'user1@example.com',
-          displayName: 'Người dùng 1',
-          role: 'user' as const,
-          createdAt: new Date(),
-          isActive: true
-        }
-      ];
-      setUsers(fallbackUsers);
-      setStats(prev => ({ ...prev, totalUsers: fallbackUsers.length }));
-      toast.warning('Không thể kết nối database, hiển thị dữ liệu mẫu');
+      return []; // Return empty array on error
     }
   };
 
-  const loadQuizzes = async () => {
+  const loadQuizzesData = async (): Promise<Quiz[]> => {
     try {
       const quizzesQuery = query(collection(db, 'quizzes'), orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(quizzesQuery);
@@ -144,69 +133,55 @@ const AdminDashboard: React.FC = () => {
         id: doc.id,
         ...doc.data()
       } as Quiz));
-      setQuizzes(quizzesData);
-      
-      const pending = quizzesData.filter(q => q.status === 'pending').length;
-      const approved = quizzesData.filter(q => q.status === 'approved').length;
-      
-      setStats(prev => ({ 
-        ...prev, 
-        pendingQuizzes: pending,
-        approvedQuizzes: approved 
-      }));
-      console.log('Loaded quizzes:', quizzesData.length, '- Pending:', pending, '- Approved:', approved);
+      console.log('Loaded quizzes:', quizzesData.length);
+      return quizzesData;
     } catch (error) {
       console.error('Error loading quizzes:', error);
-      // Fallback with sample data
-      const fallbackQuizzes = [
-        {
-          id: '1',
-          title: 'Quiz mẫu',
-          description: 'Mô tả quiz mẫu',
-          createdBy: 'user1',
-          status: 'pending' as const,
-          createdAt: new Date(),
-          category: 'Khoa học'
-        }
-      ];
-      setQuizzes(fallbackQuizzes);
-      setStats(prev => ({ ...prev, pendingQuizzes: 1, approvedQuizzes: 0 }));
-      toast.warning('Không thể kết nối database quiz, hiển thị dữ liệu mẫu');
+      return []; // Return empty array on error
     }
   };
 
-  const loadCategories = async () => {
+  const loadCategoriesData = async (): Promise<Category[]> => {
     try {
       const categoriesQuery = query(collection(db, 'categories'), orderBy('name'));
       const snapshot = await getDocs(categoriesQuery);
       const categoriesData = snapshot.docs.map(doc => ({
         id: doc.id,
-        quizCount: 0,
         ...doc.data()
       } as Category));
-      setCategories(categoriesData);
-      setStats(prev => ({ ...prev, totalCategories: categoriesData.length }));
       console.log('Loaded categories:', categoriesData.length);
+      return categoriesData;
     } catch (error) {
       console.error('Error loading categories:', error);
-      // Fallback with sample data
-      const fallbackCategories = [
-        {
-          id: '1',
-          name: 'Khoa học',
-          description: 'Các câu hỏi về khoa học',
-          quizCount: 0
-        },
-        {
-          id: '2',
-          name: 'Lịch sử',
-          description: 'Các câu hỏi về lịch sử',
-          quizCount: 0
-        }
-      ];
-      setCategories(fallbackCategories);
-      setStats(prev => ({ ...prev, totalCategories: fallbackCategories.length }));
-      toast.warning('Không thể kết nối database categories, hiển thị dữ liệu mẫu');
+      return []; // Return empty array on error
+    }
+  };
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      // Load all data concurrently
+      const [usersData, quizzesData, categoriesData] = await Promise.all([
+        loadUsersData(),
+        loadQuizzesData(),
+        loadCategoriesData()
+      ]);
+      
+      // Update state with actual data
+      setUsers(usersData);
+      setQuizzes(quizzesData);
+      setCategories(categoriesData);
+      
+      // Update stats from actual data
+      updateStatsFromData(usersData, quizzesData, categoriesData);
+      
+      setLastUpdate(new Date());
+      console.log('Data refreshed at:', new Date().toLocaleTimeString());
+    } catch (error) {
+      console.error('Error loading data:', error);
+      toast.error('Có lỗi khi tải dữ liệu!');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -225,7 +200,7 @@ const AdminDashboard: React.FC = () => {
   const updateUserRole = async (userId: string, newRole: 'user' | 'admin') => {
     try {
       await updateDoc(doc(db, 'users', userId), { role: newRole });
-      await loadUsers();
+      await loadData();
       toast.success('Đã cập nhật role thành công!');
     } catch (error) {
       console.error('Error updating user role:', error);
@@ -237,7 +212,7 @@ const AdminDashboard: React.FC = () => {
     setLoading(true);
     try {
       await updateDoc(doc(db, 'users', userId), { isActive: !currentStatus });
-      await loadUsers();
+      await loadData();
       toast.success(`Đã ${!currentStatus ? 'kích hoạt' : 'vô hiệu hóa'} tài khoản!`);
     } catch (error) {
       console.error('Error updating user status:', error);
@@ -251,7 +226,7 @@ const AdminDashboard: React.FC = () => {
     setLoading(true);
     try {
       await deleteDoc(doc(db, 'users', userId));
-      await loadUsers();
+      await loadData();
       toast.success('Đã xóa người dùng thành công!');
     } catch (error) {
       console.error('Error deleting user:', error);
@@ -265,7 +240,7 @@ const AdminDashboard: React.FC = () => {
     setLoading(true);
     try {
       await updateDoc(doc(db, 'quizzes', quizId), { status: 'approved' });
-      await loadQuizzes();
+      await loadData();
       toast.success('Đã phê duyệt quiz thành công!');
     } catch (error) {
       console.error('Error approving quiz:', error);
@@ -279,7 +254,7 @@ const AdminDashboard: React.FC = () => {
     setLoading(true);
     try {
       await updateDoc(doc(db, 'quizzes', quizId), { status: 'rejected' });
-      await loadQuizzes();
+      await loadData();
       toast.success('Đã từ chối quiz!');
     } catch (error) {
       console.error('Error rejecting quiz:', error);
@@ -293,7 +268,7 @@ const AdminDashboard: React.FC = () => {
     setLoading(true);
     try {
       await updateDoc(doc(db, 'quizzes', quizId), { status: 'pending' });
-      await loadQuizzes();
+      await loadData();
       toast.success('Đã mở lại quiz để xem xét!');
     } catch (error) {
       console.error('Error reopening quiz:', error);
@@ -307,7 +282,7 @@ const AdminDashboard: React.FC = () => {
     setLoading(true);
     try {
       await deleteDoc(doc(db, 'quizzes', quizId));
-      await loadQuizzes();
+      await loadData();
       toast.success('Đã xóa quiz thành công!');
     } catch (error) {
       console.error('Error deleting quiz:', error);
@@ -332,7 +307,7 @@ const AdminDashboard: React.FC = () => {
       
       setNewCategory({ name: '', description: '' });
       setShowAddCategory(false);
-      await loadCategories();
+      await loadData();
       toast.success('Đã thêm danh mục thành công!');
     } catch (error) {
       console.error('Error adding category:', error);
@@ -346,68 +321,11 @@ const AdminDashboard: React.FC = () => {
     setLoading(true);
     try {
       await deleteDoc(doc(db, 'categories', categoryId));
-      await loadCategories();
+      await loadData();
       toast.success('Đã xóa danh mục thành công!');
     } catch (error) {
       console.error('Error deleting category:', error);
       toast.error('Có lỗi xảy ra khi xóa danh mục!');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Function to create sample quiz for testing
-  const createSampleQuiz = async () => {
-    try {
-      setLoading(true);
-      const sampleQuiz = {
-        title: "Sample Quiz - JavaScript Basics",
-        description: "Quiz mẫu để test hệ thống",
-        category: "programming",
-        difficulty: "easy",
-        duration: 15,
-        questions: [
-          {
-            id: "q1",
-            text: "JavaScript là gì?",
-            answers: [
-              { id: "a1", text: "Ngôn ngữ lập trình", isCorrect: true },
-              { id: "a2", text: "Framework", isCorrect: false },
-              { id: "a3", text: "Database", isCorrect: false },
-              { id: "a4", text: "Hệ điều hành", isCorrect: false }
-            ],
-            explanation: "JavaScript là ngôn ngữ lập trình phổ biến cho web.",
-            points: 10
-          },
-          {
-            id: "q2",
-            text: "Cách khai báo biến trong JavaScript?",
-            answers: [
-              { id: "b1", text: "var name = 'value';", isCorrect: true },
-              { id: "b2", text: "variable name = 'value';", isCorrect: false },
-              { id: "b3", text: "declare name = 'value';", isCorrect: false },
-              { id: "b4", text: "set name = 'value';", isCorrect: false }
-            ],
-            explanation: "Dùng var, let hoặc const để khai báo biến.",
-            points: 10
-          }
-        ],
-        createdBy: user?.uid || 'admin',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        tags: ["javascript", "programming", "basic"],
-        isPublished: true,
-        status: "approved",
-        totalPoints: 20,
-        passingScore: 70
-      };
-
-      await addDoc(collection(db, 'quizzes'), sampleQuiz);
-      toast.success('Tạo quiz mẫu thành công!');
-      await loadQuizzes(); // Reload quiz list
-    } catch (error) {
-      console.error('Error creating sample quiz:', error);
-      toast.error('Lỗi khi tạo quiz mẫu');
     } finally {
       setLoading(false);
     }
@@ -787,13 +705,6 @@ const AdminDashboard: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 <span>Làm mới</span>
-              </button>
-              <button
-                onClick={createSampleQuiz}
-                disabled={loading}
-                className="bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-yellow-700 transition-colors duration-200 disabled:opacity-50"
-              >
-                Tạo Quiz Mẫu
               </button>
               {lastUpdate && (
                 <div className="text-xs text-gray-500">

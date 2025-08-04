@@ -4,9 +4,11 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../../lib/firebase/config';
 import { signIn } from '../services';
 import { toast } from 'react-toastify';
+import { ForgotPassword } from '../components/ForgotPassword';
 
 export const LoginPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -149,6 +151,11 @@ export const LoginPage: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Hiển thị component ForgotPassword nếu được yêu cầu
+  if (showForgotPassword) {
+    return <ForgotPassword onBack={() => setShowForgotPassword(false)} />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 flex items-center justify-center px-4">
@@ -300,6 +307,19 @@ export const LoginPage: React.FC = () => {
               : (isLogin ? 'Đăng nhập' : 'Đăng ký')
             }
           </button>
+
+          {/* Link Quên mật khẩu - chỉ hiển thị khi đang ở mode đăng nhập */}
+          {isLogin && (
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Quên mật khẩu?
+              </button>
+            </div>
+          )}
 
           {/* Divider */}
           <div className="relative my-6">

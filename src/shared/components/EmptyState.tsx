@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, BookOpen, Sparkles } from 'lucide-react';
+import { Plus, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface EmptyStateProps {
@@ -8,8 +8,6 @@ interface EmptyStateProps {
   description?: string;
   actionLabel?: string;
   actionUrl?: string;
-  showTestData?: boolean;
-  onCreateTestData?: () => void;
 }
 
 const EmptyState: React.FC<EmptyStateProps> = ({
@@ -17,9 +15,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
   title,
   description,
   actionLabel,
-  actionUrl,
-  showTestData = false,
-  onCreateTestData
+  actionUrl
 }) => {
   const getDefaultContent = () => {
     switch (type) {
@@ -33,7 +29,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
         };
       case 'reviews':
         return {
-          icon: <Sparkles className="w-16 h-16 text-gray-400" />,
+          icon: <BookOpen className="w-16 h-16 text-gray-400" />,
           title: 'Chưa có đánh giá nào',
           description: 'Hãy là người đầu tiên đánh giá quiz này!',
           actionLabel: 'Viết đánh giá',
@@ -87,16 +83,6 @@ const EmptyState: React.FC<EmptyStateProps> = ({
             <Plus className="w-5 h-5 mr-2" />
             {finalActionLabel}
           </Link>
-        )}
-
-        {showTestData && onCreateTestData && (
-          <button
-            onClick={onCreateTestData}
-            className="inline-flex items-center px-6 py-3 bg-yellow-600 text-white font-medium rounded-lg hover:bg-yellow-700 transition-colors"
-          >
-            <Sparkles className="w-5 h-5 mr-2" />
-            Tạo dữ liệu mẫu
-          </button>
         )}
       </div>
     </div>

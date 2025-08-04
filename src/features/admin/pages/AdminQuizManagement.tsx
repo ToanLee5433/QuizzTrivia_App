@@ -313,13 +313,16 @@ const AdminQuizManagement: React.FC = () => {
         reviewedAt: new Date()
       });
 
-      // Allow quiz to be edited by setting appropriate permissions
+      // GỠ QUIZ XUỐNG ĐỂ SỬA: Set quiz status to draft và allow edit
       const quizRef = doc(db, 'quizzes', quizId);
       await updateDoc(quizRef, {
-        canEdit: true,
+        status: 'draft', // Gỡ quiz xuống draft để sửa
+        isApproved: false, // Bỏ approved status
+        canEdit: true, // Cho phép creator edit
         editRequestApproved: true,
         lastEditRequestApproved: new Date(),
-        approvedBy: user?.uid
+        approvedBy: user?.uid,
+        needsReApproval: true // Flag để biết quiz này cần được duyệt lại sau khi sửa
       });
 
       // Create notification for the creator
@@ -327,7 +330,7 @@ const AdminQuizManagement: React.FC = () => {
         userId: editRequest.requestedBy,
         type: 'edit_request_approved',
         title: 'Yêu cầu chỉnh sửa đã được phê duyệt',
-        message: `Yêu cầu chỉnh sửa quiz "${editRequest.quizTitle}" của bạn đã được admin phê duyệt. Bạn có thể chỉnh sửa quiz ngay bây giờ.`,
+        message: `Yêu cầu chỉnh sửa quiz "${editRequest.quizTitle}" của bạn đã được admin phê duyệt. Quiz đã được gỡ xuống để bạn chỉnh sửa. Sau khi sửa xong, vui lòng nộp lại để admin duyệt.`,
         quizId: quizId,
         createdAt: serverTimestamp(),
         read: false
@@ -377,65 +380,6 @@ const AdminQuizManagement: React.FC = () => {
     } catch (error) {
       console.error('Error rejecting edit request:', error);
       toast.error('Không thể từ chối yêu cầu chỉnh sửa');
-    }
-  };
-
-  // Utility function to create sample edit requests for testing
-  const createSampleEditRequests = async () => {
-    try {
-      console.log('🔧 Creating sample edit requests...');
-      
-      // Get some existing quizzes to create edit requests for
-      const quizzesQuery = query(collection(db, 'quizzes'));
-      const quizzesSnapshot = await getDocs(quizzesQuery);
-      
-      if (quizzesSnapshot.empty) {
-        toast.info('Không có quiz nào để tạo yêu cầu chỉnh sửa mẫu');
-        return;
-      }
-
-      const existingQuizzes = quizzesSnapshot.docs.slice(0, 3); // Take first 3 quizzes
-      
-      const sampleRequests = [
-        {
-          quizId: existingQuizzes[0]?.id,
-          quizTitle: existingQuizzes[0]?.data().title || 'Quiz mẫu 1',
-          requestedBy: user?.uid || 'sample-user-1',
-          requestedByName: user?.displayName || 'Creator Test',
-          requestedByEmail: user?.email || 'creator@test.com',
-          status: 'pending',
-          requestedAt: serverTimestamp(),
-          reason: 'Cần cập nhật một số câu hỏi không chính xác',
-          description: 'Tôi muốn chỉnh sửa câu hỏi số 3 và 5 vì có lỗi chính tả'
-        },
-        {
-          quizId: existingQuizzes[1]?.id,
-          quizTitle: existingQuizzes[1]?.data().title || 'Quiz mẫu 2',
-          requestedBy: 'sample-user-2',
-          requestedByName: 'Creator Alpha',
-          requestedByEmail: 'alpha@creator.com',
-          status: 'pending',
-          requestedAt: serverTimestamp(),
-          reason: 'Thêm câu hỏi mới',
-          description: 'Quiz này cần thêm 5 câu hỏi nữa để đạt tiêu chuẩn'
-        }
-      ];
-
-      // Create the edit requests
-      for (const request of sampleRequests) {
-        if (request.quizId) {
-          await addDoc(collection(db, 'editRequests'), request);
-        }
-      }
-
-      toast.success(`Đã tạo ${sampleRequests.filter(r => r.quizId).length} yêu cầu chỉnh sửa mẫu!`);
-      
-      // Reload edit requests
-      await loadEditRequests();
-      
-    } catch (error) {
-      console.error('Error creating sample edit requests:', error);
-      toast.error('Không thể tạo yêu cầu chỉnh sửa mẫu');
     }
   };
 
@@ -888,22 +832,13 @@ const AdminQuizManagement: React.FC = () => {
                 <AlertCircle className="w-5 h-5 text-orange-500" />
                 Yêu cầu chỉnh sửa Quiz ({editRequests.length})
               </h3>
-              
-              {editRequests.length === 0 && (
-                <button
-                  onClick={createSampleEditRequests}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                >
-                  Tạo dữ liệu mẫu
-                </button>
-              )}
             </div>
             
             {editRequests.length === 0 ? (
               <div className="text-center py-12">
                 <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-500 mb-4">Không có yêu cầu chỉnh sửa nào</p>
-                <p className="text-sm text-gray-400">Nhấn "Tạo dữ liệu mẫu" để tạo một số yêu cầu chỉnh sửa cho mục đích test</p>
+                <p className="text-sm text-gray-400">Các yêu cầu chỉnh sửa sẽ hiển thị ở đây khi có quiz creator gửi yêu cầu</p>
               </div>
             ) : (
               <div className="space-y-4">

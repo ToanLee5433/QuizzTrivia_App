@@ -70,33 +70,6 @@ const ReviewTestPage: React.FC = () => {
     }
   };
 
-  const createSampleData = async () => {
-    if (!quizId) return;
-    
-    setLoading(true);
-    toast.info('Đang tạo dữ liệu mẫu...');
-    
-    try {
-      // Create sample quizzes first
-      console.log('Creating sample data...');
-      
-      // Create sample reviews
-      console.log('Creating sample reviews...');
-      
-      toast.success('Tạo dữ liệu mẫu thành công!');
-      
-      // Reload reviews
-      setTimeout(() => {
-        loadReviews();
-      }, 1000);
-      
-    } catch (error) {
-      console.error('❌ Error creating sample data:', error);
-      toast.error('Lỗi khi tạo dữ liệu mẫu');
-      setLoading(false);
-    }
-  };
-
   const testAllQuizzes = async () => {
     setLoading(true);
     const results = [];
@@ -164,15 +137,6 @@ const ReviewTestPage: React.FC = () => {
               >
                 {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
                 Tải lại Reviews
-              </button>
-              
-              <button
-                onClick={createSampleData}
-                disabled={loading}
-                className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
-              >
-                <Users className="w-4 h-4 mr-2" />
-                Tạo dữ liệu mẫu
               </button>
               
               <button
