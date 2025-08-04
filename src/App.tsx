@@ -10,9 +10,10 @@ import { loginSuccess, logout, authCheckComplete } from './features/auth/store';
 // Stage 1: Basic Landing & Authentication
 import { LandingPage } from './shared/pages/LandingPage';
 import Home from './shared/pages/Home';
+import TestAIPage from './pages/TestAIPage';
 
 // Stage 2: Authentication Pages
-import { LoginPage } from './features/auth/pages/LoginPage';
+import AuthPageNew from './features/auth/pages/AuthPageNew';
 
 // Removed RegisterPage import as the file has been deleted
 // Stage 2: Basic User Features - Lazy loaded
@@ -31,6 +32,8 @@ const LeaderboardPage = React.lazy(() => import('./features/quiz/pages/Leaderboa
 // Stage 3: Creator Features (REMOVED - Creator role eliminated)
 const CreateQuizPage = React.lazy(() => import('./features/quiz/pages/CreateQuizPage'));
 const EditQuizPageAdvanced = React.lazy(() => import('./features/quiz/pages/EditQuizPageAdvanced'));
+const Creator = React.lazy(() => import('./shared/pages/Creator'));
+const MyQuizzesPage = React.lazy(() => import('./features/quiz/pages/MyQuizzesPage'));
 
 // Stage 4: Admin Features  
 import Admin from './features/admin/pages/Admin';
@@ -73,18 +76,19 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         user: user ? {
           uid: user.uid,
           email: user.email,
-          displayName: user.displayName
+          displayName: user.displayName,
+          emailVerified: user.emailVerified
         } : null,
         timestamp: new Date().toISOString()
       });
       
       if (user) {
         try {
-          // Get role from Firestore
+          // Get role from Firestore trước khi check email verification
           const userDocRef = doc(db, 'users', user.uid);
           const userDoc = await getDoc(userDocRef);
           
-          let role: 'admin' | 'user' = 'user';
+          let role: 'admin' | 'creator' | 'user' = 'user';
           let userData = null;
           
           if (userDoc.exists()) {
@@ -101,6 +105,16 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             
             role = userData.role || 'user';
             console.log('✅ Found user document:', { uid: user.uid, role, userData });
+            
+            // Chỉ check email verification cho user thường, không phải admin
+            if (!user.emailVerified && user.email !== 'admin123@gmail.com' && role !== 'admin') {
+              console.log('📧 Email not verified for regular user, redirecting to verification');
+              // Không sign out ngay, để user có cơ hội verify email
+              // await auth.signOut();
+              // dispatch(logout());
+              // dispatch(authCheckComplete());
+              // return;
+            }
           } else if (user.email === 'admin123@gmail.com') {
             role = 'admin';
             console.log('👑 Creating admin user document');
@@ -111,7 +125,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 displayName: user.displayName || 'Admin',
                 role: 'admin',
                 createdAt: new Date(),
-                isActive: true
+                isActive: true,
+                emailVerified: true
               });
             } catch (createError) {
               console.error('Error creating admin document:', createError);
@@ -232,8 +247,11 @@ const AppContent: React.FC = () => {
         <Route path="/landing" element={<LandingPage />} />
         <Route path="/home" element={<Home />} />
         
+        {/* Test AI Route - Public access */}
+        <Route path="/test-ai" element={<TestAIPage />} />
+        
         {/* Stage 2: Authentication Routes */}
-        <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" replace />} />
+        <Route path="/login" element={!isAuthenticated ? <AuthPageNew /> : <Navigate to="/dashboard" replace />} />
         
         {/* Stage 2: Basic User Routes - Wrap with Suspense */}
         <Route path="/dashboard" element={
@@ -327,9 +345,17 @@ const AppContent: React.FC = () => {
         } />
 
         <Route path="/creator" element={
-          <ProtectedRoute requiredRole="admin">
+          <ProtectedRoute>
             <Suspense fallback={<LoadingFallback />}>
-              <CreateQuizPage />
+              <Creator />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/my-quizzes" element={
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingFallback />}>
+              <MyQuizzesPage />
             </Suspense>
           </ProtectedRoute>
         } />

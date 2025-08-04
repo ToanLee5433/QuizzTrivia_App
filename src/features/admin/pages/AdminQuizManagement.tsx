@@ -2,14 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   collection, 
   getDocs, 
   doc, 
   updateDoc, 
   deleteDoc, 
+  addDoc,
   query, 
-  orderBy
+  orderBy,
+  where,
+  serverTimestamp
 } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 import { RootState } from '../../../lib/store';
@@ -24,7 +28,8 @@ import {
   Clock,
   BarChart3,
   RotateCcw,
-  Edit3
+  Edit3,
+  AlertCircle
 } from 'lucide-react';
 
 interface Quiz {
@@ -39,15 +44,29 @@ interface Quiz {
   category: string;
   isPublic: boolean;
   isPublished?: boolean;
+  editRequests?: EditRequest[];
+}
+
+interface EditRequest {
+  id: string;
+  requestedBy: string;
+  requestedAt: Date;
+  reason: string;
+  status: 'pending' | 'approved' | 'rejected';
+  reviewedBy?: string;
+  reviewedAt?: Date;
 }
 
 const AdminQuizManagement: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [editRequests, setEditRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
+  const [activeTab, setActiveTab] = useState<'quizzes' | 'editRequests'>('quizzes');
   const [showPreview, setShowPreview] = useState(false);
   const [previewQuiz, setPreviewQuiz] = useState<Quiz | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -86,6 +105,7 @@ const AdminQuizManagement: React.FC = () => {
 
   useEffect(() => {
     loadQuizzes();
+    loadEditRequests();
   }, []);
 
   const loadQuizzes = async () => {
@@ -152,6 +172,75 @@ const AdminQuizManagement: React.FC = () => {
     }
   };
 
+  const loadEditRequests = async () => {
+    try {
+      console.log('🔍 Loading edit requests...');
+      
+      // First approach: Try with simple query and client-side filtering/sorting
+      const q = query(
+        collection(db, 'editRequests'),
+        where('status', '==', 'pending')
+      );
+      const querySnapshot = await getDocs(q);
+      
+      const loadedRequests: any[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        loadedRequests.push({
+          id: doc.id,
+          ...data,
+          requestedAt: parseFirestoreDate(data.requestedAt)
+        });
+      });
+      
+      // Sort by requestedAt descending on client side
+      loadedRequests.sort((a, b) => {
+        const aTime = a.requestedAt ? new Date(a.requestedAt).getTime() : 0;
+        const bTime = b.requestedAt ? new Date(b.requestedAt).getTime() : 0;
+        return bTime - aTime;
+      });
+      
+      console.log('✅ Loaded edit requests:', loadedRequests.length);
+      setEditRequests(loadedRequests);
+      
+    } catch (error) {
+      console.error('❌ Error loading edit requests:', error);
+      
+      // Fallback: Load all edit requests and filter client-side
+      try {
+        console.log('🔄 Trying fallback approach...');
+        const fallbackQ = query(collection(db, 'editRequests'));
+        const fallbackSnapshot = await getDocs(fallbackQ);
+        
+        const allRequests: any[] = [];
+        fallbackSnapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.status === 'pending') {
+            allRequests.push({
+              id: doc.id,
+              ...data,
+              requestedAt: parseFirestoreDate(data.requestedAt)
+            });
+          }
+        });
+        
+        // Sort by requestedAt descending
+        allRequests.sort((a, b) => {
+          const aTime = a.requestedAt ? new Date(a.requestedAt).getTime() : 0;
+          const bTime = b.requestedAt ? new Date(b.requestedAt).getTime() : 0;
+          return bTime - aTime;
+        });
+        
+        console.log('✅ Fallback loaded edit requests:', allRequests.length);
+        setEditRequests(allRequests);
+        
+      } catch (fallbackError) {
+        console.error('❌ Fallback also failed:', fallbackError);
+        setEditRequests([]);
+      }
+    }
+  };
+
   const handleEdit = (quizId: string) => {
     navigate(`/admin/edit-quiz/${quizId}`);
   };
@@ -204,6 +293,149 @@ const AdminQuizManagement: React.FC = () => {
     } catch (error) {
       console.error('Error rejecting quiz:', error);
       toast.error('Không thể từ chối quiz');
+    }
+  };
+
+  const handleApproveEditRequest = async (requestId: string, quizId: string) => {
+    try {
+      const editRequest = editRequests.find(req => req.id === requestId);
+      if (!editRequest) {
+        toast.error('Không tìm thấy yêu cầu chỉnh sửa');
+        return;
+      }
+
+      // Update edit request status
+      const requestRef = doc(db, 'editRequests', requestId);
+      await updateDoc(requestRef, {
+        status: 'approved',
+        reviewedBy: user?.uid,
+        reviewedByName: user?.displayName || 'Admin',
+        reviewedAt: new Date()
+      });
+
+      // Allow quiz to be edited by setting appropriate permissions
+      const quizRef = doc(db, 'quizzes', quizId);
+      await updateDoc(quizRef, {
+        canEdit: true,
+        editRequestApproved: true,
+        lastEditRequestApproved: new Date(),
+        approvedBy: user?.uid
+      });
+
+      // Create notification for the creator
+      await addDoc(collection(db, 'notifications'), {
+        userId: editRequest.requestedBy,
+        type: 'edit_request_approved',
+        title: 'Yêu cầu chỉnh sửa đã được phê duyệt',
+        message: `Yêu cầu chỉnh sửa quiz "${editRequest.quizTitle}" của bạn đã được admin phê duyệt. Bạn có thể chỉnh sửa quiz ngay bây giờ.`,
+        quizId: quizId,
+        createdAt: serverTimestamp(),
+        read: false
+      });
+
+      // Remove from edit requests list
+      setEditRequests(prev => prev.filter(req => req.id !== requestId));
+      
+      toast.success(`Đã phê duyệt yêu cầu chỉnh sửa của ${editRequest.requestedByName || editRequest.requestedByEmail}!`);
+    } catch (error) {
+      console.error('Error approving edit request:', error);
+      toast.error('Không thể phê duyệt yêu cầu chỉnh sửa');
+    }
+  };
+
+  const handleRejectEditRequest = async (requestId: string) => {
+    try {
+      const editRequest = editRequests.find(req => req.id === requestId);
+      if (!editRequest) {
+        toast.error('Không tìm thấy yêu cầu chỉnh sửa');
+        return;
+      }
+
+      const requestRef = doc(db, 'editRequests', requestId);
+      await updateDoc(requestRef, {
+        status: 'rejected',
+        reviewedBy: user?.uid,
+        reviewedByName: user?.displayName || 'Admin',
+        reviewedAt: new Date()
+      });
+
+      // Create notification for the creator
+      await addDoc(collection(db, 'notifications'), {
+        userId: editRequest.requestedBy,
+        type: 'edit_request_rejected', 
+        title: 'Yêu cầu chỉnh sửa đã bị từ chối',
+        message: `Yêu cầu chỉnh sửa quiz "${editRequest.quizTitle}" của bạn đã bị admin từ chối. Vui lòng liên hệ admin để biết thêm chi tiết.`,
+        quizId: editRequest.quizId,
+        createdAt: serverTimestamp(),
+        read: false
+      });
+
+      // Remove from edit requests list
+      setEditRequests(prev => prev.filter(req => req.id !== requestId));
+      
+      toast.success(`Đã từ chối yêu cầu chỉnh sửa của ${editRequest.requestedByName || editRequest.requestedByEmail}!`);
+    } catch (error) {
+      console.error('Error rejecting edit request:', error);
+      toast.error('Không thể từ chối yêu cầu chỉnh sửa');
+    }
+  };
+
+  // Utility function to create sample edit requests for testing
+  const createSampleEditRequests = async () => {
+    try {
+      console.log('🔧 Creating sample edit requests...');
+      
+      // Get some existing quizzes to create edit requests for
+      const quizzesQuery = query(collection(db, 'quizzes'));
+      const quizzesSnapshot = await getDocs(quizzesQuery);
+      
+      if (quizzesSnapshot.empty) {
+        toast.info('Không có quiz nào để tạo yêu cầu chỉnh sửa mẫu');
+        return;
+      }
+
+      const existingQuizzes = quizzesSnapshot.docs.slice(0, 3); // Take first 3 quizzes
+      
+      const sampleRequests = [
+        {
+          quizId: existingQuizzes[0]?.id,
+          quizTitle: existingQuizzes[0]?.data().title || 'Quiz mẫu 1',
+          requestedBy: user?.uid || 'sample-user-1',
+          requestedByName: user?.displayName || 'Creator Test',
+          requestedByEmail: user?.email || 'creator@test.com',
+          status: 'pending',
+          requestedAt: serverTimestamp(),
+          reason: 'Cần cập nhật một số câu hỏi không chính xác',
+          description: 'Tôi muốn chỉnh sửa câu hỏi số 3 và 5 vì có lỗi chính tả'
+        },
+        {
+          quizId: existingQuizzes[1]?.id,
+          quizTitle: existingQuizzes[1]?.data().title || 'Quiz mẫu 2',
+          requestedBy: 'sample-user-2',
+          requestedByName: 'Creator Alpha',
+          requestedByEmail: 'alpha@creator.com',
+          status: 'pending',
+          requestedAt: serverTimestamp(),
+          reason: 'Thêm câu hỏi mới',
+          description: 'Quiz này cần thêm 5 câu hỏi nữa để đạt tiêu chuẩn'
+        }
+      ];
+
+      // Create the edit requests
+      for (const request of sampleRequests) {
+        if (request.quizId) {
+          await addDoc(collection(db, 'editRequests'), request);
+        }
+      }
+
+      toast.success(`Đã tạo ${sampleRequests.filter(r => r.quizId).length} yêu cầu chỉnh sửa mẫu!`);
+      
+      // Reload edit requests
+      await loadEditRequests();
+      
+    } catch (error) {
+      console.error('Error creating sample edit requests:', error);
+      toast.error('Không thể tạo yêu cầu chỉnh sửa mẫu');
     }
   };
 
@@ -328,7 +560,9 @@ const AdminQuizManagement: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">{/* Modern Responsive Header */}
+    <>
+    <div className="bg-gradient-to-br from-gray-50 to-blue-50">
+      {/* Modern Responsive Header */}
       <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 shadow-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -338,7 +572,7 @@ const AdminQuizManagement: React.FC = () => {
                 <BookOpen className="w-6 h-6 lg:w-7 lg:h-7 text-white drop-shadow-sm" />
               </div>
               <div>
-                <h1 className="text-2xl lg:text-3xl font-bold text-white drop-shadow-sm">Quản lý Quiz</h1>
+                <h1 className="text-2xl lg:text-3xl font-bold text-white drop-shadow-sm">{t('admin.quizManagement')}</h1>
                 <p className="text-blue-100 text-sm lg:text-base mt-1">Duyệt và quản lý tất cả quiz trong hệ thống</p>
               </div>
             </div>
@@ -346,7 +580,7 @@ const AdminQuizManagement: React.FC = () => {
             {/* Actions & User Info */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 lg:gap-4">
               <button
-                onClick={loadQuizzes}
+                onClick={() => {loadQuizzes(); loadEditRequests();}}
                 className="w-full sm:w-auto px-4 py-2.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl transition-all duration-200 flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 shadow-lg hover:shadow-xl"
                 title="Làm mới danh sách"
               >
@@ -356,7 +590,6 @@ const AdminQuizManagement: React.FC = () => {
               
               {/* User Badge */}
               <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2.5 border border-white/20 shadow-lg">
-                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center ring-2 ring-white/30">
                   <User className="w-4 h-4 text-white" />
                 </div>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
@@ -371,9 +604,9 @@ const AdminQuizManagement: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
@@ -423,6 +656,46 @@ const AdminQuizManagement: React.FC = () => {
           </div>
         </div>
 
+        {/* Tabs */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-8">
+          <div className="flex border-b border-gray-200">
+            <button
+              onClick={() => setActiveTab('quizzes')}
+              className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'quizzes'
+                  ? 'border-blue-500 text-blue-600 bg-blue-50'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4" />
+                Quản lý Quiz
+                <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
+                  {quizzes.length}
+                </span>
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('editRequests')}
+              className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'editRequests'
+                  ? 'border-blue-500 text-blue-600 bg-blue-50'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                Yêu cầu chỉnh sửa
+                <span className="bg-orange-100 text-orange-600 px-2 py-1 rounded-full text-xs">
+                  {editRequests.length}
+                </span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {activeTab === 'quizzes' && (
+          <>
         {/* Search and Filter */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
           <div className="flex flex-col lg:flex-row gap-4">
@@ -605,7 +878,108 @@ const AdminQuizManagement: React.FC = () => {
             ))}
           </div>
         )}
-      </div>
+        </>
+        )}
+
+        {activeTab === 'editRequests' && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-orange-500" />
+                Yêu cầu chỉnh sửa Quiz ({editRequests.length})
+              </h3>
+              
+              {editRequests.length === 0 && (
+                <button
+                  onClick={createSampleEditRequests}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                >
+                  Tạo dữ liệu mẫu
+                </button>
+              )}
+            </div>
+            
+            {editRequests.length === 0 ? (
+              <div className="text-center py-12">
+                <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500 mb-4">Không có yêu cầu chỉnh sửa nào</p>
+                <p className="text-sm text-gray-400">Nhấn "Tạo dữ liệu mẫu" để tạo một số yêu cầu chỉnh sửa cho mục đích test</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {editRequests.map((request) => (
+                  <div key={request.id} className="border border-gray-200 rounded-lg p-6 bg-white shadow-sm">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <User className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-gray-900">
+                              {request.requestedByName || request.requestedByEmail || 'Người dùng không xác định'}
+                            </h4>
+                            <p className="text-sm text-gray-500">
+                              {request.requestedByEmail || request.requestedBy || 'Email không xác định'}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-gray-50 rounded-lg p-4 mb-3">
+                          <h5 className="font-medium text-gray-900 mb-2">
+                            📝 Quiz: {request.quizTitle || 'Tên quiz không xác định'}
+                          </h5>
+                          <p className="text-sm text-gray-700 mb-2">
+                            <strong>Lý do yêu cầu:</strong> {request.reason || 'Không có lý do cụ thể'}
+                          </p>
+                          {request.description && (
+                            <p className="text-sm text-gray-600">
+                              <strong>Chi tiết:</strong> {request.description}
+                            </p>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-4 h-4" />
+                            {request.requestedAt?.toLocaleDateString('vi-VN', {
+                              day: '2-digit',
+                              month: '2-digit', 
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            }) || 'Thời gian không xác định'}
+                          </span>
+                          <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
+                            Chờ xử lý
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 ml-6">
+                        <button
+                          onClick={() => handleApproveEditRequest(request.id, request.quizId)}
+                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 shadow-sm"
+                          title="Phê duyệt yêu cầu"
+                        >
+                          <Check className="w-4 h-4" />
+                          Duyệt
+                        </button>
+                        <button
+                          onClick={() => handleRejectEditRequest(request.id)}
+                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 shadow-sm"
+                          title="Từ chối yêu cầu"
+                        >
+                          <X className="w-4 h-4" />
+                          Từ chối
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
       {/* Preview Modal */}
       {showPreview && previewQuiz && (
@@ -676,6 +1050,7 @@ const AdminQuizManagement: React.FC = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

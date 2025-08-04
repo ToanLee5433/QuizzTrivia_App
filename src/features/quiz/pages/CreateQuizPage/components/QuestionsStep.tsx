@@ -20,7 +20,7 @@ import { QuizFormData } from '../types';
 import { Question } from '../types';
 import SortableItem from './SortableItem';
 import QuizBulkImport from './QuizBulkImport';
-import { ModernGeminiAIGenerator } from '../../../components/ModernGeminiAIGenerator';
+import ClientSideAIGenerator from '../../../../../components/ClientSideAIGenerator';
 
 interface QuestionsStepProps {
   quiz: QuizFormData;
@@ -69,10 +69,23 @@ const QuestionsStep: React.FC<QuestionsStepProps> = ({
     }));
   };
 
-  const handleAIQuestionsGenerated = (questions: Question[]) => {
+  const handleAIQuestionsGenerated = (questions: any[]) => {
+    // Convert simple AI questions to full Question format
+    const convertedQuestions: Question[] = questions.map((q, index) => ({
+      id: `ai_question_${Date.now()}_${index}`,
+      text: q.text,
+      type: 'multiple' as const,
+      answers: q.answers.map((a: any, idx: number) => ({
+        id: `ai_answer_${Date.now()}_${index}_${idx}`,
+        text: a.text,
+        isCorrect: a.isCorrect
+      })),
+      points: 1
+    }));
+
     setQuiz(prev => ({
       ...prev,
-      questions: [...prev.questions, ...questions]
+      questions: [...prev.questions, ...convertedQuestions]
     }));
     setShowGeminiAI(false);
   };
@@ -136,7 +149,7 @@ const QuestionsStep: React.FC<QuestionsStepProps> = ({
               </button>
             </div>
             <div className="p-6">
-              <ModernGeminiAIGenerator
+              <ClientSideAIGenerator
                 onQuestionsGenerated={handleAIQuestionsGenerated}
               />
             </div>

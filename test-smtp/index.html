@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test SMTP Firebase - Quiz App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .template-preview {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            font-size: 12px;
+        }
+        
+        .otp-code {
+            background: #f8fafc;
+            border: 2px dashed #2563eb;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        .code {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2563eb;
+            letter-spacing: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 Test SMTP Firebase</h1>
+            <p>Kiểm tra gửi email OTP qua Firebase Functions</p>
+        </div>
+        
+        <form id="emailForm">
+            <div class="form-group">
+                <label for="emailTo">Email nhận:</label>
+                <input type="email" id="emailTo" required placeholder="Nhập email để nhận mã OTP">
+            </div>
+            
+            <div class="form-group">
+                <label for="template">Template email:</label>
+                <select id="template">
+                    <option value="otp_verification">OTP Verification</option>
+                    <option value="test">Test Email</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="customCode">Mã OTP (tùy chọn):</label>
+                <input type="text" id="customCode" placeholder="Để trống để tự động tạo mã 6 số">
+            </div>
+            
+            <button type="submit" class="btn" id="sendBtn">
+                📧 Gửi Email Test
+            </button>
+        </form>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Đang gửi email...</p>
+        </div>
+        
+        <div class="result" id="result"></div>
+        
+        <div class="template-preview">
+            <h3>📋 Preview Template Email:</h3>
+            <div style="border: 1px solid #ddd; padding: 15px; background: white; border-radius: 4px; margin-top: 10px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 24px; font-weight: bold; color: #2563eb;">🧠 Quiz App</div>
+                    <h2>Xác thực email đăng ký</h2>
+                </div>
+                
+                <p>Xin chào!</p>
+                <p>Bạn đã yêu cầu đăng ký tài khoản tại Quiz App. Vui lòng sử dụng mã xác thực bên dưới:</p>
+                
+                <div class="otp-code">
+                    <div class="code">123456</div>
+                    <p style="margin: 10px 0 0 0; color: #6b7280;">Mã này có hiệu lực trong 10 phút</p>
+                </div>
+                
+                <p><strong>Lưu ý:</strong> Không chia sẻ mã này với bất kỳ ai khác.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase SDK
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFunctions, httpsCallable, connectFunctionsEmulator } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
+        import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase config - thay bằng config của bạn
+        const firebaseConfig = {
+            apiKey: "AIzaSyDJH0VS_7xK9m7DGLdWe-4OAJtMCw9p1tk",
+            authDomain: "quiz-app-85db6.firebaseapp.com",
+            projectId: "quiz-app-85db6",
+            storageBucket: "quiz-app-85db6.firebasestorage.app",
+            messagingSenderId: "195053871984",
+            appId: "1:195053871984:web:5aaf0b66a0e6b22e7da1fd",
+            measurementId: "G-HM3CRQYHMH"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const functions = getFunctions(app);
+        const db = getFirestore(app);
+
+        // Tạo mã OTP 6 số
+        function generateOTP() {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
+
+        // Gửi email qua Firestore trigger (không cần functions)
+        async function sendEmailViaFirestore(emailTo, code, template) {
+            try {
+                const emailData = {
+                    to: emailTo,
+                    template: template,
+                    data: {
+                        code: code,
+                        expiresIn: '10 phút'
+                    },
+                    status: 'pending',
+                    createdAt: serverTimestamp()
+                };
+
+                const docRef = await addDoc(collection(db, 'email_queue'), emailData);
+                return { success: true, id: docRef.id };
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        // Gửi email qua HTTP function (nếu có)
+        async function sendEmailViaFunction(emailTo, code, template) {
+            try {
+                const sendEmail = httpsCallable(functions, 'sendTestEmail');
+                const result = await sendEmail({
+                    to: emailTo,
+                    template: template,
+                    data: {
+                        code: code,
+                        expiresIn: '10 phút'
+                    }
+                });
+                return result.data;
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        // Event handlers
+        document.getElementById('emailForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const emailTo = document.getElementById('emailTo').value;
+            const template = document.getElementById('template').value;
+            const customCode = document.getElementById('customCode').value;
+            const code = customCode || generateOTP();
+            
+            const sendBtn = document.getElementById('sendBtn');
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            
+            // Show loading
+            sendBtn.disabled = true;
+            loading.style.display = 'block';
+            result.style.display = 'none';
+            
+            try {
+                // Thử gửi qua Firestore trigger trước
+                console.log('Gửi email qua Firestore trigger...');
+                const firestoreResult = await sendEmailViaFirestore(emailTo, code, template);
+                
+                // Show success
+                result.className = 'result success';
+                result.innerHTML = `
+                    <h4>✅ Email đã được thêm vào queue thành công!</h4>
+                    <p><strong>Email:</strong> ${emailTo}</p>
+                    <p><strong>Mã OTP:</strong> ${code}</p>
+                    <p><strong>Template:</strong> ${template}</p>
+                    <p><strong>Queue ID:</strong> ${firestoreResult.id}</p>
+                    <p><em>Kiểm tra collection 'email_queue' trong Firestore để xem trạng thái gửi email.</em></p>
+                `;
+                result.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Lỗi:', error);
+                
+                // Show error
+                result.className = 'result error';
+                result.innerHTML = `
+                    <h4>❌ Lỗi gửi email</h4>
+                    <p><strong>Lỗi:</strong> ${error.message}</p>
+                    <p><em>Kiểm tra:</em></p>
+                    <ul>
+                        <li>Firebase Functions đã được deploy chưa?</li>
+                        <li>Email config đã được cấu hình đúng chưa?</li>
+                        <li>Firestore rules có cho phép ghi vào email_queue không?</li>
+                    </ul>
+                `;
+                result.style.display = 'block';
+            } finally {
+                // Hide loading
+                sendBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        });
+
+        // Test Firebase connection
+        window.addEventListener('load', () => {
+            console.log('🔥 Firebase initialized');
+            console.log('📧 Ready to test email sending');
+        });
+    </script>
+</body>
+</html>

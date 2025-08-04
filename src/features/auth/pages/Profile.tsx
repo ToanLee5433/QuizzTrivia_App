@@ -4,7 +4,7 @@ import { RootState } from '../../../lib/store';
 import { QuizResult } from '../../quiz/types';
 import { Link } from 'react-router-dom';
 import { fetchUserQuizResults } from '../../quiz/store';
-import { updateProfile, updatePassword } from 'firebase/auth';
+import { updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { auth } from '../../../lib/firebase/config';
 import { toast } from 'react-toastify';
 import { getQuizById } from '../../quiz/api';
@@ -39,7 +39,9 @@ const Profile: React.FC = () => {
   
   // Profile edit states
   const [displayName, setDisplayName] = useState(user?.displayName || '');
+  const [currentPassword, setCurrentPassword] = useState(''); // Mật khẩu cũ
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [avatarUrl, setAvatarUrl] = useState(user?.photoURL || '');
   const [saving, setSaving] = useState(false);
   
@@ -181,16 +183,58 @@ const Profile: React.FC = () => {
   };
 
   const handlePasswordUpdate = async () => {
-    if (!auth.currentUser || !newPassword) return;
+    if (!auth.currentUser || !currentPassword || !newPassword || !confirmPassword) {
+      toast.error('Vui lòng nhập đầy đủ tất cả các trường');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error('Mật khẩu mới và xác nhận mật khẩu không khớp');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error('Mật khẩu mới phải có ít nhất 6 ký tự');
+      return;
+    }
+
+    if (newPassword === currentPassword) {
+      toast.error('Mật khẩu mới phải khác mật khẩu hiện tại');
+      return;
+    }
+
+    if (!auth.currentUser.email) {
+      toast.error('Không tìm thấy email người dùng');
+      return;
+    }
     
     setSaving(true);
     try {
+      // Tạo credential để reauthenticate
+      const credential = EmailAuthProvider.credential(auth.currentUser.email, currentPassword);
+      
+      // XÁC THỰC LẠI NGƯỜI DÙNG TRƯỚC KHI ĐỔI MẬT KHẨU
+      await reauthenticateWithCredential(auth.currentUser, credential);
+      
+      // Nếu xác thực thành công, đổi mật khẩu mới
       await updatePassword(auth.currentUser, newPassword);
+      
+      // Reset form
+      setCurrentPassword('');
       setNewPassword('');
-      toast.success('Cập nhật mật khẩu thành công!');
-    } catch (error) {
+      setConfirmPassword('');
+      toast.success('Đổi mật khẩu thành công!');
+    } catch (error: any) {
       console.error('Error updating password:', error);
-      toast.error('Có lỗi khi cập nhật mật khẩu');
+      if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        toast.error('Mật khẩu cũ không đúng');
+      } else if (error.code === 'auth/weak-password') {
+        toast.error('Mật khẩu mới quá yếu. Vui lòng chọn mật khẩu mạnh hơn (ít nhất 6 ký tự)');
+      } else if (error.code === 'auth/requires-recent-login') {
+        toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng xuất và đăng nhập lại');
+      } else {
+        toast.error('Có lỗi khi đổi mật khẩu: ' + error.message);
+      }
     } finally {
       setSaving(false);
     }
@@ -605,22 +649,65 @@ const Profile: React.FC = () => {
               <h3 className="text-lg font-semibold text-gray-900 mb-6">Đổi mật khẩu</h3>
               <div className="space-y-4">
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Mật khẩu hiện tại</label>
+                  <input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Nhập mật khẩu hiện tại để xác thực"
+                  />
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Mật khẩu mới</label>
                   <input
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Nhập mật khẩu mới"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      newPassword && newPassword.length < 6 ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)"
                   />
+                  {newPassword && newPassword.length < 6 && (
+                    <p className="text-xs text-red-500 mt-1">Mật khẩu phải có ít nhất 6 ký tự</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Xác nhận mật khẩu mới</label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      confirmPassword && newPassword !== confirmPassword ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    placeholder="Nhập lại mật khẩu mới để xác nhận"
+                  />
+                  {confirmPassword && newPassword !== confirmPassword && (
+                    <p className="text-xs text-red-500 mt-1">Mật khẩu xác nhận không khớp</p>
+                  )}
                 </div>
                 <button
                   onClick={handlePasswordUpdate}
-                  disabled={saving || !newPassword}
+                  disabled={
+                    saving || 
+                    !currentPassword || 
+                    !newPassword || 
+                    !confirmPassword ||
+                    newPassword.length < 6 ||
+                    newPassword !== confirmPassword ||
+                    newPassword === currentPassword
+                  }
                   className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
                 >
-                  {saving ? 'Đang cập nhật...' : 'Đổi mật khẩu'}
+                  {saving ? 'Đang xác thực...' : 'Đổi mật khẩu'}
                 </button>
+                <div className="text-xs text-gray-500 space-y-1">
+                  <p>⚠️ Bạn cần nhập đúng mật khẩu hiện tại để xác thực trước khi đổi mật khẩu mới</p>
+                  <p>✓ Mật khẩu mới phải có ít nhất 6 ký tự</p>
+                  <p>✓ Mật khẩu mới phải khác mật khẩu hiện tại</p>
+                </div>
               </div>
             </div>
           </div>

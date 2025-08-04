@@ -17,8 +17,9 @@ const Sidebar: React.FC = () => {
   ];
 
   // Add role-specific menu items
-  if (user?.role === 'admin') {
+  if (user?.role === 'creator' || user?.role === 'admin') {
     menuItems.push({ path: '/creator', label: 'Tạo Quiz', icon: '➕' });
+    menuItems.push({ path: '/my-quizzes', label: 'Quiz của tôi', icon: '📝' });
   }
 
   if (user?.role === 'admin') {

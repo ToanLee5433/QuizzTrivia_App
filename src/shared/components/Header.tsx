@@ -1,8 +1,10 @@
 ﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { RootState } from '../../lib/store';
 import NotificationCenter from './NotificationCenter';
+import LanguageSwitcher from './LanguageSwitcher';
 import { Menu, X, User, LogOut, Settings, Crown, Zap, Home, BookOpen, Heart, Trophy, UserCircle, Plus } from 'lucide-react';
 
 interface HeaderProps {
@@ -12,6 +14,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = () => {
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
+  const { t } = useTranslation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
@@ -21,20 +24,20 @@ const Header: React.FC<HeaderProps> = () => {
   };
 
   const navigationItems = [
-    { path: '/', label: 'Trang chủ', icon: Home },
-    { path: '/quizzes', label: 'Quiz', icon: BookOpen },
-    { path: '/favorites', label: 'Yêu thích', icon: Heart },
-    { path: '/leaderboard', label: 'Bảng xếp hạng', icon: Trophy },
-    { path: '/profile', label: 'Hồ sơ', icon: UserCircle },
+    { path: '/', label: t('nav.home'), icon: Home },
+    { path: '/quizzes', label: t('nav.quizzes'), icon: BookOpen },
+    { path: '/favorites', label: t('nav.favorites'), icon: Heart },
+    { path: '/leaderboard', label: t('nav.leaderboard'), icon: Trophy },
+    { path: '/profile', label: t('nav.profile'), icon: UserCircle },
   ];
 
   // Add role-specific items
   if (user?.role === 'creator' || user?.role === 'admin') {
-    navigationItems.push({ path: '/creator', label: 'Tạo Quiz', icon: Plus });
+    navigationItems.push({ path: '/creator', label: t('nav.creator'), icon: Plus });
   }
 
   if (user?.role === 'admin') {
-    navigationItems.push({ path: '/admin', label: 'Quản trị', icon: Settings });
+    navigationItems.push({ path: '/admin', label: t('nav.admin'), icon: Settings });
   }
 
   return (
@@ -84,6 +87,9 @@ const Header: React.FC<HeaderProps> = () => {
 
           {/* Right Section */}
           <div className="flex items-center space-x-3">
+            {/* Language Switcher */}
+            <LanguageSwitcher />
+
             {/* Notification Center */}
             {user && (
               <div className="hidden sm:block">

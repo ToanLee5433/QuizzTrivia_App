@@ -7,6 +7,7 @@ import Button from '../../../shared/components/ui/Button';
 import { getQuizResults, getQuizResultById, getQuizById } from '../services/quizService';
 import { toast } from 'react-toastify';
 import QuickReviewSection from '../../../shared/components/QuickReviewSection';
+import { quizStatsService } from '../../../services/quizStatsService';
 
 interface ResultState {
   score: number;
@@ -16,6 +17,7 @@ interface ResultState {
   isTimeUp?: boolean;
   timeSpent?: number;
   quizId?: string;
+  tracked?: boolean; // Add this to prevent duplicate tracking
 }
 
 interface LeaderboardEntry {
@@ -219,6 +221,20 @@ export const ResultPage: React.FC = () => {
       });
     }
   }, [quizId, quizzes, navigate]);
+
+  // Track completion when result and quiz are both available
+  useEffect(() => {
+    if (result && quiz && user && !result.tracked) {
+      console.log('📊 Tracking quiz completion for user:', user.uid);
+      const score = safeNumber(result.correct, 0);
+      const total = safeNumber(result.total, quiz.questions.length);
+      
+      quizStatsService.trackCompletion(quiz.id, user.uid, score, total);
+      
+      // Mark as tracked to prevent duplicate tracking
+      setResult(prev => prev ? { ...prev, tracked: true } : null);
+    }
+  }, [result, quiz, user]);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {

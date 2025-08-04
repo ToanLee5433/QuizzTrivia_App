@@ -1,20 +1,34 @@
 export interface Answer {
   id: string;
   text: string;
+  richText?: string; // Rich text content with HTML
   isCorrect: boolean;
   imageUrl?: string; // Cho dạng chọn ảnh
+  audioUrl?: string; // For audio answers
+  videoUrl?: string; // For video answers
 }
 
 export interface Question {
   id: string;
   text: string;
-  type: 'multiple' | 'boolean' | 'short_answer' | 'image' | 'checkbox';
+  richText?: string; // Rich text content with HTML for question
+  type: 'multiple' | 'boolean' | 'short_answer' | 'image' | 'checkbox' | 'rich_content';
   answers: Answer[];
   explanation?: string;
+  richExplanation?: string; // Rich text explanation
   points: number;
   difficulty?: 'easy' | 'medium' | 'hard';
   correctAnswer?: string; // Cho dạng điền từ
   acceptedAnswers?: string[]; // Cho dạng điền từ - các từ được chấp nhận
+  imageUrl?: string; // Question image
+  audioUrl?: string; // Question audio
+  videoUrl?: string; // Question video
+  attachments?: Array<{ // Multiple attachments
+    type: 'image' | 'audio' | 'video';
+    url: string;
+    name?: string;
+    description?: string;
+  }>;
 }
 
 export interface Quiz {

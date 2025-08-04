@@ -5,6 +5,7 @@ import { RootState } from '../../../../../lib/store';
 import { Question, Quiz } from '../../../types';
 import { QuizSession } from '../types';
 import { checkShortAnswer } from '../utils';
+import { quizStatsService } from '../../../../../services/quizStatsService';
 
 interface UseQuizSessionProps {
   quiz: Quiz;
@@ -21,6 +22,14 @@ export const useQuizSession = ({ quiz }: UseQuizSessionProps) => {
     isCompleted: false,
     timeSpent: 0
   });
+
+  // Track attempt when session starts
+  useEffect(() => {
+    if (user) {
+      console.log('📊 Tracking quiz attempt for user:', user.uid);
+      quizStatsService.trackAttempt(quiz.id, user.uid);
+    }
+  }, [quiz.id, user]);
 
   // Update time spent every second
   useEffect(() => {

@@ -19,6 +19,29 @@ const CreateQuizPage: React.FC = () => {
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
+  // Kiểm tra quyền truy cập
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Cần đăng nhập</h2>
+          <p className="text-gray-600">Bạn cần đăng nhập để tạo quiz</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentUser.role !== 'creator' && currentUser.role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Không có quyền truy cập</h2>
+          <p className="text-gray-600">Bạn cần có vai trò Creator hoặc Admin để tạo quiz</p>
+        </div>
+      </div>
+    );
+  }
+
   // Thêm câu hỏi mới
   const addQuestion = () => {
     setQuiz(q => ({

@@ -1,6 +1,7 @@
 import React from 'react';
 import { QuizFormData } from '../types';
 import { categories, difficulties } from '../constants';
+import RichTextEditor from '../../../../../shared/components/ui/RichTextEditor';
 import { BookOpen, Clock, Tag, Star, FileText } from 'lucide-react';
 
 interface QuizInfoStepProps {
@@ -40,14 +41,13 @@ const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
             <FileText className="w-4 h-4" />
-            Mô tả quiz *
+            Mô tả quiz * (Hỗ trợ định dạng Rich Text)
           </label>
-          <textarea
-            className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
-            placeholder="Mô tả ngắn gọn về nội dung quiz..."
-            rows={4}
+          <RichTextEditor
             value={quiz.description}
-            onChange={e => setQuiz(q => ({ ...q, description: e.target.value }))}
+            onChange={(value: string) => setQuiz(q => ({ ...q, description: value }))}
+            placeholder="Mô tả chi tiết về quiz của bạn... Bạn có thể thêm định dạng text, hình ảnh, video và nhiều hơn nữa!"
+            height={200}
           />
         </div>
 

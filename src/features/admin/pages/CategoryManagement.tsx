@@ -13,6 +13,7 @@ import {
   where
 } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
+import { initializeCategories } from '../../../utils/initializeCategories';
 import {
   Plus,
   Search,
@@ -88,6 +89,10 @@ const CategoryManagement: React.FC = () => {
     try {
       setLoading(true);
       console.log('🔍 Loading categories from Firebase...');
+      
+      // Initialize default categories if none exist
+      await initializeCategories();
+      
       const categoriesRef = collection(db, 'categories');
       const snapshot = await getDocs(categoriesRef);
       

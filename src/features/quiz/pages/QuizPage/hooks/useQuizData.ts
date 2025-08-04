@@ -4,12 +4,14 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../../../lib/store';
 import { setCurrentQuiz } from '../../../store';
 import { Quiz } from '../../../types';
+import { quizStatsService } from '../../../../../services/quizStatsService';
 
 export const useQuizData = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { quizzes, currentQuiz, loading, error } = useSelector((state: RootState) => state.quiz);
+  const user = useSelector((state: RootState) => state.auth.user);
   
   const [quiz, setQuiz] = useState<Quiz | null>(null);
 
@@ -31,12 +33,21 @@ export const useQuizData = () => {
       setQuiz(foundQuiz);
       // Initialize quiz timer in Redux store
       dispatch(setCurrentQuiz(foundQuiz));
+      
+      // Track view when quiz is loaded
+      if (user) {
+        console.log('📊 Tracking quiz view for user:', user.uid);
+        quizStatsService.trackView(id, user.uid);
+      } else {
+        console.log('📊 Tracking anonymous quiz view');
+        quizStatsService.trackView(id);
+      }
     } else {
       // If not in store, show error for now
       console.log('❌ Quiz not found in store');
       navigate('/quiz-list');
     }
-  }, [id, quizzes, navigate, dispatch]);
+  }, [id, quizzes, navigate, dispatch, user]);
   
   // Handle currentQuiz from Redux (when fetched individually)
   useEffect(() => {

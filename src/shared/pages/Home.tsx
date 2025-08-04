@@ -7,13 +7,15 @@ import { Quiz } from '../../features/quiz/types';
 import QuizCard from '../../features/quiz/components/QuizCard';
 import Button from '../components/ui/Button';
 import PopularQuizzesRanking from '../components/PopularQuizzesRanking';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../../lib/firebase/config';
 
 // **THÊM MỚI**: Dashboard stats interface
 interface DashboardStats {
   totalQuizzes: number;
+  totalUsers: number;
   completedQuizzes: number;
-  averageScore: number;
-  todayQuizzes: number;
+  totalCreators: number;
 }
 
 const Home: React.FC = () => {
@@ -21,39 +23,65 @@ const Home: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const { quizzes, loading } = useSelector((state: RootState) => state.quiz);
   
-  // **THÊM MỚI**: Dashboard stats state
+  // **THÊM MỚI**: Dashboard stats state với dữ liệu thật
   const [stats, setStats] = useState<DashboardStats>({
     totalQuizzes: 0,
+    totalUsers: 0,
     completedQuizzes: 0,
-    averageScore: 0,
-    todayQuizzes: 0
+    totalCreators: 0
   });
 
   const [featuredQuizzes, setFeaturedQuizzes] = useState<Quiz[]>([]);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
     if (quizzes.length === 0) {
       dispatch(fetchQuizzes({ user }) as any);
     }
+    loadRealStats();
   }, [dispatch, user, quizzes.length]);
+
+  const loadRealStats = async () => {
+    try {
+      setStatsLoading(true);
+      
+      // Lấy dữ liệu thực từ Firebase
+      const [quizzesSnapshot, usersSnapshot] = await Promise.all([
+        getDocs(collection(db, 'quizzes')),
+        getDocs(collection(db, 'users'))
+      ]);
+      
+      // Đếm chỉ users ACTIVE (không bị xoá và isActive = true)
+      const users = usersSnapshot.docs.map(doc => doc.data());
+      const activeUsers = users.filter(user => 
+        user.isActive !== false && 
+        user.isDeleted !== true
+      );
+      
+      // Đếm creators trong số users ACTIVE
+      const creators = activeUsers.filter(user => 
+        user.role === 'creator' || user.role === 'admin'
+      );
+      
+      // Quiz hoàn thành tạm thời = 0 vì chưa có data về quiz results
+      const completedQuizzes = 0;
+      
+      setStats({
+        totalQuizzes: quizzesSnapshot.size,
+        totalUsers: activeUsers.length, // CHỈ ĐẾM USERS HOẠT ĐỘNG
+        completedQuizzes: completedQuizzes,
+        totalCreators: creators.length // CHỈ ĐẾM CREATORS HOẠT ĐỘNG
+      });
+      
+    } catch (error) {
+      console.error('Error loading real stats:', error);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (quizzes.length > 0) {
-      // **THÊM MỚI**: Calculate dashboard stats
-      const completed = quizzes.filter(q => q.isCompleted).length;
-      const totalScore = quizzes.reduce((sum, q) => sum + (q.score || 0), 0);
-      const avgScore = completed > 0 ? totalScore / completed : 0;
-      
-      setStats({
-        totalQuizzes: quizzes.length,
-        completedQuizzes: completed,
-        averageScore: Math.round(avgScore * 10) / 10,
-        todayQuizzes: quizzes.filter(q => {
-          const today = new Date().toDateString();
-          return new Date(q.createdAt).toDateString() === today;
-        }).length
-      });
-
       // **THÊM MỚI**: Set featured quizzes (trending/popular)
       const trending = quizzes
         .filter(q => q.isPublic)
@@ -123,9 +151,11 @@ const Home: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 group hover:border-blue-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium mb-2">Tổng Quiz</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.totalQuizzes}</p>
-              <p className="text-xs text-green-600 font-medium mt-1">📈 +12% tháng này</p>
+              <p className="text-gray-600 text-sm font-medium mb-2">Tổng số Quiz</p>
+              <p className="text-3xl font-bold text-gray-900">
+                {statsLoading ? '...' : stats.totalQuizzes}
+              </p>
+              <p className="text-xs text-green-600 font-medium mt-1">📈 Dữ liệu thực tế</p>
             </div>
             <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,11 +168,30 @@ const Home: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 group hover:border-green-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium mb-2">Đã hoàn thành</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.completedQuizzes}</p>
-              <p className="text-xs text-green-600 font-medium mt-1">🎉 +5 quiz tuần này</p>
+              <p className="text-gray-600 text-sm font-medium mb-2">Người dùng</p>
+              <p className="text-3xl font-bold text-gray-900">
+                {statsLoading ? '...' : stats.totalUsers}
+              </p>
+              <p className="text-xs text-green-600 font-medium mt-1">👥 Đã đăng ký</p>
             </div>
             <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 group hover:border-purple-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-600 text-sm font-medium mb-2">Quiz hoàn thành</p>
+              <p className="text-3xl font-bold text-gray-900">
+                {statsLoading ? '...' : stats.completedQuizzes}
+              </p>
+              <p className="text-xs text-purple-600 font-medium mt-1">✅ Chờ cập nhật</p>
+            </div>
+            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -153,28 +202,15 @@ const Home: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 group hover:border-yellow-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium mb-2">Điểm trung bình</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.averageScore}%</p>
-              <p className="text-xs text-yellow-600 font-medium mt-1">⭐ Tuyệt vời!</p>
+              <p className="text-gray-600 text-sm font-medium mb-2">Người tạo</p>
+              <p className="text-3xl font-bold text-gray-900">
+                {statsLoading ? '...' : stats.totalCreators}
+              </p>
+              <p className="text-xs text-yellow-600 font-medium mt-1">✨ Creator + Admin</p>
             </div>
             <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 group hover:border-purple-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm font-medium mb-2">Quiz hôm nay</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.todayQuizzes}</p>
-              <p className="text-xs text-purple-600 font-medium mt-1">🔥 Đang hot!</p>
-            </div>
-            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
           </div>

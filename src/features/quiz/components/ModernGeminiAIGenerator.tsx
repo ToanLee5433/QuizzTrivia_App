@@ -30,7 +30,7 @@ export const ModernGeminiAIGenerator: React.FC<Props> = ({ onQuestionsGenerated 
   });
 
   const convertGeminiToAppQuestion = (geminiQ: GeminiQuestion, index: number): Question => {
-    const answers: Answer[] = geminiQ.answers.map((answerText, answerIndex) => ({
+    const answers: Answer[] = geminiQ.answers.map((answerText: string, answerIndex: number) => ({
       id: `${index}-${answerIndex}`,
       text: answerText,
       isCorrect: answerIndex === geminiQ.correctAnswer
@@ -128,7 +128,9 @@ export const ModernGeminiAIGenerator: React.FC<Props> = ({ onQuestionsGenerated 
         geminiQuestions = await geminiAIService.generateQuestions(aiConfig);
       }
 
-      const appQuestions = geminiQuestions.map(convertGeminiToAppQuestion);
+      const appQuestions = geminiQuestions.map((geminiQ: GeminiQuestion, index: number) => 
+        convertGeminiToAppQuestion(geminiQ, index)
+      );
       
       onQuestionsGenerated(appQuestions);
       setSuccess(`🎉 Đã tạo thành công ${appQuestions.length} câu hỏi từ ${uploadedFile ? `file "${uploadedFile.name}"` : 'nội dung văn bản'}!`);

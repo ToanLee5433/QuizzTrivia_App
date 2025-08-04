@@ -3,6 +3,6 @@ export interface AuthUser {
   uid: string;
   email: string;
   displayName?: string;
-  role?: string;
+  role?: 'admin' | 'creator' | 'user';
   [key: string]: any;
 }

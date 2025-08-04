@@ -44,7 +44,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               <Link to="/quizzes" className="text-gray-700 hover:text-blue-600">Quiz</Link>
               <Link to="/favorites" className="text-gray-700 hover:text-yellow-500">Favorites</Link>
               <Link to="/leaderboard" className="text-gray-700 hover:text-green-600">Leaderboard</Link>
-              {user.role === 'admin' ? (
+              {(user.role === 'creator' || user.role === 'admin') ? (
                 <Link to="/creator" className="text-gray-700 hover:text-blue-600">Creator</Link>
               ) : null}
               {user.role === 'admin' ? (
