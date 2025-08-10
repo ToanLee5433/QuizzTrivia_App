@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
 import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -54,6 +55,7 @@ interface EditRequest {
 }
 
 const MyQuizzesPage: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
   
@@ -129,7 +131,7 @@ const MyQuizzesPage: React.FC = () => {
       setQuizzes(loadedQuizzes);
     } catch (error) {
       console.error('Error loading quizzes:', error);
-      toast.error('Lỗi khi tải danh sách quiz');
+      toast.error(t('quiz.loadError', 'Lỗi khi tải danh sách quiz'));
     } finally {
       setLoading(false);
     }
@@ -137,7 +139,7 @@ const MyQuizzesPage: React.FC = () => {
 
   const handleEditRequest = async () => {
     if (!selectedQuiz || !editReason.trim()) {
-      toast.error('Vui lòng nhập lý do chỉnh sửa');
+      toast.error(t('quiz.editReasonRequired', 'Vui lòng nhập lý do chỉnh sửa'));
       return;
     }
 
@@ -158,7 +160,7 @@ const MyQuizzesPage: React.FC = () => {
       loadMyQuizzes(); // Reload to get updated data
     } catch (error) {
       console.error('Error submitting edit request:', error);
-      toast.error('Lỗi khi gửi yêu cầu chỉnh sửa');
+      toast.error(t('quiz.editRequestError', 'Lỗi khi gửi yêu cầu chỉnh sửa'));
     } finally {
       setSubmittingRequest(false);
     }
@@ -257,8 +259,8 @@ const MyQuizzesPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Không có quyền truy cập</h2>
-          <p className="text-gray-600">Bạn cần có vai trò Creator hoặc Admin để xem trang này</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('messages.unauthorized', 'Không có quyền truy cập')}</h2>
+          <p className="text-gray-600">{t('creator.roleRequired', 'Bạn cần có vai trò Creator hoặc Admin để xem trang này')}</p>
         </div>
       </div>
     );

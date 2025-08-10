@@ -7,9 +7,9 @@ interface QuickActionsProps {
   onRefreshData: () => void;
   stats: {
     totalUsers: number;
-    pendingQuizzes: number;
-    approvedQuizzes: number;
-    totalCategories: number;
+    totalQuizzes: number;
+    completedQuizzes: number;
+    totalCreators: number;
   };
 }
 
@@ -232,16 +232,16 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
             <div className="font-bold text-blue-600">{stats.totalUsers}</div>
           </div>
           <div>
-            <div className="text-gray-600">Chờ duyệt</div>
-            <div className="font-bold text-yellow-600">{stats.pendingQuizzes}</div>
+            <div className="text-gray-600">Tổng Quiz</div>
+            <div className="font-bold text-yellow-600">{stats.totalQuizzes}</div>
           </div>
           <div>
-            <div className="text-gray-600">Đã duyệt</div>
-            <div className="font-bold text-green-600">{stats.approvedQuizzes}</div>
+            <div className="text-gray-600">Đã hoàn thành</div>
+            <div className="font-bold text-green-600">{stats.completedQuizzes}</div>
           </div>
           <div>
-            <div className="text-gray-600">Danh mục</div>
-            <div className="font-bold text-purple-600">{stats.totalCategories}</div>
+            <div className="text-gray-600">Người tạo</div>
+            <div className="font-bold text-purple-600">{stats.totalCreators}</div>
           </div>
         </div>
       </div>

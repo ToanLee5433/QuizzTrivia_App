@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../lib/store';
 
@@ -17,46 +18,18 @@ interface Notification {
 }
 
 const NotificationCenter: React.FC = () => {
+  const { t } = useTranslation();
   const user = useSelector((state: RootState) => state.auth.user);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Mock notifications for demo
+  // Load real notifications
   useEffect(() => {
     if (user) {
-      const mockNotifications: Notification[] = [
-        {
-          id: '1',
-          type: 'achievement',
-          title: '🎉 Chúc mừng!',
-          message: 'Bạn đã hoàn thành 5 quiz liên tiếp!',
-          timestamp: new Date(Date.now() - 5 * 60 * 1000),
-          read: false,
-          icon: '🏆'
-        },
-        {
-          id: '2',
-          type: 'quiz',
-          title: '📚 Quiz mới',
-          message: 'Có quiz mới về "JavaScript Advanced" vừa được thêm!',
-          timestamp: new Date(Date.now() - 30 * 60 * 1000),
-          read: false,
-          icon: '📖'
-        },
-        {
-          id: '3',
-          type: 'social',
-          title: '⭐ Đánh giá tốt',
-          message: 'Quiz "React Fundamentals" của bạn nhận được 5 sao!',
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-          read: true,
-          icon: '⭐'
-        }
-      ];
-      
-      setNotifications(mockNotifications);
-      setUnreadCount(mockNotifications.filter(n => !n.read).length);
+      // TODO: Load real notifications from Firebase
+      setNotifications([]);
+      setUnreadCount(0);
     }
   }, [user]);
 
@@ -126,7 +99,7 @@ const NotificationCenter: React.FC = () => {
             {notifications.length === 0 ? (
               <div className="px-4 py-8 text-center text-gray-500">
                 <div className="text-4xl mb-3">🔔</div>
-                <p>Không có thông báo nào</p>
+                <p>{t('notifications.empty', 'Không có thông báo nào')}</p>
               </div>
             ) : (
               notifications.map((notification) => (

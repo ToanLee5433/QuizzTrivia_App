@@ -8,7 +8,7 @@ import { toast } from 'react-toastify';
 
 interface RoleSelectionProps {
   user: AuthUser;
-  onRoleSelected: () => void;
+  onRoleSelected: (role: 'user' | 'creator') => void;
 }
 
 const RoleSelection: React.FC<RoleSelectionProps> = ({ user, onRoleSelected }) => {
@@ -17,6 +17,7 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({ user, onRoleSelected }) =
   const dispatch = useDispatch();
 
   const handleRoleSelection = async (role: 'user' | 'creator') => {
+    setIsLoading(true);
     
     try {
       // Thử cập nhật Firestore trước
@@ -38,11 +39,11 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({ user, onRoleSelected }) =
       // Lưu vào localStorage như backup
       localStorage.setItem(`user_role_${user.uid}`, role);
       
-      // Force một small delay để đảm bảo Redux state được update
-      setTimeout(() => {
-        console.log('Calling onRoleSelected callback');
-        onRoleSelected();
-      }, 100);
+      // Call callback với role để parent có thể navigate
+      toast.success(`Chào mừng bạn với vai trò ${role === 'user' ? 'Người dùng' : 'Người tạo'}!`);
+      
+      // Gọi callback ngay lập tức, không delay
+      onRoleSelected(role);
       
     } catch (error: any) {
       console.error('Error updating user role:', error);
@@ -57,16 +58,14 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({ user, onRoleSelected }) =
       // Lưu vào localStorage 
       localStorage.setItem(`user_role_${user.uid}`, role);
       
-      // Force một small delay để đảm bảo Redux state được update
-      setTimeout(() => {
-        console.log('Calling onRoleSelected callback (fallback)');
-        onRoleSelected();
-      }, 100);
+      // Call callback với role để parent có thể navigate
+      toast.success(`Chào mừng bạn với vai trò ${role === 'user' ? 'Người dùng' : 'Người tạo'}!`);
+      
+      // Gọi callback ngay lập tức, không delay
+      onRoleSelected(role);
       
       // Hiển thị thông báo nhẹ nhàng
-      setTimeout(() => {
-        toast.info('Vai trò đã được chọn. Dữ liệu sẽ được đồng bộ khi kết nối ổn định.');
-      }, 1000);
+      toast.info('Vai trò đã được chọn. Dữ liệu sẽ được đồng bộ khi kết nối ổn định.');
       
     } finally {
       setIsLoading(false);
@@ -164,7 +163,7 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({ user, onRoleSelected }) =
             {isLoading ? (
               <div className="flex items-center justify-center">
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                Đang cập nhật...
+                Đang thiết lập vai trò...
               </div>
             ) : (
               'Xác nhận vai trò'

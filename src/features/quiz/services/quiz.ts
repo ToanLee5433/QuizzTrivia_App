@@ -3,6 +3,44 @@ import { db } from '../../../firebase/config';
 import { Quiz } from '../types';
 import { QUIZZES_COLLECTION } from '../constants';
 
+// Helper function to convert Firestore Timestamps
+const convertTimestamps = (data: any): any => {
+  if (!data || typeof data !== 'object') {
+    return data;
+  }
+
+  // Handle arrays
+  if (Array.isArray(data)) {
+    return data.map(item => convertTimestamps(item));
+  }
+
+  const converted = { ...data };
+  
+  // Convert all fields recursively
+  Object.keys(converted).forEach(key => {
+    const value = converted[key];
+    
+    if (value && typeof value === 'object') {
+      // Check if it's a Firestore Timestamp
+      if (value.toDate && typeof value.toDate === 'function') {
+        // Firestore Timestamp
+        converted[key] = value.toDate().toISOString();
+      } else if (value instanceof Date) {
+        // JavaScript Date
+        converted[key] = value.toISOString();
+      } else if (Array.isArray(value)) {
+        // Recursively handle arrays
+        converted[key] = value.map(item => convertTimestamps(item));
+      } else {
+        // Recursively handle nested objects
+        converted[key] = convertTimestamps(value);
+      }
+    }
+  });
+  
+  return converted;
+};
+
 export const getQuizzes = async (
   filters?: any,
   pageSize?: number
@@ -25,7 +63,7 @@ export const getQuizzes = async (
     const snapshot = await getDocs(q);
     const quizzes = snapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data()
+      ...convertTimestamps(doc.data())
     })) as Quiz[];
 
     return {
@@ -55,9 +93,12 @@ export const getQuizById = async (id: string): Promise<Quiz> => {
       throw new Error('Quiz not found');
     }
     
+    const data = docSnap.data();
+    const convertedData = convertTimestamps(data);
+    
     return {
       id: docSnap.id,
-      ...docSnap.data()
+      ...convertedData
     } as Quiz;
   } catch (error) {
     console.error('Error fetching quiz:', error);

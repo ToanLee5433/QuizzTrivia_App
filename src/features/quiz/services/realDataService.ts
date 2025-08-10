@@ -78,6 +78,31 @@ export const getRealReviewData = async () => {
   }
 };
 
+export const getRealQuizResultsData = async () => {
+  try {
+    console.log('🎯 Fetching real quiz results data from Firebase...');
+    
+    const resultsQuery = query(
+      collection(db, 'quizResults'),
+      orderBy('completedAt', 'desc'),
+      limit(200)
+    );
+    
+    const snapshot = await getDocs(resultsQuery);
+    const results = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    console.log('📊 Found real quiz results:', results.length);
+    
+    return results;
+  } catch (error) {
+    console.error('❌ Error fetching real quiz results data:', error);
+    return [];
+  }
+};
+
 export const getRealCategoryData = async () => {
   try {
     console.log('📂 Fetching real category data from Firebase...');

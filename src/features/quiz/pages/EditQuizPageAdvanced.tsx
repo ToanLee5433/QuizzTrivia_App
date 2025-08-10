@@ -9,6 +9,10 @@ import {
   BookOpen, Target, MessageSquare, AlertCircle,
   FileText, Tag, Star, Clock
 } from 'lucide-react';
+import { db } from '../../../firebase/config';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../lib/store';
 
 // Import categories and difficulties from CreateQuizPage
 const categories = [
@@ -33,6 +37,7 @@ const difficulties = [
 const EditQuizPageAdvanced: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useSelector((state: RootState) => state.auth);
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -44,7 +49,7 @@ const EditQuizPageAdvanced: React.FC = () => {
     description: '',
     category: '',
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
-    status: 'pending' as 'pending' | 'approved' | 'rejected',
+    status: 'pending' as 'pending' | 'approved' | 'rejected' | 'draft',
     timeLimit: 30,
     passingScore: 70,
     tags: [] as string[],
@@ -112,8 +117,34 @@ const EditQuizPageAdvanced: React.FC = () => {
         updatedAt: new Date()
       };
 
+      // ✅ HANDLE RESUBMISSION AFTER EDIT APPROVAL
+      if (quiz.needsReApproval) {
+        // Quiz was edited after admin approval, resubmit for approval
+        updatedQuiz.status = 'pending';
+        updatedQuiz.canEdit = false;
+        updatedQuiz.isApproved = false;
+        updatedQuiz.needsReApproval = false;
+        updatedQuiz.resubmittedAt = new Date();
+        
+        // Create notification for admin about resubmission
+        await addDoc(collection(db, 'notifications'), {
+          userId: 'admin', // Or get actual admin IDs
+          type: 'quiz_resubmitted',
+          title: 'Quiz đã được sửa và nộp lại',
+          message: `Quiz "${updatedQuiz.title}" đã được creator sửa xong và nộp lại để admin duyệt.`,
+          quizId: id,
+          createdBy: user?.uid,
+          createdByName: user?.displayName || user?.email,
+          createdAt: serverTimestamp(),
+          read: false
+        });
+        
+        toast.success('✅ Quiz đã được cập nhật và nộp lại để admin duyệt!');
+      } else {
+        toast.success('✅ Quiz updated successfully!');
+      }
+
       await updateQuiz(id, updatedQuiz);
-      toast.success('✅ Quiz updated successfully!');
       navigate('/admin/stats-test');
     } catch (error) {
       console.error('Error updating quiz:', error);

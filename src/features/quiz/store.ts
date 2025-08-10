@@ -34,14 +34,13 @@ export const fetchQuizById = createAsyncThunk(
   }
 );
 
-export const fetchUserQuizResults = (userId: string) => async (dispatch: any) => {
-  try {
+export const fetchUserQuizResults = createAsyncThunk(
+  'quiz/fetchUserQuizResults',
+  async (userId: string) => {
     const results = await getUserQuizResults(userId);
-    dispatch({ type: 'quiz/setUserResults', payload: results });
-  } catch (e) {
-    // Có thể dispatch lỗi nếu muốn
+    return results;
   }
-};
+);
 
 // Thêm isTimeWarning và totalTime vào QuizState
 interface QuizState {
@@ -86,6 +85,7 @@ const initialState: QuizState = {
   totalTime: 0,
 };
 
+// Fixed Redux store configuration - v2
 const quizSlice = createSlice({
   name: 'quiz',
   initialState,
@@ -236,8 +236,16 @@ const quizSlice = createSlice({
         state.loading = false;
         state.error = action.error.message || 'Lỗi khi tải quiz';
       })
-      .addCase('quiz/setUserResults', (state, action: any) => {
+      .addCase(fetchUserQuizResults.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchUserQuizResults.fulfilled, (state, action) => {
+        state.loading = false;
         state.userResults = action.payload;
+      })
+      .addCase(fetchUserQuizResults.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Lỗi khi tải kết quả quiz';
       });
   },
 });
@@ -252,6 +260,15 @@ export const {
   setFilters,
   updateFilter,
   clearFilters,
+  setUserResults,
+  setUserAnswer,
+  clearUserAnswers,
+  setTimeLeft,
+  setLoading,
+  setError,
+  addQuiz,
+  updateQuiz,
+  removeQuiz,
 } = quizSlice.actions;
 
 export default quizSlice.reducer;

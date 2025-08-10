@@ -52,7 +52,7 @@ export interface Quiz {
   score?: number;
   averageScore?: number;
   totalPlayers?: number;
-  status?: 'pending' | 'approved' | 'rejected'; // Trạng thái kiểm duyệt
+  status?: 'pending' | 'approved' | 'rejected' | 'draft'; // Trạng thái kiểm duyệt
   
   // **ADMIN FEATURES**: Enhanced admin properties
   rating?: number; // Average rating from users
@@ -67,6 +67,12 @@ export interface Quiz {
   archivedAt?: Date;
   views?: number; // Number of views
   completionRate?: number; // Percentage of users who complete the quiz
+  
+  // **EDIT WORKFLOW**: Quiz edit approval workflow
+  canEdit?: boolean; // Whether creator can edit this quiz
+  needsReApproval?: boolean; // Whether quiz needs re-approval after edit
+  isApproved?: boolean; // Quick approval status check
+  resubmittedAt?: Date; // When quiz was resubmitted after edit
 }
 
 export interface QuizResult {

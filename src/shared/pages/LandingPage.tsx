@@ -1,7 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import LanguageSwitcher from '../components/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
 export const LandingPage: React.FC = () => {
+  const { t } = useTranslation();
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900">
       {/* Navigation */}
@@ -12,19 +16,18 @@ export const LandingPage: React.FC = () => {
           </div>
           <span className="text-white text-lg sm:text-xl font-bold">Quiz Trivia</span>
         </div>
-        {/* Đã xoá nút đăng nhập, đăng ký góc phải */}
+        <LanguageSwitcher variant="dark" />
       </nav>
 
       {/* Hero Section */}
       <div className="flex items-center justify-center min-h-[80vh] px-4">
         <div className="text-center text-white max-w-4xl">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-transparent leading-tight">
-            Thử thách kiến thức của bạn
+            {t('landing.hero.title', 'Thử thách kiến thức của bạn')}
           </h1>
           
           <p className="text-lg sm:text-xl text-blue-100 mb-6 sm:mb-8 max-w-2xl mx-auto px-4 leading-relaxed">
-            Khám phá hàng ngàn quiz thú vị, thử thách bản thân và nâng cao kiến thức 
-            với Quiz Trivia - nền tảng quiz tương tác hàng đầu!
+            {t('landing.hero.subtitle', 'Khám phá hàng ngàn quiz thú vị, thử thách bản thân và nâng cao kiến thức với Quiz Trivia - nền tảng quiz tương tác hàng đầu!')}
           </p>
           
           <div className="flex flex-col gap-3 sm:gap-4 justify-center mb-8 sm:mb-12 px-4">
@@ -32,14 +35,14 @@ export const LandingPage: React.FC = () => {
               to="/login"
               className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg transition-all duration-200 transform hover:scale-105 shadow-lg"
             >
-              Bắt đầu ngay - Miễn phí!
+              {t('landing.cta.primary', 'Bắt đầu ngay - Miễn phí!')}
             </Link>
             
             <Link
               to="/login"
               className="border-2 border-white text-white hover:bg-white hover:text-blue-900 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg transition-all duration-200"
             >
-              Đã có tài khoản?
+              {t('landing.cta.secondary', 'Đã có tài khoản?')}
             </Link>
           </div>
 

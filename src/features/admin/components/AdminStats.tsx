@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, 
   PieChart, Pie, Cell, Legend, LineChart, Line, AreaChart, Area 
@@ -12,6 +13,7 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
 const AdminStats: React.FC = () => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [realData, setRealData] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'quizzes' | 'performance'>('overview');
@@ -42,7 +44,7 @@ const AdminStats: React.FC = () => {
       toast.success('Đã tải dữ liệu thực tế từ Firebase!');
     } catch (error) {
       console.error('Error loading real data:', error);
-      toast.error('Lỗi khi tải dữ liệu thực tế');
+      toast.error(t('admin.realDataLoadError', 'Lỗi khi tải dữ liệu thực tế'));
     } finally {
       setLoading(false);
     }
@@ -464,7 +466,7 @@ const AdminStats: React.FC = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Đang tải dữ liệu thực tế...</p>
+          <p className="mt-4 text-gray-600">{t('admin.loadingRealData', 'Đang tải dữ liệu thực tế...')}</p>
         </div>
       </div>
     );

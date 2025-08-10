@@ -17,7 +17,7 @@ const EditQuizPage: React.FC = () => {
     description: '',
     category: '',
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
-    status: 'pending' as 'pending' | 'approved' | 'rejected'
+    status: 'pending' as 'pending' | 'approved' | 'rejected' | 'draft'
   });
 
   useEffect(() => {

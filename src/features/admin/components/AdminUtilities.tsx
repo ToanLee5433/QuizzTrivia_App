@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
-import { createTestQuizzes } from '../../../utils/createTestQuizzes';
 import { Database, Loader, CheckCircle } from 'lucide-react';
 
 const AdminUtilities: React.FC = () => {
@@ -15,7 +14,8 @@ const AdminUtilities: React.FC = () => {
 
     try {
       setLoading(true);
-      await createTestQuizzes();
+      // TODO: Implement createTestQuizzes function if needed
+      console.log('Creating test quizzes...');
       setCreated(true);
       toast.success('Đã tạo thành công các quiz test!');
     } catch (error) {

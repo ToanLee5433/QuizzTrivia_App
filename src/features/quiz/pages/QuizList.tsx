@@ -1,5 +1,6 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { RootState } from '../../../lib/store';
 import QuizCard, { QuizCardSkeleton } from '../components/QuizCard';
 import QuizStats from '../components/QuizStats';
@@ -10,6 +11,7 @@ import { toast } from 'react-toastify';
 
 const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: propQuizzes, title }) => {
   console.log('🎯 QuizList component mounted!');
+  const { t } = useTranslation();
   
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -53,7 +55,7 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
               setRetryCount(prev => prev + 1);
             }, delay);
           } else {
-            toast.error('Không thể kết nối đến server. Vui lòng thử lại sau.');
+            toast.error(t('messages.serverError', 'Không thể kết nối đến server. Vui lòng thử lại sau.'));
           }
         }
       }
@@ -186,7 +188,7 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="🔍 Tìm kiếm quiz, danh mục, tags..."
+                  placeholder={t('quiz.searchPlaceholder', '🔍 Tìm kiếm quiz, danh mục, tags...')}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg p-3 pl-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { RootState } from '../../lib/store';
 import CreateQuizPage from '../../features/quiz/pages/CreateQuizPage';
 import MyQuizzesPage from '../../features/quiz/pages/MyQuizzesPage';
@@ -7,6 +8,7 @@ import { Plus, BookOpen } from 'lucide-react';
 
 const Creator: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'create' | 'my-quizzes'>('my-quizzes');
 
   // Kiểm tra quyền creator
@@ -14,8 +16,8 @@ const Creator: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Cần đăng nhập</h2>
-          <p className="text-gray-600">Bạn cần đăng nhập để truy cập trang Creator</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('auth.loginRequired', 'Cần đăng nhập')}</h2>
+          <p className="text-gray-600">{t('creator.loginMessage', 'Bạn cần đăng nhập để truy cập trang Creator')}</p>
         </div>
       </div>
     );
@@ -25,8 +27,8 @@ const Creator: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Không có quyền truy cập</h2>
-          <p className="text-gray-600">Bạn cần có vai trò Creator hoặc Admin để truy cập trang này</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('messages.unauthorized', 'Không có quyền truy cập')}</h2>
+          <p className="text-gray-600">{t('creator.roleRequired', 'Bạn cần có vai trò Creator hoặc Admin để truy cập trang này')}</p>
         </div>
       </div>
     );
@@ -47,7 +49,7 @@ const Creator: React.FC = () => {
               }`}
             >
               <BookOpen className="w-4 h-4" />
-              <span>Quiz của tôi</span>
+              <span>{t('quiz.myQuizzes', 'Quiz của tôi')}</span>
             </button>
             <button
               onClick={() => setActiveTab('create')}
@@ -58,7 +60,7 @@ const Creator: React.FC = () => {
               }`}
             >
               <Plus className="w-4 h-4" />
-              <span>Tạo Quiz mới</span>
+              <span>{t('creator.createNewQuiz', 'Tạo Quiz mới')}</span>
             </button>
           </div>
         </div>

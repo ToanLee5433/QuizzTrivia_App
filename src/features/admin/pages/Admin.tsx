@@ -240,7 +240,7 @@ const Admin: React.FC = () => {
               to="/admin/quiz-management" 
               className="w-full text-left p-2 md:p-3 hover:bg-gray-50 rounded border block text-sm md:text-base"
             >
-              📝 Duyệt Quiz
+              ◆ Quản lý Quiz
             </Link>
             <Link 
               to="/admin/categories" 

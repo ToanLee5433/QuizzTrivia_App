@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { RootState } from '../../../lib/store';
 import { QuizResult } from '../../quiz/types';
 import { Link } from 'react-router-dom';
@@ -26,6 +27,7 @@ import {
 } from 'lucide-react';
 
 const Profile: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useSelector((state: RootState) => state.auth);
   const userResults = useSelector((state: RootState) => state.quiz.userResults);
   const dispatch = useDispatch();
@@ -94,13 +96,37 @@ const Profile: React.FC = () => {
     
     // Debug: Log actual result data to see what we're working with
     console.log('🔍 Profile Debug - User Results:', userResults);
+    console.log('🔍 Profile Debug - User Results Length:', userResults.length);
     if (userResults.length > 0) {
       console.log('🔍 Sample result data:', {
         sampleResult: userResults[0],
         scoreField: userResults[0]?.score,
         correctAnswers: userResults[0]?.correctAnswers,
-        totalQuestions: userResults[0]?.totalQuestions
+        totalQuestions: userResults[0]?.totalQuestions,
+        allFields: Object.keys(userResults[0])
       });
+      
+      // Debug each result individually
+      userResults.forEach((result, index) => {
+        console.log(`🔍 Result ${index + 1}:`, {
+          id: result.id,
+          score: result.score,
+          correctAnswers: result.correctAnswers,
+          totalQuestions: result.totalQuestions,
+          timeSpent: result.timeSpent,
+          answersLength: result.answers?.length,
+          completedAt: result.completedAt,
+          quizId: result.quizId,
+          resultId: result.id, // This should be the Firestore document ID
+          linkWillBe: `/results/${result.id}` // This is what Profile will link to
+        });
+      });
+    } else {
+      console.warn('⚠️ No user results found! This could mean:');
+      console.warn('   1. User has not completed any quizzes');
+      console.warn('   2. Database query is failing');
+      console.warn('   3. User ID mismatch');
+      console.warn('   4. Firestore permissions issue');
     }
     
     // Calculate comprehensive stats with more accurate scoring
@@ -108,13 +134,15 @@ const Profile: React.FC = () => {
     
     // Calculate scores more accurately - prioritize correctAnswers/totalQuestions
     const accurateScores = userResults.map(r => {
-      if (r.correctAnswers !== undefined && r.totalQuestions !== undefined && r.totalQuestions > 0) {
-        // Calculate percentage from answers (most accurate)
-        return (r.correctAnswers / r.totalQuestions) * 100;
-      } else if (r.score !== undefined && r.score !== null) {
-        // Use provided score, convert if needed
-        return r.score <= 1 ? r.score * 100 : r.score;
+      // Always prioritize correctAnswers/totalQuestions if available
+      if (typeof r.correctAnswers === 'number' && typeof r.totalQuestions === 'number' && r.totalQuestions > 0) {
+        return Math.round((r.correctAnswers / r.totalQuestions) * 100);
+      } 
+      // Fallback to score field if it exists and is valid
+      else if (typeof r.score === 'number' && !isNaN(r.score)) {
+        return r.score <= 1 ? Math.round(r.score * 100) : Math.round(r.score);
       }
+      // Last resort: 0
       return 0;
     });
     
@@ -165,8 +193,8 @@ const Profile: React.FC = () => {
       return true;
     })
     .filter(result => {
-      // Score filter
-      const percentage = (result.correctAnswers / result.totalQuestions) * 100;
+      // Score filter with guard
+      const percentage = result.totalQuestions > 0 ? (result.correctAnswers / result.totalQuestions) * 100 : 0;
       switch (filterByScore) {
         case 'high': return percentage >= 80;
         case 'medium': return percentage >= 60 && percentage < 80;
@@ -183,10 +211,12 @@ const Profile: React.FC = () => {
         case 'score':
           comparison = (a.score || 0) - (b.score || 0);
           break;
-        case 'percentage':
-          const aPercentage = (a.correctAnswers / a.totalQuestions) * 100;
-          const bPercentage = (b.correctAnswers / b.totalQuestions) * 100;
+        case 'percentage': {
+          const aPercentage = a.totalQuestions > 0 ? (a.correctAnswers / a.totalQuestions) * 100 : 0;
+          const bPercentage = b.totalQuestions > 0 ? (b.correctAnswers / b.totalQuestions) * 100 : 0;
           comparison = aPercentage - bPercentage;
+          break;
+        }
           break;
       }
       return sortOrder === 'asc' ? comparison : -comparison;
@@ -206,10 +236,10 @@ const Profile: React.FC = () => {
         displayName: displayName,
         photoURL: avatarUrl
       });
-      toast.success('Cập nhật profile thành công!');
+      toast.success(t('profile.profileUpdateSuccess'));
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error('Có lỗi khi cập nhật profile');
+      toast.error(t('profile.profileUpdateError'));
     } finally {
       setSaving(false);
     }
@@ -217,27 +247,27 @@ const Profile: React.FC = () => {
 
   const handlePasswordUpdate = async () => {
     if (!auth.currentUser || !currentPassword || !newPassword || !confirmPassword) {
-      toast.error('Vui lòng nhập đầy đủ tất cả các trường');
+      toast.error(t('profile.fillAllFields'));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      toast.error('Mật khẩu mới và xác nhận mật khẩu không khớp');
+      toast.error(t('profile.passwordMismatch'));
       return;
     }
 
     if (newPassword.length < 6) {
-      toast.error('Mật khẩu mới phải có ít nhất 6 ký tự');
+      toast.error(t('profile.passwordTooShort'));
       return;
     }
 
     if (newPassword === currentPassword) {
-      toast.error('Mật khẩu mới phải khác mật khẩu hiện tại');
+      toast.error(t('profile.passwordMustDiffer'));
       return;
     }
 
     if (!auth.currentUser.email) {
-      toast.error('Không tìm thấy email người dùng');
+      toast.error(t('profile.emailNotFound'));
       return;
     }
     
@@ -256,17 +286,17 @@ const Profile: React.FC = () => {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      toast.success('Đổi mật khẩu thành công!');
+      toast.success(t('profile.passwordChangeSuccess'));
     } catch (error: any) {
       console.error('Error updating password:', error);
       if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        toast.error('Mật khẩu cũ không đúng');
+        toast.error(t('profile.wrongPassword'));
       } else if (error.code === 'auth/weak-password') {
-        toast.error('Mật khẩu mới quá yếu. Vui lòng chọn mật khẩu mạnh hơn (ít nhất 6 ký tự)');
+        toast.error(t('profile.weakPassword'));
       } else if (error.code === 'auth/requires-recent-login') {
-        toast.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng xuất và đăng nhập lại');
+        toast.error(t('profile.requiresRecentLogin'));
       } else {
-        toast.error('Có lỗi khi đổi mật khẩu: ' + error.message);
+        toast.error(t('profile.passwordChangeError', { message: error.message }));
       }
     } finally {
       setSaving(false);
@@ -300,25 +330,22 @@ const Profile: React.FC = () => {
       rawResult: result
     });
     
-    // Handle different ways score might be calculated with improved logic
+    // Calculate percentage using consistent logic
     let percentage = 0;
     let calculationMethod = 'none';
     
-    // Prioritize correctAnswers/totalQuestions calculation (most accurate)
-    if (result.correctAnswers !== undefined && result.totalQuestions !== undefined && result.totalQuestions > 0) {
+    // Primary: Use correctAnswers/totalQuestions if available
+    if (typeof result.correctAnswers === 'number' && typeof result.totalQuestions === 'number' && result.totalQuestions > 0) {
       percentage = Math.round((result.correctAnswers / result.totalQuestions) * 100);
       calculationMethod = 'answers_calculation';
-    } else if (result.score !== undefined && result.score !== null) {
-      // Use score as fallback, check if it's decimal (0-1) or percentage (0-100)
-      if (result.score <= 1) {
-        percentage = Math.round(result.score * 100);
-        calculationMethod = 'score_decimal';
-      } else {
-        percentage = Math.round(result.score);
-        calculationMethod = 'score_percentage';
-      }
-    } else {
-      // No valid data for calculation
+    } 
+    // Fallback: Use score field
+    else if (typeof result.score === 'number' && !isNaN(result.score)) {
+      percentage = result.score <= 1 ? Math.round(result.score * 100) : Math.round(result.score);
+      calculationMethod = result.score <= 1 ? 'score_decimal' : 'score_percentage';
+    } 
+    // Last resort: 0
+    else {
       console.warn('⚠️ No valid score data found for result:', result.id);
       calculationMethod = 'fallback_zero';
       percentage = 0;
@@ -372,9 +399,9 @@ const Profile: React.FC = () => {
               <RotateCcw className="w-4 h-4" />
             </Link>
             <Link
-              to={`/results/${result.id}`}
+              to={`/quiz-result/${result.id}`}
               className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-              title="Xem kết quả"
+              title="Xem kết quả chi tiết"
             >
               <Eye className="w-4 h-4" />
             </Link>
@@ -388,7 +415,7 @@ const Profile: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600">Vui lòng đăng nhập để xem profile</p>
+          <p className="text-gray-600">{t('profile.loginRequired')}</p>
         </div>
       </div>
     );

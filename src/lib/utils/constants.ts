@@ -77,24 +77,24 @@ export const VALIDATION = {
   MIN_ANSWERS_PER_QUESTION: 2,
 } as const;
 
-// Error Messages
+// Error Messages - These should be replaced with i18n keys in components
 export const ERROR_MESSAGES = {
-  NETWORK_ERROR: 'Lỗi kết nối mạng',
-  UNAUTHORIZED: 'Bạn không có quyền truy cập',
-  QUIZ_NOT_FOUND: 'Không tìm thấy quiz',
-  INVALID_CREDENTIALS: 'Thông tin đăng nhập không chính xác',
-  EMAIL_ALREADY_EXISTS: 'Email đã được sử dụng',
-  WEAK_PASSWORD: 'Mật khẩu quá yếu',
+  NETWORK_ERROR: 'messages.networkError',
+  UNAUTHORIZED: 'messages.unauthorized',
+  QUIZ_NOT_FOUND: 'messages.notFound',
+  INVALID_CREDENTIALS: 'auth.errors.invalidCredential',
+  EMAIL_ALREADY_EXISTS: 'auth.errors.emailExists',
+  WEAK_PASSWORD: 'auth.errors.weakPassword',
 } as const;
 
-// Success Messages
+// Success Messages - These should be replaced with i18n keys in components
 export const SUCCESS_MESSAGES = {
-  QUIZ_CREATED: 'Tạo quiz thành công',
-  QUIZ_UPDATED: 'Cập nhật quiz thành công',
-  QUIZ_DELETED: 'Xóa quiz thành công',
-  PROFILE_UPDATED: 'Cập nhật profile thành công',
-  LOGIN_SUCCESS: 'Đăng nhập thành công',
-  REGISTER_SUCCESS: 'Đăng ký thành công',
+  QUIZ_CREATED: 'quiz.createSuccess',
+  QUIZ_UPDATED: 'quiz.updateSuccess',
+  QUIZ_DELETED: 'quiz.deleteSuccess',
+  PROFILE_UPDATED: 'profile.profileUpdateSuccess',
+  LOGIN_SUCCESS: 'auth.loginSuccess',
+  REGISTER_SUCCESS: 'auth.registerSuccess',
 } as const;
 
 // Animation Durations (in milliseconds)

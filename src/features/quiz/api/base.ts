@@ -18,25 +18,38 @@ const QUIZZES_COLLECTION = 'quizzes';
 const QUIZ_RESULTS_COLLECTION = 'quizResults';
 
 /**
- * Convert Firestore Timestamp fields to ISO strings
+ * Convert Firestore Timestamp fields to ISO strings (recursive)
  */
 const convertTimestamps = (data: any): any => {
+  if (!data || typeof data !== 'object') {
+    return data;
+  }
+
+  // Handle arrays
+  if (Array.isArray(data)) {
+    return data.map(item => convertTimestamps(item));
+  }
+
   const converted = { ...data };
   
-  // Convert common timestamp fields
-  const timestampFields = ['createdAt', 'updatedAt', 'submittedAt', 'completedAt', 'approvedAt'];
-  
-  timestampFields.forEach(field => {
-    if (converted[field]) {
-      if (converted[field]?.toDate) {
+  // Convert all fields recursively
+  Object.keys(converted).forEach(key => {
+    const value = converted[key];
+    
+    if (value && typeof value === 'object') {
+      // Check if it's a Firestore Timestamp
+      if (value.toDate && typeof value.toDate === 'function') {
         // Firestore Timestamp
-        converted[field] = converted[field].toDate().toISOString();
-      } else if (converted[field] instanceof Date) {
+        converted[key] = value.toDate().toISOString();
+      } else if (value instanceof Date) {
         // JavaScript Date
-        converted[field] = converted[field].toISOString();
-      } else if (typeof converted[field] !== 'string') {
-        // Other types, convert to empty string
-        converted[field] = '';
+        converted[key] = value.toISOString();
+      } else if (Array.isArray(value)) {
+        // Recursively handle arrays
+        converted[key] = value.map(item => convertTimestamps(item));
+      } else {
+        // Recursively handle nested objects
+        converted[key] = convertTimestamps(value);
       }
     }
   });
@@ -122,21 +135,65 @@ export const getQuizById = async (quizId: string): Promise<Quiz | null> => {
  * Submit quiz result
  */
 export const submitQuizResult = async (result: Omit<QuizResult, 'id'>): Promise<string> => {
-  // Validate dữ liệu trước khi gửi lên Firestore
-  if (!result.userId || !result.quizId || typeof result.score !== 'number' || !Array.isArray(result.answers) || !result.completedAt) {
-    console.error('❌ [submitQuizResult] Thiếu trường bắt buộc:', result);
-    throw new Error('Thiếu trường bắt buộc khi lưu kết quả quiz');
+  console.log('🔍 [submitQuizResult] Input data:', result);
+  
+  // Enhanced validation for all required fields
+  const requiredFields = ['userId', 'quizId', 'score', 'correctAnswers', 'totalQuestions', 'answers', 'completedAt'];
+  const missingFields = requiredFields.filter(field => {
+    const value = (result as any)[field];
+    if (field === 'answers') return !Array.isArray(value);
+    if (field === 'completedAt') return !value;
+    if (['score', 'correctAnswers', 'totalQuestions'].includes(field)) {
+      return typeof value !== 'number' || isNaN(value);
+    }
+    return !value;
+  });
+
+  if (missingFields.length > 0) {
+    console.error('❌ [submitQuizResult] Missing required fields:', missingFields, result);
+    throw new Error(`Thiếu trường bắt buộc: ${missingFields.join(', ')}`);
   }
-  if (isNaN(result.score) || result.score < 0 || result.score > 100) {
-    console.error('❌ [submitQuizResult] Điểm số không hợp lệ:', result.score);
-    throw new Error('Điểm số không hợp lệ');
+
+  // Validate score range
+  if (result.score < 0 || result.score > 100) {
+    console.error('❌ [submitQuizResult] Invalid score range:', result.score);
+    throw new Error('Điểm số phải trong khoảng 0-100');
   }
+
+  // Validate correctAnswers vs totalQuestions
+  if (result.correctAnswers > result.totalQuestions) {
+    console.error('❌ [submitQuizResult] correctAnswers > totalQuestions:', { 
+      correctAnswers: result.correctAnswers, 
+      totalQuestions: result.totalQuestions 
+    });
+    throw new Error('Số câu đúng không thể lớn hơn tổng số câu');
+  }
+
+  // Validate answers array has isCorrect field
+  const answersWithoutCorrect = result.answers.filter(a => typeof a.isCorrect !== 'boolean');
+  if (answersWithoutCorrect.length > 0) {
+    console.warn('⚠️ [submitQuizResult] Some answers missing isCorrect field:', answersWithoutCorrect.length);
+  }
+  
+  console.log('✅ [submitQuizResult] All validations passed, saving to Firestore...');
+  console.log('📊 [submitQuizResult] Final data to save:', {
+    userId: result.userId,
+    quizId: result.quizId,
+    score: result.score,
+    correctAnswers: result.correctAnswers,
+    totalQuestions: result.totalQuestions,
+    answersCount: result.answers.length,
+    answersWithCorrect: result.answers.filter(a => a.isCorrect).length
+  });
+  
   try {
     const docRef = await addDoc(collection(db, QUIZ_RESULTS_COLLECTION), result);
+    console.log('✅ [submitQuizResult] Successfully saved with ID:', docRef.id);
     toast.success('Nộp bài thành công!');
     return docRef.id;
   } catch (error) {
-    console.error('Error submitting quiz result:', error, result);
+    console.error('❌ [submitQuizResult] Firestore error:', error);
+    console.error('❌ [submitQuizResult] Data that failed to save:', result);
     toast.error('Không thể lưu kết quả quiz');
     throw new Error('Không thể lưu kết quả quiz');
   }
@@ -197,14 +254,38 @@ export const getQuizResults = async (quizId: string): Promise<QuizResult[]> => {
  * Get quiz result by ID
  */
 export async function getQuizResultById(attemptId: string) {
-  const docRef = doc(db, 'quizResults', attemptId);
-  const docSnap = await getDoc(docRef);
-  if (docSnap.exists()) {
-    const data = docSnap.data();
-    const convertedData = convertTimestamps(data);
-    return { id: docSnap.id, ...convertedData };
+  console.log('🔍 [getQuizResultById] Fetching result for ID:', attemptId);
+  
+  try {
+    const docRef = doc(db, QUIZ_RESULTS_COLLECTION, attemptId);
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      console.log('✅ [getQuizResultById] Raw Firestore data:', data);
+      
+      const convertedData = convertTimestamps(data);
+      const result = { id: docSnap.id, ...convertedData };
+      
+      console.log('✅ [getQuizResultById] Converted data:', result);
+      console.log('📊 [getQuizResultById] Key fields:', {
+        score: result.score,
+        correctAnswers: result.correctAnswers,
+        totalQuestions: result.totalQuestions,
+        answersCount: result.answers?.length,
+        userId: result.userId,
+        quizId: result.quizId
+      });
+      
+      return result;
+    } else {
+      console.warn('❌ [getQuizResultById] No document found for ID:', attemptId);
+      return null;
+    }
+  } catch (error) {
+    console.error('❌ [getQuizResultById] Error fetching document:', error);
+    throw error;
   }
-  return null;
 }
 
 // Export collection names for other modules

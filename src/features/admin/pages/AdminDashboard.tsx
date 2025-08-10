@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { RootState } from '../../../lib/store';
 import { logout } from '../../auth/store';
 import { signOut } from 'firebase/auth';
@@ -23,7 +24,7 @@ interface User {
   id: string;
   email: string;
   displayName: string;
-  role: 'user' | 'admin';
+  role: 'user' | 'admin' | 'creator';
   createdAt: any;
   isActive: boolean;
 }
@@ -33,7 +34,7 @@ interface Quiz {
   title: string;
   description: string;
   createdBy: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'draft' | 'published';
   createdAt: any;
   category: string;
 }
@@ -46,6 +47,7 @@ interface Category {
 }
 
 const AdminDashboard: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
   
@@ -57,29 +59,56 @@ const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({
     totalUsers: 0,
-    pendingQuizzes: 0,
-    approvedQuizzes: 0,
-    totalCategories: 0
+    totalQuizzes: 0,
+    completedQuizzes: 0,
+    totalCreators: 0
   });
 
   // Function to calculate and update stats from actual data
-  const updateStatsFromData = (users: User[], quizzes: Quiz[], categories: Category[]) => {
-    const pending = quizzes.filter(q => q.status === 'pending').length;
+  const updateStatsFromData = (users: User[], quizzes: Quiz[]) => {
+    // Filter users to get real user count (exclude admins if needed)
+    const realUsers = users.filter(u => u.role !== 'admin' && u.isActive !== false);
+    
+    // Count quizzes that are approved and published (completed)
     const approved = quizzes.filter(q => q.status === 'approved').length;
+    const published = quizzes.filter(q => q.status === 'approved' || q.status === 'published').length;
     
-    setStats({
-      totalUsers: users.length,
-      pendingQuizzes: pending,
+    // Calculate creators (users who have created quizzes or have creator role)
+    const creatorIds = new Set(quizzes.map(q => q.createdBy));
+    const roleCreators = users.filter(u => u.role === 'creator').length;
+    const activeCreators = Math.max(creatorIds.size, roleCreators);
+    
+    // Total quizzes available to users
+    const totalQuizzes = quizzes.length;
+    
+    const newStats = {
+      totalUsers: realUsers.length,
+      totalQuizzes: totalQuizzes,
+      completedQuizzes: published > 0 ? published : approved, // Quizzes ready for users
+      totalCreators: activeCreators
+    };
+    
+    setStats(newStats);
+    
+    console.log('📊 DETAILED Stats calculation:', {
+      totalUsersInDB: users.length,
+      realUsers: realUsers.length,
+      adminUsers: users.filter(u => u.role === 'admin').length,
+      inactiveUsers: users.filter(u => u.isActive === false).length,
+      totalQuizzesInDB: quizzes.length,
       approvedQuizzes: approved,
-      totalCategories: categories.length
+      publishedQuizzes: published,
+      activeCreators: activeCreators,
+      finalStats: newStats
     });
     
-    console.log('📊 Stats updated:', {
-      totalUsers: users.length,
-      pendingQuizzes: pending,
-      approvedQuizzes: approved,
-      totalCategories: categories.length
-    });
+    // Also log quiz statuses for debugging
+    console.log('🔍 Quiz status breakdown:', 
+      quizzes.reduce((acc, q) => {
+        acc[q.status || 'unknown'] = (acc[q.status || 'unknown'] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>)
+    );
   };
 
   // New category form
@@ -173,13 +202,13 @@ const AdminDashboard: React.FC = () => {
       setCategories(categoriesData);
       
       // Update stats from actual data
-      updateStatsFromData(usersData, quizzesData, categoriesData);
+      updateStatsFromData(usersData, quizzesData);
       
       setLastUpdate(new Date());
       console.log('Data refreshed at:', new Date().toLocaleTimeString());
     } catch (error) {
       console.error('Error loading data:', error);
-      toast.error('Có lỗi khi tải dữ liệu!');
+      toast.error(t('admin.dataLoadError'));
     } finally {
       setLoading(false);
     }
@@ -201,10 +230,10 @@ const AdminDashboard: React.FC = () => {
     try {
       await updateDoc(doc(db, 'users', userId), { role: newRole });
       await loadData();
-      toast.success('Đã cập nhật role thành công!');
+      toast.success(t('admin.roleUpdateSuccess'));
     } catch (error) {
       console.error('Error updating user role:', error);
-      toast.error('Có lỗi xảy ra khi cập nhật role!');
+      toast.error(t('admin.roleUpdateError'));
     }
   };
 
@@ -213,10 +242,10 @@ const AdminDashboard: React.FC = () => {
     try {
       await updateDoc(doc(db, 'users', userId), { isActive: !currentStatus });
       await loadData();
-      toast.success(`Đã ${!currentStatus ? 'kích hoạt' : 'vô hiệu hóa'} tài khoản!`);
+      toast.success(t('admin.userStatusUpdateSuccess', { action: !currentStatus ? t('admin.activated') : t('admin.deactivated') }));
     } catch (error) {
       console.error('Error updating user status:', error);
-      toast.error('Có lỗi xảy ra khi cập nhật trạng thái!');
+      toast.error(t('admin.statusUpdateError'));
     } finally {
       setLoading(false);
     }
@@ -227,10 +256,10 @@ const AdminDashboard: React.FC = () => {
     try {
       await deleteDoc(doc(db, 'users', userId));
       await loadData();
-      toast.success('Đã xóa người dùng thành công!');
+      toast.success(t('admin.userDeleteSuccess'));
     } catch (error) {
       console.error('Error deleting user:', error);
-      toast.error('Có lỗi xảy ra khi xóa người dùng!');
+      toast.error(t('admin.userDeleteError'));
     } finally {
       setLoading(false);
     }

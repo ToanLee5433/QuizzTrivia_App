@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { RootState } from '../../lib/store';
-import { collection, addDoc, getDocs, query, where, orderBy } from 'firebase/firestore';
-import { db } from '../../lib/firebase/config';
+import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 import { toast } from 'react-toastify';
 
 interface QuizReview {
@@ -26,6 +27,7 @@ const QuizReviewSystem: React.FC<QuizReviewSystemProps> = ({
   quizTitle = 'Quiz này',
   showSubmitForm = true 
 }) => {
+  const { t } = useTranslation();
   const user = useSelector((state: RootState) => state.auth.user);
   const [reviews, setReviews] = useState<QuizReview[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,90 +36,65 @@ const QuizReviewSystem: React.FC<QuizReviewSystemProps> = ({
   const [userComment, setUserComment] = useState('');
   const [hasUserReviewed, setHasUserReviewed] = useState(false);
 
+  // Load reviews function
+  const loadReviews = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      // Simplified query without orderBy to avoid index issues
+      const reviewsQuery = query(
+        collection(db, 'quizReviews'),
+        where('quizId', '==', quizId)
+      );
+      
+      const querySnapshot = await getDocs(reviewsQuery);
+      const reviewsData: QuizReview[] = [];
+      
+      querySnapshot.forEach(doc => {
+        const data = doc.data();
+        reviewsData.push({
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate() || new Date()
+        } as QuizReview);
+      });
+      
+      // Sort in memory instead of in Firestore
+      reviewsData.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      
+      setReviews(reviewsData);
+      
+      // Check if user has already reviewed
+      if (user) {
+        const userReview = reviewsData.find(r => r.userId === user.uid);
+        setHasUserReviewed(!!userReview);
+      }
+    } catch (error) {
+      console.error('Error loading reviews:', error);
+      setReviews([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [quizId, user]);
+
   // Load existing reviews
   useEffect(() => {
-    const loadReviews = async () => {
-      try {
-        setLoading(true);
-        const reviewsQuery = query(
-          collection(db, 'quizReviews'),
-          where('quizId', '==', quizId),
-          orderBy('createdAt', 'desc')
-        );
-        
-        const querySnapshot = await getDocs(reviewsQuery);
-        const reviewsData: QuizReview[] = [];
-        
-        querySnapshot.forEach(doc => {
-          const data = doc.data();
-          reviewsData.push({
-            id: doc.id,
-            ...data,
-            createdAt: data.createdAt?.toDate() || new Date()
-          } as QuizReview);
-        });
-        
-        setReviews(reviewsData);
-        
-        // Check if user has already reviewed
-        if (user) {
-          const userReview = reviewsData.find(r => r.userId === user.uid);
-          setHasUserReviewed(!!userReview);
-        }
-      } catch (error) {
-        console.error('Error loading reviews:', error);
-        // Mock reviews for demo
-        const mockReviews: QuizReview[] = [
-          {
-            id: '1',
-            quizId,
-            userId: 'user1',
-            userName: 'Nguyễn Văn A',
-            rating: 5,
-            comment: 'Quiz rất hay và bổ ích! Câu hỏi được thiết kế tốt.',
-            createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
-          },
-          {
-            id: '2',
-            quizId,
-            userId: 'user2',
-            userName: 'Trần Thị B',
-            rating: 4,
-            comment: 'Nội dung tốt nhưng có vài câu hơi khó.',
-            createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
-          },
-          {
-            id: '3',
-            quizId,
-            userId: 'user3',
-            userName: 'Lê Văn C',
-            rating: 5,
-            comment: 'Tuyệt vời! Học được nhiều kiến thức mới.',
-            createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-          }
-        ];
-        setReviews(mockReviews);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadReviews();
-  }, [quizId, user]);
+  }, [loadReviews]);
 
   const handleSubmitReview = async () => {
     if (!user) {
-      toast.error('Bạn cần đăng nhập để đánh giá quiz');
+      toast.error(t('quiz.reviews.loginRequired'));
       return;
     }
 
     if (userRating === 0) {
-      toast.error('Vui lòng chọn số sao đánh giá');
+      toast.error(t('quiz.reviews.ratingRequired'));
       return;
     }
 
     if (userComment.trim().length < 10) {
-      toast.error('Nhận xét cần ít nhất 10 ký tự');
+      toast.error(t('quiz.reviews.commentTooShort'));
       return;
     }
 
@@ -133,18 +110,18 @@ const QuizReviewSystem: React.FC<QuizReviewSystemProps> = ({
         createdAt: new Date()
       };
 
-      await addDoc(collection(db, 'quizReviews'), newReview);
+      const docRef = await addDoc(collection(db, 'quizReviews'), newReview);
       
       // Add to local state
-      setReviews(prev => [{ ...newReview, id: Date.now().toString() }, ...prev]);
+      setReviews(prev => [{ ...newReview, id: docRef.id }, ...prev]);
       setHasUserReviewed(true);
       setUserRating(0);
       setUserComment('');
       
-      toast.success('Cảm ơn bạn đã đánh giá quiz!');
+      toast.success(t('quiz.reviews.submitSuccess'));
     } catch (error) {
       console.error('Error submitting review:', error);
-      toast.error('Có lỗi xảy ra khi gửi đánh giá');
+      toast.error(t('quiz.reviews.submitError'));
     } finally {
       setSubmitting(false);
     }
@@ -181,14 +158,14 @@ const QuizReviewSystem: React.FC<QuizReviewSystemProps> = ({
   return (
     <div className="bg-white rounded-2xl shadow-xl p-8">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-2xl font-bold text-gray-900">💬 Đánh giá Quiz</h3>
+        <h3 className="text-2xl font-bold text-gray-900">💬 {t('quiz.reviews.title')}</h3>
         <div className="flex items-center space-x-2">
           <StarRating rating={Math.round(averageRating)} readonly />
           <span className="text-lg font-semibold text-gray-700">
             {averageRating.toFixed(1)}
           </span>
           <span className="text-sm text-gray-500">
-            ({reviews.length} đánh giá)
+            ({reviews.length} {t('quiz.reviews.reviewsCount')})
           </span>
         </div>
       </div>
@@ -197,12 +174,12 @@ const QuizReviewSystem: React.FC<QuizReviewSystemProps> = ({
       {showSubmitForm && user && !hasUserReviewed && (
         <div className="mb-8 p-6 bg-blue-50 rounded-xl border border-blue-200">
           <h4 className="text-lg font-semibold text-gray-900 mb-4">
-            Đánh giá {quizTitle}
+            {t('quiz.reviews.reviewQuiz', { quizTitle })}
           </h4>
           
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Đánh giá của bạn:
+              {t('quiz.reviews.yourRating')}:
             </label>
             <StarRating 
               rating={userRating} 
@@ -212,12 +189,12 @@ const QuizReviewSystem: React.FC<QuizReviewSystemProps> = ({
           
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nhận xét:
+              {t('quiz.reviews.comment')}:
             </label>
             <textarea
               value={userComment}
               onChange={(e) => setUserComment(e.target.value)}
-              placeholder="Chia sẻ cảm nhận của bạn về quiz này..."
+              placeholder={t('quiz.reviews.commentPlaceholder')}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               rows={4}
               maxLength={500}
@@ -232,7 +209,7 @@ const QuizReviewSystem: React.FC<QuizReviewSystemProps> = ({
             disabled={submitting || userRating === 0}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
           >
-            {submitting ? '⏳ Đang gửi...' : '📤 Gửi đánh giá'}
+            {submitting ? `⏳ ${t('quiz.reviews.submitting')}` : `📤 ${t('quiz.reviews.submitReview')}`}
           </button>
         </div>
       )}
@@ -241,7 +218,7 @@ const QuizReviewSystem: React.FC<QuizReviewSystemProps> = ({
       {hasUserReviewed && (
         <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
           <p className="text-green-800 font-medium">
-            ✅ Bạn đã đánh giá quiz này. Cảm ơn phản hồi của bạn!
+            ✅ {t('quiz.reviews.alreadyReviewed')}
           </p>
         </div>
       )}
@@ -255,8 +232,8 @@ const QuizReviewSystem: React.FC<QuizReviewSystemProps> = ({
         ) : reviews.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <div className="text-4xl mb-2">💬</div>
-            <p>Chưa có đánh giá nào</p>
-            <p className="text-sm">Hãy là người đầu tiên đánh giá quiz này!</p>
+            <p>{t('quiz.reviews.noReviews')}</p>
+            <p className="text-sm">{t('quiz.reviews.beFirst')}</p>
           </div>
         ) : (
           reviews.map(review => (

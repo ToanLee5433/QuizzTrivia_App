@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../lib/store';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -14,6 +15,7 @@ import QuestionsStep from './components/QuestionsStep';
 import ReviewStep from './components/ReviewStep';
 
 const CreateQuizPage: React.FC = () => {
+  const { t } = useTranslation();
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const [quiz, setQuiz] = useState<QuizFormData>(defaultQuiz);
   const [step, setStep] = useState(0);
@@ -24,8 +26,8 @@ const CreateQuizPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Cần đăng nhập</h2>
-          <p className="text-gray-600">Bạn cần đăng nhập để tạo quiz</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('auth.loginRequired')}</h2>
+          <p className="text-gray-600">{t('createQuiz.loginRequired')}</p>
         </div>
       </div>
     );
@@ -35,8 +37,8 @@ const CreateQuizPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Không có quyền truy cập</h2>
-          <p className="text-gray-600">Bạn cần có vai trò Creator hoặc Admin để tạo quiz</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('messages.unauthorized')}</h2>
+          <p className="text-gray-600">{t('creator.roleRequired')}</p>
         </div>
       </div>
     );
@@ -126,12 +128,12 @@ const CreateQuizPage: React.FC = () => {
   // Submit quiz
   const handleSubmit = async () => {
     if (!currentUser) {
-      toast.error('Bạn cần đăng nhập để tạo quiz');
+      toast.error(t('createQuiz.loginRequired'));
       return;
     }
 
     if (!validateStep(1)) {
-      toast.error('Vui lòng hoàn thành tất cả thông tin quiz');
+      toast.error(t('createQuiz.completeAllInfo'));
       return;
     }
 
@@ -147,12 +149,12 @@ const CreateQuizPage: React.FC = () => {
         status: 'pending', // Đặt trạng thái chờ duyệt
       });
 
-      toast.success('Tạo quiz thành công! Quiz đang chờ admin duyệt.');
+      toast.success(t('createQuiz.createSuccess'));
       setQuiz(defaultQuiz);
       setStep(0);
     } catch (error) {
       console.error('Error creating quiz:', error);
-      toast.error('Có lỗi xảy ra khi tạo quiz');
+      toast.error(t('createQuiz.createError'));
     } finally {
       setSubmitting(false);
     }
@@ -162,7 +164,7 @@ const CreateQuizPage: React.FC = () => {
     if (validateStep(step)) {
       setStep(prev => Math.min(prev + 1, steps.length - 1));
     } else {
-      toast.error('Vui lòng hoàn thành thông tin trước khi tiếp tục');
+      toast.error(t('createQuiz.completeInfoFirst'));
     }
   };
 
@@ -175,11 +177,11 @@ const CreateQuizPage: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Tạo Quiz Mới</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('createQuiz.title')}</h1>
           
           {/* Progress Steps */}
           <div className="flex items-center justify-between mb-6">
-            {steps.map((stepName, idx) => (
+            {steps.map((_, idx) => (
               <div key={idx} className="flex items-center">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                   idx <= step ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'
@@ -189,7 +191,7 @@ const CreateQuizPage: React.FC = () => {
                 <span className={`ml-2 text-sm ${
                   idx <= step ? 'text-blue-600 font-medium' : 'text-gray-500'
                 }`}>
-                  {stepName}
+                  {t(`createQuiz.steps.${idx === 0 ? 'info' : idx === 1 ? 'questions' : 'review'}`)}
                 </span>
                 {idx < steps.length - 1 && (
                   <div className={`w-16 h-0.5 mx-4 ${
@@ -224,7 +226,7 @@ const CreateQuizPage: React.FC = () => {
               disabled={step === 0}
               variant="outline"
             >
-              ← Quay lại
+              ← {t('createQuiz.back')}
             </Button>
 
             <div className="flex gap-3">
@@ -235,14 +237,14 @@ const CreateQuizPage: React.FC = () => {
                   loading={submitting}
                   className="bg-green-600 hover:bg-green-700"
                 >
-                  🚀 Xuất bản Quiz
+                  🚀 {t('createQuiz.publish')}
                 </Button>
               ) : (
                 <Button
                   onClick={nextStep}
                   disabled={!validateStep(step)}
                 >
-                  Tiếp tục →
+                  {t('createQuiz.continue')} →
                 </Button>
               )}
             </div>

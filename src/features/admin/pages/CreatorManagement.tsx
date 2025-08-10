@@ -163,16 +163,14 @@ const CreatorManagement: React.FC = () => {
       console.log('Loaded creators:', loadedCreators.length);
       setCreators(loadedCreators);
       
+      // Show empty state if no real creators found
       if (loadedCreators.length === 0) {
-        console.log('No real creators found, loading mock data');
-        setCreators(getMockCreators());
+        console.log('No real creators found');
       }
     } catch (error) {
       console.error('Error loading creators:', error);
-      toast.error('Không thể tải danh sách creator, hiển thị dữ liệu mẫu');
-      
-      // Load mock data if Firebase fails
-      setCreators(getMockCreators());
+      toast.error('Không thể tải danh sách creator');
+      setCreators([]);
     } finally {
       setLoading(false);
     }
@@ -190,66 +188,6 @@ const CreatorManagement: React.FC = () => {
       return [];
     }
   };
-
-  const getMockCreators = (): Creator[] => [
-    {
-      id: '1',
-      displayName: 'Nguyễn Văn A',
-      email: 'nguyenvana@example.com',
-      role: 'creator',
-      isActive: true,
-      createdAt: new Date('2024-01-15'),
-      lastLoginAt: new Date('2024-12-01'),
-      quizCount: 15,
-      totalPlays: 342,
-      avgRating: 4.6,
-      status: 'active',
-      permissions: {
-        canCreateQuiz: true,
-        canEditOwnQuiz: true,
-        canDeleteOwnQuiz: true,
-        canViewAnalytics: true
-      }
-    },
-    {
-      id: '2',
-      displayName: 'Trần Thị B',
-      email: 'tranthib@example.com',
-      role: 'creator',
-      isActive: true,
-      createdAt: new Date('2024-02-20'),
-      lastLoginAt: new Date('2024-11-28'),
-      quizCount: 8,
-      totalPlays: 156,
-      avgRating: 4.3,
-      status: 'active',
-      permissions: {
-        canCreateQuiz: true,
-        canEditOwnQuiz: true,
-        canDeleteOwnQuiz: false,
-        canViewAnalytics: true
-      }
-    },
-    {
-      id: '3',
-      displayName: 'Lê Văn C',
-      email: 'levanc@example.com',
-      role: 'creator',
-      isActive: false,
-      createdAt: new Date('2024-03-10'),
-      lastLoginAt: new Date('2024-10-15'),
-      quizCount: 3,
-      totalPlays: 45,
-      avgRating: 3.8,
-      status: 'suspended',
-      permissions: {
-        canCreateQuiz: false,
-        canEditOwnQuiz: true,
-        canDeleteOwnQuiz: false,
-        canViewAnalytics: false
-      }
-    }
-  ];
 
   const loadStats = async () => {
     try {
@@ -279,14 +217,14 @@ const CreatorManagement: React.FC = () => {
       });
     } catch (error) {
       console.error('Error loading stats:', error);
-      // Mock stats
+      // Set empty stats on error
       setStats({
-        totalCreators: 26,
-        activeCreators: 22,
-        suspendedCreators: 3,
-        bannedCreators: 1,
-        totalQuizzes: 156,
-        thisMonth: 23
+        totalCreators: 0,
+        activeCreators: 0,
+        suspendedCreators: 0,
+        bannedCreators: 0,
+        totalQuizzes: 0,
+        thisMonth: 0
       });
     }
   };

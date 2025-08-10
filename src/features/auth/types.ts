@@ -6,6 +6,7 @@ export interface AuthUser {
   emailVerified: boolean;
   role?: 'admin' | 'creator' | 'user';
   needsRoleSelection?: boolean;
+  createdAt?: string; // Sử dụng string ISO format thay vì Date object
 }
 
 export interface LoginCredentials {

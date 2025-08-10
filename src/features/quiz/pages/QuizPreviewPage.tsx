@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Clock, Star, Play, Eye, BookOpen, Target } from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
@@ -11,6 +12,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
 
 const QuizPreviewPage: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
@@ -54,7 +56,7 @@ const QuizPreviewPage: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Đang tải quiz...</p>
+          <p className="mt-4 text-gray-600">{t('quiz.loading')}</p>
         </div>
       </div>
     );
@@ -65,9 +67,9 @@ const QuizPreviewPage: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Quiz không tồn tại</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('quiz.notFound')}</h2>
           <Link to="/quizzes" className="text-blue-600 hover:underline">
-            Về danh sách quiz
+            {t('quiz.backToQuizList')}
           </Link>
         </div>
       </div>
@@ -105,11 +107,11 @@ const QuizPreviewPage: React.FC = () => {
               <div className="flex flex-wrap gap-4 mb-6">
                 <div className="flex items-center space-x-2">
                   <BookOpen className="w-5 h-5" />
-                  <span>{quiz.questions.length} câu hỏi</span>
+                  <span>{t('quiz.questionsCount', { count: quiz.questions.length })}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Clock className="w-5 h-5" />
-                  <span>{(quiz as any).timeLimit ? `${(quiz as any).timeLimit / 60} phút` : 'Không giới hạn'}</span>
+                  <span>{(quiz as any).timeLimit ? t('quiz.timeLimit', { time: (quiz as any).timeLimit / 60 }) : t('quiz.noTimeLimit')}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Target className="w-5 h-5" />
@@ -138,7 +140,7 @@ const QuizPreviewPage: React.FC = () => {
                     {reviewStats.averageRating.toFixed(1)}
                   </span>
                   <span className="text-blue-200">
-                    ({reviewStats.totalReviews} đánh giá)
+                    ({t('quiz.ratingCount', { count: reviewStats.totalReviews })})
                   </span>
                 </div>
               )}
@@ -149,7 +151,7 @@ const QuizPreviewPage: React.FC = () => {
                   className="inline-flex items-center px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors shadow-md"
                 >
                   <Play className="w-5 h-5 mr-2" />
-                  Bắt đầu Quiz
+                  {t('quiz.startQuizButton')}
                 </Link>
                 
                 <Link
@@ -157,7 +159,7 @@ const QuizPreviewPage: React.FC = () => {
                   className="inline-flex items-center px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-400 transition-colors border border-blue-400"
                 >
                   <Eye className="w-5 h-5 mr-2" />
-                  Xem đánh giá
+                  {t('quiz.viewReviews')}
                 </Link>
               </div>
             </div>
@@ -170,13 +172,13 @@ const QuizPreviewPage: React.FC = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* Quiz Info */}
             <div className="bg-white rounded-xl shadow-sm p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Thông tin chi tiết</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-4">{t('quiz.detailedInfo')}</h2>
               
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <div className="flex items-center space-x-2 mb-2">
                     <BookOpen className="w-5 h-5 text-blue-600" />
-                    <span className="font-semibold text-gray-900">Số câu hỏi</span>
+                    <span className="font-semibold text-gray-900">{t('quiz.questions')}</span>
                   </div>
                   <p className="text-2xl font-bold text-blue-600">{quiz.questions.length}</p>
                 </div>
@@ -184,7 +186,7 @@ const QuizPreviewPage: React.FC = () => {
                 <div className="bg-purple-50 p-4 rounded-lg">
                   <div className="flex items-center space-x-2 mb-2">
                     <Clock className="w-5 h-5 text-purple-600" />
-                    <span className="font-semibold text-gray-900">Thời gian</span>
+                    <span className="font-semibold text-gray-900">{t('quiz.duration')}</span>
                   </div>
                   <p className="text-2xl font-bold text-purple-600">
                     {(quiz as any).timeLimit ? `${(quiz as any).timeLimit / 60}'` : '∞'}
@@ -195,7 +197,7 @@ const QuizPreviewPage: React.FC = () => {
               {/* Tags */}
               {quiz.tags && quiz.tags.length > 0 && (
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Chủ đề</h3>
+                  <h3 className="font-semibold text-gray-900 mb-2">{t('quiz.topics')}</h3>
                   <div className="flex flex-wrap gap-2">
                     {quiz.tags.map((tag, index) => (
                       <span
@@ -212,7 +214,7 @@ const QuizPreviewPage: React.FC = () => {
 
             {/* Questions Preview */}
             <div className="bg-white rounded-xl shadow-sm p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Dạng câu hỏi</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-4">{t('quiz.questionType')}</h2>
               
               <div className="space-y-3">
                 {quiz.questions.slice(0, 3).map((question, index) => (
@@ -224,8 +226,8 @@ const QuizPreviewPage: React.FC = () => {
                       <div className="flex-1">
                         <p className="text-gray-800 font-medium">{question.text}</p>
                         <div className="mt-2 flex items-center space-x-4 text-sm text-gray-600">
-                          <span>Loại: {question.type === 'multiple' ? 'Trắc nghiệm' : question.type === 'boolean' ? 'Đúng/Sai' : 'Tự luận'}</span>
-                          <span>Điểm: {question.points}</span>
+                          <span>{t('quiz.type', { type: t(`quiz.questionTypes.${question.type}`) })}</span>
+                          <span>{t('quiz.points', { points: question.points })}</span>
                         </div>
                       </div>
                     </div>
@@ -234,7 +236,7 @@ const QuizPreviewPage: React.FC = () => {
                 
                 {quiz.questions.length > 3 && (
                   <p className="text-center text-gray-600 py-4">
-                    ... và {quiz.questions.length - 3} câu hỏi khác
+                    {t('quiz.moreQuestions', { count: quiz.questions.length - 3 })}
                   </p>
                 )}
               </div>
@@ -245,16 +247,16 @@ const QuizPreviewPage: React.FC = () => {
           <div className="space-y-6">
             {/* Stats */}
             <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Thống kê</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">{t('quiz.stats')}</h3>
               
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Danh mục</span>
+                  <span className="text-gray-600">{t('quiz.category')}</span>
                   <span className="font-semibold text-gray-900">{quiz.category}</span>
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Độ khó</span>
+                  <span className="text-gray-600">{t('quiz.difficulty')}</span>
                   <span className={`px-2 py-1 rounded-full text-sm ${getDifficultyColor(quiz.difficulty)}`}>
                     {getDifficultyText(quiz.difficulty)}
                   </span>
@@ -263,14 +265,14 @@ const QuizPreviewPage: React.FC = () => {
                 {reviewStats && (
                   <>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Đánh giá</span>
+                      <span className="text-gray-600">{t('quiz.rating')}</span>
                       <span className="font-semibold text-gray-900">
                         {reviewStats.averageRating.toFixed(1)}/5 ⭐
                       </span>
                     </div>
                     
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Lượt đánh giá</span>
+                      <span className="text-gray-600">{t('quiz.reviewCount')}</span>
                       <span className="font-semibold text-gray-900">{reviewStats.totalReviews}</span>
                     </div>
                   </>
@@ -280,13 +282,13 @@ const QuizPreviewPage: React.FC = () => {
 
             {/* Author */}
             <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Tác giả</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">{t('quiz.author')}</h3>
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
                   {quiz.createdBy?.charAt(0).toUpperCase() || 'A'}
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">Tác giả</p>
+                  <p className="font-semibold text-gray-900">{t('quiz.author')}</p>
                   <p className="text-sm text-gray-600">
                     {(quiz as any).createdAt && new Date((quiz as any).createdAt.seconds * 1000).toLocaleDateString('vi-VN')}
                   </p>

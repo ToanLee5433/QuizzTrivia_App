@@ -1,16 +1,16 @@
 import React, { useEffect, Suspense } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import { store, RootState } from './lib/store';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from './lib/firebase/config';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { loginSuccess, logout, authCheckComplete } from './features/auth/store';
 
 // Stage 1: Basic Landing & Authentication
 import { LandingPage } from './shared/pages/LandingPage';
 import Home from './shared/pages/Home';
-import TestAIPage from './pages/TestAIPage';
 
 // Stage 2: Authentication Pages
 import AuthPageNew from './features/auth/pages/AuthPageNew';
@@ -23,7 +23,7 @@ const QuizPage = React.lazy(() => import('./features/quiz/pages/QuizPage'));
 const QuizPreviewPage = React.lazy(() => import('./features/quiz/pages/QuizPreviewPage'));
 const QuizReviewsPage = React.lazy(() => import('./features/quiz/pages/QuizReviewsPage'));
 const RealQuizListPage = React.lazy(() => import('./features/quiz/pages/RealQuizListPage'));
-const ResultPage = React.lazy(() => import('./features/quiz/pages/ResultPage'));
+const QuizResultViewer = React.lazy(() => import('./features/quiz/pages/QuizResultViewer'));
 const Profile = React.lazy(() => import('./features/auth/pages/Profile'));
 const FavoritesPage = React.lazy(() => import('./features/quiz/pages/FavoritesPage'));
 const LeaderboardPage = React.lazy(() => import('./features/quiz/pages/LeaderboardPage'));
@@ -34,11 +34,11 @@ const EditQuizPageAdvanced = React.lazy(() => import('./features/quiz/pages/Edit
 const Creator = React.lazy(() => import('./shared/pages/Creator'));
 const MyQuizzesPage = React.lazy(() => import('./features/quiz/pages/MyQuizzesPage'));
 
-// Stage 4: Admin Features  
-import Admin from './features/admin/pages/Admin';
-import AdminQuizManagement from './features/admin/pages/AdminQuizManagement';
-import AdminUserManagement from './features/admin/pages/AdminUserManagement';
-import StatsDashboard from './features/admin/pages/StatsDashboard';
+// Stage 4: Admin Features - All lazy loaded for better performance
+const Admin = React.lazy(() => import('./features/admin/pages/Admin'));
+const AdminQuizManagement = React.lazy(() => import('./features/admin/pages/AdminQuizManagement'));
+const AdminUserManagement = React.lazy(() => import('./features/admin/pages/AdminUserManagement'));
+const StatsDashboard = React.lazy(() => import('./features/admin/pages/StatsDashboard'));
 const CategoryManagement = React.lazy(() => import('./features/admin/pages/CategoryManagement'));
 const AdminStats = React.lazy(() => import('./features/admin/components/AdminStats'));
 const AdminUtilities = React.lazy(() => import('./features/admin/components/AdminUtilities'));
@@ -52,6 +52,7 @@ import ProtectedRoute from './features/auth/components/ProtectedRoute';
 import AutoLogoutOnBan from './features/auth/components/AutoLogoutOnBan';
 import AdminProtectedRoute from './features/admin/components/AdminProtectedRoute';
 import NotificationBanner from './shared/components/NotificationBanner';
+import RoleBasedRedirect from './shared/components/RoleBasedRedirect';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -123,7 +124,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                 email: user.email,
                 displayName: user.displayName || 'Admin',
                 role: 'admin',
-                createdAt: new Date(),
+                createdAt: serverTimestamp(), // Sử dụng serverTimestamp thay vì Date
                 isActive: true,
                 emailVerified: true
               });
@@ -143,7 +144,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
                   email: user.email,
                   displayName: user.displayName || 'Admin',
                   role: 'admin',
-                  createdAt: new Date(),
+                  createdAt: serverTimestamp(), // Sử dụng serverTimestamp thay vì Date
                   isActive: true
                 });
                 role = 'admin';
@@ -165,23 +166,44 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             photoURL: user.photoURL,
             emailVerified: user.emailVerified,
             role: role,
-            needsRoleSelection: userData?.needsRoleSelection || !role, // Set needsRoleSelection if no role or flag is true
+            needsRoleSelection: userData?.needsRoleSelection || (!role && role !== 'admin'), // Admin không cần chọn role
+            createdAt: userData?.createdAt ? 
+              (userData.createdAt.toDate ? userData.createdAt.toDate().toISOString() : 
+               userData.createdAt instanceof Date ? userData.createdAt.toISOString() : 
+               userData.createdAt) : 
+              new Date().toISOString(), // Convert Date to ISO string
           };
           
           console.log('📝 Dispatching loginSuccess with:', authUser);
           dispatch(loginSuccess(authUser));
+          
+          // Force re-render để cập nhật UI ngay lập tức
+          setTimeout(() => {
+            console.log('🔄 Force state refresh for UI update');
+            dispatch(loginSuccess(authUser));
+          }, 100);
         } catch (error) {
           console.error('Error getting user role:', error);
-          // Fallback role
-          const fallbackRole = user.email === 'admin123@gmail.com' ? 'admin' : 'user';
-          dispatch(loginSuccess({
+          // Fallback role với check admin email chính xác hơn
+          const fallbackRole: 'admin' | 'user' = user.email === 'admin123@gmail.com' ? 'admin' : 'user';
+          const authUser = {
             uid: user.uid,
             email: user.email,
             displayName: user.displayName,
             photoURL: user.photoURL,
             emailVerified: user.emailVerified,
             role: fallbackRole,
-          }));
+            createdAt: new Date().toISOString(), // Convert Date to ISO string
+          };
+          
+          console.log('📝 Dispatching fallback loginSuccess with:', authUser);
+          dispatch(loginSuccess(authUser));
+          
+          // Force re-render cho fallback cũng cần
+          setTimeout(() => {
+            console.log('🔄 Force state refresh for fallback user');
+            dispatch(loginSuccess(authUser));
+          }, 100);
         }
       } else {
         dispatch(logout());
@@ -199,15 +221,19 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 };
 
 // Thêm LoadingFallback component nếu chưa có
-const LoadingFallback = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-    <span className="ml-3 text-lg font-medium text-gray-700">Đang tải...</span>
-  </div>
-);
+const LoadingFallback = () => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      <span className="ml-3 text-lg font-medium text-gray-700">{t('common.loading', 'Đang tải...')}</span>
+    </div>
+  );
+};
 
 // Cập nhật AppContent để đảm bảo mọi lazy component đều được bọc trong Suspense
 const AppContent: React.FC = () => {
+  const { t } = useTranslation();
   const { user, isLoading, authChecked, isAuthenticated, needsRoleSelection } = useSelector((state: RootState) => state.auth);
 
   console.log('📱 AppContent render:', {
@@ -225,9 +251,9 @@ const AppContent: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mb-4"></div>
-          <div className="text-xl font-semibold text-gray-700">Đang tải dữ liệu...</div>
-          <div className="text-sm text-gray-500 mt-2">Vui lòng đợi một chút</div>
-          {isLoading && <div className="text-xs text-gray-400 mt-1">Đang kiểm tra xác thực...</div>}
+          <div className="text-xl font-semibold text-gray-700">{t('common.loadingData', 'Đang tải dữ liệu...')}</div>
+          <div className="text-sm text-gray-500 mt-2">{t('common.pleaseWait', 'Vui lòng đợi một chút')}</div>
+          {isLoading && <div className="text-xs text-gray-400 mt-1">{t('common.checkingAuth', 'Đang kiểm tra xác thực...')}</div>}
         </div>
       </div>
     );
@@ -236,7 +262,21 @@ const AppContent: React.FC = () => {
   // Show role selection if user needs to choose a role
   if (isAuthenticated && user && needsRoleSelection) {
     console.log('📱 App: Showing role selection screen');
-    return <RoleSelection user={user} onRoleSelected={() => window.location.reload()} />;
+    
+    const handleRoleSelected = (role: 'user' | 'creator') => {
+      console.log('🎯 Role selected:', role);
+      
+      // Navigate theo role với proper redirect
+      setTimeout(() => {
+        if (role === 'creator') {
+          window.location.href = '/creator';
+        } else if (role === 'user') {
+          window.location.href = '/dashboard';
+        }
+      }, 1500); // Increase delay để user thấy được toast message
+    };
+    
+    return <RoleSelection user={user} onRoleSelected={handleRoleSelected} />;
   }
 
   return (
@@ -245,9 +285,6 @@ const AppContent: React.FC = () => {
         {/* Stage 1: Landing & Home Routes */}
         <Route path="/landing" element={<LandingPage />} />
         <Route path="/home" element={<Home />} />
-        
-        {/* Test AI Route - Public access */}
-        <Route path="/test-ai" element={<TestAIPage />} />
         
         {/* Stage 2: Authentication Routes */}
         <Route path="/login" element={!isAuthenticated ? <AuthPageNew /> : <Navigate to="/dashboard" replace />} />
@@ -317,10 +354,10 @@ const AppContent: React.FC = () => {
           </ProtectedRoute>
         } />
         
-        <Route path="/results/:attemptId" element={
+        <Route path="/quiz-result/:resultId" element={
           <ProtectedRoute>
             <Suspense fallback={<LoadingFallback />}>
-              <ResultPage />
+              <QuizResultViewer />
             </Suspense>
           </ProtectedRoute>
         } />
@@ -328,7 +365,7 @@ const AppContent: React.FC = () => {
         {/* Stage 3: Creator Routes - REMOVED (Creator role eliminated) */}
         
         <Route path="/create-quiz" element={
-          <ProtectedRoute requiredRole="admin">
+          <ProtectedRoute requiredRole={["admin", "creator"]}>
             <Suspense fallback={<LoadingFallback />}>
               <CreateQuizPage />
             </Suspense>
@@ -440,7 +477,18 @@ const AppContent: React.FC = () => {
         {/* Stage 5: Utility & Error Routes */}
         <Route path="/role-selection" element={
           <ProtectedRoute>
-            <RoleSelection user={user!} onRoleSelected={() => window.location.reload()} />
+            {user && (
+              <RoleSelection 
+                user={user} 
+                onRoleSelected={(role) => {
+                  if (role === 'creator') {
+                    window.location.href = '/creator';
+                  } else if (role === 'user') {
+                    window.location.href = '/dashboard';
+                  }
+                }} 
+              />
+            )}
           </ProtectedRoute>
         } />
         
@@ -459,8 +507,8 @@ const AppContent: React.FC = () => {
           </ProtectedRoute>
         } />
         
-        {/* Default route - landing page */}
-        <Route path="/" element={<LandingPage />} />
+        {/* Default route - role-based redirect */}
+        <Route path="/" element={<RoleBasedRedirect />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </div>

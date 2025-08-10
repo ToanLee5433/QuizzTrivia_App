@@ -26,7 +26,9 @@ export const getUserQuizResults = async (userId: string): Promise<QuizResult[]> 
 
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      results.push({
+      console.log('🔍 Raw Firestore data for result:', doc.id, data);
+      
+      let result = {
         id: doc.id,
         ...data,
         completedAt: data.completedAt?.toDate
@@ -36,7 +38,40 @@ export const getUserQuizResults = async (userId: string): Promise<QuizResult[]> 
               : typeof data.completedAt === 'string'
                 ? data.completedAt
                 : ''),
-      } as QuizResult);
+      } as any;
+
+      // Validate and fix score data for legacy results
+      const hasValidCorrectAnswers = typeof result.correctAnswers === 'number';
+      const hasValidTotalQuestions = typeof result.totalQuestions === 'number' && result.totalQuestions > 0;
+      const hasValidScore = typeof result.score === 'number' && !isNaN(result.score);
+
+      // If missing critical fields but has answers, compute them
+      if ((!hasValidCorrectAnswers || !hasValidTotalQuestions) && Array.isArray(result.answers) && result.answers.length > 0) {
+        const computedCorrect = result.answers.filter((a: any) => a && a.isCorrect === true).length;
+        const computedTotal = result.answers.length;
+        
+        if (!hasValidCorrectAnswers) {
+          result.correctAnswers = computedCorrect;
+        }
+        if (!hasValidTotalQuestions) {
+          result.totalQuestions = computedTotal;
+        }
+        
+        // Recompute score if missing or zero
+        if (!hasValidScore || result.score === 0) {
+          result.score = result.totalQuestions > 0 ? Math.round((result.correctAnswers / result.totalQuestions) * 100) : 0;
+        }
+        
+        console.log('🛠️ Hydrated legacy result:', { 
+          id: result.id, 
+          correctAnswers: result.correctAnswers, 
+          totalQuestions: result.totalQuestions, 
+          score: result.score,
+          computedFromAnswers: true
+        });
+      }
+
+      results.push(result as QuizResult);
     });
 
     return results;

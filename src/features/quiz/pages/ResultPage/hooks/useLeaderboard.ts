@@ -24,78 +24,8 @@ export const useLeaderboard = (quizId: string | null, currentResult?: any) => {
         
         console.log('📊 Raw quiz results:', quizResults);
         
-        // If no real data, create demo data for testing
+        // Use only real data
         let leaderboardData = quizResults;
-        if (quizResults.length === 0) {
-          console.log('📊 No real quiz results found, creating demo data...');
-          leaderboardData = [
-            {
-              id: 'demo1',
-              userId: 'user1',
-              userName: 'Nguyễn Văn A',
-              userEmail: 'a@example.com',
-              quizId: quizId,
-              score: 95,
-              correctAnswers: 19,
-              totalQuestions: 20,
-              timeSpent: 180, // 3 minutes
-              answers: [],
-              completedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) // 3 days ago
-            },
-            {
-              id: 'demo2',
-              userId: 'user2',
-              userName: 'Trần Thị B',
-              userEmail: 'b@example.com',
-              quizId: quizId,
-              score: 90,
-              correctAnswers: 18,
-              totalQuestions: 20,
-              timeSpent: 240, // 4 minutes
-              answers: [],
-              completedAt: new Date(Date.now() - 24 * 60 * 60 * 1000) // Yesterday
-            },
-            {
-              id: 'demo3',
-              userId: 'user3',
-              userName: 'Phạm Văn C',
-              userEmail: 'c@example.com',
-              quizId: quizId,
-              score: 85,
-              correctAnswers: 17,
-              totalQuestions: 20,
-              timeSpent: 200, // 3m 20s
-              answers: [],
-              completedAt: new Date(Date.now() - 2 * 60 * 60 * 1000) // 2 hours ago
-            },
-            {
-              id: 'demo4',
-              userId: user?.uid || 'currentUser',
-              userName: user?.displayName || user?.email?.split('@')[0] || 'Bạn',
-              userEmail: user?.email || 'you@example.com',
-              quizId: quizId,
-              score: 80,
-              correctAnswers: 16,
-              totalQuestions: 20,
-              timeSpent: 220, // 3m 40s
-              answers: [],
-              completedAt: new Date(Date.now() - 10 * 60 * 1000) // 10 minutes ago
-            },
-            {
-              id: 'demo5',
-              userId: 'user5',
-              userName: 'Lê Thị D',
-              userEmail: 'd@example.com',
-              quizId: quizId,
-              score: 75,
-              correctAnswers: 15,
-              totalQuestions: 20,
-              timeSpent: 300, // 5 minutes
-              answers: [],
-              completedAt: new Date('2025-07-30T14:30:00') // Specific date
-            }
-          ] as any[];
-        }
         
         // Add current result to leaderboard if provided
         if (currentResult && user) {
