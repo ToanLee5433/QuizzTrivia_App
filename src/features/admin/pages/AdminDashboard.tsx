@@ -80,7 +80,7 @@ const AdminDashboard: React.FC = () => {
     
     // Calculate creators more accurately
     const creatorRoleUsers = users.filter(u => u.role === 'creator').length;
-    const quizCreatorIds = new Set(quizzes.map(q => q.createdBy || q.userId).filter(Boolean));
+    const quizCreatorIds = new Set(quizzes.map(q => q.createdBy).filter(Boolean));
     const totalCreators = Math.max(creatorRoleUsers, quizCreatorIds.size);
     
     const newStats = {

@@ -182,6 +182,65 @@ const resources = {
       // Quiz translations
       "quiz": {
         "enterAnswer": "Nhập câu trả lời của bạn..."
+      },
+      
+      // Auth translations
+      "auth": {
+        "login": "Đăng nhập",
+        "register": "Đăng ký",
+        "logout": "Đăng xuất",
+        "email": "Email",
+        "password": "Mật khẩu",
+        "confirmPassword": "Xác nhận mật khẩu",
+        "displayName": "Tên hiển thị",
+        "emailPlaceholder": "Nhập email của bạn",
+        "passwordPlaceholder": "Nhập mật khẩu",
+        "displayNamePlaceholder": "Nhập tên hiển thị",
+        "welcomeBack": "Chào mừng trở lại!",
+        "createNewAccount": "Tạo tài khoản mới",
+        "loginSuccess": "Đăng nhập thành công!",
+        "registerSuccess": "Đăng ký thành công!",
+        "forgotPassword": "Quên mật khẩu?",
+        "rememberMe": "Ghi nhớ đăng nhập",
+        "loginWithGoogle": "Đăng nhập với Google",
+        "registerWithGoogle": "Đăng ký với Google",
+        "agreeToTerms": "Tôi đồng ý với các điều khoản và điều kiện",
+        "alreadyHaveAccount": "Đã có tài khoản?",
+        "dontHaveAccount": "Chưa có tài khoản?",
+        "errors": {
+          "userNotFound": "Email không tồn tại",
+          "wrongPassword": "Mật khẩu không đúng",
+          "invalidCredential": "Email hoặc mật khẩu không đúng",
+          "invalidEmail": "Email không hợp lệ",
+          "userDisabled": "Tài khoản đã bị vô hiệu hóa",
+          "tooManyRequests": "Quá nhiều lần thử. Vui lòng thử lại sau",
+          "loginError": "Lỗi đăng nhập: {{message}}"
+        },
+        "loginRequired": "Cần đăng nhập"
+      },
+      
+      // Creator page
+      "creator": {
+        "loginMessage": "Bạn cần đăng nhập để truy cập trang Creator",
+        "roleRequired": "Bạn cần có vai trò Creator hoặc Admin để truy cập trang này"
+      },
+      
+      // Create Quiz
+      "createQuiz": {
+        "loginRequired": "Bạn cần đăng nhập để tạo quiz",
+        "info": {
+          "basicInfo": "Thông tin cơ bản",
+          "fillInfo": "Điền thông tin cơ bản về quiz của bạn",
+          "titleLabel": "Tiêu đề Quiz",
+          "titlePlaceholder": "Nhập tiêu đề quiz...",
+          "descriptionLabel": "Mô tả",
+          "descriptionPlaceholder": "Mô tả chi tiết về quiz..."
+        }
+      },
+      
+      // Messages
+      "messages": {
+        "unauthorized": "Không có quyền truy cập"
       }
     }
   },
@@ -362,6 +421,65 @@ const resources = {
       // Quiz translations
       "quiz": {
         "enterAnswer": "Enter your answer..."
+      },
+      
+      // Auth translations
+      "auth": {
+        "login": "Login",
+        "register": "Register",
+        "logout": "Logout",
+        "email": "Email",
+        "password": "Password",
+        "confirmPassword": "Confirm Password",
+        "displayName": "Display Name",
+        "emailPlaceholder": "Enter your email",
+        "passwordPlaceholder": "Enter your password",
+        "displayNamePlaceholder": "Enter your display name",
+        "welcomeBack": "Welcome back!",
+        "createNewAccount": "Create new account",
+        "loginSuccess": "Login successful!",
+        "registerSuccess": "Registration successful!",
+        "forgotPassword": "Forgot password?",
+        "rememberMe": "Remember me",
+        "loginWithGoogle": "Login with Google",
+        "registerWithGoogle": "Register with Google",
+        "agreeToTerms": "I agree to the terms and conditions",
+        "alreadyHaveAccount": "Already have an account?",
+        "dontHaveAccount": "Don't have an account?",
+        "errors": {
+          "userNotFound": "Email not found",
+          "wrongPassword": "Wrong password",
+          "invalidCredential": "Invalid email or password",
+          "invalidEmail": "Invalid email",
+          "userDisabled": "Account has been disabled",
+          "tooManyRequests": "Too many attempts. Please try again later",
+          "loginError": "Login error: {{message}}"
+        },
+        "loginRequired": "Login required"
+      },
+      
+      // Creator page
+      "creator": {
+        "loginMessage": "You need to login to access Creator page",
+        "roleRequired": "You need Creator or Admin role to access this page"
+      },
+      
+      // Create Quiz
+      "createQuiz": {
+        "loginRequired": "You need to login to create quiz",
+        "info": {
+          "basicInfo": "Basic Information",
+          "fillInfo": "Fill in basic information about your quiz",
+          "titleLabel": "Quiz Title",
+          "titlePlaceholder": "Enter quiz title...",
+          "descriptionLabel": "Description",
+          "descriptionPlaceholder": "Detailed description about the quiz..."
+        }
+      },
+      
+      // Messages
+      "messages": {
+        "unauthorized": "Unauthorized access"
       }
     }
   }

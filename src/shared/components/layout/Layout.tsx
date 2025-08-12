@@ -1,11 +1,11 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { RootState } from '../../../lib/store';
 import { auth } from '../../../lib/firebase/config';
 import { signOut } from 'firebase/auth';
 import LanguageSwitcher from '../LanguageSwitcher';
-import { useTranslation } from 'react-i18next';
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -27,14 +27,20 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     </div>;
   }
   
-  // Don't show navigation if no user
-  if (!user) {
+  // Don't show navigation if no user, but exclude landing page (it has its own LanguageSwitcher)
+  const landingPages = ['/', '/landing', '/home'];
+  if (!user && !landingPages.includes(location.pathname)) {
     return <div className="relative">
       <div className="absolute top-4 right-4 z-10">
         <LanguageSwitcher variant="light" />
       </div>
       {children}
     </div>;
+  }
+  
+  // For landing pages when not authenticated, don't add extra LanguageSwitcher
+  if (!user && landingPages.includes(location.pathname)) {
+    return <div>{children}</div>;
   }
 
   const handleLogout = async () => {
@@ -58,10 +64,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <Link to="/quizzes" className="text-gray-700 hover:text-blue-600">{t('nav.quizzes', 'Quiz')}</Link>
                 <Link to="/favorites" className="text-gray-700 hover:text-yellow-500">{t('nav.favorites', 'Favorites')}</Link>
                 <Link to="/leaderboard" className="text-gray-700 hover:text-green-600">{t('nav.leaderboard', 'Leaderboard')}</Link>
-                {(user.role === 'creator' || user.role === 'admin') ? (
+                {(user?.role === 'creator' || user?.role === 'admin') ? (
                   <Link to="/creator" className="text-gray-700 hover:text-blue-600">{t('nav.creator', 'Creator')}</Link>
                 ) : null}
-                {user.role === 'admin' ? (
+                {user?.role === 'admin' ? (
                   <Link to="/admin" className="text-gray-700 hover:text-blue-600">{t('nav.admin', 'Admin')}</Link>
                 ) : null}
                 <Link to="/profile" className="text-gray-700 hover:text-blue-600">{t('nav.profile', 'Profile')}</Link>
