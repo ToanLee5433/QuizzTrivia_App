@@ -24,7 +24,7 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
   const showFirestoreError = error && (
     error.includes('ad blocker') || 
     error.includes('ERR_BLOCKED_BY_CLIENT') ||
-    error.includes('Không thể kết nối Firestore')
+    error.includes(t('errors.firestoreConnection', 'Không thể kết nối Firestore'))
   );
 
   const [retryCount, setRetryCount] = useState(0);
@@ -49,7 +49,7 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
           if (retryCount < maxRetries) {
             // Retry with exponential backoff
             const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
-            toast.info('Đang thử kết nối lại...');
+            toast.info(t('messages.retrying', 'Đang thử kết nối lại...'));
             
             setTimeout(() => {
               setRetryCount(prev => prev + 1);
@@ -145,8 +145,8 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">{title || 'Khám phá Quiz'}</h1>
-              <p className="text-gray-600 text-lg">Tìm hiểu kiến thức mới qua các quiz thú vị</p>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">{title || t('quiz.exploreQuizzes', 'Khám phá Quiz')}</h1>
+              <p className="text-gray-600 text-lg">{t('quiz.exploreDescription', 'Tìm hiểu kiến thức mới qua các quiz thú vị')}</p>
             </div>
             <div className="flex items-center gap-4">
               <button

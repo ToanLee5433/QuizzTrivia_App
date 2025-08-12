@@ -274,10 +274,10 @@ const AdminDashboard: React.FC = () => {
     try {
       await updateDoc(doc(db, 'quizzes', quizId), { status: 'approved' });
       await loadData();
-      toast.success('Đã phê duyệt quiz thành công!');
+      toast.success(t('admin.quizApproved', 'Đã phê duyệt quiz thành công!'));
     } catch (error) {
       console.error('Error approving quiz:', error);
-      toast.error('Có lỗi xảy ra khi phê duyệt quiz!');
+      toast.error(t('admin.quizApprovalError', 'Có lỗi xảy ra khi phê duyệt quiz!'));
     } finally {
       setLoading(false);
     }
@@ -288,10 +288,10 @@ const AdminDashboard: React.FC = () => {
     try {
       await updateDoc(doc(db, 'quizzes', quizId), { status: 'rejected' });
       await loadData();
-      toast.success('Đã từ chối quiz!');
+      toast.success(t('admin.quizRejected', 'Đã từ chối quiz!'));
     } catch (error) {
       console.error('Error rejecting quiz:', error);
-      toast.error('Có lỗi xảy ra khi từ chối quiz!');
+      toast.error(t('admin.quizRejectionError', 'Có lỗi xảy ra khi từ chối quiz!'));
     } finally {
       setLoading(false);
     }

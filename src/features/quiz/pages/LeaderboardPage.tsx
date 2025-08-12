@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 import { FaCrown, FaUserCircle, FaTrophy, FaMedal, FaAward, FaFire, FaStar, FaGamepad } from 'react-icons/fa';
@@ -42,6 +43,7 @@ interface OverallStats {
 }
 
 const LeaderboardPage: React.FC = () => {
+  const { t } = useTranslation();
   const [topUsers, setTopUsers] = useState<UserStat[]>([]);
   const [topQuizzes, setTopQuizzes] = useState<QuizStat[]>([]);
   const [loading, setLoading] = useState(true);
@@ -320,7 +322,7 @@ const LeaderboardPage: React.FC = () => {
           </div>
           <input
             className="border border-gray-300 rounded-lg px-4 py-2 w-full md:w-80 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="🔍 Tìm kiếm người chơi..."
+            placeholder={t('leaderboard.searchPlayers', '🔍 Tìm kiếm người chơi...')}
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -483,7 +485,7 @@ const LeaderboardPage: React.FC = () => {
                       onClick={() => setShowAllUsers(!showAllUsers)}
                       className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
                     >
-                      {showAllUsers ? 'Thu gọn' : `Xem thêm ${filteredUsers.length - 20} người`}
+                      {showAllUsers ? t('leaderboard.collapse', 'Thu gọn') : t('leaderboard.viewMore', 'Xem thêm {{count}} người', { count: filteredUsers.length - 20 })}
                     </button>
                   </div>
                 )}

@@ -47,7 +47,7 @@ const Dashboard = React.memo(() => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {t('dashboard.welcome', { name: user?.displayName || user?.email?.split('@')[0] || 'User', defaultValue: 'Xin chào, {{name}}!' })} 👋
+              {t('dashboard.welcome', 'Xin chào, {{name}}!', { name: user?.displayName || user?.email?.split('@')[0] || 'User' })} 👋
             </h1>
             <p className="text-gray-600">{user?.displayName || user?.email || 'User'}</p>
           </div>

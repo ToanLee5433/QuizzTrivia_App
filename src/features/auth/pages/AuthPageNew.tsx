@@ -52,40 +52,40 @@ const AuthPage: React.FC = () => {
 
   const validateForm = (): boolean => {
     if (!formData.email.trim()) {
-      toast.error('Vui lòng nhập email');
+      toast.error(t('auth.validation.emailRequired', 'Vui lòng nhập email'));
       return false;
     }
 
     // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email.trim())) {
-      toast.error('Email không đúng định dạng');
+      toast.error(t('auth.validation.emailInvalid', 'Email không đúng định dạng'));
       return false;
     }
 
     if (!formData.password) {
-      toast.error('Vui lòng nhập mật khẩu');
+      toast.error(t('auth.validation.passwordRequired', 'Vui lòng nhập mật khẩu'));
       return false;
     }
 
     if (!isLogin) {
       if (!formData.displayName.trim()) {
-        toast.error('Vui lòng nhập tên hiển thị');
+        toast.error(t('auth.validation.displayNameRequired', 'Vui lòng nhập tên hiển thị'));
         return false;
       }
 
       if (formData.password !== formData.confirmPassword) {
-        toast.error('Mật khẩu xác nhận không khớp');
+        toast.error(t('auth.validation.passwordMismatch', 'Mật khẩu xác nhận không khớp'));
         return false;
       }
 
       if (formData.password.length < 6) {
-        toast.error('Mật khẩu phải có ít nhất 6 ký tự');
+        toast.error(t('auth.validation.passwordTooShort', 'Mật khẩu phải có ít nhất 6 ký tự'));
         return false;
       }
 
       if (!formData.acceptTerms) {
-        toast.error('Vui lòng đồng ý với điều khoản sử dụng');
+        toast.error(t('auth.validation.termsRequired', 'Vui lòng đồng ý với điều khoản sử dụng'));
         return false;
       }
     }
@@ -137,7 +137,7 @@ const AuthPage: React.FC = () => {
 
     } catch (error: any) {
       console.error('Registration error:', error);
-      toast.error('Có lỗi xảy ra khi gửi mã xác thực: ' + (error.message || 'Vui lòng thử lại'));
+      toast.error(t('auth.errors.otpSendError', 'Có lỗi xảy ra khi gửi mã xác thực: {{message}}', { message: error.message || t('common.tryAgain', 'Vui lòng thử lại') }));
     } finally {
       setLoading(false);
     }
@@ -145,7 +145,7 @@ const AuthPage: React.FC = () => {
 
   const handleOTPVerificationSuccess = async () => {
     if (!pendingUserData) {
-      toast.error('Không tìm thấy thông tin đăng ký');
+      toast.error(t('auth.errors.registrationDataNotFound', 'Không tìm thấy thông tin đăng ký'));
       return;
     }
 
@@ -165,7 +165,7 @@ const AuthPage: React.FC = () => {
         verificationMethod: 'otp'
       });
 
-      toast.success('Đăng ký thành công! Chào mừng bạn đến với Quiz App!');
+      toast.success(t('auth.registerSuccess', 'Đăng ký thành công! Chào mừng bạn đến với Quiz App!'));
       
       // Reset form and states
       setFormData({
@@ -187,16 +187,16 @@ const AuthPage: React.FC = () => {
       // Handle specific Firebase errors
       switch (error.code) {
         case 'auth/email-already-in-use':
-          toast.error('Email này đã được sử dụng');
+          toast.error(t('auth.errors.emailAlreadyInUse', 'Email này đã được sử dụng'));
           break;
         case 'auth/weak-password':
-          toast.error('Mật khẩu quá yếu');
+          toast.error(t('auth.errors.weakPassword', 'Mật khẩu quá yếu'));
           break;
         case 'auth/invalid-email':
-          toast.error('Email không hợp lệ');
+          toast.error(t('auth.errors.invalidEmail', 'Email không hợp lệ'));
           break;
         default:
-          toast.error('Lỗi tạo tài khoản: ' + (error.message || 'Vui lòng thử lại'));
+          toast.error(t('auth.errors.registerError', 'Lỗi tạo tài khoản: {{message}}', { message: error.message || t('common.tryAgain', 'Vui lòng thử lại') }));
       }
       
       // Reset OTP verification state on error
@@ -210,7 +210,7 @@ const AuthPage: React.FC = () => {
   const handleOTPCancel = () => {
     setShowOTPVerification(false);
     setPendingUserData(null);
-    toast.info('Đã hủy quá trình đăng ký');
+    toast.info(t('auth.registrationCancelled', 'Đã hủy quá trình đăng ký'));
   };
 
   const handleLogin = async () => {
@@ -315,7 +315,7 @@ const AuthPage: React.FC = () => {
       navigate('/');
     } catch (error: any) {
       console.error('Google login error:', error);
-      toast.error(t('auth.errors.googleLoginError', 'Lỗi đăng nhập Google: {{message}}', { message: error.message || 'Vui lòng thử lại' }));
+      toast.error(t('auth.errors.googleLoginError', 'Lỗi đăng nhập Google: {{message}}', { message: error.message || t('common.tryAgain', 'Vui lòng thử lại') }));
     } finally {
       setLoading(false);
     }

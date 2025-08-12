@@ -75,10 +75,10 @@ const Profile: React.FC = () => {
         if (!titles[result.quizId]) {
           try {
             const quiz = await getQuizById(result.quizId);
-            titles[result.quizId] = quiz?.title || 'Quiz không tên';
+            titles[result.quizId] = quiz?.title || t('quiz.untitled', 'Quiz không tên');
           } catch (error) {
             console.error('Error fetching quiz:', error);
-            titles[result.quizId] = 'Quiz không tên';
+            titles[result.quizId] = t('quiz.untitled', 'Quiz không tên');
           }
         }
       }
@@ -187,7 +187,7 @@ const Profile: React.FC = () => {
     .filter(result => {
       // Search filter
       if (searchTerm) {
-        const quizTitle = quizTitles[result.quizId] || 'Quiz không tên';
+        const quizTitle = quizTitles[result.quizId] || t('quiz.untitled', 'Quiz không tên');
         return quizTitle.toLowerCase().includes(searchTerm.toLowerCase());
       }
       return true;

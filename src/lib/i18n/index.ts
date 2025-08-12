@@ -48,6 +48,7 @@ const resources = {
         "continue": "Tiếp tục",
         "processing": "Đang xử lý...",
         "noData": "Không có dữ liệu",
+        "tryAgain": "Vui lòng thử lại",
         "retry": "Thử lại",
         "refresh": "Làm mới",
         "success": "Thành công",
@@ -181,7 +182,10 @@ const resources = {
       
       // Quiz translations
       "quiz": {
-        "enterAnswer": "Nhập câu trả lời của bạn..."
+        "enterAnswer": "Nhập câu trả lời của bạn...",
+        "exploreQuizzes": "Khám phá Quiz",
+        "exploreDescription": "Tìm hiểu kiến thức mới qua các quiz thú vị",
+        "untitled": "Quiz không tên"
       },
       
       // Auth translations
@@ -207,6 +211,15 @@ const resources = {
         "agreeToTerms": "Tôi đồng ý với các điều khoản và điều kiện",
         "alreadyHaveAccount": "Đã có tài khoản?",
         "dontHaveAccount": "Chưa có tài khoản?",
+        "validation": {
+          "emailRequired": "Vui lòng nhập email",
+          "emailInvalid": "Email không đúng định dạng",
+          "passwordRequired": "Vui lòng nhập mật khẩu",
+          "displayNameRequired": "Vui lòng nhập tên hiển thị",
+          "passwordMismatch": "Mật khẩu xác nhận không khớp",
+          "passwordTooShort": "Mật khẩu phải có ít nhất 6 ký tự",
+          "termsRequired": "Vui lòng đồng ý với điều khoản sử dụng"
+        },
         "errors": {
           "userNotFound": "Email không tồn tại",
           "wrongPassword": "Mật khẩu không đúng",
@@ -214,8 +227,20 @@ const resources = {
           "invalidEmail": "Email không hợp lệ",
           "userDisabled": "Tài khoản đã bị vô hiệu hóa",
           "tooManyRequests": "Quá nhiều lần thử. Vui lòng thử lại sau",
-          "loginError": "Lỗi đăng nhập: {{message}}"
+          "loginError": "Lỗi đăng nhập: {{message}}",
+          "otpSendError": "Có lỗi xảy ra khi gửi mã xác thực: {{message}}",
+          "registrationDataNotFound": "Không tìm thấy thông tin đăng ký",
+          "emailAlreadyInUse": "Email này đã được sử dụng",
+          "weakPassword": "Mật khẩu quá yếu",
+          "registerError": "Lỗi tạo tài khoản: {{message}}",
+          "googleLoginError": "Lỗi đăng nhập Google: {{message}}"
         },
+        "googleLoginSuccess": "Đăng nhập Google thành công!",
+        "registrationCancelled": "Đã hủy quá trình đăng ký",
+        "confirmPasswordPlaceholder": "Xác nhận mật khẩu",
+        "termsOfService": "điều khoản sử dụng",
+        "noAccount": "Chưa có tài khoản? Đăng ký ngay",
+        "hasAccount": "Đã có tài khoản? Đăng nhập",
         "loginRequired": "Cần đăng nhập"
       },
       
@@ -240,7 +265,40 @@ const resources = {
       
       // Messages
       "messages": {
-        "unauthorized": "Không có quyền truy cập"
+        "unauthorized": "Không có quyền truy cập",
+        "serverError": "Không thể kết nối đến server. Vui lòng thử lại sau.",
+        "retrying": "Đang thử kết nối lại..."
+      },
+      
+      // Errors
+      "errors": {
+        "firestoreConnection": "Không thể kết nối Firestore"
+      },
+      
+      // Leaderboard
+      "leaderboard": {
+        "searchPlayers": "🔍 Tìm kiếm người chơi...",
+        "collapse": "Thu gọn",
+        "viewMore": "Xem thêm {{count}} người"
+      },
+      
+      // Dashboard
+      "dashboard": {
+        "welcome": "Xin chào, {{name}}!",
+        "takeQuizzes": "Thử thách kiến thức với các bài quiz đa dạng",
+        "favoriteQuizzes": "Các quiz bạn đã lưu để làm sau",
+        "viewRanking": "Xem thứ hạng và thành tích của bạn",
+        "editProfile": "Xem và chỉnh sửa thông tin cá nhân",
+        "createQuizzes": "Tạo các bài quiz của riêng bạn",
+        "adminPanel": "Quản lý người dùng và hệ thống"
+      },
+      
+      // Admin
+      "admin": {
+        "quizApproved": "Đã phê duyệt quiz thành công!",
+        "quizApprovalError": "Có lỗi xảy ra khi phê duyệt quiz!",
+        "quizRejected": "Đã từ chối quiz!",
+        "quizRejectionError": "Có lỗi xảy ra khi từ chối quiz!"
       }
     }
   },
@@ -287,6 +345,7 @@ const resources = {
         "continue": "Continue",
         "processing": "Processing...",
         "noData": "No data",
+        "tryAgain": "Please try again",
         "retry": "Retry",
         "refresh": "Refresh",
         "success": "Success",
@@ -420,7 +479,10 @@ const resources = {
       
       // Quiz translations
       "quiz": {
-        "enterAnswer": "Enter your answer..."
+        "enterAnswer": "Enter your answer...",
+        "exploreQuizzes": "Explore Quizzes",
+        "exploreDescription": "Learn new knowledge through interesting quizzes",
+        "untitled": "Untitled Quiz"
       },
       
       // Auth translations
@@ -446,6 +508,15 @@ const resources = {
         "agreeToTerms": "I agree to the terms and conditions",
         "alreadyHaveAccount": "Already have an account?",
         "dontHaveAccount": "Don't have an account?",
+        "validation": {
+          "emailRequired": "Please enter email",
+          "emailInvalid": "Email format is invalid",
+          "passwordRequired": "Please enter password",
+          "displayNameRequired": "Please enter display name",
+          "passwordMismatch": "Password confirmation does not match",
+          "passwordTooShort": "Password must be at least 6 characters",
+          "termsRequired": "Please agree to the terms of service"
+        },
         "errors": {
           "userNotFound": "Email not found",
           "wrongPassword": "Wrong password",
@@ -453,8 +524,20 @@ const resources = {
           "invalidEmail": "Invalid email",
           "userDisabled": "Account has been disabled",
           "tooManyRequests": "Too many attempts. Please try again later",
-          "loginError": "Login error: {{message}}"
+          "loginError": "Login error: {{message}}",
+          "otpSendError": "Error sending verification code: {{message}}",
+          "registrationDataNotFound": "Registration data not found",
+          "emailAlreadyInUse": "This email is already in use",
+          "weakPassword": "Password is too weak",
+          "registerError": "Registration error: {{message}}",
+          "googleLoginError": "Google login error: {{message}}"
         },
+        "googleLoginSuccess": "Google login successful!",
+        "registrationCancelled": "Registration cancelled",
+        "confirmPasswordPlaceholder": "Confirm password",
+        "termsOfService": "terms of service",
+        "noAccount": "Don't have an account? Sign up now",
+        "hasAccount": "Already have an account? Sign in",
         "loginRequired": "Login required"
       },
       
@@ -479,7 +562,40 @@ const resources = {
       
       // Messages
       "messages": {
-        "unauthorized": "Unauthorized access"
+        "unauthorized": "Unauthorized access",
+        "serverError": "Cannot connect to server. Please try again later.",
+        "retrying": "Retrying connection..."
+      },
+      
+      // Errors
+      "errors": {
+        "firestoreConnection": "Cannot connect to Firestore"
+      },
+      
+      // Leaderboard
+      "leaderboard": {
+        "searchPlayers": "🔍 Search players...",
+        "collapse": "Collapse",
+        "viewMore": "View {{count}} more players"
+      },
+      
+      // Dashboard
+      "dashboard": {
+        "welcome": "Hello, {{name}}!",
+        "takeQuizzes": "Challenge your knowledge with diverse quizzes",
+        "favoriteQuizzes": "Quizzes you've saved for later",
+        "viewRanking": "View your ranking and achievements",
+        "editProfile": "View and edit your personal information",
+        "createQuizzes": "Create your own quizzes",
+        "adminPanel": "Manage users and system"
+      },
+      
+      // Admin
+      "admin": {
+        "quizApproved": "Quiz approved successfully!",
+        "quizApprovalError": "Error occurred while approving quiz!",
+        "quizRejected": "Quiz rejected!",
+        "quizRejectionError": "Error occurred while rejecting quiz!"
       }
     }
   }
