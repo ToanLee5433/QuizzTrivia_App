@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from '../features/auth/store';
 import quizReducer from '../features/quiz/store';
+// import multiplayerReducer from '../features/multiplayer/components/multiplayerStore';
 import { toast } from 'react-toastify';
 
 // Custom error handling middleware
@@ -18,6 +19,7 @@ export const store = configureStore({
   reducer: {
     auth: authReducer,
     quiz: quizReducer,
+    // multiplayer: multiplayerReducer,
   },
   middleware: (getDefaultMiddleware) => {
     const defaultMiddleware = getDefaultMiddleware({
@@ -26,12 +28,16 @@ export const store = configureStore({
           'persist/PERSIST', 
           'persist/REHYDRATE',
           'quiz/fetchQuizzes/fulfilled',
-          'quiz/fetchQuizById/fulfilled'
+          'quiz/fetchQuizById/fulfilled',
+          'multiplayer/setCurrentRoom',
+          'multiplayer/updatePlayerInRoom'
         ],
         ignoredPaths: [
           'quiz.quizzes',
           'quiz.currentQuiz',
-          'quiz.userResults'
+          'quiz.userResults',
+          'multiplayer.currentRoom',
+          'multiplayer.currentPlayer'
         ],
       },
       immutableCheck: { warnAfter: 128 },

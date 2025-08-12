@@ -1,0 +1,205 @@
+[33mcommit 5346f2ccd04a84b6b0cad400aa591a6aa1000316[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: ToanLe <lequytoanptit0303@gmail.com>
+Date:   Mon Aug 11 02:17:42 2025 +0700
+
+    feat: Complete i18n integration for QuizTrivia App
+    
+    - Implemented comprehensive internationalization system with i18next
+    - Added multi-language support (Vietnamese/English) for all components
+    - Integrated LanguageSwitcher with context-aware styling
+    - Translated major features: Dashboard, Quiz creation, Admin interface
+    - Maintained functionality while enabling language switching
+    - Built production-ready version with optimized assets
+
+.firebase/hosting.ZGlzdA.cache
+CLEANUP_COMPLETED.md
+add-i18n-bulk.ps1
+complete-i18n.ps1
+debug-quiz-results-detailed.js
+dist/assets/Admin-CEqzddrw.js
+dist/assets/AdminLayout-CaTuievE.js
+dist/assets/AdminQuizManagement-CXGRSBn-.js
+dist/assets/AdminStats-Cj9w8qWO.js
+dist/assets/AdminUserManagement-C9-jAdXZ.js
+dist/assets/AdminUtilities-DfFnC9jf.js
+dist/assets/AdminUtilities-XPzQxj6X.js
+dist/assets/CategoryManagement-CK6nqXIt.js
+dist/assets/CategoryManagement-CzSdUIr8.js
+dist/assets/CreateQuizPage-BhNCy4tJ.js
+dist/assets/CreateQuizPage-Bz9azZTq.js
+dist/assets/Creator-B5Hi2ppJ.js
+dist/assets/Creator-BpzMp3vt.js
+dist/assets/Dashboard-DNtlIYl3.js
+dist/assets/Dashboard-KnilWRWu.js
+dist/assets/EditQuizPageAdvanced-CSJhhuHv.js
+dist/assets/EditQuizPageAdvanced-IW-v2LT7.js
+dist/assets/FavoritesPage-DsSmfnsF.js
+dist/assets/FavoritesPage-j0Q57LG4.js
+dist/assets/LeaderboardPage-CYlyfCQI.js
+dist/assets/LeaderboardPage-D-LOudwj.js
+dist/assets/MyQuizzesPage-BRxFQm5_.js
+dist/assets/MyQuizzesPage-D5S1Vs4F.js
+dist/assets/Profile-56b2NVs9.js
+dist/assets/Profile-Cikw5EDA.js
+dist/assets/QuickReviewSection-u80bxDqr.js
+dist/assets/QuizList-C1-WrtRj.js
+dist/assets/QuizList-DZJVVOpN.js
+dist/assets/QuizPage-CMzlsuNp.js
+dist/assets/QuizPage-t6FGF91V.js
+dist/assets/QuizPreviewPage-D10S6bUt.js
+dist/assets/QuizPreviewPage-DCYetbHG.js
+dist/assets/QuizReviewsPage-B_1QD63P.js
+dist/assets/QuizReviewsPage-Bi6XlV4I.js
+dist/assets/RealQuizListPage-DZ_5e_9v.js
+dist/assets/RealQuizListPage-de3nx4Oo.js
+dist/assets/ResultPage-CsdEMOUw.js
+dist/assets/ReviewForm-CUyZab1E.js
+dist/assets/ReviewForm-CYr2zfgf.js
+dist/assets/StatsDashboard-Cy77OKvj.js
+dist/assets/arrow-left-c0cUcr_a.js
+dist/assets/arrow-up-CPnAPxLH.js
+dist/assets/arrow-up-a-bYVxqq.js
+dist/assets/book-open-BDZJXuDN.js
+dist/assets/calendar-3Wsr6Ss3.js
+dist/assets/calendar-DQ8V8GS6.js
+dist/assets/chart-column-CzhYRAPr.js
+dist/assets/check-CFaoMA0V.js
+dist/assets/circle-alert-DcoXbu2o.js
+dist/assets/circle-x-CSd3MNaG.js
+dist/assets/index-9G1y_mGg.js
+dist/assets/index-B_cN7TH7.css
+dist/assets/index-CUTuLMUt.js
+dist/assets/index-DGwh0kkI.css
+dist/assets/index-q5-JgBMW.js
+dist/assets/message-square-dCWNa84K.js
+dist/assets/pen-line-_XpPNirX.js
+dist/assets/plus-BJSn1tHq.js
+dist/assets/quizStatsService-BEYZWmAJ.js
+dist/assets/realDataService-BBTJgiaP.js
+dist/assets/rotate-ccw-C97_obaa.js
+dist/assets/save-B_T7Z7p-.js
+dist/assets/save-CTWPC1cY.js
+dist/assets/search-DuMBi8uH.js
+dist/assets/send-C6orf-r8.js
+dist/assets/send-TBnx_V2Q.js
+dist/assets/square-pen-BsIHJbOz.js
+dist/assets/tag-B2fEuBFH.js
+dist/assets/tag-BS5h73GX.js
+dist/assets/trash-2-Duhly62c.js
+dist/assets/x-C0UuZYBH.js
+dist/index.html
+firebase.json
+fixed-navigation-logic.txt
+jest.config.js
+node_modules/.package-lock.json
+node_modules/.vite/deps/_metadata.json
+node_modules/.vite/deps/recharts.js
+package-lock.json
+package.json
+src/App.tsx
+src/__tests__/test-mocks.ts
+src/__tests__/test-utils.tsx
+src/components/EmulatorTest.tsx
+src/features/admin/__tests__/AdminDashboard.test.tsx
+src/features/admin/__tests__/AdminQuizManagement.test.tsx
+src/features/admin/__tests__/AdminStats.test.tsx
+src/features/admin/components/AdminProtectedRoute.test.tsx
+src/features/admin/components/AdminSidebar.test.tsx
+src/features/admin/components/AdminStats.test.tsx
+src/features/admin/components/AdminStats.tsx
+src/features/admin/components/AdminStatsRealNew.tsx
+src/features/admin/components/AdminUtilities.tsx
+src/features/admin/components/BulkActions.test.tsx
+src/features/admin/components/QuickActions.test.tsx
+src/features/admin/components/QuickActions.tsx
+src/features/admin/pages/Admin.tsx
+src/features/admin/pages/AdminDashboard.tsx
+src/features/admin/pages/AdminQuizManagementNew.tsx
+src/features/admin/pages/AdminQuizManagement_new.tsx
+src/features/admin/pages/AdminStatsTestPage.tsx
+src/features/admin/pages/CategoryManagement_new.tsx
+src/features/admin/pages/CreatorManagement.tsx
+src/features/admin/pages/CreatorManagementNew.tsx
+src/features/auth/__tests__/services.test.ts
+src/features/auth/__tests__/store.test.ts
+src/features/auth/components/ProfileDebugPanel.tsx
+src/features/auth/components/ProtectedRoute.tsx
+src/features/auth/components/RoleSelection.tsx
+src/features/auth/pages/AuthPageNew.tsx
+src/features/auth/pages/LoginPage.tsx
+src/features/auth/pages/Profile.tsx
+src/features/auth/types.ts
+src/features/quiz/__tests__/CreateQuizPage.test.tsx
+src/features/quiz/__tests__/QuizCard.test.tsx
+src/features/quiz/__tests__/store.test.ts
+src/features/quiz/api/base.ts
+src/features/quiz/api/shared.ts
+src/features/quiz/components/GeminiAIQuestionGenerator.tsx
+src/features/quiz/components/ModernGeminiAIGenerator.tsx
+src/features/quiz/components/QuizDebugPanel.tsx
+src/features/quiz/components/QuizInitializer.tsx
+src/features/quiz/components/ReviewFormNew.tsx
+src/features/quiz/components/ReviewListNew.tsx
+src/features/quiz/index.ts
+src/features/quiz/pages/CreateQuizPage/components/FileUploadDemo.tsx
+src/features/quiz/pages/CreateQuizPage/components/QuizInfoStep.tsx
+src/features/quiz/pages/CreateQuizPage/components/QuizInfoStep_new.tsx
+src/features/quiz/pages/CreateQuizPage/index.tsx
+src/features/quiz/pages/EditQuizPage.tsx
+src/features/quiz/pages/EditQuizPageAdvanced.tsx
+src/features/quiz/pages/FavoritesPage.tsx
+src/features/quiz/pages/MyQuizzesPage.tsx
+src/features/quiz/pages/QuizList.tsx
+src/features/quiz/pages/QuizPage/hooks/useQuizSession.ts
+src/features/quiz/pages/QuizPreviewPage.tsx
+src/features/quiz/pages/QuizResultViewer/index.ts
+src/features/quiz/pages/QuizResultViewer/index.tsx
+src/features/quiz/pages/ResultPage/hooks/useLeaderboard.ts
+src/features/quiz/pages/ResultPage/hooks/useResultData.ts
+src/features/quiz/pages/ReviewTestPage.tsx
+src/features/quiz/pages/TestPage.tsx
+src/features/quiz/services/geminiAIServiceBackup.ts
+src/features/quiz/services/quiz.ts
+src/features/quiz/services/realDataService.ts
+src/features/quiz/services/sampleQuizService.ts
+src/features/quiz/services/testFirebaseConnection.ts
+src/features/quiz/services/testReviewService.ts
+src/features/quiz/store.ts
+src/features/quiz/types.ts
+src/lib/i18n/index.ts
+src/lib/index.ts
+src/lib/utils/constants.ts
+src/lib/utils/createTestQuizzes.ts
+src/main.tsx
+src/pages/TestAIPage.tsx
+src/setupTests.ts
+src/shared/components/FirestoreTest.tsx
+src/shared/components/Header.tsx
+src/shared/components/LanguageSwitcher.tsx
+src/shared/components/NotificationCenter.tsx
+src/shared/components/PopularQuizzesRanking.tsx
+src/shared/components/QuizReviewSystem.tsx
+src/shared/components/RoleBasedRedirect.tsx
+src/shared/components/layout/Layout.tsx
+src/shared/components/layout/Loading.tsx
+src/shared/pages/Creator.tsx
+src/shared/pages/Dashboard.tsx
+src/shared/pages/LandingPage.tsx
+src/simple.test.ts
+src/utils/createTestQuizzes.ts
+src/utils/createTestResults.ts
+vite.config.ts
+
+                   SSUUMMMMAARRYY OOFF LLEESSSS CCOOMMMMAANNDDSS
+
+      Commands marked with * may be preceded by a number, _N.
+      Notes in parentheses indicate the behavior if _N is given.
+      A key preceded by a caret indicates the Ctrl key; thus ^K is ctrl-K.
+
+  h  H                 Display this help.
+  q  :q  Q  :Q  ZZ     Exit.
+ ---------------------------------------------------------------------------
+
+                           MMOOVVIINNGG
+
+  e  ^E  j  ^N  CR  *  Forward  one line   (or _N lines).

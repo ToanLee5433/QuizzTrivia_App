@@ -153,6 +153,17 @@ const QuizPreviewPage: React.FC = () => {
                   <Play className="w-5 h-5 mr-2" />
                   {t('quiz.startQuizButton')}
                 </Link>
+
+                <Link
+                  to={`/multiplayer`}
+                  state={{ selectedQuiz: quiz }}
+                  className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-lg hover:from-green-600 hover:to-emerald-700 transition-colors shadow-md"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.196-2.121M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.196-2.121M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Chơi cùng bạn bè
+                </Link>
                 
                 <Link
                   to={`/quiz/${quiz.id}/reviews`}

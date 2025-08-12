@@ -41,6 +41,7 @@ const AdminUserManagement = React.lazy(() => import('./features/admin/pages/Admi
 const StatsDashboard = React.lazy(() => import('./features/admin/pages/StatsDashboard'));
 const CategoryManagement = React.lazy(() => import('./features/admin/pages/CategoryManagement'));
 const AdminStats = React.lazy(() => import('./features/admin/components/AdminStats'));
+const MultiplayerPage = React.lazy(() => import('./features/multiplayer/pages/MultiplayerPage'));
 const AdminUtilities = React.lazy(() => import('./features/admin/components/AdminUtilities'));
 
 // Stage 5: Advanced Components
@@ -503,6 +504,15 @@ const AppContent: React.FC = () => {
           <ProtectedRoute>
             <Suspense fallback={<LoadingFallback />}>
               <LeaderboardPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        
+        {/* Multiplayer */}
+        <Route path="/multiplayer" element={
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingFallback />}>
+              <MultiplayerPage />
             </Suspense>
           </ProtectedRoute>
         } />

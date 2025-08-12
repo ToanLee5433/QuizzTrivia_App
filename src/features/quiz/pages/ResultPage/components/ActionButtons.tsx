@@ -27,6 +27,13 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({ quiz, percentage }
       >
         🔄 Làm lại Quiz
       </Button>
+
+      <Button
+        onClick={() => navigate('/multiplayer', { state: { selectedQuiz: quiz } })}
+        className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
+      >
+        👥 Chơi cùng bạn bè
+      </Button>
       
       <Button
         onClick={() => {

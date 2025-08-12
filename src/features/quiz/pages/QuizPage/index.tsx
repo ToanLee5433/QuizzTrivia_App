@@ -5,6 +5,7 @@ import ProgressIndicator from './components/ProgressIndicator';
 import QuestionRenderer from './components/QuestionRenderer';
 import QuickNavigation from './components/QuickNavigation';
 import ConfirmationModals from './components/ConfirmationModals';
+import { useNavigate } from 'react-router-dom';
 
 const QuizPage: React.FC = () => {
   const { quiz, loading, error } = useQuizData();
@@ -43,6 +44,7 @@ interface QuizPageContentProps {
 }
 
 const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
+  const navigate = useNavigate();
   const {
     session,
     updateAnswer,
@@ -112,7 +114,14 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
               <h1 className="text-xl font-semibold text-gray-800">{quiz.title}</h1>
             </div>
             
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => navigate('/multiplayer', { state: { selectedQuiz: quiz } })}
+                className="px-3 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-medium hover:opacity-90 shadow-sm"
+                title="Chơi cùng bạn bè"
+              >
+                Chơi cùng
+              </button>
               <ProgressIndicator
                 current={session.currentQuestionIndex + 1}
                 total={quiz.questions.length}

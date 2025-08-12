@@ -1,0 +1,1 @@
+export { firestoreMultiplayerService } from './firestoreMultiplayerService';

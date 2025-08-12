@@ -8,7 +8,7 @@
     "build": "tsc && node ./node_modules/vite/bin/vite.js build",
     "preview": "node ./node_modules/vite/bin/vite.js preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "test": "jest --config=jest.config.cjs",
+    "test": "jest --config=jest.config.cjs --passWithNoTests",
     "test:watch": "jest --config=jest.config.cjs --watch",
     "test:coverage": "jest --config=jest.config.cjs --coverage",
     "test:ci": "jest --config=jest.config.cjs --ci --coverage --watchAll=false"
@@ -26,6 +26,7 @@
     "dompurify": "^3.2.6",
     "express": "^5.1.0",
     "firebase": "^10.14.1",
+    "framer-motion": "^12.23.12",
     "i18next": "^25.3.2",
     "i18next-browser-languagedetector": "^8.2.0",
     "i18next-http-backend": "^3.0.2",

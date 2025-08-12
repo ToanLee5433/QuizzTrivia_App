@@ -144,7 +144,7 @@ export const sendOTPEmail = async (email: string, code: string): Promise<boolean
       
       return true;
     } else {
-      throw new Error(result.message || 'Failed to send email via EmailJS');
+      throw new Error(result.messageKey || 'Failed to send email via EmailJS');
     }
   } catch (error: any) {
     console.error('Error sending OTP email:', error);

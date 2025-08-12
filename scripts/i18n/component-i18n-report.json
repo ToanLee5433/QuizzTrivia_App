@@ -1,0 +1,2238 @@
+{
+  "timestamp": "2025-08-12T09:37:43.109Z",
+  "total": 223,
+  "withI18n": 107,
+  "withoutI18n": 116,
+  "components": [
+    {
+      "file": "main.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "App.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "components\\ClientSideAIGenerator.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\pages\\NotFound.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\pages\\LandingPage.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "shared\\pages\\Home.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\pages\\Dashboard.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "shared\\pages\\Creator.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "shared\\components\\Sidebar.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\components\\SearchComponent.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\components\\RoleBasedRedirect.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\components\\QuizReviewSystem.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "shared\\components\\QuickReviewSection.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\components\\PopularQuizzesRanking.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\components\\NotificationCenter.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "shared\\components\\NotificationBanner.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\components\\Layout.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\components\\LanguageSwitcher.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "shared\\components\\Header.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "shared\\components\\Footer.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\components\\FirestoreTest.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\components\\ErrorBoundary.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\components\\EmptyState.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\components\\AchievementSystem.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\components\\ui\\RichTextViewer.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\components\\ui\\RichTextEditor.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\components\\ui\\Modal.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\components\\ui\\LoadingSpinner.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\components\\ui\\Input.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\components\\ui\\Button.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\components\\layout\\Unauthorized.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\components\\layout\\NotFound.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\components\\layout\\Loading.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "shared\\components\\layout\\Layout.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\ResultPage.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": true,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\RealQuizListPage.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizReviewsPage.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizPreviewPage.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizPage.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizList.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\MyQuizzesPage.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\LeaderboardPage.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\FavoritesPage.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\EditQuizPageAdvanced.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\EditQuizPage.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\CreateQuizPage.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\components\\ReviewListNew.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\components\\ReviewList.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\components\\ReviewFormNew.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\components\\ReviewForm.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\components\\QuizStats.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\components\\QuizFilters.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\components\\QuizCard.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\components\\QuizBulkImport.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\components\\QuestionEditor.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\components\\ModernGeminiAIGenerator_new.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\components\\GeminiAIQuestionGenerator.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\pages\\MultiplayerMain.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\pages\\CreateMultiplayerRoom.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\components\\RoomSettings.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\components\\RoomLobby.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\components\\MultiplayerTestComponent.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\components\\MultiplayerQuiz.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\components\\MultiplayerManager.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\components\\MultiplayerLobby.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\components\\MultiplayerGameSimple.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\components\\MultiplayerChat.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\components\\liveLeaderboard.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\multiplayer\\components\\JoinRoomModal.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\components\\GameResults.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\components\\GameModeSelector.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\components\\CreateRoomModal.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\pages\\StatsDashboard.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\pages\\CreatorManagementNew.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\pages\\CreatorManagement.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\pages\\CategoryManagement_new.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\pages\\CategoryManagement.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\pages\\AdminUserManagement.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\pages\\AdminQuizManagement_new.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\pages\\AdminQuizManagement_clean.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\pages\\AdminQuizManagementNew.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\pages\\AdminQuizManagement.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\admin\\pages\\AdminDashboard.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\admin\\pages\\Admin.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\components\\QuizPreview.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\components\\QuickActions_Simple.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\components\\QuickActions.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\components\\BulkActions.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\components\\AdminUtilities.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\components\\AdminStats_new.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\components\\AdminStatsUltimate.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\components\\AdminStatsRealNew.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\components\\AdminStatsReal.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\components\\AdminStatsNew.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\components\\AdminStats.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\admin\\components\\AdminSidebar.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\components\\AdminSetup.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\components\\AdminProtectedRoute.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\components\\AdminLogin.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\components\\AdminLayout.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\auth\\pages\\Profile.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\auth\\pages\\LoginPage.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\auth\\pages\\AuthPageNew.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\auth\\components\\RoleSelection.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\auth\\components\\ProtectedRoute.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\auth\\components\\ProfileDebugPanel.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\auth\\components\\OTPVerification.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\auth\\components\\ForgotPassword.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\auth\\components\\AutoLogoutOnBan.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\ResultPage\\index.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizResultViewer\\index.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": true,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizPage\\index.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\CreateQuizPage\\index.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\ResultPage\\components\\StatsGrid.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\ResultPage\\components\\ScoreCircle.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\ResultPage\\components\\ResultSummary.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\ResultPage\\components\\PerformanceAnalysis.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\ResultPage\\components\\LoadingSpinner.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\ResultPage\\components\\Leaderboard.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\ResultPage\\components\\Confetti.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\ResultPage\\components\\AnswerReview.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\ResultPage\\components\\ActionButtons.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizPage\\components\\Timer.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizPage\\components\\QuickNavigation.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizPage\\components\\QuestionRenderer.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizPage\\components\\ProgressIndicator.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizPage\\components\\ConfirmationModals.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\CreateQuizPage\\components\\SortableItem.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": true,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\CreateQuizPage\\components\\ReviewStep.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\CreateQuizPage\\components\\QuizInfoStep_new.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\CreateQuizPage\\components\\QuizInfoStep.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\CreateQuizPage\\components\\QuizBulkImport.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\CreateQuizPage\\components\\QuestionsStep.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\CreateQuizPage\\components\\QuestionEditor.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\CreateQuizPage\\components\\ModernAIQuestionGenerator.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\CreateQuizPage\\components\\FirebaseAIQuestionGenerator.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\CreateQuizPage\\components\\FileUploadDemo.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\CreateQuizPage\\components\\AdvancedFileUpload.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "vite-env.d.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "utils\\initializeCategories.ts",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "utils\\createTestResults.ts",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\types.ts",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\index.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "services\\quizStatsService.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "services\\geminiAI.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "services\\fileProcessor.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "services\\emailJSService.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "firebase\\config.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "lib\\store.ts",
+      "hasI18n": true,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "lib\\index.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "config\\gemini.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "config\\constants.ts",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\pages\\index.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "lib\\utils\\roleSync.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "lib\\utils\\helpers.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "lib\\utils\\constants.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "lib\\types\\quiz.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "lib\\types\\auth.ts",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "lib\\store\\index.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "lib\\i18n\\index.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "lib\\firebase\\config.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "lib\\config\\firebase.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\types.ts",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\store.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\services.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\index.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\constants.ts",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\types.ts",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\index.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\auth\\types.ts",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\auth\\store.ts",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\auth\\services.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\auth\\index.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\admin\\index.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "shared\\components\\ui\\index.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\types\\review.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\types\\quiz.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\services\\reviewService.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\services\\realDataService.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\services\\quizService.ts",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\services\\quiz.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\services\\geminiAIService.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\services\\firebaseAIService.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\services\\fileProcessingService.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\services\\base.ts",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\services\\auth.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\services\\aiService.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\services\\aiQuestionService.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\api\\user.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\api\\shared.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\api\\index.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\api\\creator.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\api\\base.ts",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\api\\ai.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\api\\admin.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\types\\index.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\pages\\index.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\services\\multiplayerService.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\services\\LocalMultiplayerService.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\services\\index.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\services\\firestoreMultiplayerService.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\services\\enhancedMultiplayerService.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\components\\multiplayerStore.ts",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\auth\\store\\index.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\auth\\services\\otpService.ts",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\auth\\services\\authService.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\ResultPage\\utils.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\ResultPage\\types.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizResultViewer\\index.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizPage\\utils.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizPage\\types.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\CreateQuizPage\\utils.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\CreateQuizPage\\types.ts",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\CreateQuizPage\\constants.ts",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\ResultPage\\hooks\\useResultData.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\ResultPage\\hooks\\useLeaderboard.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": true,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\ResultPage\\hooks\\index.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\ResultPage\\components\\index.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizPage\\hooks\\useQuizTimer.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizPage\\hooks\\useQuizSession.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizPage\\hooks\\useQuizNavigation.ts",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizPage\\hooks\\useQuizData.ts",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizPage\\hooks\\index.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    }
+  ]
+}

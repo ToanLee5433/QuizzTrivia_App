@@ -385,17 +385,27 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, viewMode = 'grid' }) => {
         )}
 
         {/* Action buttons */}
-        <div className="flex gap-3 mt-auto pt-4 border-t border-gray-100">
+        <div className="flex gap-2 mt-auto pt-4 border-t border-gray-100">
           <Link
             to={`/quiz/${quiz.id}`}
-            className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3 px-6 rounded-2xl font-semibold text-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+            className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3 px-4 rounded-2xl font-semibold text-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-sm"
             onClick={() => console.log('Quiz card clicked:', quiz.id, quiz.title)}
           >
             {quiz.isCompleted ? '🔄 Chơi lại' : '🚀 Bắt đầu'}
           </Link>
           <Link
+            to={`/multiplayer`}
+            state={{ selectedQuiz: quiz }}
+            className="px-3 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+            title="Chơi cùng bạn bè"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.196-2.121M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.196-2.121M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </Link>
+          <Link
             to={`/quiz/${quiz.id}/reviews`}
-            className="px-4 py-3 border-2 border-gray-200 hover:border-blue-300 text-gray-700 hover:text-blue-600 rounded-2xl transition-all duration-300 hover:bg-blue-50"
+            className="px-3 py-3 border-2 border-gray-200 hover:border-blue-300 text-gray-700 hover:text-blue-600 rounded-2xl transition-all duration-300 hover:bg-blue-50"
             title="Xem đánh giá"
           >
             <Eye className="w-5 h-5" />

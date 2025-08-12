@@ -36,7 +36,11 @@ module.exports = {
   ],
   
   // Ignore patterns
-  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
+  testPathIgnorePatterns: [
+    '/node_modules/', 
+    '/dist/',
+    '/src/__tests__/fileMock.js'
+  ],
   transformIgnorePatterns: [
     'node_modules/(?!(firebase|@firebase|recharts|d3-*)/)'
   ],
@@ -46,6 +50,7 @@ module.exports = {
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
     '!src/main.tsx',
-    '!src/vite-env.d.ts'
+    '!src/vite-env.d.ts',
+    '!src/__tests__/**'
   ]
 };
