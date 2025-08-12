@@ -295,10 +295,38 @@ const resources = {
       
       // Admin
       "admin": {
+        "panel": "Bảng Quản Trị",
+        "greeting": "Xin chào, {{name}}",
         "quizApproved": "Đã phê duyệt quiz thành công!",
         "quizApprovalError": "Có lỗi xảy ra khi phê duyệt quiz!",
         "quizRejected": "Đã từ chối quiz!",
-        "quizRejectionError": "Có lỗi xảy ra khi từ chối quiz!"
+        "quizRejectionError": "Có lỗi xảy ra khi từ chối quiz!",
+        "dataLoadSuccess": "Đã tải dữ liệu thực tế từ Firebase!",
+        "dataLoadError": "Lỗi khi tải dữ liệu",
+        "realDataLoadError": "Lỗi khi tải dữ liệu thực tế",
+        "exportDataDevelopment": "Chức năng xuất dữ liệu đang được phát triển",
+        "currentTab": "Tab hiện tại: {{tab}}",
+        "backToOverview": "Về Tổng quan",
+        "viewingStatsSection": "Bạn đang xem phần Thống kê & Tổng quan",
+        "advancedStatsDescription": "Đây là trang chứa biểu đồ và thống kê nâng cao mà bạn vừa thêm",
+        "userManagement": "Quản lý người dùng",
+        "tabs": {
+          "overview": "Tổng quan",
+          "users": "Người dùng", 
+          "quizzes": "Quiz",
+          "categories": "Danh mục",
+          "overviewStats": "Tổng quan & Thống kê",
+          "userManagement": "Quản lý Người dùng",
+          "quizManagement": "Quản lý Quiz",
+          "categoryManagement": "Quản lý Danh mục"
+        },
+        "stats": {
+          "totalUsers": "Tổng tài khoản",
+          "publishedQuizzes": "Quiz đã xuất bản",
+          "completionAttempts": "Lượt làm bài",
+          "totalCreators": "Người sáng tạo",
+          "userGrowth": "Tăng trưởng người dùng"
+        }
       }
     }
   },
@@ -592,10 +620,38 @@ const resources = {
       
       // Admin
       "admin": {
+        "panel": "Admin Panel",
+        "greeting": "Hello, {{name}}",
         "quizApproved": "Quiz approved successfully!",
         "quizApprovalError": "Error occurred while approving quiz!",
         "quizRejected": "Quiz rejected!",
-        "quizRejectionError": "Error occurred while rejecting quiz!"
+        "quizRejectionError": "Error occurred while rejecting quiz!",
+        "dataLoadSuccess": "Successfully loaded real data from Firebase!",
+        "dataLoadError": "Error loading data",
+        "realDataLoadError": "Error loading real data",
+        "exportDataDevelopment": "Data export feature is under development",
+        "currentTab": "Current tab: {{tab}}",
+        "backToOverview": "Back to Overview",
+        "viewingStatsSection": "You are viewing the Statistics & Overview section",
+        "advancedStatsDescription": "This page contains the advanced charts and statistics you just added",
+        "userManagement": "User Management",
+        "tabs": {
+          "overview": "Overview",
+          "users": "Users",
+          "quizzes": "Quizzes",
+          "categories": "Categories",
+          "overviewStats": "Overview & Statistics",
+          "userManagement": "User Management",
+          "quizManagement": "Quiz Management",
+          "categoryManagement": "Category Management"
+        },
+        "stats": {
+          "totalUsers": "Total Accounts",
+          "publishedQuizzes": "Published Quizzes",
+          "completionAttempts": "Quiz Attempts",
+          "totalCreators": "Content Creators",
+          "userGrowth": "User Growth"
+        }
       }
     }
   }

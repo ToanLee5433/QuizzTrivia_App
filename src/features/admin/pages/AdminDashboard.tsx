@@ -373,8 +373,8 @@ const AdminDashboard: React.FC = () => {
           <div className="flex items-center">
             <span className="text-2xl mr-3">✅</span>
             <div>
-              <h3 className="font-semibold text-green-800">Bạn đang xem phần Thống kê & Tổng quan</h3>
-              <p className="text-green-700 text-sm">Đây là trang chứa biểu đồ và thống kê nâng cao mà bạn vừa thêm</p>
+              <h3 className="font-semibold text-green-800">{t('admin.viewingStatsSection', 'Bạn đang xem phần Thống kê & Tổng quan')}</h3>
+              <p className="text-green-700 text-sm">{t('admin.advancedStatsDescription', 'Đây là trang chứa biểu đồ và thống kê nâng cao mà bạn vừa thêm')}</p>
             </div>
           </div>
         </div>
@@ -396,7 +396,7 @@ const AdminDashboard: React.FC = () => {
   const renderUsers = () => (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg font-semibold">Quản lý người dùng</h3>
+        <h3 className="text-lg font-semibold">{t('admin.userManagement', 'Quản lý người dùng')}</h3>
       </div>
       
       <div className="overflow-x-auto">
@@ -745,13 +745,13 @@ const AdminDashboard: React.FC = () => {
                 </div>
               )}
               <div className="text-sm text-gray-600">
-                Xin chào, <span className="font-semibold text-red-600">{user?.displayName || user?.email}</span>
+                {t('admin.greeting', 'Xin chào, {{name}}', { name: user?.displayName || user?.email || 'Admin' })}
               </div>
               <button
                 onClick={handleLogout}
                 className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors duration-200"
               >
-                Đăng xuất
+                {t('auth.logout', 'Đăng xuất')}
               </button>
             </div>
           </div>
@@ -768,10 +768,10 @@ const AdminDashboard: React.FC = () => {
           
           <nav className="flex space-x-8">
             {[
-              { id: 'dashboard', label: 'Tổng quan', icon: '📊' },
-              { id: 'users', label: 'Người dùng', icon: '👥' },
-              { id: 'quizzes', label: 'Quiz', icon: '📝' },
-              { id: 'categories', label: 'Danh mục', icon: '📂' }
+              { id: 'dashboard', label: t('admin.tabs.overview', 'Tổng quan'), icon: '📊' },
+              { id: 'users', label: t('admin.tabs.users', 'Người dùng'), icon: '👥' },
+              { id: 'quizzes', label: t('admin.tabs.quizzes', 'Quiz'), icon: '📝' },
+              { id: 'categories', label: t('admin.tabs.categories', 'Danh mục'), icon: '📂' }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -800,21 +800,21 @@ const AdminDashboard: React.FC = () => {
         <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-blue-900">
-              {activeTab === 'dashboard' && '📊 Tổng quan & Thống kê'}
-              {activeTab === 'users' && '👥 Quản lý Người dùng'}
-              {activeTab === 'quizzes' && '📝 Quản lý Quiz'}
-              {activeTab === 'categories' && '📂 Quản lý Danh mục'}
+              {activeTab === 'dashboard' && `📊 ${t('admin.tabs.overviewStats', 'Tổng quan & Thống kê')}`}
+              {activeTab === 'users' && `👥 ${t('admin.tabs.userManagement', 'Quản lý Người dùng')}`}
+              {activeTab === 'quizzes' && `📝 ${t('admin.tabs.quizManagement', 'Quản lý Quiz')}`}
+              {activeTab === 'categories' && `📂 ${t('admin.tabs.categoryManagement', 'Quản lý Danh mục')}`}
             </h2>
             <div className="flex items-center gap-3">
               <span className="text-sm text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
-                Tab hiện tại: {activeTab}
+                {t('admin.currentTab', 'Tab hiện tại: {{tab}}', { tab: activeTab })}
               </span>
               {activeTab !== 'dashboard' && (
                 <button
                   onClick={() => setActiveTab('dashboard')}
                   className="text-sm bg-blue-600 text-white px-3 py-1 rounded-full hover:bg-blue-700"
                 >
-                  Về Tổng quan
+                  {t('admin.backToOverview', 'Về Tổng quan')}
                 </button>
               )}
             </div>

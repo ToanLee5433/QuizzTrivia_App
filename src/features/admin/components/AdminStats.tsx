@@ -5,7 +5,7 @@ import {
   PieChart, Pie, Cell, Legend, LineChart, Line, AreaChart, Area 
 } from 'recharts';
 import { 
-  TrendingUp, TrendingDown, Users, BookOpen, Target, Award, Activity, RefreshCw, 
+  TrendingUp, TrendingDown, Users, BookOpen, Target, Award, RefreshCw, 
   Eye, MessageSquare, Edit, Download
 } from 'lucide-react';
 import { getRealQuizData, getRealUserData, getRealReviewData, getRealCategoryData } from '../../quiz/services/realDataService';
@@ -41,7 +41,7 @@ const AdminStats: React.FC = () => {
         categories: categories || []
       });
 
-      toast.success('Đã tải dữ liệu thực tế từ Firebase!');
+      toast.success(t('admin.dataLoadSuccess', 'Đã tải dữ liệu thực tế từ Firebase!'));
     } catch (error) {
       console.error('Error loading real data:', error);
       toast.error(t('admin.realDataLoadError', 'Lỗi khi tải dữ liệu thực tế'));
@@ -56,7 +56,7 @@ const AdminStats: React.FC = () => {
 
   const exportData = () => {
     console.log('Exporting data...');
-    toast.info('Chức năng xuất dữ liệu đang được phát triển');
+    toast.info(t('admin.exportDataDevelopment', 'Chức năng xuất dữ liệu đang được phát triển'));
   };
 
   // Calculate enhanced stats from real data
@@ -65,15 +65,26 @@ const AdminStats: React.FC = () => {
 
     const { quizzes, users, reviews } = realData;
     
+    // Calculate more accurate statistics
+    const publishedQuizzes = quizzes.filter((q: any) => q.status === 'published' || q.status === 'approved').length;
+    const creatorUsers = users.filter((u: any) => u.role === 'creator' || u.role === 'admin').length;
+    const quizCreatorIds = new Set(quizzes.map((q: any) => q.createdBy).filter(Boolean));
+    const totalCreators = Math.max(creatorUsers, quizCreatorIds.size);
+    
+    // More realistic completion estimates based on actual quiz count
+    const estimatedCompletions = Math.floor(publishedQuizzes * 2.5); // Average 2.5 attempts per published quiz
+    
     return {
       totalUsers: users.length,
-      activeUsers: Math.floor(users.length * 0.7), // Assume 70% active
+      activeUsers: Math.floor(users.length * 0.65), // More conservative estimate
       totalQuizzes: quizzes.length,
-      completedQuizzes: Math.floor(quizzes.length * 4.2), // Estimate
-      averageScore: 78.5, // Mock for now
-      completionRate: 85.2, // Mock for now
-      userGrowthRate: 12.5, // Mock for now
-      quizCompletionGrowth: 8.3, // Mock for now
+      publishedQuizzes: publishedQuizzes, // Quizzes available to users
+      totalCreators: totalCreators, // Users who have created quizzes
+      completedQuizzes: estimatedCompletions, // Quiz completion attempts
+      averageScore: 78.5, // Keep mock for now
+      completionRate: 85.2, // Keep mock for now  
+      userGrowthRate: 12.5, // Keep mock for now
+      quizCompletionGrowth: 8.3, // Keep mock for now
       totalReviews: reviews.length,
       averageRating: reviews.length > 0 ? 
         reviews.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / reviews.length : 0
@@ -125,7 +136,7 @@ const AdminStats: React.FC = () => {
         {/* Main Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
-            title="Tổng người dùng"
+            title={t('admin.stats.totalUsers', 'Tổng tài khoản')}
             value={enhancedStats.totalUsers.toLocaleString()}
             icon={<Users className="w-6 h-6 text-blue-600" />}
             change={enhancedStats.userGrowthRate}
@@ -133,25 +144,25 @@ const AdminStats: React.FC = () => {
             onClick={() => setActiveTab('users')}
           />
           <StatCard
-            title="Người dùng hoạt động"
-            value={enhancedStats.activeUsers.toLocaleString()}
-            icon={<Activity className="w-6 h-6 text-green-600" />}
-            change={8.2}
-            color="green"
-          />
-          <StatCard
-            title="Tổng quiz"
-            value={enhancedStats.totalQuizzes.toLocaleString()}
-            icon={<BookOpen className="w-6 h-6 text-purple-600" />}
+            title={t('admin.stats.publishedQuizzes', 'Quiz đã xuất bản')}
+            value={enhancedStats.publishedQuizzes.toLocaleString()}
+            icon={<BookOpen className="w-6 h-6 text-green-600" />}
             change={15.3}
-            color="purple"
+            color="green"
             onClick={() => setActiveTab('quizzes')}
           />
           <StatCard
-            title="Lượt hoàn thành"
+            title={t('admin.stats.completionAttempts', 'Lượt làm bài')}
             value={enhancedStats.completedQuizzes.toLocaleString()}
-            icon={<Target className="w-6 h-6 text-orange-600" />}
+            icon={<Target className="w-6 h-6 text-purple-600" />}
             change={enhancedStats.quizCompletionGrowth}
+            color="purple"
+          />
+          <StatCard
+            title={t('admin.stats.totalCreators', 'Người sáng tạo')}
+            value={enhancedStats.totalCreators.toLocaleString()}
+            icon={<Award className="w-6 h-6 text-orange-600" />}
+            change={8.2}
             color="orange"
           />
         </div>
@@ -161,7 +172,7 @@ const AdminStats: React.FC = () => {
           {/* User Growth Chart */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Tăng trưởng người dùng</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t('admin.stats.userGrowth', 'Tăng trưởng người dùng')}</h3>
               <div className="flex space-x-2">
                 {['7d', '30d', '90d', '1y'].map((range) => (
                   <button
