@@ -142,6 +142,46 @@ const resources = {
           "kickedPlayer": "Đã kick người chơi",
           "gameStarted": "Game đã bắt đầu"
         }
+      },
+      
+      // Landing page
+      "landing": {
+        "hero": {
+          "title": "Thử thách kiến thức của bạn",
+          "subtitle": "Khám phá hàng ngàn quiz thú vị, thử thách bản thân và nâng cao kiến thức với Quiz Trivia - nền tảng quiz tương tác hàng đầu!"
+        },
+        "cta": {
+          "primary": "Bắt đầu ngay - Miễn phí!",
+          "secondary": "Đã có tài khoản?"
+        },
+        "features": {
+          "diversity": {
+            "title": "Đa dạng chủ đề",
+            "description": "Khoa học, lịch sử, thể thao, giải trí và nhiều chủ đề hấp dẫn khác"
+          },
+          "realtime": {
+            "title": "Thời gian thực",
+            "description": "Thử thách với timer đếm ngược và theo dõi tiến độ realtime"
+          },
+          "ranking": {
+            "title": "Xếp hạng & Thành tích",
+            "description": "Theo dõi điểm số, thống kê và so sánh với bạn bè"
+          }
+        },
+        "stats": {
+          "quizzes": "Quiz đa dạng",
+          "players": "Người chơi",
+          "plays": "Lượt chơi",
+          "support": "Hỗ trợ"
+        },
+        "footer": {
+          "rights": "Tất cả quyền được bảo lưu."
+        }
+      },
+      
+      // Quiz translations
+      "quiz": {
+        "enterAnswer": "Nhập câu trả lời của bạn..."
       }
     }
   },
@@ -282,6 +322,46 @@ const resources = {
           "kickedPlayer": "Player kicked",
           "gameStarted": "Game started"
         }
+      },
+      
+      // Landing page
+      "landing": {
+        "hero": {
+          "title": "Challenge Your Knowledge",
+          "subtitle": "Discover thousands of exciting quizzes, challenge yourself and enhance your knowledge with Quiz Trivia - the leading interactive quiz platform!"
+        },
+        "cta": {
+          "primary": "Get Started - Free!",
+          "secondary": "Already have an account?"
+        },
+        "features": {
+          "diversity": {
+            "title": "Diverse Topics",
+            "description": "Science, history, sports, entertainment and many other exciting topics"
+          },
+          "realtime": {
+            "title": "Real-time",
+            "description": "Challenge with countdown timer and realtime progress tracking"
+          },
+          "ranking": {
+            "title": "Ranking & Achievements",
+            "description": "Track scores, statistics and compare with friends"
+          }
+        },
+        "stats": {
+          "quizzes": "Diverse Quizzes",
+          "players": "Players",
+          "plays": "Plays",
+          "support": "Support"
+        },
+        "footer": {
+          "rights": "All rights reserved."
+        }
+      },
+      
+      // Quiz translations
+      "quiz": {
+        "enterAnswer": "Enter your answer..."
       }
     }
   }

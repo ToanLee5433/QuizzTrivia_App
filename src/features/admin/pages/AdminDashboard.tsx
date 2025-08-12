@@ -66,39 +66,43 @@ const AdminDashboard: React.FC = () => {
 
   // Function to calculate and update stats from actual data
   const updateStatsFromData = (users: User[], quizzes: Quiz[]) => {
-    // Filter users to get real user count (exclude admins if needed)
-    const realUsers = users.filter(u => u.role !== 'admin' && u.isActive !== false);
+    // Count ALL users (including admins for admin dashboard)
+    const totalUsers = users.length;
     
-    // Count quizzes that are approved and published (completed)
-    const approved = quizzes.filter(q => q.status === 'approved').length;
-    const published = quizzes.filter(q => q.status === 'approved' || q.status === 'published').length;
-    
-    // Calculate creators (users who have created quizzes or have creator role)
-    const creatorIds = new Set(quizzes.map(q => q.createdBy));
-    const roleCreators = users.filter(u => u.role === 'creator').length;
-    const activeCreators = Math.max(creatorIds.size, roleCreators);
-    
-    // Total quizzes available to users
+    // Count ALL quizzes regardless of status
     const totalQuizzes = quizzes.length;
     
+    // Count quizzes by status for meaningful metrics
+    const approvedQuizzes = quizzes.filter(q => q.status === 'approved').length;
+    const publishedQuizzes = quizzes.filter(q => q.status === 'published').length;
+    const pendingQuizzes = quizzes.filter(q => q.status === 'pending').length;
+    const completedQuizzes = approvedQuizzes + publishedQuizzes; // Available for users
+    
+    // Calculate creators more accurately
+    const creatorRoleUsers = users.filter(u => u.role === 'creator').length;
+    const quizCreatorIds = new Set(quizzes.map(q => q.createdBy || q.userId).filter(Boolean));
+    const totalCreators = Math.max(creatorRoleUsers, quizCreatorIds.size);
+    
     const newStats = {
-      totalUsers: realUsers.length,
+      totalUsers: totalUsers,
       totalQuizzes: totalQuizzes,
-      completedQuizzes: published > 0 ? published : approved, // Quizzes ready for users
-      totalCreators: activeCreators
+      completedQuizzes: completedQuizzes,
+      totalCreators: totalCreators
     };
     
     setStats(newStats);
     
     console.log('📊 DETAILED Stats calculation:', {
       totalUsersInDB: users.length,
-      realUsers: realUsers.length,
       adminUsers: users.filter(u => u.role === 'admin').length,
-      inactiveUsers: users.filter(u => u.isActive === false).length,
+      creatorUsers: users.filter(u => u.role === 'creator').length,
+      normalUsers: users.filter(u => u.role === 'user').length,
       totalQuizzesInDB: quizzes.length,
-      approvedQuizzes: approved,
-      publishedQuizzes: published,
-      activeCreators: activeCreators,
+      approvedQuizzes: approvedQuizzes,
+      publishedQuizzes: publishedQuizzes,
+      pendingQuizzes: pendingQuizzes,
+      creatorRoleUsers: creatorRoleUsers,
+      quizCreatorIds: quizCreatorIds.size,
       finalStats: newStats
     });
     

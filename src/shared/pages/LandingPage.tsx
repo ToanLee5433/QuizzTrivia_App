@@ -50,25 +50,25 @@ export const LandingPage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mt-8 sm:mt-12 lg:mt-16 px-4">
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-6">
               <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">🎯</div>
-              <h3 className="text-lg sm:text-xl font-semibold mb-2">Đa dạng chủ đề</h3>
+              <h3 className="text-lg sm:text-xl font-semibold mb-2">{t('landing.features.diversity.title', 'Đa dạng chủ đề')}</h3>
               <p className="text-blue-100 text-sm sm:text-base">
-                Khoa học, lịch sử, thể thao, giải trí và nhiều chủ đề hấp dẫn khác
+                {t('landing.features.diversity.description', 'Khoa học, lịch sử, thể thao, giải trí và nhiều chủ đề hấp dẫn khác')}
               </p>
             </div>
             
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-6">
               <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">⏱️</div>
-              <h3 className="text-lg sm:text-xl font-semibold mb-2">Thời gian thực</h3>
+              <h3 className="text-lg sm:text-xl font-semibold mb-2">{t('landing.features.realtime.title', 'Thời gian thực')}</h3>
               <p className="text-blue-100 text-sm sm:text-base">
-                Thử thách với timer đếm ngược và theo dõi tiến độ realtime
+                {t('landing.features.realtime.description', 'Thử thách với timer đếm ngược và theo dõi tiến độ realtime')}
               </p>
             </div>
             
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-6 sm:col-span-2 lg:col-span-1">
               <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">🏆</div>
-              <h3 className="text-lg sm:text-xl font-semibold mb-2">Xếp hạng & Thành tích</h3>
+              <h3 className="text-lg sm:text-xl font-semibold mb-2">{t('landing.features.ranking.title', 'Xếp hạng & Thành tích')}</h3>
               <p className="text-blue-100 text-sm sm:text-base">
-                Theo dõi điểm số, thống kê và so sánh với bạn bè
+                {t('landing.features.ranking.description', 'Theo dõi điểm số, thống kê và so sánh với bạn bè')}
               </p>
             </div>
           </div>
@@ -81,19 +81,19 @@ export const LandingPage: React.FC = () => {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 text-center text-white">
             <div>
               <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-300 mb-1 sm:mb-2">1000+</div>
-              <div className="text-blue-100 text-xs sm:text-sm lg:text-base">Quiz đa dạng</div>
+              <div className="text-blue-100 text-xs sm:text-sm lg:text-base">{t('landing.stats.quizzes', 'Quiz đa dạng')}</div>
             </div>
             <div>
               <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-purple-300 mb-1 sm:mb-2">10K+</div>
-              <div className="text-blue-100 text-xs sm:text-sm lg:text-base">Người chơi</div>
+              <div className="text-blue-100 text-xs sm:text-sm lg:text-base">{t('landing.stats.players', 'Người chơi')}</div>
             </div>
             <div>
               <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-indigo-300 mb-1 sm:mb-2">50K+</div>
-              <div className="text-blue-100 text-xs sm:text-sm lg:text-base">Lượt chơi</div>
+              <div className="text-blue-100 text-xs sm:text-sm lg:text-base">{t('landing.stats.plays', 'Lượt chơi')}</div>
             </div>
             <div>
               <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-cyan-300 mb-1 sm:mb-2">24/7</div>
-              <div className="text-blue-100 text-xs sm:text-sm lg:text-base">Hỗ trợ</div>
+              <div className="text-blue-100 text-xs sm:text-sm lg:text-base">{t('landing.stats.support', 'Hỗ trợ')}</div>
             </div>
           </div>
         </div>
@@ -101,7 +101,7 @@ export const LandingPage: React.FC = () => {
 
       {/* Footer */}
       <footer className="text-center text-blue-200 py-4 sm:py-6 lg:py-8 px-4">
-        <p>&copy; 2025 Quiz Trivia. Tất cả quyền được bảo lưu.</p>
+        <p>&copy; 2025 Quiz Trivia. {t('landing.footer.rights', 'Tất cả quyền được bảo lưu.')}</p>
       </footer>
     </div>
   );

@@ -46,7 +46,7 @@ const AdminUtilities = React.lazy(() => import('./features/admin/components/Admi
 
 // Stage 5: Advanced Components
 import { Layout } from './shared/components/layout/Layout';
-import { NotFound } from './shared/components/layout/NotFound';
+import { NotFound } from './shared/pages/NotFound';
 import ErrorBoundary from './shared/components/ErrorBoundary';
 import RoleSelection from './features/auth/components/RoleSelection';
 import ProtectedRoute from './features/auth/components/ProtectedRoute';
@@ -523,7 +523,7 @@ const AppContent: React.FC = () => {
       </Routes>
     </div>
   );
-};
+}
 
 function App() {
   return (

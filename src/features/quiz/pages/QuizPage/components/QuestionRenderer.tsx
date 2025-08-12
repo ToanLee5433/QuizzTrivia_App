@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Question } from '../../../types';
 
 interface QuestionRendererProps {
@@ -14,6 +15,7 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
   value,
   onChange,
 }) => {
+  const { t } = useTranslation();
   const renderMultipleChoice = () => (
     <div className="space-y-3">
       {question.answers.map((answer, index) => (
@@ -39,7 +41,10 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
             <span className="font-medium mr-3">
               {String.fromCharCode(65 + index)}.
             </span>
-            <span className="flex-1">{answer.text}</span>
+            <span 
+              className="flex-1"
+              dangerouslySetInnerHTML={{ __html: answer.text || '' }}
+            />
           </div>
         </button>
       ))}
@@ -71,11 +76,10 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
             <span className="font-medium mr-3">
               {String.fromCharCode(65 + index)}.
             </span>
-            <span className={`flex-1 font-medium ${
-              answer.text === 'Đúng' ? 'text-green-600' : 'text-red-600'
-            }`}>
-              {answer.text}
-            </span>
+            <span 
+              className={`flex-1 font-medium ${answer.text === 'Đúng' ? 'text-green-600' : 'text-red-600'}`}
+              dangerouslySetInnerHTML={{ __html: answer.text || '' }}
+            />
           </div>
         </button>
       ))}
@@ -92,7 +96,7 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
           type="text"
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Nhập câu trả lời của bạn..."
+          placeholder={t('quiz.enterAnswer', 'Nhập câu trả lời của bạn...')}
           className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg"
         />
       </div>
@@ -194,7 +198,10 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
               <span className="font-medium mr-3">
                 {String.fromCharCode(65 + index)}.
               </span>
-              <span className="flex-1">{answer.text}</span>
+              <span 
+                className="flex-1"
+                dangerouslySetInnerHTML={{ __html: answer.text || '' }}
+              />
             </div>
           </button>
         );
@@ -234,9 +241,10 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
             {question.type === 'checkbox' && 'Nhiều lựa chọn'}
           </span>
         </div>
-        <h2 className="text-xl font-semibold text-gray-800 mb-6">
-          {question.text}
-        </h2>
+        <h2 
+          className="text-xl font-semibold text-gray-800 mb-6"
+          dangerouslySetInnerHTML={{ __html: question.text || '' }}
+        />
       </div>
       
       {renderQuestion()}

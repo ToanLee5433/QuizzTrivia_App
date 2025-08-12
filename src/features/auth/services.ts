@@ -10,7 +10,7 @@ import {
   AuthError as FirebaseAuthError,
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../../firebase/config';
+import { auth, db } from '../../lib/firebase/config';
 import { AuthUser, LoginCredentials, RegisterCredentials } from './types';
 import { User } from '../../shared/types';
 
