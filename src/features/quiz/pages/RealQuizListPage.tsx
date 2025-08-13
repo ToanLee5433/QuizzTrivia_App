@@ -50,17 +50,17 @@ const RealQuizListPage: React.FC = () => {
             className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Quay lại Admin
+            {t('back')}
           </Link>
           
           <div className="bg-white rounded-lg p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                  📚 Danh Sách Quiz Thực Tế
+                  📚 {t('quizList.title')}
                 </h1>
                 <p className="text-gray-600">
-                  {quizzes.length} quiz được tìm thấy trong database
+                  {quizzes.length} {t('quizList.results.quizzes')}
                 </p>
               </div>
               
@@ -68,7 +68,7 @@ const RealQuizListPage: React.FC = () => {
                 onClick={loadRealQuizzes}
                 className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
-                <RefreshCw className="w-4 h-4 mr-2" />{t("refresh")}
+                <RefreshCw className="w-4 h-4 mr-2" />{t('refresh')}
               </button>
             </div>
           </div>
@@ -116,11 +116,11 @@ const RealQuizListPage: React.FC = () => {
                   
                   <div className="flex items-center space-x-3">
                     <Link
-                      to={`/quiz/${quiz.id}/preview`}
+                       to={`/quiz/${quiz.id}/preview`}
                       className="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
                     >
                       <Eye className="w-4 h-4 mr-2" />
-                      Xem Quiz
+                       {t('quiz.preview')}
                     </Link>
                     
                     <Link
@@ -128,7 +128,7 @@ const RealQuizListPage: React.FC = () => {
                       className="inline-flex items-center px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
                     >
                       <MessageSquare className="w-4 h-4 mr-2" />
-                      Đánh giá
+                       {t('quiz.reviewsTitle')}
                     </Link>
                   </div>
                 </div>
@@ -140,12 +140,12 @@ const RealQuizListPage: React.FC = () => {
         {/* Quick Stats */}
         {quizzes.length > 0 && (
           <div className="mt-8 bg-white rounded-lg p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Thống kê nhanh</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 {t('dashboard.realTimeData')}</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="text-center">
                 <p className="text-2xl font-bold text-blue-600">{quizzes.length}</p>
-                <p className="text-sm text-gray-600">Tổng quiz</p>
+                <p className="text-sm text-gray-600">{t('dashboard.totalQuizzes')}</p>
               </div>
               
               <div className="text-center">

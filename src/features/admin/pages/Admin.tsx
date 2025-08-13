@@ -21,21 +21,25 @@ const Admin: React.FC = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // Lấy tất cả quiz
-        const quizzesSnap = await getDocs(collection(db, 'quizzes'));
-        const quizzes = quizzesSnap.docs.map(doc => doc.data());
-        // Chỉ lấy quiz đã được duyệt (status === 'approved')
-        const approvedQuizzes = quizzes.filter(q => q.status === 'approved');
-        const totalQuizzes = approvedQuizzes.length;
-        const completedQuizzes = approvedQuizzes.filter(q => q.completed === true || q.status === 'completed').length;
-        const totalCreators = approvedQuizzes
-          .map(q => q.creatorId)
-          .filter((v, i, a) => v && a.indexOf(v) === i).length;
+        // Đồng bộ logic với /home: dùng dữ liệu thực, đếm toàn bộ quiz và người dùng đang hoạt động
+        const [quizzesSnap, usersSnap] = await Promise.all([
+          getDocs(collection(db, 'quizzes')),
+          getDocs(collection(db, 'users'))
+        ]);
 
-        // Lấy tổng số user
-        const usersSnap = await getDocs(collection(db, 'users'));
-        const users = usersSnap.docs.map(doc => doc.data());
-        const totalUsers = users.length;
+        // Tổng số quiz = tất cả document trong 'quizzes'
+        const totalQuizzes = quizzesSnap.size;
+
+        // Chỉ đếm người dùng hoạt động (isActive !== false và isDeleted !== true)
+        const users = usersSnap.docs.map(doc => doc.data() as any);
+        const activeUsers = users.filter(u => u?.isActive !== false && u?.isDeleted !== true);
+        const totalUsers = activeUsers.length;
+
+        // Người tạo: role 'creator' hoặc 'admin' trong nhóm active
+        const totalCreators = activeUsers.filter(u => u?.role === 'creator' || u?.role === 'admin').length;
+
+        // Chưa có dữ liệu quiz results => để 0 cho khớp với /home
+        const completedQuizzes = 0;
 
         setStats({
           totalQuizzes,
@@ -43,8 +47,8 @@ const Admin: React.FC = () => {
           completedQuizzes,
           totalCreators,
         });
-      } catch (err) {
-        // Có thể toast lỗi nếu muốn
+      } catch (_) {
+        // silent
       }
     };
     fetchStats();

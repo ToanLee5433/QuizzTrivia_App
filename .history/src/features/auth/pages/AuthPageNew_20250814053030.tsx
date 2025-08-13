@@ -221,7 +221,7 @@ const AuthPage: React.FC = () => {
         await setDoc(userDocRef, { lastLoginAt: new Date(), emailVerified: userCredential.user.emailVerified }, { merge: true });
       }
 
-      // toast.success(t('auth.loginSuccess'));
+      toast.success(t('auth.loginSuccess'));
       navigate(redirectPath);
     } catch (error: any) {
       console.error('❌ Login error:', error.code, error.message);

@@ -241,10 +241,10 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
             {question.type === 'checkbox' && t('quiz.questionTypes.checkbox')}
           </span>
         </div>
-        <h2 
-          className="text-xl font-semibold text-gray-800 mb-6"
-          dangerouslySetInnerHTML={{ __html: question.text || '' }}
-        />
+        {/* Render tiêu đề câu hỏi KHÔNG tự bọc <p> */}
+        <h2 className="text-xl font-semibold text-gray-800 mb-6">
+          {typeof question.text === 'string' ? question.text.replace(/^<p>|<\/p>$/g, '') : ''}
+        </h2>
       </div>
       
       {renderQuestion()}

@@ -9,6 +9,7 @@ import { db } from '../../../lib/firebase/config';
 import { toast } from 'react-toastify';
 import { Star, Eye } from 'lucide-react';
 import { reviewService } from '../services/reviewService';
+import { useTranslation } from 'react-i18next';
 import { QuizReviewStats } from '../types/review';
 
 interface QuizCardProps {
@@ -18,6 +19,7 @@ interface QuizCardProps {
 
 const QuizCard: React.FC<QuizCardProps> = ({ quiz, viewMode = 'grid' }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   // **THÊM MỚI**: Helper functions
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -151,9 +153,9 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, viewMode = 'grid' }) => {
                 <span className={`px-2 py-1 rounded text-xs font-medium ${getDifficultyColor(quiz.difficulty)}`}>
                   {quiz.difficulty.charAt(0).toUpperCase() + quiz.difficulty.slice(1)}
                 </span>
-                {quiz.isCompleted && (
+                 {quiz.isCompleted && (
                   <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded font-medium">
-                    ✓ Hoàn thành
+                    ✓ {t('quiz.completed')}
                   </span>
                 )}
               </div>
@@ -174,7 +176,7 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, viewMode = 'grid' }) => {
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                {quiz.questions.length} câu hỏi
+               {quiz.questions.length} {t('quiz.questions')}
               </div>
               <div className="flex items-center">
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -182,10 +184,10 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, viewMode = 'grid' }) => {
                 </svg>
                 {formatDuration(quiz.duration)}
               </div>
-              {quiz.totalPlayers && (
+               {quiz.totalPlayers && (
                 <div className="flex items-center">
                   <Eye className="w-4 h-4 mr-1" />
-                  {quiz.totalPlayers} lượt chơi
+                   {quiz.totalPlayers} {t('leaderboard.plays')}
                 </div>
               )}
               {reviewStats && reviewStats.totalReviews > 0 && (
@@ -215,11 +217,11 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, viewMode = 'grid' }) => {
 
           {/* Actions */}
           <div className="flex items-center gap-3 flex-shrink-0">
-            <button
+             <button
               onClick={handleToggleFavorite}
               disabled={!user || favLoading}
               className={`p-2 border rounded-lg transition-colors ${isFavorite ? 'bg-yellow-100 border-yellow-400 text-yellow-600' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
-              title={isFavorite ? 'Bỏ yêu thích' : 'Yêu thích quiz này'}
+               title={isFavorite ? t('favorites.remove') || 'Unfavorite' : t('favorites.add') || 'Favorite'}
             >
               <svg className="w-5 h-5" fill={isFavorite ? 'gold' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
@@ -228,7 +230,7 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, viewMode = 'grid' }) => {
             <Link
               to={`/quiz/${quiz.id}/reviews`}
               className="p-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              title="Xem đánh giá"
+              title={t('quiz.viewReviews')}
             >
               <Eye className="w-5 h-5" />
             </Link>
@@ -237,7 +239,7 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, viewMode = 'grid' }) => {
               className="bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 px-6 rounded-lg font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-200"
               onClick={() => console.log('Quiz card clicked:', quiz.id, quiz.title)}
             >
-              {quiz.isCompleted ? 'Chơi lại' : 'Xem chi tiết'}
+              {quiz.isCompleted ? t('quiz.startQuizButton') : t('quiz.preview')}
             </Link>
           </div>
         </div>
@@ -271,12 +273,12 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, viewMode = 'grid' }) => {
         
         {/* **THÊM MỚI**: Overlay badges */}
         <div className="absolute top-4 left-4 flex flex-wrap gap-2 z-20">
-          <span className={`px-3 py-1.5 rounded-2xl text-xs font-semibold backdrop-blur-sm shadow-lg ${getDifficultyColor(quiz.difficulty)}`}>
-            {quiz.difficulty === 'easy' ? '🟢 Dễ' : quiz.difficulty === 'medium' ? '🟡 Trung bình' : '🔴 Khó'}
+           <span className={`px-3 py-1.5 rounded-2xl text-xs font-semibold backdrop-blur-sm shadow-lg ${getDifficultyColor(quiz.difficulty)}`}>
+            {quiz.difficulty === 'easy' ? `🟢 ${t('difficulty.easy')}` : quiz.difficulty === 'medium' ? `🟡 ${t('difficulty.medium')}` : `🔴 ${t('difficulty.hard')}`}
           </span>
           {quiz.isPublic && (
             <span className="px-3 py-1.5 rounded-2xl text-xs font-semibold bg-green-500/80 text-white backdrop-blur-sm shadow-lg">
-              📢 Công khai
+              📢 {t('quiz.published')}
             </span>
           )}
         </div>
@@ -287,7 +289,7 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, viewMode = 'grid' }) => {
             onClick={handleToggleFavorite}
             disabled={!user || favLoading}
             className={`p-2.5 backdrop-blur-sm rounded-2xl shadow-lg transition-all duration-300 ${isFavorite ? 'bg-yellow-400/90 border border-yellow-300 text-yellow-900' : 'bg-white/20 border border-white/30 text-white hover:bg-white/30'}`}
-            title={isFavorite ? 'Bỏ yêu thích' : 'Yêu thích quiz này'}
+            title={isFavorite ? (t('favorites.remove') || 'Unfavorite') : (t('favorites.add') || 'Favorite')}
           >
             <svg className="w-5 h-5" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
@@ -348,7 +350,7 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, viewMode = 'grid' }) => {
               <svg className="w-4 h-4 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span className="font-medium">{quiz.questions.length} câu hỏi</span>
+               <span className="font-medium">{quiz.questions.length} {t('quiz.questions')}</span>
             </div>
             {reviewStats && reviewStats.totalReviews > 0 && (
               <div className="flex items-center">
@@ -360,12 +362,12 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, viewMode = 'grid' }) => {
         </div>
 
         {/* **THÊM MỚI**: Completion status */}
-        {quiz.isCompleted && (
+           {quiz.isCompleted && (
           <div className="flex items-center text-green-600 text-sm mb-4 bg-green-50 px-3 py-2 rounded-2xl border border-green-200">
             <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
             </svg>
-            <span className="font-semibold">Đã hoàn thành: {quiz.score}%</span>
+            <span className="font-semibold">{t('quiz.completed')}: {quiz.score}%</span>
           </div>
         )}
 
@@ -397,13 +399,13 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, viewMode = 'grid' }) => {
             }}
             className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3 px-4 rounded-2xl font-semibold text-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-sm"
           >
-            {quiz.isCompleted ? '🔄 Chơi lại' : '🚀 Bắt đầu'}
+            {quiz.isCompleted ? `🔄 ${t('quiz.startQuizButton')}` : `🚀 ${t('start')}`}
           </button>
 
           <Link
             to={`/quiz/${quiz.id}/reviews`}
             className="px-3 py-3 border-2 border-gray-200 hover:border-blue-300 text-gray-700 hover:text-blue-600 rounded-2xl transition-all duration-300 hover:bg-blue-50"
-            title="Xem đánh giá"
+            title={t('quiz.viewReviews')}
           >
             <Eye className="w-5 h-5" />
           </Link>

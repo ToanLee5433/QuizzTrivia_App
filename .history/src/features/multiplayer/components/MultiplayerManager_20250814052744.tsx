@@ -220,12 +220,12 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
 
   const handleConnectionLost = useCallback(() => {
     setConnectionStatus('disconnected');
-    // toast.warning(t('multiplayer.errors.connectionLost'));
+    toast.warning(t('multiplayer.errors.connectionLost'));
   }, [t]);
 
   const handleConnectionRestored = useCallback(() => {
     setConnectionStatus('connected');
-    // toast.success(t('multiplayer.success.connectionRestored'));
+    toast.success(t('multiplayer.success.connectionRestored'));
   }, [t]);
 
   // Navigation handlers

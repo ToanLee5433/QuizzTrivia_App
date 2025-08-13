@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 
 const Profile: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useSelector((state: RootState) => state.auth);
   const userResults = useSelector((state: RootState) => state.quiz.userResults);
   const dispatch = useDispatch();
@@ -371,7 +371,7 @@ const Profile: React.FC = () => {
       <div key={result.id} className="bg-white rounded-lg border border-gray-100 p-4 hover:shadow-md transition-shadow">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h4 className="font-semibold text-gray-900 mb-1">{quizTitles[result.quizId] || 'Quiz không tên'}</h4>
+            <h4 className="font-semibold text-gray-900 mb-1">{quizTitles[result.quizId] || t('quiz.untitled')}</h4>
             <div className="flex items-center space-x-4 text-sm text-gray-600">
               <span className="flex items-center space-x-1">
                 <Target className="w-4 h-4" />
@@ -379,11 +379,11 @@ const Profile: React.FC = () => {
               </span>
               <span className="flex items-center space-x-1">
                 <Clock className="w-4 h-4" />
-                <span>{Math.round((result.timeSpent || 0) / 60)}p</span>
+                <span>{Math.round((result.timeSpent || 0) / 60)} {t('minutes')}</span>
               </span>
               <span className="flex items-center space-x-1">
                 <Calendar className="w-4 h-4" />
-                <span>{new Date(result.completedAt).toLocaleDateString('vi-VN')}</span>
+                <span>{new Date(result.completedAt).toLocaleDateString(i18n.language)}</span>
               </span>
             </div>
           </div>
@@ -395,14 +395,14 @@ const Profile: React.FC = () => {
             <Link
               to={`/quiz/${result.quizId}/reviews`}
               className="p-2 text-gray-400 hover:text-purple-600 transition-colors"
-              title="Xem lại quiz"
+              title={t('profile.viewAgain')}
             >
               <RotateCcw className="w-4 h-4" />
             </Link>
             <Link
               to={`/quiz-result/${result.id}`}
               className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-              title="Xem kết quả chi tiết"
+              title={t('profile.viewDetails')}
             >
               <Eye className="w-4 h-4" />
             </Link>
@@ -438,7 +438,7 @@ const Profile: React.FC = () => {
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-gray-900">{user.displayName || user.email}</h1>
               <p className="text-gray-600">{user.email}</p>
-              <p className="text-sm text-gray-500 mt-1">{t('profile.memberSince')} {new Date().toLocaleDateString('vi-VN')}</p>
+              <p className="text-sm text-gray-500 mt-1">{t('profile.memberSince')} {new Date().toLocaleDateString(i18n.language)}</p>
             </div>
             <button
               onClick={() => setTab('settings')}
