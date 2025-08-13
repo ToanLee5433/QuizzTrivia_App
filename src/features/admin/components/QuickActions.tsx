@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 import { collection, addDoc, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 
@@ -24,10 +25,12 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
   const [showBanner, setShowBanner] = useState(false);
   const [bannerData, setBannerData] = useState<{message:string,type:string}|null>(null);
 
+  const { t } = useTranslation();
+
   // 1. Tạo thông báo hệ thống
   const createSystemNotification = async () => {
     if (!notificationData.message.trim()) {
-      toast.error('Vui lòng nhập nội dung thông báo!');
+      toast.error(t('admin.quickActions.toasts.enterMessage', 'Please enter notification content!'));
       return;
     }
 
@@ -52,10 +55,10 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
       setShowBanner(true);
       setTimeout(() => setShowBanner(false), 5000);
       
-      toast.success('Thông báo đã được tạo thành công!');
+      toast.success(t('admin.quickActions.toasts.createSuccess', 'Notification created successfully!'));
     } catch (error) {
       console.error('Error creating notification:', error);
-      toast.error('Có lỗi xảy ra khi tạo thông báo!');
+      toast.error(t('admin.quickActions.toasts.createError', 'Error creating notification!'));
     } finally {
       setLoading(false);
     }
@@ -89,9 +92,9 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
       link.download = `quiz-app-backup-${new Date().toISOString().split('T')[0]}.json`;
       link.click();
       
-      toast.success('Backup dữ liệu thành công!');
+      toast.success(t('admin.quickActions.toasts.backupSuccess', 'Data backup successful!'));
     } catch (error) {
-      toast.error('Lỗi khi backup dữ liệu!');
+      toast.error(t('admin.quickActions.toasts.backupError', 'Error during data backup!'));
     } finally {
       setLoading(false);
     }
@@ -99,7 +102,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
 
   // 3. Xóa thông báo hệ thống
   const deleteNotifications = async () => {
-    if (!confirm('Bạn có chắc muốn xóa tất cả thông báo đang hiển thị?')) return;
+    if (!confirm(t('admin.quickActions.toasts.confirmDeleteAll', 'Are you sure you want to disable all visible notifications?'))) return;
     
     setLoading(true);
     try {
@@ -110,11 +113,11 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
       );
       
       await Promise.all(deletePromises);
-      toast.success('Đã tắt tất cả thông báo!');
+      toast.success(t('admin.quickActions.toasts.deleteSuccess', 'All notifications disabled!'));
       onRefreshData();
     } catch (error) {
       console.error('Error deleting notifications:', error);
-      toast.error('Lỗi khi xóa thông báo!');
+      toast.error(t('admin.quickActions.toasts.deleteError', 'Error disabling notifications!'));
     } finally {
       setLoading(false);
     }
@@ -122,7 +125,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
 
   // 4. Dọn dẹp dữ liệu đã xóa
   const cleanupDeletedData = async () => {
-    if (!confirm('Bạn có chắc muốn dọn dẹp dữ liệu đã xoá (quiz, user)?')) return;
+    if (!confirm(t('admin.quickActions.toasts.confirmCleanup', 'Are you sure you want to cleanup deleted data (quizzes, users)?'))) return;
     setLoading(true);
     try {
       // Xóa quiz đã bị đánh dấu deleted=true
@@ -136,10 +139,10 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
       const userDeletePromises = deletedUsers.map(u => updateDoc(doc(db, 'users', u.id), { isPurged: true }));
 
       await Promise.all([...quizDeletePromises, ...userDeletePromises]);
-      toast.success('Đã dọn dẹp dữ liệu xoá!');
+      toast.success(t('admin.quickActions.toasts.cleanupSuccess', 'Deleted data cleaned up!'));
       onRefreshData();
     } catch (error) {
-      toast.error('Lỗi khi dọn dẹp dữ liệu xoá!');
+      toast.error(t('admin.quickActions.toasts.cleanupError', 'Error during cleanup!'));
     } finally {
       setLoading(false);
     }
@@ -149,29 +152,29 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
     // Updated actions as requested
     {
       icon: '📢',
-      title: 'Gửi thông báo',
-      description: 'Gửi thông báo đến tất cả người dùng',
+      title: t('admin.quickActions.items.notify.title', 'Send notification'),
+      description: t('admin.quickActions.items.notify.desc', 'Send notification to all users'),
       action: openNotificationModal,
       color: 'blue'
     },
     {
       icon: '❌',
-      title: 'Xóa thông báo',
-      description: 'Tắt tất cả thông báo đang hiển thị',
+      title: t('admin.quickActions.items.deleteNotifications.title', 'Clear notifications'),
+      description: t('admin.quickActions.items.deleteNotifications.desc', 'Disable all active notifications'),
       action: deleteNotifications,
       color: 'red'
     },
     {
-      icon: '�',
-      title: 'Backup dữ liệu',
-      description: 'Sao lưu toàn bộ dữ liệu hệ thống',
+      icon: '🗂️',
+      title: t('admin.quickActions.items.backup.title', 'Backup data'),
+      description: t('admin.quickActions.items.backup.desc', 'Export all system data'),
       action: backupData,
       color: 'green'
     },
     {
       icon: '🗑️',
-      title: 'Dọn dẹp dữ liệu xoá',
-      description: 'Xóa quiz và user đã bị đánh dấu xoá',
+      title: t('admin.quickActions.items.cleanup.title', 'Cleanup deleted data'),
+      description: t('admin.quickActions.items.cleanup.desc', 'Mark deleted quizzes and users as purged'),
       action: cleanupDeletedData,
       color: 'orange'
     }
@@ -202,7 +205,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
       )}
       <h3 className="text-lg font-semibold mb-4 flex items-center">
         <span className="text-2xl mr-2">⚡</span>
-        Thao tác nhanh (Đã cập nhật)
+        {t('admin.quickActions.title', 'Quick actions')}
       </h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -225,22 +228,22 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
 
       {/* Thống kê nhanh hiển thị */}
       <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-        <h4 className="font-medium mb-2">📊 Tình trạng hệ thống</h4>
+        <h4 className="font-medium mb-2">📊 {t('admin.quickActions.systemStatus', 'System status')}</h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
-            <div className="text-gray-600">Người dùng</div>
+            <div className="text-gray-600">{t('admin.quickActions.stats.users', 'Users')}</div>
             <div className="font-bold text-blue-600">{stats.totalUsers}</div>
           </div>
           <div>
-            <div className="text-gray-600">Tổng Quiz</div>
+            <div className="text-gray-600">{t('admin.quickActions.stats.totalQuizzes', 'Total Quizzes')}</div>
             <div className="font-bold text-yellow-600">{stats.totalQuizzes}</div>
           </div>
           <div>
-            <div className="text-gray-600">Đã hoàn thành</div>
+            <div className="text-gray-600">{t('admin.quickActions.stats.completions', 'Completions')}</div>
             <div className="font-bold text-green-600">{stats.completedQuizzes}</div>
           </div>
           <div>
-            <div className="text-gray-600">Người tạo</div>
+            <div className="text-gray-600">{t('admin.quickActions.stats.creators', 'Creators')}</div>
             <div className="font-bold text-purple-600">{stats.totalCreators}</div>
           </div>
         </div>
@@ -250,18 +253,18 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
       {showNotificationModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <h2 className="text-xl font-semibold mb-4">Gửi thông báo hệ thống</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('admin.quickActions.modal.title', 'Send system notification')}</h2>
             
             <div className="space-y-4">
               {/* Nội dung thông báo */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nội dung thông báo
+                  {t('admin.quickActions.modal.contentLabel', 'Notification content')}
                 </label>
                 <textarea
                   value={notificationData.message}
                   onChange={(e) => setNotificationData(prev => ({ ...prev, message: e.target.value }))}
-                  placeholder="Nhập nội dung thông báo..."
+                  placeholder={t('admin.quickActions.modal.contentPlaceholder', 'Enter notification content...')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={4}
                 />
@@ -270,33 +273,33 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
               {/* Loại thông báo */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Loại thông báo
+                  {t('admin.quickActions.modal.typeLabel', 'Notification type')}
                 </label>
                 <select
                   value={notificationData.type}
                   onChange={(e) => setNotificationData(prev => ({ ...prev, type: e.target.value as any }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="info">Thông tin (Xanh)</option>
-                  <option value="warning">Cảnh báo (Vàng)</option>
-                  <option value="success">Thành công (Xanh lá)</option>
-                  <option value="error">Lỗi (Đỏ)</option>
+                  <option value="info">{t('admin.quickActions.modal.type.info', 'Info (Blue)')}</option>
+                  <option value="warning">{t('admin.quickActions.modal.type.warning', 'Warning (Yellow)')}</option>
+                  <option value="success">{t('admin.quickActions.modal.type.success', 'Success (Green)')}</option>
+                  <option value="error">{t('admin.quickActions.modal.type.error', 'Error (Red)')}</option>
                 </select>
               </div>
 
               {/* Đối tượng nhận thông báo */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Đối tượng nhận
+                  {t('admin.quickActions.modal.targetLabel', 'Target audience')}
                 </label>
                 <select
                   value={notificationData.targetRole}
                   onChange={(e) => setNotificationData(prev => ({ ...prev, targetRole: e.target.value as any }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="all">Tất cả người dùng</option>
-                  <option value="user">Chỉ User</option>
-                  <option value="creator">Chỉ Creator</option>
+                  <option value="all">{t('admin.quickActions.modal.target.all', 'All users')}</option>
+                  <option value="user">{t('admin.quickActions.modal.target.user', 'Users only')}</option>
+                  <option value="creator">{t('admin.quickActions.modal.target.creator', 'Creators only')}</option>
                 </select>
               </div>
 
@@ -307,14 +310,14 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
                   className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
                   disabled={loading}
                 >
-                  Hủy
+                  {t('cancel', 'Cancel')}
                 </button>
                 <button
                   onClick={createSystemNotification}
                   disabled={loading || !notificationData.message.trim()}
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'Đang gửi...' : 'Gửi thông báo'}
+                  {loading ? t('admin.quickActions.modal.sending', 'Sending...') : t('admin.quickActions.modal.send', 'Send notification')}
                 </button>
               </div>
             </div>

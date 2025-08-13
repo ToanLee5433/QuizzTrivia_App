@@ -56,7 +56,7 @@ const Header: React.FC<HeaderProps> = () => {
                 Quiz Trivia
               </h1>
               <p className="text-blue-100/90 text-xs lg:text-sm hidden sm:block font-medium">
-                Thử thách kiến thức của bạn ✨
+                {t('landing.hero.title', 'Thử thách kiến thức của bạn')} ✨
               </p>
             </div>
           </div>
@@ -114,8 +114,8 @@ const Header: React.FC<HeaderProps> = () => {
                     {user?.role && (
                       <p className="text-blue-100/90 text-xs flex items-center font-medium">
                         {user.role === 'admin' && <Crown className="w-3 h-3 mr-1 text-yellow-300" />}
-                        {user.role === 'admin' ? 'Quản trị viên' : 
-                         user.role === 'creator' ? 'Người tạo' : 'Người dùng'}
+                        {user.role === 'admin' ? t('ui.admin', 'Quản trị viên') : 
+                         user.role === 'creator' ? t('ui.creator', 'Người tạo') : t('ui.user', 'Người dùng')}
                       </p>
                     )}
                   </div>
@@ -142,8 +142,8 @@ const Header: React.FC<HeaderProps> = () => {
                             'bg-gradient-to-r from-gray-500 to-slate-500 text-white'
                           }`}>
                             {user.role === 'admin' && <Crown className="w-3 h-3 mr-1.5" />}
-                            {user.role === 'admin' ? 'Admin' : 
-                             user.role === 'creator' ? 'Creator' : 'User'}
+                             {user.role === 'admin' ? t('ui.admin', 'Admin') : 
+                             user.role === 'creator' ? t('ui.creator', 'Creator') : t('ui.user', 'User')}
                           </span>
                         </div>
                       )}
@@ -157,7 +157,7 @@ const Header: React.FC<HeaderProps> = () => {
                         className="w-full flex items-center px-5 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200 hover:text-blue-700 group"
                       >
                         <UserCircle className="w-5 h-5 mr-3 group-hover:scale-110 transition-transform duration-200" />
-                        <span className="font-medium">Hồ sơ cá nhân</span>
+                        <span className="font-medium">{t('profile.myProfile', 'Hồ sơ cá nhân')}</span>
                       </button>
                       <button
                         onClick={() => {
@@ -167,7 +167,7 @@ const Header: React.FC<HeaderProps> = () => {
                         className="w-full flex items-center px-5 py-3 text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 transition-all duration-200 hover:text-red-700 group"
                       >
                         <LogOut className="w-5 h-5 mr-3 group-hover:scale-110 transition-transform duration-200" />
-                        <span className="font-medium">Đăng xuất</span>
+                        <span className="font-medium">{t('auth.logout', 'Đăng xuất')}</span>
                       </button>
                     </div>
                   </div>

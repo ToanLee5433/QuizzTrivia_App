@@ -665,6 +665,10 @@ i18n
     resources,
     lng: 'vi', // default language
     fallbackLng: 'vi',
+    // Use both filesystem namespace (common) and inline fallback (translation)
+    ns: ['common', 'translation'],
+    defaultNS: 'common',
+    fallbackNS: 'translation',
     
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],
@@ -685,8 +689,35 @@ i18n
     load: 'languageOnly',
     preload: ['vi', 'en'],
     
-    // Debug mode in development
-    debug: process.env.NODE_ENV === 'development'
+    // Debug mode in development (Vite)
+    debug: import.meta.env.DEV,
+
+    // Avoid Suspense requirement globally since not all trees are wrapped
+    react: { useSuspense: false },
+
+    // Optionally record missing keys while developing
+    saveMissing: import.meta.env.DEV
   });
 
+// Helpful development logs for i18n lifecycle
+if (import.meta.env.DEV) {
+  i18n.on('initialized', (opts) => {
+    // eslint-disable-next-line no-console
+    console.log('i18n initialized', { lng: i18n.language, opts });
+  });
+  i18n.on('loaded', (loaded) => {
+    // eslint-disable-next-line no-console
+    console.log('i18n resources loaded', loaded);
+  });
+  i18n.on('languageChanged', (lng) => {
+    // eslint-disable-next-line no-console
+    console.log('i18n language changed to', lng);
+    if (typeof document !== 'undefined') {
+      document.documentElement.lang = lng;
+    }
+  });
+}
+
+// Cache buster: 1755022794404
+// Force reload: 1755023227283
 export default i18n;

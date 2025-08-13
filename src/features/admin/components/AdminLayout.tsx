@@ -1,6 +1,7 @@
 ﻿import React from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
+import { useTranslation } from 'react-i18next';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -9,11 +10,12 @@ interface AdminLayoutProps {
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
   const { user } = useSelector((state: RootState) => state.auth);
+  const { t } = useTranslation();
 
   if (user?.role !== 'admin') {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-600">Bạn không có quyền truy cập trang này.</p>
+        <p className="text-gray-600">{t('admin.loginAsAdmin', 'You need admin rights to access this page.')}</p>
       </div>
     );
   }
@@ -26,7 +28,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <h1 className="text-xl font-bold text-gray-900">🔧 Admin Panel</h1>
+                <h1 className="text-xl font-bold text-gray-900">🔧 {t('admin.sidebar.title', 'Admin Panel')}</h1>
               </div>
               {title && (
                 <div className="ml-4 pl-4 border-l border-gray-200">
@@ -35,7 +37,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
               )}
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-500">Xin chào, {user?.email}</span>
+              <span className="text-sm text-gray-500">{t('welcome', 'Welcome')}, {user?.email}</span>
               <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-medium">A</span>
               </div>

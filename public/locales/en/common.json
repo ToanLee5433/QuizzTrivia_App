@@ -1,62 +1,81 @@
 {
   "loading": "Loading...",
   "loadingData": "Loading data...",
-  "save": "Save",
-  "cancel": "Cancel",
-  "delete": "Delete",
-  "edit": "Edit",
-  "create": "Create",
-  "update": "Update",
-  "search": "Search",
-  "filter": "Filter",
-  "sort": "Sort",
-  "yes": "Yes",
-  "no": "No",
-  "ok": "OK",
-  "back": "Back",
-  "next": "Next",
-  "previous": "Previous",
-  "close": "Close",
-  "open": "Open",
-  "view": "View",
-  "download": "Download",
-  "upload": "Upload",
   "or": "Or",
-  "pleaseWait": "Please wait a moment",
-  "checkingAuth": "Checking authentication...",
-  "minutes": "minutes",
-  "success": "Success",
-  "error": "Error",
-  "welcome": "Welcome",
-  "details": "Details",
-  "viewDetails": "View details",
-  "tryAgain": "Try again",
-  "start": "Start",
-  "finish": "Finish",
-  "complete": "Complete",
-  "continue": "Continue",
-  "processing": "Processing...",
-  "noData": "No data",
-  "retry": "Retry",
-  "refresh": "Refresh",
-  
-  "nav": {
-    "home": "Home",
-    "dashboard": "Dashboard",
-    "quizzes": "Quizzes",
-    "offline": "Offline",
-    "multiplayer": "Multiplayer",
-    "favorites": "Favorites",
-    "leaderboard": "Leaderboard",
-    "profile": "Profile",
-    "creator": "Creator",
+  "favorites": {
+    "title": "Favorite Quizzes"
+  },
+  "quiz": {
+    "searchPlaceholder": "🔍 Search quizzes, categories, tags...",
+    "myQuizzes": "My Quizzes"
+  },
+  "creator": {
+    "createNewQuiz": "Create New Quiz"
+  },
+  "quizList": {
+    "title": "Explore Quizzes",
+    "subtitle": "Discover new knowledge through interesting quizzes",
+    "exploreQuizzes": "Explore Quizzes",
+    "showStats": "Show statistics",
+    "hideStats": "Hide statistics", 
+    "createNewQuiz": "Create New Quiz",
+    "filters": {
+      "searchPlaceholder": "🔍 Search quizzes, categories, tags...",
+      "allCategories": "🏷️ All categories",
+      "allDifficulties": "📊 All difficulties",
+      "easyDifficulty": "😊 Easy",
+      "mediumDifficulty": "😐 Medium",
+      "hardDifficulty": "😤 Hard"
+    },
+    "sort": {
+      "newest": "🆕 Newest",
+      "oldest": "📅 Oldest", 
+      "popular": "🔥 Popular",
+      "difficulty": "📈 By difficulty"
+    },
+    "display": {
+      "label": "Display:",
+      "grid": "Grid",
+      "list": "List"
+    },
+    "options": {
+      "showCompleted": "Show completed quizzes"
+    },
+    "results": {
+      "found": "Found",
+      "quizzes": "quizzes",
+      "for": "for",
+      "inCategory": "in category",
+      "withDifficulty": "with difficulty"
+    },
+    "empty": {
+      "noQuizFound": "No quizzes found",
+      "noQuizMatch": "No quizzes match the current filters.",
+      "clearFilters": "🔄 Clear filters",
+      "createNewQuiz": "➕ Create new quiz"
+    },
+    "errors": {
+      "connectionBlocked": "🚫 Firestore connection blocked",
+      "errorOccurred": "❌ An error occurred",
+      "troubleshooting": "Troubleshooting:",
+      "steps": {
+        "step1": "1. Disable Ad Blocker for localhost:5174",
+        "step2": "2. Add *.googleapis.com to whitelist",
+        "step3": "3. Try Incognito/Private mode",
+        "step4": "4. Check Firewall/Antivirus"
+      },
+      "retryConnection": "🔄 Retry connection",
+      "tryAgain": "🔄 Try again",
+      "retrying": "Retrying connection..."
+    }
+  }
+}
     "admin": "Admin",
     "login": "Login",
     "logout": "Logout",
     "register": "Register"
   },
-
-  "ui": {
+  "uiDuplicate": {
     "login": "Login",
     "logout": "Logout",
     "register": "Register",
@@ -68,14 +87,39 @@
     "dashboard": "Dashboard",
     "management": "Management",
     "userManagement": "User Management",
-    "quizManagement": "Quiz Management",
     "welcome": "Welcome",
     "menu": "Menu",
     "navigation": "Navigation",
-    "welcomeRole": "Welcome with role"
+    "welcomeRole": "Welcome with role",
+    "hideStats": "Hide stats",
+    "showStats": "Show stats",
+    "sort": {
+      "newest": "Newest",
+      "oldest": "Oldest",
+      "popular": "Popular",
+      "byDifficulty": "By difficulty"
+    },
+    "display": "Display:",
+    "grid": "Grid",
+    "list": "List",
+    "searchResultPrefix": "Found",
+    "searchResultSuffix": "quizzes",
+    "for": "for",
+    "inCategory": "in category",
+    "withDifficulty": "with difficulty",
+    "noQuizFound": "No quizzes found",
+    "noQuizMatch": "No quizzes match current filters.",
+    "clearFilters": "Clear filters",
+    "retryConnection": "Retry connection",
+    "firestoreHelp": {
+      "1": "1. Disable Ad Blocker for localhost:5174",
+      "2": "2. Add *.googleapis.com to whitelist",
+      "3": "3. Try Incognito/Private mode",
+      "4": "4. Check Firewall/Antivirus"
+    }
   },
-
   "status": {
+    "label": "Status",
     "pending": "Pending",
     "approved": "Approved",
     "rejected": "Rejected",
@@ -88,10 +132,10 @@
     "failed": "Failed",
     "successful": "Successful"
   },
-
   "action": {
     "submit": "Submit",
     "confirm": "Confirm",
+    "actions": "Actions",
     "approve": "Approve",
     "reject": "Reject",
     "activate": "Activate",
@@ -106,7 +150,6 @@
     "deselect": "Deselect",
     "save": "Save"
   },
-  
   "landing": {
     "hero": {
       "title": "Test your knowledge",
@@ -123,16 +166,22 @@
       },
       "realtime": {
         "title": "Real-time",
-        "desc": "Challenge yourself with countdown timer and track realtime progress"
+        "desc": "Challenge yourself with countdown timer and track realtime progress",
+        "description": "Real-time gaming experience"
       },
       "ranking": {
         "title": "Ranking & Achievements",
-        "desc": "Track scores, statistics and compare with friends"
+        "desc": "Track scores, statistics and compare with friends",
+        "description": "Compete and challenge friends"
+      },
+      "diversity": {
+        "title": "Diverse Topics",
+        "description": "Thousands of quizzes across all fields"
       }
     },
     "stats": {
       "quizzes": "Diverse Quizzes",
-      "players": "Players", 
+      "players": "Players",
       "plays": "Plays",
       "support": "Support"
     },
@@ -140,7 +189,6 @@
       "rights": "All rights reserved."
     }
   },
-  
   "auth": {
     "login": "Login",
     "register": "Register",
@@ -175,11 +223,26 @@
       "userDisabled": "Account has been disabled",
       "tooManyRequests": "Too many attempts. Please try again later",
       "loginError": "Login error: {{message}}",
-      "googleLoginError": "Google login error: {{message}}"
+      "googleLoginError": "Google login error: {{message}}",
+      "emailAlreadyInUse": "Email already in use",
+      "otpSendError": "OTP send error",
+      "registerError": "Registration error",
+      "registrationDataNotFound": "Registration data not found",
+      "weakPassword": "Password too weak"
+    },
+    "logout": "Logout",
+    "registrationCancelled": "Registration cancelled",
+    "validation": {
+      "displayNameRequired": "Display name is required",
+      "emailInvalid": "Email is invalid",
+      "emailRequired": "Email is required",
+      "passwordMismatch": "Passwords don't match",
+      "passwordRequired": "Password is required",
+      "passwordTooShort": "Password too short",
+      "termsRequired": "You must agree to terms"
     }
   },
-  
-  "quiz": {
+  "quizDuplicateToRemove": {
     "title": "Title",
     "description": "Description",
     "category": "Category",
@@ -264,9 +327,13 @@
       "alreadyReviewed": "You have already reviewed this quiz. Thank you for your feedback!",
       "noReviews": "No reviews yet",
       "beFirst": "Be the first to review this quiz!"
-    }
+    },
+    "enterAnswer": "Enter answer",
+    "exploreDescription": "Explore interesting quizzes",
+    "exploreQuizzes": "Explore Quizzes",
+    "selectedQuiz": "Selected Quiz",
+    "untitled": "Untitled"
   },
-
   "createQuiz": {
     "title": "Create New Quiz",
     "back": "Back",
@@ -309,7 +376,6 @@
       "noDifficulty": "Not selected"
     }
   },
-  
   "dashboard": {
     "welcome": "Hello, {{name}}!",
     "totalQuizzes": "Total Quizzes",
@@ -327,8 +393,8 @@
     "createQuizzes": "Create your own quizzes",
     "adminPanel": "Manage users and system"
   },
-  
   "profile": {
+    "displayName": "Display Name",
     "myProfile": "My Profile",
     "editProfile": "Edit Profile",
     "changePassword": "Change Password",
@@ -337,6 +403,7 @@
     "confirmNewPassword": "Confirm New Password",
     "updateProfile": "Update Profile",
     "avatarUrl": "Avatar URL",
+    "memberSince": "Member since",
     "passwordChangeSuccess": "Password changed successfully!",
     "passwordChangeError": "Error changing password",
     "currentPasswordRequired": "You need to enter the correct current password to authenticate before changing to a new password",
@@ -350,13 +417,69 @@
     "wrongPassword": "Old password is incorrect",
     "weakPassword": "New password is too weak. Please choose a stronger password (at least 6 characters)",
     "requiresRecentLogin": "Login session has expired. Please logout and login again",
-    "loginRequired": "Please login to view profile"
+    "loginRequired": "Please login to view profile",
+    "tabs": {
+      "overview": "Overview",
+      "history": "Quiz History",
+      "achievements": "Achievements",
+      "settings": "Settings"
+    },
+    "stats": {
+      "completedQuizzes": "Completed quizzes",
+      "averageScore": "Average score",
+      "onTotal": "On total quizzes",
+      "accuracy": "Accuracy",
+      "correctRate": "Correct rate",
+      "highScores": "High scores",
+      "over80": "Quizzes ≥80%"
+    },
+    "recentActivity": "Recent activity",
+    "viewAllHistory": "View all history",
+    "searchPlaceholder": "Search quizzes...",
+    "filters": {
+      "score": {
+        "all": "All scores",
+        "high": "High (≥80%)",
+        "medium": "Medium (60-79%)",
+        "low": "Low (<60%)"
+      }
+    },
+    "sort": {
+      "label": "Sort",
+      "date": "Date",
+      "score": "Score",
+      "percentage": "Percentage"
+    },
+    "pagination": {
+      "perPage10": "10/page",
+      "perPage25": "25/page",
+      "perPage50": "50/page",
+      "perPage100": "100/page",
+      "paginate": "Paginate",
+      "showing": "Showing",
+      "of": "of",
+      "results": "results",
+      "prev": "Prev",
+      "pageXofY": "Page {{x}}/{{y}}",
+      "next": "Next"
+    },
+    "noResults": "No results yet",
+    "noResultsDesc": "You haven't completed any quiz. Start your first quiz!",
+    "achievements": "Achievements",
+    "achievementSystem": "Achievement system",
+    "inDevelopment": "Feature under development",
+    "settingsTitle": "Personal information",
+    "updating": "Updating...",
+    "authenticating": "Authenticating..."
   },
-  
   "admin": {
+    "users": {
+      "cannotChangeSelfRole": "You cannot change your own role!",
+      "cannotDeactivateSelf": "You cannot change your own status!",
+      "cannotDeleteSelf": "You cannot delete your own account!"
+    },
     "dashboard": "Admin Dashboard",
     "userManagement": "User Management",
-    "quizManagement": "Quiz Management",
     "categoryManagement": "Category Management",
     "statistics": "Statistics",
     "settings": "Settings",
@@ -370,10 +493,221 @@
     "activated": "activated",
     "deactivated": "deactivated",
     "realDataLoadError": "Error loading real data",
-    "loadingRealData": "Loading real data..."
+    "loadingRealData": "Loading real data...",
+    "advancedStatsDescription": "Advanced statistics about system activity",
+    "backToOverview": "Back to Overview",
+    "currentTab": "Current Tab",
+    "dataLoadSuccess": "Data loaded successfully",
+    "exportDataDevelopment": "Export Development Data",
+    "greeting": "Welcome to Admin Panel",
+    "quizApprovalError": "Error approving quiz",
+    "quizApproved": "Quiz approved",
+    "quizRejected": "Quiz rejected",
+    "quizRejectionError": "Error rejecting quiz",
+    "viewingStatsSection": "Viewing stats section",
+    "roles": "Roles",
+    "dashboardSubtitle": "Manage the entire Quiz system efficiently",
+    "tabs": {
+      "categories": "Categories",
+      "categoryManagement": "Category Management",
+      "overview": "Overview",
+      "overviewStats": "Overview Stats",
+      "quizManagement": "Quiz Management",
+      "quizzes": "Quizzes",
+      "userManagement": "User Management",
+      "users": "Users",
+      "performance": "Performance"
+    },
+    "quickActions": {
+      "title": "Quick actions",
+      "important": "Important functions",
+      "systemStatus": "System status",
+      "stats": {
+        "users": "Users",
+        "totalQuizzes": "Total Quizzes",
+        "completions": "Completions",
+        "creators": "Creators"
+      },
+      "items": {
+        "notify": { "title": "Send notification", "desc": "Send notification to all users" },
+        "deleteNotifications": { "title": "Clear notifications", "desc": "Disable all active notifications" },
+        "backup": { "title": "Backup data", "desc": "Export all system data" },
+        "cleanup": { "title": "Cleanup deleted data", "desc": "Mark deleted quizzes and users as purged" }
+      },
+      "testModal": "Test Modal",
+      "testModalDesc": "Open modal (Debug)",
+      "inDevelopment": "In development",
+      "moreSoon": "More features coming soon",
+      "debugPanel": "Debug Panel",
+      "modalState": "Modal state",
+      "debugHint": "Press F12 to open Developer Tools and check Console log",
+      "modal": {
+        "title": "Send system notification",
+        "contentLabel": "Notification content",
+        "contentPlaceholder": "Enter notification content...",
+        "typeLabel": "Notification type",
+        "type": { "info": "Info (Blue)", "warning": "Warning (Yellow)", "success": "Success (Green)", "error": "Error (Red)" },
+        "targetLabel": "Target audience",
+        "target": { "all": "All users", "user": "Users only", "creator": "Creators only" },
+        "cancel": "Cancel",
+        "send": "Send notification",
+        "sending": "Sending..."
+      },
+      "toasts": {
+        "enterMessage": "Please enter notification content!",
+        "createSuccess": "Notification created successfully!",
+        "createError": "Error creating notification!",
+        "backupSuccess": "Data backup successful!",
+        "backupError": "Error during data backup!",
+        "confirmDeleteAll": "Are you sure you want to disable all visible notifications?",
+        "deleteSuccess": "All notifications disabled!",
+        "deleteError": "Error disabling notifications!",
+        "confirmCleanup": "Are you sure you want to cleanup deleted data (quizzes, users)?",
+        "cleanupSuccess": "Deleted data cleaned up!",
+        "cleanupError": "Error during cleanup!"
+      }
+    },
+    "vsLastMonth": "vs last month",
+    "header": {
+      "title": "Admin Statistics (Real Data)",
+      "subtitle": "Statistics dashboard with real data from Firebase"
+    },
+    "exportData": "Export data",
+    "sidebar": {
+      "title": "Admin Panel",
+      "sectionAdmin": "Administration",
+      "quickActions": "Quick actions",
+      "createQuiz": "Create Quiz",
+      "backToDashboard": "Back to Dashboard",
+      "nav": {
+        "dashboard": "Dashboard",
+        "quizManagement": "Quiz Management",
+        "categories": "Category Management",
+        "users": "User Management",
+        "utilities": "Utilities",
+        "roles": "Roles"
+      }
+    },
+    "utilities": {
+      "title": "Admin Utilities",
+      "createTestQuizzes": {
+        "title": "Create Test Quizzes",
+        "desc": "Create sample quizzes for testing review and data display.",
+        "creating": "Creating...",
+        "created": "Created",
+        "button": "Create Test Quizzes",
+        "alreadyCreated": "Test quizzes already created!",
+        "success": "Successfully created test quizzes!",
+        "error": "Error creating test quizzes"
+      }
+    },
+    "stats": {
+      "completionAttempts": "Completion Attempts",
+      "publishedQuizzes": "Published Quizzes",
+      "totalCreators": "Total Creators",
+      "totalUsers": "Total Users",
+      "userGrowth": "User Growth",
+      "quizActivity": "Quiz activity",
+      "performanceOverview": "Performance overview",
+      "averageScore": "Average score",
+      "completionRate": "Completion rate",
+      "totalReviews": "Total reviews",
+      "averageRating": "Average rating",
+      "topCategories": "Top categories",
+      "recentActivity": "Recent activity",
+      "availableQuizzes": "{{count}} quizzes available",
+      "registeredUsers": "{{count}} users registered",
+      "reviews": "{{count}} reviews",
+      "completions": "{{count}} completions",
+      "createdQuizzes": "Created quizzes",
+      "completedAttempts": "Completed attempts",
+      "performanceMetrics": "Performance metrics",
+      "ratingDistribution": "Rating distribution",
+      "unnamedCategory": "Category {{n}}"
+    },
+    "quizManagement": {
+      "description": "Review and manage all quizzes in the system",
+      "adminBadge": "Admin",
+      "cards": {
+        "totalQuizzes": "Total Quizzes",
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "tab": {
+        "quizzes": "Manage Quizzes",
+        "editRequests": "Edit requests"
+      },
+      "searchPlaceholder": "Search quizzes by title, description...",
+      "filter": {
+        "all": "All",
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "empty": {
+        "noMatchTitle": "No matching quizzes found",
+        "noMatchDesc": "Try changing the search keyword or filters to see more quizzes.",
+        "noQuizzesTitle": "No quizzes yet",
+        "noQuizzesDesc": "There are currently no quizzes in the system. Creators can create quizzes from the Creator page.",
+        "goToCreator": "Go to Creator"
+      },
+      "table": {
+        "title": "Title",
+        "category": "Category",
+        "creator": "Creator",
+        "createdAt": "Created at",
+        "actions": "Actions",
+        "uncategorized": "Uncategorized"
+      },
+      "tooltips": {
+        "preview": "Preview details",
+        "edit": "Edit quiz",
+        "approve": "Approve quiz",
+        "reject": "Reject quiz",
+        "reopen": "Reopen for review",
+        "delete": "Permanently delete quiz"
+      }
+    },
+    "editRequests": {
+      "title": "Quiz edit requests ({{count}})",
+      "emptyTitle": "No edit requests",
+      "emptyDesc": "Edit requests from quiz creators will appear here",
+      "unknownUser": "Unknown user",
+      "unknownEmail": "Unknown email",
+      "quiz": "Quiz",
+      "reason": "Reason",
+      "noReason": "No specific reason",
+      "details": "Details",
+      "unknownTime": "Unknown time",
+      "pending": "Pending",
+      "approve": "Approve",
+      "reject": "Reject",
+      "approveTitle": "Approve request",
+      "rejectTitle": "Reject request"
+    },
+    "preview": {
+      "title": "Preview Quiz",
+      "description": "Description",
+      "category": "Category",
+      "difficulty": "Difficulty",
+      "questions": "Questions",
+      "status": "Status",
+      "questionList": "Questions:"
+    },
+    "loginAsAdmin": "You need admin rights to access this page."
   },
-  
   "categories": {
+    "add": "Add category",
+    "name": "Category name",
+    "description": "Description",
+    "quizCount": "Quiz count",
+    "confirmDelete": "Are you sure you want to delete this category?",
+    "enterName": "Please enter category name!",
+    "addSuccess": "Category added successfully!",
+    "addError": "Error adding category!",
+    "deleteSuccess": "Category deleted successfully!",
+    "deleteError": "Error deleting category!",
     "programming": "Programming",
     "webDevelopment": "Web Development",
     "science": "Science",
@@ -391,15 +725,35 @@
     "biology": "Biology",
     "english": "English",
     "economics": "Economics",
-    "politics": "Politics"
+    "politics": "Politics",
+    "colors": {"blue": "Blue", "green": "Green", "purple": "Purple", "red": "Red", "yellow": "Yellow", "pink": "Pink", "indigo": "Indigo", "gray": "Gray"},
+    "headerDesc": "Create and manage quiz categories",
+    "total": "Total Categories",
+    "withQuizzes": "Categories with quizzes",
+    "totalQuizzes": "Total Quizzes",
+    "empty": "Empty Categories",
+    "searchPlaceholder": "Search categories...",
+    "noCategories": "No categories",
+    "noSearchMatch": "No categories match your search.",
+    "noneCreated": "No categories created yet.",
+    "createFirst": "Create the first category",
+    "quizSuffix": "quizzes",
+    "createdAtLabel": "Created",
+    "confirmDeleteName": "Are you sure you want to delete category \"{{name}}\"?",
+    "updateSuccess": "Category updated successfully",
+    "saveError": "Cannot save category",
+    "namePlaceholder": "Enter category name...",
+    "descriptionPlaceholder": "Enter category description...",
+    "color": "Color",
+    "editTitle": "Edit category",
+    "addTitle": "Add new category",
+    "create": "Create category"
   },
-  
   "difficulty": {
     "easy": "Easy",
     "medium": "Medium",
     "hard": "Hard"
   },
-  
   "messages": {
     "error": "An error occurred",
     "success": "Success",
@@ -407,22 +761,20 @@
     "networkError": "Network error",
     "unauthorized": "Unauthorized access",
     "notFound": "Not found",
-    "serverError": "Server error"
+    "serverError": "Server error",
+    "retrying": "Retrying..."
   },
-
   "favorites": {
     "title": "Favorite Quizzes",
     "loginRequired": "You need to login to view favorite quizzes.",
     "loadError": "Cannot load quiz list. Please check your network connection or try again later.",
     "fetchError": "Cannot load favorite quizzes."
   },
-
   "creator": {
     "loginMessage": "You need to login to access the Creator page",
     "roleRequired": "You need Creator or Admin role to access this page",
     "createNewQuiz": "Create New Quiz"
   },
-
   "notifications": {
     "empty": "No notifications",
     "title": "Notifications",
@@ -432,7 +784,6 @@
     "loading": "Loading notifications...",
     "error": "Cannot load notifications"
   },
-
   "offline": {
     "title": "Offline Quizzes",
     "connected": "Connected",
@@ -447,18 +798,37 @@
     "totalPlays": "Total Plays",
     "storageUsed": "Storage Used"
   },
-
   "multiplayer": {
-    "title": "Multiplayer Arena",
-    "createRoom": "Create Room",
+    "title": "Play with Friends",
+    "subtitle": "Join rooms and compete with others",
+    "createRoom": "Create New Room",
+    "createRoomDesc": "Create new room with your quiz",
     "joinRoom": "Join Room",
+    "joinRoomDesc": "Join existing room or enter room code",
     "roomCode": "Room Code",
-    "players": "Players",
-    "waiting": "Waiting for players",
+    "roomName": "Room Name",
+    "enterRoomName": "Enter room name...",
+    "enterRoomCode": "Enter room code...",
+    "roomCodeHint": "Room code has 6 characters",
+    "maxPlayers": "Max Players",
+    "timeLimit": "Time per Question",
+    "roomSettings": "Room Settings",
+    "showLeaderboard": "Show Leaderboard",
+    "private": "Private Room",
+    "password": "Password",
+    "enterPassword": "Enter password...",
+    "passwordRequired": "This room requires password",
+    "players": "players",
+    "totalPlayers": "Total Players",
+    "readyPlayers": "Ready",
+    "timePerQuestion": "Time/Question",
+    "waiting": "Waiting",
+    "waitingForPlayer": "Waiting for players...",
     "inProgress": "In Progress",
     "finished": "Finished",
-    "ready": "Ready",
-    "notReady": "Not Ready",
+    "ready": "ready",
+    "notReady": "Not ready",
+    "startingIn": "Starting in",
     "startGame": "Start Game",
     "leaveRoom": "Leave Room",
     "roomFull": "Room Full",
@@ -466,9 +836,61 @@
     "connectionFailed": "Connection Failed",
     "host": "Host",
     "spectator": "Spectator",
-    "lobby": "Lobby"
+    "lobby": "Lobby",
+    "features": "Multiplayer Features",
+    "realTimeDesc": "Play together with friends, real-time sync",
+    "leaderboardDesc": "Live leaderboard, competitive scoring",
+    "quickScoringDesc": "Higher scores for quick and accurate answers",
+    "easySetupDesc": "Simple room creation, share join code",
+    "guideDesc": "Learn how to play multiplayer",
+    "chat": {
+      "title": "Chat",
+      "noMessages": "No messages yet",
+      "placeholder": "Type a message...",
+      "disabled": "Chat disabled"
+    },
+    "errors": {
+      "roomNotFound": "Room not found",
+      "roomFull": "Room is full",
+      "wrongPassword": "Wrong password",
+      "gameInProgress": "Game in progress",
+      "connectionLost": "Connection lost",
+      "reconnecting": "Reconnecting",
+      "connectionFailed": "Connection failed"
+    },
+    "success": {
+      "gameStarted": "Game started",
+      "connectionRestored": "Connection restored",
+      "roomCreated": "Room created successfully",
+      "joinedRoom": "Joined room successfully",
+      "leftRoom": "Left room"
+    },
+    "avgScore": "Average Score",
+    "backToLobby": "Back to Lobby",
+    "game": {
+      "finalResults": "Final Results",
+      "gameOver": "Game Over"
+    },
+    "playAgain": "Play Again",
+    "totalQuestions": "Total Questions",
+    "totalTime": "Total Time",
+    "yourResult": "Your Result"
   },
-
+  "gameMode": {
+    "singlePlayer": "Single Player",
+    "singlePlayerDesc": "Practice at your own pace and improve skills",
+    "multiplayer": "Multiplayer",
+    "multiplayerDesc": "Challenge friends and compete in real-time",
+    "noPressure": "No time pressure",
+    "trackProgress": "Track progress",
+    "customizable": "Customizable settings",
+    "startSolo": "Start Playing",
+    "createRoom": "Create Room",
+    "createRoomDesc": "Start new game and invite friends",
+    "becomeHost": "Become room host",
+    "invitePlayers": "Invite up to 10 players",
+    "customizeSettings": "Customize game settings"
+  },
   "email": {
     "required": "Email is required",
     "otpSent": "Verification code has been sent to {{email}}. Please check your inbox (including Spam folder).",
@@ -479,5 +901,211 @@
       "keyError": "Public Key Error: Key is invalid. Please check EmailJS Dashboard.",
       "sendFailed": "Cannot send email: {{error}}. Check internet connection and try again."
     }
-  }
+  },
+  "common": {
+    "selectLanguage": "Select language",
+    "accuracy": "Accuracy",
+    "avgTime": "Average Time",
+    "back": "Back",
+    "cancel": "Cancel",
+    "checkingAuth": "Checking authentication...",
+    "connecting": "Connecting...",
+    "correct": "Correct",
+    "guide": "Guide",
+    "loading": "Loading...",
+    "loadingData": "Loading data...",
+    "messages": "messages",
+    "minutes": "minutes",
+    "offline": "Offline",
+    "online": "Online",
+    "or": "or",
+    "pleaseWait": "Please wait...",
+    "points": "points",
+    "rank": "Rank",
+    "recommended": "Recommended",
+    "start": "Start",
+    "submit": "Submit",
+    "tryAgain": "Try Again",
+    "all": "All",
+    "you": "You",
+    "createdAt": "Created at"
+  },
+  "ui": {
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "user": "User",
+    "admin": "Administrator",
+    "creator": "Creator",
+    "profile": "Profile",
+    "settings": "Settings",
+    "dashboard": "Dashboard",
+    "management": "Management",
+    "userManagement": "User Management",
+    "quizManagement": "Quiz Management",
+    "welcome": "Welcome",
+    "menu": "Menu",
+    "navigation": "Navigation",
+    "welcomeRole": "Welcome with role",
+    "hideStats": "Hide stats",
+    "showStats": "Show stats",
+    "sort": {
+      "newest": "Newest",
+      "oldest": "Oldest",
+      "popular": "Popular",
+      "byDifficulty": "By difficulty"
+    },
+    "display": "Display:",
+    "grid": "Grid",
+    "list": "List",
+    "searchResultPrefix": "Found",
+    "searchResultSuffix": "quizzes",
+    "for": "for",
+    "inCategory": "in category",
+    "withDifficulty": "with difficulty",
+    "noQuizFound": "No quizzes found",
+    "noQuizMatch": "No quizzes match current filters.",
+    "clearFilters": "Clear filters",
+    "retryConnection": "Retry connection",
+    "firestoreHelp": {
+      "1": "1. Disable Ad Blocker for localhost:5174",
+      "2": "2. Add *.googleapis.com to whitelist",
+      "3": "3. Try Incognito/Private mode",
+      "4": "4. Check Firewall/Antivirus"
+    }
+  },
+  
+  "quiz": {
+    "title": "Title",
+    "description": "Description",
+    "category": "Category",
+    "difficulty": "Difficulty",
+    "duration": "Duration",
+    "questions": "Questions",
+    "question": "Question",
+    "answer": "Answer",
+    "correctAnswer": "Correct Answer",
+    "startQuiz": "Start Quiz",
+    "submitQuiz": "Submit Quiz",
+    "score": "Score",
+    "result": "Result",
+    "playNow": "Play Now",
+    "preview": "Preview",
+    "create": "Create Quiz",
+    "takeQuiz": "Take Quiz",
+    "myQuizzes": "My Quizzes",
+    "popularQuizzes": "Popular Quizzes",
+    "completed": "Completed",
+    "attempts": "Attempts",
+    "averageScore": "Average Score",
+    "players": "Players",
+    "tags": "Tags",
+    "published": "Published",
+    "draft": "Draft",
+    "searchPlaceholder": "🔍 Search quizzes, categories, tags...",
+    "createLoginRequired": "You need to login to create quizzes",
+    "reviewsTitle": "Reviews",
+    "submitReview": "Submit Review",
+    "rating": "Rating",
+    "reviewText": "Review Content",
+    "loadError": "Error loading quiz list",
+    "editReasonRequired": "Please enter edit reason",
+    "editRequestError": "Error sending edit request",
+    "createSuccess": "Quiz created successfully",
+    "updateSuccess": "Quiz updated successfully",
+    "deleteSuccess": "Quiz deleted successfully",
+    "deleteError": "Error deleting quiz",
+    "confirmDelete": "Are you sure you want to delete this quiz?",
+    "loading": "Loading quiz...",
+    "notFound": "Quiz not found",
+    "backToQuizList": "Back to quiz list",
+    "questionsCount": "{{count}} questions",
+    "timeLimit": "{{time}} minutes",
+    "noTimeLimit": "No time limit",
+    "startQuizButton": "Start Quiz",
+    "viewReviews": "View Reviews",
+    "detailedInfo": "Detailed Information",
+    "questionType": "Question Type",
+    "questionTypes": {
+      "multiple": "Multiple Choice",
+      "boolean": "True/False",
+      "short_answer": "Short Answer",
+      "image": "Image",
+      "checkbox": "Multiple Select"
+    },
+    "stats": "Statistics",
+    "author": "Author",
+    "topics": "Topics",
+    "moreQuestions": "... and {{count}} more questions",
+    "points": "Points: {{points}}",
+    "type": "Type: {{type}}",
+    "ratingCount": "{{count}} ratings",
+    "reviewCount": "Review Count",
+    "previewPage": {
+      "title": "Quiz Preview",
+      "loadingQuiz": "Loading quiz...",
+      "quizNotFound": "Quiz not found",
+      "backToList": "Back to quiz list"
+    },
+    "reviews": {
+      "title": "Quiz Reviews",
+      "reviewsCount": "reviews",
+      "loginRequired": "You need to login to review quizzes",
+      "ratingRequired": "Please select a star rating",
+      "commentTooShort": "Comment needs at least 10 characters",
+      "submitSuccess": "Thank you for reviewing the quiz!",
+      "submitError": "Error occurred while submitting review",
+      "reviewQuiz": "Review {{quizTitle}}",
+      "yourRating": "Your Rating",
+      "comment": "Comment",
+      "commentPlaceholder": "Share your thoughts about this quiz...",
+      "submitting": "Submitting...",
+      "submitReview": "Submit Review",
+      "alreadyReviewed": "You have already reviewed this quiz. Thank you for your feedback!",
+      "noReviews": "No reviews yet",
+      "beFirst": "Be the first to review this quiz!"
+    },
+    "enterAnswer": "Enter answer",
+    "exploreDescription": "Explore interesting quizzes",
+    "exploreQuizzes": "Explore Quizzes",
+    "selectedQuiz": "Selected Quiz",
+    "unsupportedType": "Unsupported question type",
+    "boolean": { "true": "True", "false": "False" },
+    "untitled": "Untitled"
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "time": "Time",
+    "filters": {
+      "allTime": "All time",
+      "thisWeek": "This week",
+      "thisMonth": "This month"
+    },
+    "collapse": "Collapse",
+    "searchPlayers": "Search Players",
+    "viewMore": "View More",
+    "viewAllCount": "View all ({{count}})",
+    "players": "Players",
+    "plays": "Plays",
+    "avgScore": "Avg Score",
+    "avgShort": "Avg",
+    "activeToday": "Active today",
+    "perfectScores": "Perfect scores",
+    "topPlayers": "Top Players",
+    "noData": "No data",
+    "playToAppear": "Play quizzes to appear on the leaderboard!",
+    "perfect100": "100 points",
+    "activity": "Activity",
+    "yourPosition": "Your position",
+    "topQuizzes": "Top Quizzes",
+    "noQuizzes": "No quizzes yet",
+    "createFirstQuiz": "Create the first quiz to appear here!"
+  },
+  "errors": {
+    "firestoreConnection": "Firestore connection error"
+  },
+  "connected": "Connected",
+  "disconnected": "Disconnected",
+  "_cacheBuster": 1755025070296,
+  "_lastUpdate": "2025-08-12T18:57:50.301Z"
 }

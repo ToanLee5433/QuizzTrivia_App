@@ -7,7 +7,7 @@ import './lib/i18n' // Import i18n configuration
 import './index.css'
 
 // Suppress ReactQuill findDOMNode warnings in development
-if (process.env.NODE_ENV === 'development') {
+if (import.meta.env.DEV) {
   const originalWarn = console.warn;
   console.warn = (...args) => {
     if (

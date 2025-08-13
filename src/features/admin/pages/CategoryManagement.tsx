@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 import { 
   collection, 
   getDocs, 
@@ -40,6 +41,7 @@ interface Category {
 
 const CategoryManagement: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
+  const { t } = useTranslation();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -54,14 +56,14 @@ const CategoryManagement: React.FC = () => {
   });
 
   const colors = [
-    { value: 'blue', label: 'Xanh dương', class: 'bg-blue-500' },
-    { value: 'green', label: 'Xanh lá', class: 'bg-green-500' },
-    { value: 'purple', label: 'Tím', class: 'bg-purple-500' },
-    { value: 'red', label: 'Đỏ', class: 'bg-red-500' },
-    { value: 'yellow', label: 'Vàng', class: 'bg-yellow-500' },
-    { value: 'pink', label: 'Hồng', class: 'bg-pink-500' },
-    { value: 'indigo', label: 'Chàm', class: 'bg-indigo-500' },
-    { value: 'gray', label: 'Xám', class: 'bg-gray-500' }
+    { value: 'blue', label: t('categories.colors.blue', 'Blue'), class: 'bg-blue-500' },
+    { value: 'green', label: t('categories.colors.green', 'Green'), class: 'bg-green-500' },
+    { value: 'purple', label: t('categories.colors.purple', 'Purple'), class: 'bg-purple-500' },
+    { value: 'red', label: t('categories.colors.red', 'Red'), class: 'bg-red-500' },
+    { value: 'yellow', label: t('categories.colors.yellow', 'Yellow'), class: 'bg-yellow-500' },
+    { value: 'pink', label: t('categories.colors.pink', 'Pink'), class: 'bg-pink-500' },
+    { value: 'indigo', label: t('categories.colors.indigo', 'Indigo'), class: 'bg-indigo-500' },
+    { value: 'gray', label: t('categories.colors.gray', 'Gray'), class: 'bg-gray-500' }
   ];
 
   const icons = ['📚', '🔬', '💻', '🎨', '📊', '🌍', '🏃‍♂️', '🎵', '🍳', '📈', '🧮', '📝'];
@@ -74,8 +76,8 @@ const CategoryManagement: React.FC = () => {
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <X className="w-8 h-8 text-red-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Truy cập bị từ chối</h2>
-          <p className="text-gray-600">Bạn không có quyền truy cập trang này.</p>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">{t('errors.unauthorized', 'Unauthorized access')}</h2>
+          <p className="text-gray-600">{t('admin.loginAsAdmin', 'You need admin rights to access this page.')}</p>
         </div>
       </div>
     );
@@ -122,7 +124,7 @@ const CategoryManagement: React.FC = () => {
       setCategories(loadedCategories.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()));
     } catch (error) {
       console.error('❌ Error loading categories:', error);
-      toast.error('Không thể tải danh sách danh mục');
+      toast.error(t('categories.loadError', 'Cannot load categories'));
     } finally {
       setLoading(false);
     }
@@ -132,7 +134,7 @@ const CategoryManagement: React.FC = () => {
     e.preventDefault();
     
     if (!formData.name.trim()) {
-      toast.error('Vui lòng nhập tên danh mục');
+      toast.error(t('categories.enterName', 'Please enter category name!'));
       return;
     }
 
@@ -154,7 +156,7 @@ const CategoryManagement: React.FC = () => {
             : cat
         ));
         
-        toast.success('Danh mục đã được cập nhật');
+        toast.success(t('categories.updateSuccess', 'Category updated successfully'));
       } else {
         // Add new category
         const docRef = await addDoc(collection(db, 'categories'), {
@@ -176,7 +178,7 @@ const CategoryManagement: React.FC = () => {
         };
         
         setCategories(prev => [newCategory, ...prev]);
-        toast.success('Danh mục mới đã được tạo');
+        toast.success(t('categories.addSuccess', 'Category added successfully!'));
       }
       
       // Reset form
@@ -185,7 +187,7 @@ const CategoryManagement: React.FC = () => {
       setEditingCategory(null);
     } catch (error) {
       console.error('Error saving category:', error);
-      toast.error('Không thể lưu danh mục');
+      toast.error(t('categories.saveError', 'Cannot save category'));
     }
   };
 
@@ -201,17 +203,17 @@ const CategoryManagement: React.FC = () => {
   };
 
   const handleDelete = async (categoryId: string, categoryName: string) => {
-    if (!confirm(`Bạn có chắc chắn muốn xóa danh mục "${categoryName}"?`)) {
+    if (!confirm(t('categories.confirmDeleteName', { name: categoryName, defaultValue: `Are you sure you want to delete category "${categoryName}"?` }))) {
       return;
     }
 
     try {
       await deleteDoc(doc(db, 'categories', categoryId));
       setCategories(prev => prev.filter(cat => cat.id !== categoryId));
-      toast.success('Danh mục đã được xóa');
+      toast.success(t('categories.deleteSuccess', 'Category deleted successfully!'));
     } catch (error) {
       console.error('Error deleting category:', error);
-      toast.error('Không thể xóa danh mục');
+      toast.error(t('categories.deleteError', 'Error deleting category!'));
     }
   };
 
@@ -239,7 +241,7 @@ const CategoryManagement: React.FC = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Đang tải dữ liệu...</p>
+          <p className="mt-4 text-gray-600">{t('loadingData', 'Loading data...')}</p>
         </div>
       </div>
     );
@@ -256,8 +258,8 @@ const CategoryManagement: React.FC = () => {
                 <FolderOpen className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Quản lý Danh mục</h1>
-                <p className="text-gray-600">Tạo và quản lý các danh mục quiz</p>
+                <h1 className="text-2xl font-bold text-gray-900">{t('admin.categoryManagement', 'Category Management')}</h1>
+                <p className="text-gray-600">{t('admin.categories.headerDesc', 'Create and manage quiz categories')}</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -270,12 +272,12 @@ const CategoryManagement: React.FC = () => {
                 className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
               >
                 <Plus className="w-5 h-5" />
-                Thêm danh mục
+                {t('categories.add', 'Add category')}
               </button>
               <div className="flex items-center space-x-2 text-sm text-gray-600">
                 <User className="w-4 h-4" />
                 <span>{user?.email}</span>
-                <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">Admin</span>
+                <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">{t('ui.admin', 'Admin')}</span>
               </div>
             </div>
           </div>
@@ -288,7 +290,7 @@ const CategoryManagement: React.FC = () => {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Tổng Danh mục</p>
+                <p className="text-sm font-medium text-gray-600">{t('categories.total', 'Total Categories')}</p>
                 <p className="text-2xl font-bold text-gray-900">{categories.length}</p>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -300,7 +302,7 @@ const CategoryManagement: React.FC = () => {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Danh mục có Quiz</p>
+                <p className="text-sm font-medium text-gray-600">{t('categories.withQuizzes', 'Categories with quizzes')}</p>
                 <p className="text-2xl font-bold text-green-600">{categories.filter(c => c.quizCount && c.quizCount > 0).length}</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -312,7 +314,7 @@ const CategoryManagement: React.FC = () => {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Tổng Quiz</p>
+                <p className="text-sm font-medium text-gray-600">{t('categories.totalQuizzes', 'Total Quizzes')}</p>
                 <p className="text-2xl font-bold text-blue-600">{categories.reduce((sum, c) => sum + (c.quizCount || 0), 0)}</p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -324,7 +326,7 @@ const CategoryManagement: React.FC = () => {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Danh mục Trống</p>
+                <p className="text-sm font-medium text-gray-600">{t('categories.empty', 'Empty Categories')}</p>
                 <p className="text-2xl font-bold text-orange-600">{categories.filter(c => !c.quizCount || c.quizCount === 0).length}</p>
               </div>
               <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -338,9 +340,9 @@ const CategoryManagement: React.FC = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
+              <input
               type="text"
-              placeholder="Tìm kiếm danh mục..."
+                placeholder={t('categories.searchPlaceholder', 'Search categories...')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
@@ -352,9 +354,9 @@ const CategoryManagement: React.FC = () => {
         {filteredCategories.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
             <FolderOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Không có danh mục nào</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('categories.noCategories', 'No categories')}</h3>
             <p className="text-gray-600 mb-4">
-              {searchTerm ? 'Không tìm thấy danh mục nào phù hợp với từ khóa tìm kiếm.' : 'Chưa có danh mục nào được tạo.'}
+              {searchTerm ? t('categories.noSearchMatch', 'No categories match your search.') : t('categories.noneCreated', 'No categories created yet.')}
             </p>
             <button
               onClick={() => {
@@ -365,7 +367,7 @@ const CategoryManagement: React.FC = () => {
               className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors mx-auto"
             >
               <Plus className="w-5 h-5" />
-              Tạo danh mục đầu tiên
+              {t('categories.createFirst', 'Create the first category')}
             </button>
           </div>
         ) : (
@@ -379,21 +381,21 @@ const CategoryManagement: React.FC = () => {
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-gray-900">{category.name}</h3>
-                      <p className="text-sm text-gray-600">{category.quizCount || 0} quiz</p>
+                      <p className="text-sm text-gray-600">{category.quizCount || 0} {t('categories.quizSuffix', 'quizzes')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleEdit(category)}
                       className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="Chỉnh sửa"
+                      title={t('edit', 'Edit')}
                     >
                       <Edit className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(category.id, category.name)}
                       className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Xóa"
+                      title={t('delete', 'Delete')}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -403,7 +405,7 @@ const CategoryManagement: React.FC = () => {
                 <p className="text-gray-600 text-sm mb-4">{category.description}</p>
                 
                 <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span>Tạo: {category.createdAt.toLocaleDateString('vi-VN')}</span>
+                  <span>{t('categories.createdAtLabel', 'Created')}: {category.createdAt.toLocaleDateString()}</span>
                   <span className={`px-2 py-1 rounded-full text-white ${getColorClass(category.color)}`}>
                     {category.color}
                   </span>
@@ -420,7 +422,7 @@ const CategoryManagement: React.FC = () => {
           <div className="bg-white rounded-2xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold">
-                {editingCategory ? 'Chỉnh sửa danh mục' : 'Thêm danh mục mới'}
+                {editingCategory ? t('categories.editTitle', 'Edit category') : t('categories.addTitle', 'Add new category')}
               </h2>
               <button
                 onClick={() => {
@@ -437,28 +439,28 @@ const CategoryManagement: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tên danh mục *
+                  {t('categories.name', 'Category name')} *
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="Nhập tên danh mục..."
+                  placeholder={t('categories.namePlaceholder', 'Enter category name...')}
                   required
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Mô tả
+                  {t('categories.description', 'Description')}
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"
                   rows={3}
-                  placeholder="Nhập mô tả danh mục..."
+                  placeholder={t('categories.descriptionPlaceholder', 'Enter category description...')}
                 />
               </div>
               
@@ -484,7 +486,7 @@ const CategoryManagement: React.FC = () => {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Màu sắc
+                  {t('categories.color', 'Color')}
                 </label>
                 <div className="grid grid-cols-4 gap-2">
                   {colors.map((color) => (
@@ -513,14 +515,14 @@ const CategoryManagement: React.FC = () => {
                   }}
                   className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  Hủy
+                  {t('cancel', 'Cancel')}
                 </button>
                 <button
                   type="submit"
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                 >
                   <Save className="w-4 h-4" />
-                  {editingCategory ? 'Cập nhật' : 'Tạo danh mục'}
+                  {editingCategory ? t('update', 'Update') : t('categories.create', 'Create category')}
                 </button>
               </div>
             </form>

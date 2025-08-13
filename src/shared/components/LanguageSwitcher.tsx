@@ -7,7 +7,7 @@ interface LanguageSwitcherProps {
 }
 
 const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ variant = 'light' }) => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const languages = [
     { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳' },
@@ -82,7 +82,7 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ variant = 'light' }
       
       <div className="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[160px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
         <div className="px-3 py-2 border-b border-gray-200">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Chọn ngôn ngữ</p>
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{t('common.selectLanguage', 'Chọn ngôn ngữ')}</p>
         </div>
         {languages.map((language) => (
           <button

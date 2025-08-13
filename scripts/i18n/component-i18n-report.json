@@ -1,8 +1,8 @@
 {
-  "timestamp": "2025-08-12T09:37:43.109Z",
-  "total": 223,
-  "withI18n": 107,
-  "withoutI18n": 116,
+  "timestamp": "2025-08-12T18:02:41.368Z",
+  "total": 221,
+  "withI18n": 110,
+  "withoutI18n": 111,
   "components": [
     {
       "file": "main.tsx",
@@ -419,9 +419,9 @@
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -575,8 +575,8 @@
       }
     },
     {
-      "file": "features\\multiplayer\\pages\\MultiplayerMain.tsx",
-      "hasI18n": true,
+      "file": "features\\multiplayer\\pages\\MultiplayerPage.tsx",
+      "hasI18n": false,
       "hasHardcodedText": true,
       "imports": {
         "useTranslation": false,
@@ -585,9 +585,19 @@
       }
     },
     {
+      "file": "features\\multiplayer\\pages\\MultiplayerMain.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
       "file": "features\\multiplayer\\pages\\CreateMultiplayerRoom.tsx",
-      "hasI18n": true,
-      "hasHardcodedText": true,
+      "hasI18n": false,
+      "hasHardcodedText": false,
       "imports": {
         "useTranslation": false,
         "Trans": false,
@@ -609,9 +619,9 @@
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -619,9 +629,9 @@
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -639,33 +649,13 @@
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
       "file": "features\\multiplayer\\components\\MultiplayerLobby.tsx",
-      "hasI18n": true,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\multiplayer\\components\\MultiplayerGameSimple.tsx",
-      "hasI18n": true,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\multiplayer\\components\\MultiplayerChat.tsx",
       "hasI18n": false,
       "hasHardcodedText": false,
       "imports": {
@@ -675,7 +665,17 @@
       }
     },
     {
-      "file": "features\\multiplayer\\components\\liveLeaderboard.tsx",
+      "file": "features\\multiplayer\\components\\MultiplayerGameSimple.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\components\\MultiplayerChat.tsx",
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
@@ -689,13 +689,53 @@
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
       "file": "features\\multiplayer\\components\\GameResults.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\multiplayer\\components\\GameModeSelector.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\multiplayer\\components\\CreateRoomModal.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\auth\\pages\\Profile.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\auth\\pages\\LoginPage.tsx",
       "hasI18n": false,
       "hasHardcodedText": false,
       "imports": {
@@ -705,7 +745,17 @@
       }
     },
     {
-      "file": "features\\multiplayer\\components\\GameModeSelector.tsx",
+      "file": "features\\auth\\pages\\AuthPageNew.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\auth\\components\\RoleSelection.tsx",
       "hasI18n": false,
       "hasHardcodedText": true,
       "imports": {
@@ -715,8 +765,48 @@
       }
     },
     {
-      "file": "features\\multiplayer\\components\\CreateRoomModal.tsx",
+      "file": "features\\auth\\components\\ProtectedRoute.tsx",
       "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\auth\\components\\ProfileDebugPanel.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\auth\\components\\OTPVerification.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\auth\\components\\ForgotPassword.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\auth\\components\\AutoLogoutOnBan.tsx",
+      "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
         "useTranslation": false,
@@ -1005,96 +1095,6 @@
       }
     },
     {
-      "file": "features\\auth\\pages\\Profile.tsx",
-      "hasI18n": true,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": true,
-        "Trans": true,
-        "i18next": true
-      }
-    },
-    {
-      "file": "features\\auth\\pages\\LoginPage.tsx",
-      "hasI18n": false,
-      "hasHardcodedText": false,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\auth\\pages\\AuthPageNew.tsx",
-      "hasI18n": true,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": true,
-        "Trans": true,
-        "i18next": true
-      }
-    },
-    {
-      "file": "features\\auth\\components\\RoleSelection.tsx",
-      "hasI18n": false,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\auth\\components\\ProtectedRoute.tsx",
-      "hasI18n": false,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\auth\\components\\ProfileDebugPanel.tsx",
-      "hasI18n": true,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\auth\\components\\OTPVerification.tsx",
-      "hasI18n": true,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\auth\\components\\ForgotPassword.tsx",
-      "hasI18n": true,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\auth\\components\\AutoLogoutOnBan.tsx",
-      "hasI18n": true,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
       "file": "features\\quiz\\pages\\ResultPage\\index.tsx",
       "hasI18n": false,
       "hasHardcodedText": true,
@@ -1246,12 +1246,12 @@
     },
     {
       "file": "features\\quiz\\pages\\QuizPage\\components\\QuestionRenderer.tsx",
-      "hasI18n": false,
+      "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -1395,6 +1395,16 @@
       }
     },
     {
+      "file": "setupTests.ts",
+      "hasI18n": true,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
       "file": "utils\\initializeCategories.ts",
       "hasI18n": false,
       "hasHardcodedText": true,
@@ -1475,16 +1485,6 @@
       }
     },
     {
-      "file": "firebase\\config.ts",
-      "hasI18n": false,
-      "hasHardcodedText": false,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
       "file": "lib\\store.ts",
       "hasI18n": true,
       "hasHardcodedText": false,
@@ -1496,6 +1496,16 @@
     },
     {
       "file": "lib\\index.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "firebase\\config.ts",
       "hasI18n": false,
       "hasHardcodedText": false,
       "imports": {
@@ -1676,16 +1686,6 @@
     },
     {
       "file": "features\\multiplayer\\types.ts",
-      "hasI18n": false,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\multiplayer\\index.ts",
       "hasI18n": false,
       "hasHardcodedText": false,
       "imports": {
@@ -1956,8 +1956,8 @@
     },
     {
       "file": "features\\multiplayer\\types\\index.ts",
-      "hasI18n": false,
-      "hasHardcodedText": false,
+      "hasI18n": true,
+      "hasHardcodedText": true,
       "imports": {
         "useTranslation": false,
         "Trans": false,
@@ -1966,26 +1966,6 @@
     },
     {
       "file": "features\\multiplayer\\pages\\index.ts",
-      "hasI18n": false,
-      "hasHardcodedText": false,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\multiplayer\\services\\multiplayerService.ts",
-      "hasI18n": false,
-      "hasHardcodedText": false,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\multiplayer\\services\\LocalMultiplayerService.ts",
       "hasI18n": false,
       "hasHardcodedText": false,
       "imports": {
@@ -2006,16 +1986,6 @@
     },
     {
       "file": "features\\multiplayer\\services\\firestoreMultiplayerService.ts",
-      "hasI18n": false,
-      "hasHardcodedText": false,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\multiplayer\\services\\enhancedMultiplayerService.ts",
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
@@ -2025,8 +1995,8 @@
       }
     },
     {
-      "file": "features\\multiplayer\\components\\multiplayerStore.ts",
-      "hasI18n": false,
+      "file": "features\\multiplayer\\services\\enhancedMultiplayerService.ts",
+      "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
         "useTranslation": false,
@@ -2226,6 +2196,16 @@
     },
     {
       "file": "features\\quiz\\pages\\QuizPage\\hooks\\index.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "__tests__\\fileMock.js",
       "hasI18n": false,
       "hasHardcodedText": false,
       "imports": {

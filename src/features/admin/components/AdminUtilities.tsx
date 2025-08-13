@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { Database, Loader, CheckCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const AdminUtilities: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState(false);
+  const { t } = useTranslation();
 
   const handleCreateTestQuizzes = async () => {
     if (created) {
-      toast.warning('Quiz test đã được tạo rồi!');
+      toast.warning(t('admin.utilities.createTestQuizzes.alreadyCreated', 'Test quizzes already created!'));
       return;
     }
 
@@ -17,10 +19,10 @@ const AdminUtilities: React.FC = () => {
       // TODO: Implement createTestQuizzes function if needed
       console.log('Creating test quizzes...');
       setCreated(true);
-      toast.success('Đã tạo thành công các quiz test!');
+      toast.success(t('admin.utilities.createTestQuizzes.success', 'Successfully created test quizzes!'));
     } catch (error) {
       console.error('Error creating test quizzes:', error);
-      toast.error('Lỗi khi tạo quiz test');
+      toast.error(t('admin.utilities.createTestQuizzes.error', 'Error creating test quizzes'));
     } finally {
       setLoading(false);
     }
@@ -30,14 +32,14 @@ const AdminUtilities: React.FC = () => {
     <div className="p-6 bg-white rounded-lg shadow-sm">
       <div className="flex items-center gap-3 mb-6">
         <Database className="w-6 h-6 text-blue-600" />
-        <h2 className="text-xl font-bold text-gray-900">Utilities Admin</h2>
+        <h2 className="text-xl font-bold text-gray-900">{t('admin.utilities.title', 'Admin Utilities')}</h2>
       </div>
 
       <div className="space-y-4">
         <div className="border border-gray-200 rounded-lg p-4">
-          <h3 className="font-semibold text-gray-900 mb-2">Tạo Quiz Test</h3>
+          <h3 className="font-semibold text-gray-900 mb-2">{t('admin.utilities.createTestQuizzes.title', 'Create Test Quizzes')}</h3>
           <p className="text-gray-600 mb-4">
-            Tạo một số quiz mẫu để test tính năng duyệt quiz và hiển thị dữ liệu.
+            {t('admin.utilities.createTestQuizzes.desc', 'Create sample quizzes for testing review and data display.')}
           </p>
           
           <button
@@ -54,17 +56,17 @@ const AdminUtilities: React.FC = () => {
             {loading ? (
               <>
                 <Loader className="w-4 h-4 animate-spin" />
-                Đang tạo...
+                {t('admin.utilities.createTestQuizzes.creating', 'Creating...')}
               </>
             ) : created ? (
               <>
                 <CheckCircle className="w-4 h-4" />
-                Đã tạo xong
+                {t('admin.utilities.createTestQuizzes.created', 'Created')}
               </>
             ) : (
               <>
                 <Database className="w-4 h-4" />
-                Tạo Quiz Test
+                {t('admin.utilities.createTestQuizzes.button', 'Create Test Quizzes')}
               </>
             )}
           </button>

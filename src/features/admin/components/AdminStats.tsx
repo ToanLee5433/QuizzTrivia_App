@@ -123,13 +123,13 @@ const AdminStats: React.FC = () => {
         <span className={`text-sm font-medium ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
           {change >= 0 ? '+' : ''}{change}%
         </span>
-        <span className="text-sm text-gray-500 ml-1">vs tháng trước</span>
+        <span className="text-sm text-gray-500 ml-1">{t('admin.vsLastMonth', 'vs last month')}</span>
       </div>
     </div>
   );
 
   const renderOverview = () => {
-    if (!enhancedStats) return <div>Loading...</div>;
+    if (!enhancedStats) return <div>{t('loading', 'Loading...')}</div>;
 
     return (
       <div className="space-y-6">
@@ -172,7 +172,7 @@ const AdminStats: React.FC = () => {
           {/* User Growth Chart */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">{t('admin.stats.userGrowth', 'Tăng trưởng người dùng')}</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t('admin.stats.userGrowth', 'User Growth')}</h3>
               <div className="flex space-x-2">
                 {['7d', '30d', '90d', '1y'].map((range) => (
                   <button
@@ -218,7 +218,7 @@ const AdminStats: React.FC = () => {
 
           {/* Quiz Activity Chart */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Hoạt động Quiz</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">{t('admin.stats.quizActivity', 'Quiz activity')}</h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={[
                 { date: 'T1', created: Math.floor(enhancedStats.totalQuizzes * 0.2), completed: Math.floor(enhancedStats.completedQuizzes * 0.2) },
@@ -230,8 +230,8 @@ const AdminStats: React.FC = () => {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="created" fill="#10B981" name="Quiz được tạo" />
-                <Bar dataKey="completed" fill="#3B82F6" name="Lượt hoàn thành" />
+                <Bar dataKey="created" fill="#10B981" name={t('admin.stats.createdQuizzes', 'Created quizzes')} />
+                <Bar dataKey="completed" fill="#3B82F6" name={t('admin.stats.completedAttempts', 'Completed attempts')} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -241,22 +241,22 @@ const AdminStats: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Performance Overview */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Hiệu suất tổng quan</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.stats.performanceOverview', 'Performance overview')}</h3>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Điểm trung bình</span>
+                <span className="text-gray-600">{t('admin.stats.averageScore', 'Average score')}</span>
                 <span className="font-semibold text-green-600">{enhancedStats.averageScore}%</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Tỷ lệ hoàn thành</span>
+                <span className="text-gray-600">{t('admin.stats.completionRate', 'Completion rate')}</span>
                 <span className="font-semibold text-blue-600">{enhancedStats.completionRate}%</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Tổng đánh giá</span>
+                <span className="text-gray-600">{t('admin.stats.totalReviews', 'Total reviews')}</span>
                 <span className="font-semibold text-purple-600">{enhancedStats.totalReviews}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">Đánh giá trung bình</span>
+                <span className="text-gray-600">{t('admin.stats.averageRating', 'Average rating')}</span>
                 <span className="font-semibold text-yellow-600">
                   {enhancedStats.averageRating.toFixed(1)} ⭐
                 </span>
@@ -266,11 +266,11 @@ const AdminStats: React.FC = () => {
 
           {/* Top Categories */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Top danh mục</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.stats.topCategories', 'Top categories')}</h3>
             <div className="space-y-3">
               {realData?.categories?.slice(0, 5).map((category: any, index: number) => (
                 <div key={category.id} className="flex items-center justify-between">
-                  <span className="text-gray-600">{category.name || `Danh mục ${index + 1}`}</span>
+                  <span className="text-gray-600">{category.name || t('admin.stats.unnamedCategory', { n: index + 1, defaultValue: `Category ${index + 1}` })}</span>
                   <span className="font-semibold text-blue-600">
                     {realData.quizzes.filter((q: any) => q.category === category.id).length}
                   </span>
@@ -281,23 +281,23 @@ const AdminStats: React.FC = () => {
 
           {/* Recent Activity */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Hoạt động gần đây</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.stats.recentActivity', 'Recent activity')}</h3>
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-gray-600">{enhancedStats.totalQuizzes} quiz có sẵn</span>
+                <span className="text-sm text-gray-600">{t('admin.stats.availableQuizzes', { count: enhancedStats.totalQuizzes, defaultValue: `${enhancedStats.totalQuizzes} quizzes available` })}</span>
               </div>
               <div className="flex items-center space-x-3">
                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span className="text-sm text-gray-600">{enhancedStats.totalUsers} người dùng đăng ký</span>
+                <span className="text-sm text-gray-600">{t('admin.stats.registeredUsers', { count: enhancedStats.totalUsers, defaultValue: `${enhancedStats.totalUsers} users registered` })}</span>
               </div>
               <div className="flex items-center space-x-3">
                 <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                <span className="text-sm text-gray-600">{enhancedStats.totalReviews} đánh giá</span>
+                <span className="text-sm text-gray-600">{t('admin.stats.reviews', { count: enhancedStats.totalReviews, defaultValue: `${enhancedStats.totalReviews} reviews` })}</span>
               </div>
               <div className="flex items-center space-x-3">
                 <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                <span className="text-sm text-gray-600">{enhancedStats.completedQuizzes} lượt hoàn thành</span>
+                <span className="text-sm text-gray-600">{t('admin.stats.completions', { count: enhancedStats.completedQuizzes, defaultValue: `${enhancedStats.completedQuizzes} completions` })}</span>
               </div>
             </div>
           </div>
@@ -309,15 +309,15 @@ const AdminStats: React.FC = () => {
   const renderUsers = () => (
     <div className="space-y-6">
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Quản lý người dùng</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.userManagement', 'User Management')}</h3>
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead>
               <tr className="border-b border-gray-200">
                 <th className="text-left py-3 px-4 font-medium text-gray-600">ID</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-600">Email</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-600">Vai trò</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-600">Trạng thái</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-600">{t('ui.user', 'User')}</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-600">{t('status.active', 'Active')}</th>
               </tr>
             </thead>
             <tbody>
@@ -328,7 +328,7 @@ const AdminStats: React.FC = () => {
                   <td className="py-3 px-4 text-sm text-gray-600">{user.role || 'user'}</td>
                   <td className="py-3 px-4">
                     <span className="inline-flex px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                      Hoạt động
+                      {t('status.active', 'Active')}
                     </span>
                   </td>
                 </tr>
@@ -344,33 +344,33 @@ const AdminStats: React.FC = () => {
     <div className="space-y-6">
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Quản lý Quiz</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('admin.quizManagement', 'Quiz Management')}</h3>
           <button
             onClick={() => navigate('/admin/quiz-management')}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Quản lý chi tiết
+            {t('viewDetails', 'View details')}
           </button>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 font-medium text-gray-600">Tiêu đề</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-600">Danh mục</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-600">Người tạo</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-600">Ngày tạo</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-600">Hành động</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-600">{t('admin.quizManagement.table.title', 'Title')}</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-600">{t('admin.quizManagement.table.category', 'Category')}</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-600">{t('admin.quizManagement.table.creator', 'Creator')}</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-600">{t('admin.quizManagement.table.createdAt', 'Created at')}</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-600">{t('admin.quizManagement.table.actions', 'Actions')}</th>
               </tr>
             </thead>
             <tbody>
               {realData?.quizzes?.slice(0, 10).map((quiz: any) => (
                 <tr key={quiz.id} className="border-b border-gray-100">
                   <td className="py-3 px-4 text-sm font-medium text-gray-900">
-                    {quiz.title || 'Chưa có tiêu đề'}
+                    {quiz.title || t('quiz.untitled', 'Untitled')}
                   </td>
                   <td className="py-3 px-4 text-sm text-gray-600">
-                    {quiz.category || 'Chưa phân loại'}
+                    {quiz.category || t('admin.quizManagement.table.uncategorized', 'Uncategorized')}
                   </td>
                   <td className="py-3 px-4 text-sm text-gray-600">
                     {quiz.createdBy || 'N/A'}
@@ -383,21 +383,21 @@ const AdminStats: React.FC = () => {
                       <button
                         onClick={() => navigate(`/quiz/${quiz.id}`)}
                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Xem quiz"
+                        title={t('admin.quizManagement.tooltips.preview', 'Preview details')}
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => navigate(`/admin/edit-quiz/${quiz.id}`)}
                         className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                        title="Chỉnh sửa"
+                        title={t('admin.quizManagement.tooltips.edit', 'Edit quiz')}
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => navigate(`/quiz/${quiz.id}/reviews`)}
                         className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                        title="Xem đánh giá"
+                        title={t('admin.quizManagement.tooltips.viewReviews', 'View reviews')}
                       >
                         <MessageSquare className="w-4 h-4" />
                       </button>
@@ -417,7 +417,7 @@ const AdminStats: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Performance Metrics */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Chỉ số hiệu suất</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.stats.performanceMetrics', 'Performance metrics')}</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={[
               { month: 'T1', score: 75, completion: 80 },
@@ -429,24 +429,24 @@ const AdminStats: React.FC = () => {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="score" stroke="#10B981" name="Điểm trung bình" />
-              <Line type="monotone" dataKey="completion" stroke="#3B82F6" name="Tỷ lệ hoàn thành" />
+              <Line type="monotone" dataKey="score" stroke="#10B981" name={t('admin.stats.averageScore', 'Average score')} />
+              <Line type="monotone" dataKey="completion" stroke="#3B82F6" name={t('admin.stats.completionRate', 'Completion rate')} />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
         {/* Quiz Rating Distribution */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Phân bố đánh giá</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.stats.ratingDistribution', 'Rating distribution')}</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
                 data={[
-                  { name: '5 sao', value: 35, color: '#10B981' },
-                  { name: '4 sao', value: 28, color: '#3B82F6' },
-                  { name: '3 sao', value: 20, color: '#F59E0B' },
-                  { name: '2 sao', value: 12, color: '#EF4444' },
-                  { name: '1 sao', value: 5, color: '#6B7280' }
+                  { name: '5★', value: 35, color: '#10B981' },
+                  { name: '4★', value: 28, color: '#3B82F6' },
+                  { name: '3★', value: 20, color: '#F59E0B' },
+                  { name: '2★', value: 12, color: '#EF4444' },
+                  { name: '1★', value: 5, color: '#6B7280' }
                 ]}
                 cx="50%"
                 cy="50%"
@@ -477,17 +477,17 @@ const AdminStats: React.FC = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">{t('admin.loadingRealData', 'Đang tải dữ liệu thực tế...')}</p>
+          <p className="mt-4 text-gray-600">{t('admin.loadingRealData', 'Loading real data...')}</p>
         </div>
       </div>
     );
   }
 
   const tabs = [
-    { id: 'overview', label: 'Tổng quan', icon: Target },
-    { id: 'users', label: 'Người dùng', icon: Users },
-    { id: 'quizzes', label: 'Quiz', icon: BookOpen },
-    { id: 'performance', label: 'Hiệu suất', icon: Award }
+    { id: 'overview', label: t('admin.tabs.overview', 'Overview'), icon: Target },
+    { id: 'users', label: t('admin.tabs.users', 'Users'), icon: Users },
+    { id: 'quizzes', label: t('admin.tabs.quizzes', 'Quizzes'), icon: BookOpen },
+    { id: 'performance', label: t('admin.tabs.performance', 'Performance'), icon: Award }
   ];
 
   return (
@@ -497,12 +497,8 @@ const AdminStats: React.FC = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                📊 Thống kê Admin (Dữ liệu thực)
-              </h1>
-              <p className="text-gray-600">
-                Dashboard thống kê với dữ liệu thực từ Firebase
-              </p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">📊 {t('admin.header.title', 'Admin Statistics (Real Data)')}</h1>
+              <p className="text-gray-600">{t('admin.header.subtitle', 'Statistics dashboard with real data from Firebase')}</p>
             </div>
             <div className="flex space-x-3">
               <button
@@ -511,14 +507,14 @@ const AdminStats: React.FC = () => {
                 className="flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                Làm mới
+                {t('refresh', 'Refresh')}
               </button>
               <button
                 onClick={exportData}
                 className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Download className="w-4 h-4 mr-2" />
-                Xuất dữ liệu
+                {t('admin.exportData', 'Export data')}
               </button>
             </div>
           </div>
@@ -540,7 +536,7 @@ const AdminStats: React.FC = () => {
                   }`}
                 >
                   <Icon className="w-5 h-5 mr-2" />
-                  {tab.label}
+                   {tab.label}
                 </button>
               );
             })}

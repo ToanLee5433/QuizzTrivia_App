@@ -4,8 +4,8 @@ import fs from 'fs-extra';
 import path from 'path';
 import { glob } from 'glob';
 
-const LOCALES_DIR = '../../public/locales';
-const SRC_DIR = '../../src';
+const LOCALES_DIR = './public/locales';
+const SRC_DIR = './src';
 
 /**
  * Extract all i18n keys from the codebase
@@ -20,7 +20,8 @@ async function extractKeys() {
   });
 
   const extractedKeys = new Set();
-  const keyPattern = /t\(\s*['"`]([^'"`]+)['"`]/g;
+  // Improved regex to match t() calls with proper string literals
+  const keyPattern = /t\(\s*['"`]([^'"`\$\{\}\\]+)['"`]/g;
 
   for (const file of files) {
     const filePath = path.join(SRC_DIR, file);
@@ -28,7 +29,16 @@ async function extractKeys() {
     
     let match;
     while ((match = keyPattern.exec(content)) !== null) {
-      extractedKeys.add(match[1]);
+      const key = match[1].trim();
+      // Filter out false positives
+      if (key &&
+          !key.includes('/') && // File paths
+          !key.includes('.') || key.match(/^[a-zA-Z][a-zA-Z0-9._-]*$/)) { // Valid i18n keys
+        // Only allow keys that start with letter and contain valid chars
+        if (key.match(/^[a-zA-Z][a-zA-Z0-9._-]*$/)) {
+          extractedKeys.add(key);
+        }
+      }
     }
   }
 

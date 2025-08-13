@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { RootState } from '../../../lib/store';
 import AdminLayout from '../components/AdminLayout';
 import { toast } from 'react-toastify';
@@ -8,6 +9,7 @@ import { collection, addDoc, getDocs, updateDoc, doc } from 'firebase/firestore'
 import { db } from '../../../lib/firebase/config';
 
 const Admin: React.FC = () => {
+  const { t } = useTranslation();
   // State cho thống kê
   const [stats, setStats] = useState({
     totalQuizzes: 0,
@@ -58,7 +60,7 @@ const Admin: React.FC = () => {
 
   const createSystemNotification = async () => {
     if (!notificationData.message.trim()) {
-      toast.error('Vui lòng nhập nội dung thông báo!');
+      toast.error(t('admin.quickActions.toasts.enterMessage', 'Please enter notification content!'));
       return;
     }
 
@@ -80,10 +82,10 @@ const Admin: React.FC = () => {
       });
       setShowNotificationModal(false);
       
-      toast.success('Đã gửi thông báo hệ thống!');
+      toast.success(t('admin.quickActions.toasts.createSuccess', 'Notification created successfully!'));
     } catch (error) {
       console.error('Error creating notification:', error);
-      toast.error('Lỗi khi gửi thông báo!');
+      toast.error(t('admin.quickActions.toasts.createError', 'Error creating notification!'));
     } finally {
       setLoading(false);
     }
@@ -113,9 +115,9 @@ const Admin: React.FC = () => {
       link.download = `quiz-app-backup-${new Date().toISOString().split('T')[0]}.json`;
       link.click();
       
-      toast.success('Backup dữ liệu thành công!');
+      toast.success(t('admin.quickActions.toasts.backupSuccess', 'Data backup successful!'));
     } catch (error) {
-      toast.error('Lỗi khi backup dữ liệu!');
+      toast.error(t('admin.quickActions.toasts.backupError', 'Error during data backup!'));
     } finally {
       setLoading(false);
     }
@@ -123,7 +125,7 @@ const Admin: React.FC = () => {
 
   // Xóa thông báo hệ thống
   const deleteNotifications = async () => {
-    if (!confirm('Bạn có chắc muốn xóa tất cả thông báo đang hiển thị?')) return;
+    if (!confirm(t('admin.quickActions.toasts.confirmDeleteAll', 'Are you sure you want to disable all visible notifications?'))) return;
     
     setLoading(true);
     try {
@@ -133,10 +135,10 @@ const Admin: React.FC = () => {
       );
       
       await Promise.all(deletePromises);
-      toast.success('Đã tắt tất cả thông báo!');
+      toast.success(t('admin.quickActions.toasts.deleteSuccess', 'All notifications disabled!'));
     } catch (error) {
       console.error('Error deleting notifications:', error);
-      toast.error('Lỗi khi xóa thông báo!');
+      toast.error(t('admin.quickActions.toasts.deleteError', 'Error disabling notifications!'));
     } finally {
       setLoading(false);
     }
@@ -144,7 +146,7 @@ const Admin: React.FC = () => {
 
   // Dọn dẹp dữ liệu đã xóa
   const cleanupDeletedData = async () => {
-    if (!confirm('Bạn có chắc muốn dọn dẹp dữ liệu đã xoá (quiz, user)?')) return;
+    if (!confirm(t('admin.quickActions.toasts.confirmCleanup', 'Are you sure you want to cleanup deleted data (quizzes, users)?'))) return;
     setLoading(true);
     try {
       const quizzesSnapshot = await getDocs(collection(db, 'quizzes'));
@@ -156,9 +158,9 @@ const Admin: React.FC = () => {
       const userDeletePromises = deletedUsers.map(u => updateDoc(doc(db, 'users', u.id), { isPurged: true }));
 
       await Promise.all([...quizDeletePromises, ...userDeletePromises]);
-      toast.success('Đã dọn dẹp dữ liệu xoá!');
+      toast.success(t('admin.quickActions.toasts.cleanupSuccess', 'Deleted data cleaned up!'));
     } catch (error) {
-      toast.error('Lỗi khi dọn dẹp dữ liệu xoá!');
+      toast.error(t('admin.quickActions.toasts.cleanupError', 'Error during cleanup!'));
     } finally {
       setLoading(false);
     }
@@ -167,7 +169,7 @@ const Admin: React.FC = () => {
   if (user?.role !== 'admin') {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-600">Bạn không có quyền truy cập trang này.</p>
+        <p className="text-gray-600">{t('admin.loginAsAdmin', 'You need admin rights to access this page.')}</p>
       </div>
     );
   }
@@ -176,8 +178,8 @@ const Admin: React.FC = () => {
     <AdminLayout title="Dashboard">
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-lg p-6 mb-8 text-white">
-        <h1 className="text-2xl md:text-3xl font-bold mb-2">Chào mừng đến với Admin Dashboard</h1>
-        <p className="text-blue-100">Quản lý toàn bộ hệ thống Quiz một cách hiệu quả</p>
+        <h1 className="text-2xl md:text-3xl font-bold mb-2">{t('admin.greeting', 'Welcome to Admin Panel')}</h1>
+        <p className="text-blue-100">{t('admin.dashboardSubtitle', 'Manage the entire Quiz system efficiently')}</p>
       </div>
 
       {/* Stats Grid - Responsive */}
@@ -188,7 +190,7 @@ const Admin: React.FC = () => {
               <span className="text-2xl">📚</span>
             </div>
             <div className="ml-4">
-              <h3 className="text-sm md:text-base font-semibold text-gray-900">Tổng số Quiz</h3>
+              <h3 className="text-sm md:text-base font-semibold text-gray-900">{t('dashboard.totalQuizzes', 'Total Quizzes')}</h3>
               <div className="text-xl md:text-3xl font-bold text-blue-600">{stats.totalQuizzes}</div>
             </div>
           </div>
@@ -200,7 +202,7 @@ const Admin: React.FC = () => {
               <span className="text-2xl">👥</span>
             </div>
             <div className="ml-4">
-              <h3 className="text-sm md:text-base font-semibold text-gray-900">Người dùng</h3>
+              <h3 className="text-sm md:text-base font-semibold text-gray-900">{t('dashboard.totalUsers', 'Users')}</h3>
               <div className="text-xl md:text-3xl font-bold text-green-600">{stats.totalUsers}</div>
             </div>
           </div>
@@ -212,7 +214,7 @@ const Admin: React.FC = () => {
               <span className="text-2xl">✅</span>
             </div>
             <div className="ml-4">
-              <h3 className="text-sm md:text-base font-semibold text-gray-900">Quiz hoàn thành</h3>
+              <h3 className="text-sm md:text-base font-semibold text-gray-900">{t('dashboard.completedQuizzes', 'Completed Quizzes')}</h3>
               <div className="text-xl md:text-3xl font-bold text-purple-600">{stats.completedQuizzes}</div>
             </div>
           </div>
@@ -224,7 +226,7 @@ const Admin: React.FC = () => {
               <span className="text-2xl">✏️</span>
             </div>
             <div className="ml-4">
-              <h3 className="text-sm md:text-base font-semibold text-gray-900">Người tạo</h3>
+              <h3 className="text-sm md:text-base font-semibold text-gray-900">{t('dashboard.totalCreators', 'Creators')}</h3>
               <div className="text-xl md:text-3xl font-bold text-orange-600">{stats.totalCreators}</div>
             </div>
           </div>
@@ -234,43 +236,43 @@ const Admin: React.FC = () => {
       {/* Management Grid - Responsive */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
-          <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">Quản lý Quiz</h3>
+          <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">{t('admin.tabs.quizManagement', 'Quiz Management')}</h3>
           <div className="space-y-2">
             <Link 
               to="/admin/quiz-management" 
               className="w-full text-left p-2 md:p-3 hover:bg-gray-50 rounded border block text-sm md:text-base"
             >
-              ◆ Quản lý Quiz
+              ◆ {t('admin.tabs.quizManagement', 'Quiz Management')}
             </Link>
             <Link 
               to="/admin/categories" 
               className="w-full text-left p-2 md:p-3 hover:bg-gray-50 rounded border block text-sm md:text-base"
             >
-              📂 Quản lý danh mục
+              📂 {t('admin.tabs.categoryManagement', 'Category Management')}
             </Link>
             <Link 
               to="/admin/quiz-stats" 
               className="w-full text-left p-2 md:p-3 hover:bg-gray-50 rounded border block text-sm md:text-base"
             >
-              📊 Thống kê Quiz
+              📊 {t('admin.stats.quizActivity', 'Quiz activity')}
             </Link>
           </div>
         </div>
         
         <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
-          <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">Quản lý người dùng</h3>
+          <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-3 md:mb-4">{t('admin.tabs.userManagement', 'User Management')}</h3>
           <div className="space-y-2">
             <Link 
               to="/admin/users" 
               className="w-full text-left p-2 md:p-3 hover:bg-gray-50 rounded border block text-sm md:text-base"
             >
-              👥 Danh sách người dùng
+              👥 {t('admin.tabs.users', 'Users')}
             </Link>
             <Link 
               to="/admin/roles" 
               className="w-full text-left p-2 md:p-3 hover:bg-gray-50 rounded border block text-sm md:text-base"
             >
-              🔐 Phân quyền người dùng
+              🔐 {t('admin.roles', 'Roles')}
             </Link>
           </div>
         </div>
@@ -279,11 +281,11 @@ const Admin: React.FC = () => {
       {/* Quick Actions - Enhanced Design */}
       <div className="bg-white rounded-lg shadow-md p-4 md:p-6 border border-gray-200">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg md:text-xl font-semibold text-gray-900 flex items-center">
+            <h2 className="text-lg md:text-xl font-semibold text-gray-900 flex items-center">
             <span className="bg-blue-100 p-2 rounded-lg mr-3">⚡</span>
-            Thao tác nhanh
+              {t('admin.quickActions.title', 'Quick actions')}
           </h2>
-          <span className="text-sm text-gray-500">Các chức năng quan trọng</span>
+          <span className="text-sm text-gray-500">{t('admin.quickActions.important', 'Important functions')}</span>
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
@@ -294,7 +296,7 @@ const Admin: React.FC = () => {
           >
             <div className="flex flex-col items-center space-y-2">
               <span className="text-2xl group-hover:scale-110 transition-transform">📢</span>
-              <span className="text-sm font-medium">Gửi thông báo</span>
+              <span className="text-sm font-medium">{t('admin.quickActions.items.notify.title', 'Send notification')}</span>
             </div>
           </button>
           
@@ -305,7 +307,7 @@ const Admin: React.FC = () => {
           >
             <div className="flex flex-col items-center space-y-2">
               <span className="text-2xl group-hover:scale-110 transition-transform">❌</span>
-              <span className="text-sm font-medium">Xóa thông báo</span>
+              <span className="text-sm font-medium">{t('admin.quickActions.items.deleteNotifications.title', 'Clear notifications')}</span>
             </div>
           </button>
           
@@ -316,7 +318,7 @@ const Admin: React.FC = () => {
           >
             <div className="flex flex-col items-center space-y-2">
               <span className="text-2xl group-hover:scale-110 transition-transform">💾</span>
-              <span className="text-sm font-medium">Backup dữ liệu</span>
+              <span className="text-sm font-medium">{t('admin.quickActions.items.backup.title', 'Backup data')}</span>
             </div>
           </button>
           
@@ -327,7 +329,7 @@ const Admin: React.FC = () => {
           >
             <div className="flex flex-col items-center space-y-2">
               <span className="text-2xl group-hover:scale-110 transition-transform">🗑️</span>
-              <span className="text-sm font-medium">Dọn dẹp dữ liệu</span>
+              <span className="text-sm font-medium">{t('admin.quickActions.items.cleanup.title', 'Cleanup deleted data')}</span>
             </div>
           </button>
         </div>
@@ -337,18 +339,16 @@ const Admin: React.FC = () => {
       {showNotificationModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-4 md:p-6 w-full max-w-md mx-4">
-            <h2 className="text-lg md:text-xl font-semibold mb-4">Gửi thông báo hệ thống</h2>
+            <h2 className="text-lg md:text-xl font-semibold mb-4">{t('admin.quickActions.modal.title', 'Send system notification')}</h2>
             
             <div className="space-y-4">
               {/* Nội dung thông báo */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nội dung thông báo
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.quickActions.modal.contentLabel', 'Notification content')}</label>
                 <textarea
                   value={notificationData.message}
                   onChange={(e) => setNotificationData(prev => ({ ...prev, message: e.target.value }))}
-                  placeholder="Nhập nội dung thông báo..."
+                  placeholder={t('admin.quickActions.modal.contentPlaceholder', 'Enter notification content...')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
                   rows={4}
                 />
@@ -356,34 +356,30 @@ const Admin: React.FC = () => {
 
               {/* Loại thông báo */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Loại thông báo
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.quickActions.modal.typeLabel', 'Notification type')}</label>
                 <select
                   value={notificationData.type}
                   onChange={(e) => setNotificationData(prev => ({ ...prev, type: e.target.value as any }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
                 >
-                  <option value="info">Thông tin (Xanh)</option>
-                  <option value="warning">Cảnh báo (Vàng)</option>
-                  <option value="success">Thành công (Xanh lá)</option>
-                  <option value="error">Lỗi (Đỏ)</option>
+                  <option value="info">{t('admin.quickActions.modal.type.info', 'Info (Blue)')}</option>
+                  <option value="warning">{t('admin.quickActions.modal.type.warning', 'Warning (Yellow)')}</option>
+                  <option value="success">{t('admin.quickActions.modal.type.success', 'Success (Green)')}</option>
+                  <option value="error">{t('admin.quickActions.modal.type.error', 'Error (Red)')}</option>
                 </select>
               </div>
 
               {/* Đối tượng nhận thông báo */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Đối tượng nhận
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.quickActions.modal.targetLabel', 'Target audience')}</label>
                 <select
                   value={notificationData.targetRole}
                   onChange={(e) => setNotificationData(prev => ({ ...prev, targetRole: e.target.value as any }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
                 >
-                  <option value="all">Tất cả người dùng</option>
-                  <option value="user">Chỉ User</option>
-                  <option value="creator">Chỉ Creator</option>
+                  <option value="all">{t('admin.quickActions.modal.target.all', 'All users')}</option>
+                  <option value="user">{t('admin.quickActions.modal.target.user', 'Users only')}</option>
+                  <option value="creator">{t('admin.quickActions.modal.target.creator', 'Creators only')}</option>
                 </select>
               </div>
 
@@ -394,14 +390,14 @@ const Admin: React.FC = () => {
                   className="w-full sm:w-auto px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors text-sm md:text-base"
                   disabled={loading}
                 >
-                  Hủy
+                  {t('cancel', 'Cancel')}
                 </button>
                 <button
                   onClick={createSystemNotification}
                   disabled={loading || !notificationData.message.trim()}
                   className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
                 >
-                  {loading ? 'Đang gửi...' : 'Gửi thông báo'}
+                  {loading ? t('admin.quickActions.modal.sending', 'Sending...') : t('admin.quickActions.modal.send', 'Send notification')}
                 </button>
               </div>
             </div>

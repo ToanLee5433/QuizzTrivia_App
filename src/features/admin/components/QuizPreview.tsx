@@ -1,5 +1,6 @@
 import React from 'react';
 import { Quiz, Question } from '../../quiz/types';
+import { useTranslation } from 'react-i18next';
 
 interface QuizPreviewProps {
   quiz: Quiz | null;
@@ -21,6 +22,7 @@ const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.Re
 };
 
 const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, isOpen, onClose }) => {
+  const { t } = useTranslation();
   // Guard clause to prevent null quiz errors
   if (!quiz) {
     return null;
@@ -51,39 +53,39 @@ const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, isOpen, onClose }) => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600">{quiz.questions.length}</div>
-            <div className="text-sm text-gray-600">Câu hỏi</div>
+            <div className="text-sm text-gray-600">{t('quiz.questions', 'Questions')}</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600">{quiz.duration}</div>
-            <div className="text-sm text-gray-600">Phút</div>
+            <div className="text-sm text-gray-600">{t('minutes', 'minutes')}</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-600">{quiz.difficulty}</div>
-            <div className="text-sm text-gray-600">Độ khó</div>
+            <div className="text-sm text-gray-600">{t('quiz.difficulty', 'Difficulty')}</div>
           </div>
           <div className="text-center">
             <div className={`text-2xl font-bold ${
               quiz.status === 'approved' ? 'text-green-600' : 
               quiz.status === 'rejected' ? 'text-red-600' : 'text-yellow-600'
             }`}>
-              {quiz.status === 'approved' ? 'Đã duyệt' : 
-               quiz.status === 'rejected' ? 'Từ chối' : 'Chờ duyệt'}
+              {quiz.status === 'approved' ? t('status.approved', 'Approved') : 
+               quiz.status === 'rejected' ? t('status.rejected', 'Rejected') : t('status.pending', 'Pending')}
             </div>
-            <div className="text-sm text-gray-600">Trạng thái</div>
+            <div className="text-sm text-gray-600">{t('status.label', 'Status')}</div>
           </div>
         </div>
       </div>
 
       {/* Scrollable Content */}
       <div className="p-6">
-        <h3 className="text-lg font-semibold mb-6 text-gray-900">Danh sách câu hỏi ({quiz.questions.length} câu)</h3>
+        <h3 className="text-lg font-semibold mb-6 text-gray-900">{t('admin.preview.questionList', 'Questions:')}</h3>
         
         <div className="space-y-6">
           {quiz.questions.map((question: Question, index: number) => (
             <div key={index} className="border border-gray-200 rounded-lg p-6 bg-white shadow-sm">
               <div className="flex justify-between items-start mb-4">
                 <h4 className="font-semibold text-gray-900 text-lg">
-                  Câu {index + 1}: {question.text}
+                  {t('quiz.question', 'Question')} {index + 1}: {question.text}
                 </h4>
                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                   question.type === 'multiple' ? 'bg-blue-100 text-blue-800' :
@@ -91,20 +93,20 @@ const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, isOpen, onClose }) => {
                   question.type === 'boolean' ? 'bg-purple-100 text-purple-800' :
                   'bg-yellow-100 text-yellow-800'
                 }`}>
-                  {question.type === 'multiple' ? 'Nhiều lựa chọn' :
-                   question.type === 'checkbox' ? 'Chọn nhiều đáp án' :
-                   question.type === 'boolean' ? 'Đúng/Sai' :
-                   question.type === 'short_answer' ? 'Điền từ' :
-                   'Chọn ảnh'}
+                  {question.type === 'multiple' ? t('quiz.questionTypes.multiple', 'Multiple Choice') :
+                   question.type === 'checkbox' ? t('quiz.questionTypes.checkbox', 'Multiple Select') :
+                   question.type === 'boolean' ? t('quiz.questionTypes.boolean', 'True/False') :
+                   question.type === 'short_answer' ? t('quiz.questionTypes.short_answer', 'Short Answer') :
+                   t('quiz.questionTypes.image', 'Image')}
                 </span>
               </div>
 
               {/* Answers */}
               <div className="space-y-3">
                 {question.type === 'short_answer' ? (
-                  <div className="p-4 bg-green-50 border-2 border-green-300 rounded-lg">
+                    <div className="p-4 bg-green-50 border-2 border-green-300 rounded-lg">
                     <div className="flex items-center">
-                      <span className="font-medium text-green-800">Đáp án đúng: </span>
+                        <span className="font-medium text-green-800">{t('quiz.correctAnswer', 'Correct Answer')}: </span>
                       <span className="ml-2 text-green-700 font-semibold">{question.correctAnswer}</span>
                       <span className="ml-2 text-green-600 text-xl">✓</span>
                     </div>
@@ -141,7 +143,7 @@ const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, isOpen, onClose }) => {
                   </span>
                   {question.explanation && (
                     <span className="text-gray-600">
-                      <span className="font-medium">Giải thích: </span>
+                      <span className="font-medium">{t('quiz.explanation', 'Explanation')}: </span>
                       <span className="text-gray-700">{question.explanation}</span>
                     </span>
                   )}
@@ -155,14 +157,14 @@ const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, isOpen, onClose }) => {
         <div className="mt-8 pt-6 border-t border-gray-200 bg-gray-50 -mx-6 px-6 pb-6">
           <div className="flex justify-between items-center">
             <div className="text-sm text-gray-600">
-              Tổng: <span className="font-semibold">{quiz.questions.length} câu hỏi</span> - 
-              <span className="font-semibold ml-1">{quiz.questions.reduce((sum, q) => sum + q.points, 0)} điểm</span>
+              {t('quiz.questions', 'Questions')}: <span className="font-semibold">{quiz.questions.length}</span> - 
+              <span className="font-semibold ml-1">{t('quiz.points', { points: quiz.questions.reduce((sum, q) => sum + q.points, 0), defaultValue: `Points: ${quiz.questions.reduce((sum, q) => sum + q.points, 0)}` })}</span>
             </div>
             <button
               onClick={onClose}
               className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
             >
-              Đóng
+              {t('close', 'Close')}
             </button>
           </div>
         </div>

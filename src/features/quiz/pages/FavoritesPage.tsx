@@ -51,7 +51,7 @@ const FavoritesPage: React.FC = () => {
 
   if (!user) return <div className="p-8 text-center">{t('favorites.loginRequired', 'Bạn cần đăng nhập để xem quiz yêu thích.')}</div>;
   if (error) return <div className="p-8 text-center text-red-600">{error}</div>;
-  if (loading || quizLoading) return <div className="p-8 text-center">{t('common.loading', 'Đang tải...')}</div>;
+  if (loading || quizLoading) return <div className="p-8 text-center">{t('loading', 'Đang tải...')}</div>;
 
   return <QuizList quizzes={favoriteQuizzes} title={t('favorites.title', 'Quiz Yêu Thích')} />;
 };

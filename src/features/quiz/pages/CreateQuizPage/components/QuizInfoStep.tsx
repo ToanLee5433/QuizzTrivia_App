@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { QuizFormData } from '../types';
 import { categories, difficulties } from '../constants';
 import RichTextEditor from '../../../../../shared/components/ui/RichTextEditor';
+import RichTextViewer from '../../../../../shared/components/ui/RichTextViewer';
 import { BookOpen, Clock, Tag, Star, FileText } from 'lucide-react';
 
 interface QuizInfoStepProps {
@@ -147,10 +148,10 @@ const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
         <h3 className="font-semibold text-blue-900 mb-3">📋 {t('createQuiz.info.preview')}</h3>
         <div className="space-y-2 text-sm">
           <p><strong>{t('quiz.title')}:</strong> {quiz.title || t('createQuiz.info.noTitle')}</p>
-          <p><strong>{t('quiz.description')}:</strong> {quiz.description || t('createQuiz.info.noDescription')}</p>
+          <div><strong>{t('quiz.description')}:</strong> <RichTextViewer content={quiz.description || t('createQuiz.info.noDescription')} /></div>
           <p><strong>{t('quiz.category')}:</strong> {quiz.category || t('createQuiz.info.noCategory')}</p>
           <p><strong>{t('quiz.difficulty')}:</strong> {quiz.difficulty || t('createQuiz.info.noDifficulty')}</p>
-          <p><strong>{t('quiz.duration')}:</strong> {quiz.duration} {t('common.minutes')}</p>
+          <p><strong>{t('quiz.duration')}:</strong> {quiz.duration} {t('minutes')}</p>
           {quiz.tags && quiz.tags.length > 0 && (
             <p><strong>Tags:</strong> {quiz.tags.join(', ')}</p>
           )}

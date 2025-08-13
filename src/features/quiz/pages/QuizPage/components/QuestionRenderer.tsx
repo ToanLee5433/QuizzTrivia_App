@@ -77,7 +77,7 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
               {String.fromCharCode(65 + index)}.
             </span>
             <span 
-              className={`flex-1 font-medium ${answer.text === 'Đúng' ? 'text-green-600' : 'text-red-600'}`}
+              className={`flex-1 font-medium ${answer.text === t('quiz.boolean.true', 'Đúng') ? 'text-green-600' : 'text-red-600'}`}
               dangerouslySetInnerHTML={{ __html: answer.text || '' }}
             />
           </div>
@@ -222,7 +222,7 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
       case 'checkbox':
         return renderCheckbox();
       default:
-        return <div>Loại câu hỏi không được hỗ trợ</div>;
+        return <div>{t('quiz.unsupportedType', 'Loại câu hỏi không được hỗ trợ')}</div>;
     }
   };
 
@@ -231,14 +231,14 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
       <div>
         <div className="flex items-center justify-between mb-4">
           <span className="text-sm font-medium text-blue-600">
-            Câu hỏi {questionNumber} / {question.points} điểm
+            {t('quiz.question', 'Câu hỏi')} {questionNumber} / {question.points} {t('common.points', 'điểm')}
           </span>
           <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-            {question.type === 'multiple' && 'Trắc nghiệm'}
-            {question.type === 'boolean' && 'Đúng/Sai'}
-            {question.type === 'short_answer' && 'Điền từ'}
-            {question.type === 'image' && 'Hình ảnh'}
-            {question.type === 'checkbox' && 'Nhiều lựa chọn'}
+            {question.type === 'multiple' && t('quiz.questionTypes.multiple', 'Trắc nghiệm')}
+            {question.type === 'boolean' && t('quiz.questionTypes.boolean', 'Đúng/Sai')}
+            {question.type === 'short_answer' && t('quiz.questionTypes.short_answer', 'Điền từ')}
+            {question.type === 'image' && t('quiz.questionTypes.image', 'Hình ảnh')}
+            {question.type === 'checkbox' && t('quiz.questionTypes.checkbox', 'Nhiều lựa chọn')}
           </span>
         </div>
         <h2 

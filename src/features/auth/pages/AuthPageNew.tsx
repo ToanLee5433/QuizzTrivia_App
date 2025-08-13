@@ -137,7 +137,7 @@ const AuthPage: React.FC = () => {
 
     } catch (error: any) {
       console.error('Registration error:', error);
-      toast.error(t('auth.errors.otpSendError', 'Có lỗi xảy ra khi gửi mã xác thực: {{message}}', { message: error.message || t('common.tryAgain', 'Vui lòng thử lại') }));
+      toast.error(t('auth.errors.otpSendError', 'Có lỗi xảy ra khi gửi mã xác thực: {{message}}', { message: error.message || 'Vui lòng thử lại' }));
     } finally {
       setLoading(false);
     }
@@ -165,7 +165,7 @@ const AuthPage: React.FC = () => {
         verificationMethod: 'otp'
       });
 
-      toast.success(t('auth.registerSuccess', 'Đăng ký thành công! Chào mừng bạn đến với Quiz App!'));
+      toast.success(t('auth.registerSuccess', 'Đăng ký thành công!'));
       
       // Reset form and states
       setFormData({
@@ -196,7 +196,7 @@ const AuthPage: React.FC = () => {
           toast.error(t('auth.errors.invalidEmail', 'Email không hợp lệ'));
           break;
         default:
-          toast.error(t('auth.errors.registerError', 'Lỗi tạo tài khoản: {{message}}', { message: error.message || t('common.tryAgain', 'Vui lòng thử lại') }));
+          toast.error(t('auth.errors.registerError', 'Lỗi tạo tài khoản: {{message}}', { message: error.message || 'Vui lòng thử lại' }));
       }
       
       // Reset OTP verification state on error
@@ -315,7 +315,7 @@ const AuthPage: React.FC = () => {
       navigate('/');
     } catch (error: any) {
       console.error('Google login error:', error);
-      toast.error(t('auth.errors.googleLoginError', 'Lỗi đăng nhập Google: {{message}}', { message: error.message || t('common.tryAgain', 'Vui lòng thử lại') }));
+      toast.error(t('auth.errors.googleLoginError', 'Lỗi đăng nhập Google: {{message}}', { message: error.message || 'Vui lòng thử lại' }));
     } finally {
       setLoading(false);
     }
@@ -479,7 +479,7 @@ const AuthPage: React.FC = () => {
               disabled={loading}
               className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
             >
-              {loading ? t('common.loading', 'Đang xử lý...') : (isLogin ? t('auth.login', 'Đăng nhập') : t('auth.register', 'Đăng ký'))}
+              {loading ? t('loading', 'Đang xử lý...') : (isLogin ? t('auth.login', 'Đăng nhập') : t('auth.register', 'Đăng ký'))}
             </button>
 
             {/* Forgot Password Link - Only show for login */}
@@ -501,7 +501,7 @@ const AuthPage: React.FC = () => {
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">{t('common.or', 'Hoặc')}</span>
+                <span className="px-2 bg-white text-gray-500">{t('or', 'Hoặc')}</span>
               </div>
             </div>
 

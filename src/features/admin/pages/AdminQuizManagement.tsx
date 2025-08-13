@@ -468,8 +468,8 @@ const AdminQuizManagement: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">⛔ Không có quyền truy cập</h1>
-          <p className="text-gray-600">Bạn cần quyền admin để truy cập trang này.</p>
+          <h1 className="text-2xl font-bold text-red-600 mb-4">⛔ {t('errors.unauthorized', 'Unauthorized access')}</h1>
+          <p className="text-gray-600">{t('admin.loginAsAdmin', 'You need admin rights to access this page.')}</p>
         </div>
       </div>
     );
@@ -480,7 +480,7 @@ const AdminQuizManagement: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Đang tải danh sách quiz...</p>
+          <p className="mt-4 text-gray-600">{t('loadingData', 'Loading data...')}</p>
         </div>
       </div>
     );
@@ -490,13 +490,13 @@ const AdminQuizManagement: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">❌ Lỗi</h1>
+          <h1 className="text-2xl font-bold text-red-600 mb-4">❌ {t('error', 'Error')}</h1>
           <p className="text-gray-600 mb-4">{error}</p>
           <button 
             onClick={loadQuizzes}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
-            Thử lại
+            {t('tryAgain', 'Try again')}
           </button>
         </div>
       </div>
@@ -516,8 +516,8 @@ const AdminQuizManagement: React.FC = () => {
                 <BookOpen className="w-6 h-6 lg:w-7 lg:h-7 text-white drop-shadow-sm" />
               </div>
               <div>
-                <h1 className="text-2xl lg:text-3xl font-bold text-white drop-shadow-sm">{t('admin.quizManagement')}</h1>
-                <p className="text-blue-100 text-sm lg:text-base mt-1">Duyệt và quản lý tất cả quiz trong hệ thống</p>
+                <h1 className="text-2xl lg:text-3xl font-bold text-white drop-shadow-sm">{t('admin.quizManagement', 'Quiz Management')}</h1>
+                <p className="text-blue-100 text-sm lg:text-base mt-1">{t('admin.quizManagement.description', 'Review and manage all quizzes in the system')}</p>
               </div>
             </div>
             
@@ -529,7 +529,7 @@ const AdminQuizManagement: React.FC = () => {
                 title="Làm mới danh sách"
               >
                 <RotateCcw className="w-4 h-4" />
-                <span className="font-medium">Làm mới</span>
+                <span className="font-medium">{t('refresh', 'Refresh')}</span>
               </button>
               
               {/* User Badge */}
@@ -539,7 +539,7 @@ const AdminQuizManagement: React.FC = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
                   <span className="text-white text-sm font-medium truncate max-w-32 lg:max-w-none">{user?.email}</span>
                   <span className="px-2 py-1 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 rounded-full text-xs font-bold shadow-sm">
-                    Admin
+                    {t('admin.quizManagement.adminBadge', 'Admin')}
                   </span>
                 </div>
               </div>
@@ -554,7 +554,7 @@ const AdminQuizManagement: React.FC = () => {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Tổng Quiz</p>
+                <p className="text-sm font-medium text-gray-600">{t('admin.quizManagement.cards.totalQuizzes', 'Total Quizzes')}</p>
                 <p className="text-2xl font-bold text-gray-900">{statusCounts.all}</p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -566,7 +566,7 @@ const AdminQuizManagement: React.FC = () => {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Chờ duyệt</p>
+                <p className="text-sm font-medium text-gray-600">{t('status.pending', 'Pending')}</p>
                 <p className="text-2xl font-bold text-orange-600">{statusCounts.pending}</p>
               </div>
               <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -578,7 +578,7 @@ const AdminQuizManagement: React.FC = () => {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Đã duyệt</p>
+                <p className="text-sm font-medium text-gray-600">{t('status.approved', 'Approved')}</p>
                 <p className="text-2xl font-bold text-green-600">{statusCounts.approved}</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -590,7 +590,7 @@ const AdminQuizManagement: React.FC = () => {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Đã từ chối</p>
+                <p className="text-sm font-medium text-gray-600">{t('status.rejected', 'Rejected')}</p>
                 <p className="text-2xl font-bold text-red-600">{statusCounts.rejected}</p>
               </div>
               <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
@@ -613,7 +613,7 @@ const AdminQuizManagement: React.FC = () => {
             >
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4" />
-                Quản lý Quiz
+                {t('admin.quizManagement.tab.quizzes', 'Manage Quizzes')}
                 <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
                   {quizzes.length}
                 </span>
@@ -629,7 +629,7 @@ const AdminQuizManagement: React.FC = () => {
             >
               <div className="flex items-center gap-2">
                 <AlertCircle className="w-4 h-4" />
-                Yêu cầu chỉnh sửa
+                {t('admin.quizManagement.tab.editRequests', 'Edit requests')}
                 <span className="bg-orange-100 text-orange-600 px-2 py-1 rounded-full text-xs">
                   {editRequests.length}
                 </span>
@@ -649,7 +649,7 @@ const AdminQuizManagement: React.FC = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
-                  placeholder="Tìm kiếm quiz theo tiêu đề, mô tả..."
+                  placeholder={t('admin.quizManagement.searchPlaceholder', 'Search quizzes by title, description...')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -667,7 +667,7 @@ const AdminQuizManagement: React.FC = () => {
                     : 'text-gray-700 hover:text-gray-900'
                 }`}
               >
-                Tất cả
+                {t('common.all', 'All')}
               </button>
               <button
                 onClick={() => setFilterStatus('pending')}
@@ -677,7 +677,7 @@ const AdminQuizManagement: React.FC = () => {
                     : 'text-gray-700 hover:text-gray-900'
                 }`}
               >
-                Chờ duyệt
+                {t('status.pending', 'Pending')}
               </button>
               <button
                 onClick={() => setFilterStatus('approved')}
@@ -687,7 +687,7 @@ const AdminQuizManagement: React.FC = () => {
                     : 'text-gray-700 hover:text-gray-900'
                 }`}
               >
-                Đã duyệt
+                {t('status.approved', 'Approved')}
               </button>
               <button
                 onClick={() => setFilterStatus('rejected')}
@@ -697,7 +697,7 @@ const AdminQuizManagement: React.FC = () => {
                     : 'text-gray-700 hover:text-gray-900'
                 }`}
               >
-                Từ chối
+                {t('status.rejected', 'Rejected')}
               </button>
             </div>
           </div>
@@ -710,12 +710,12 @@ const AdminQuizManagement: React.FC = () => {
               <BookOpen className="w-10 h-10 text-gray-400" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-3">
-              {searchTerm ? 'Không tìm thấy quiz phù hợp' : 'Chưa có quiz nào'}
+              {searchTerm ? t('admin.quizManagement.empty.noMatchTitle', 'No matching quizzes found') : t('admin.quizManagement.empty.noQuizzesTitle', 'No quizzes yet')}
             </h3>
             <p className="text-gray-600 mb-8 max-w-md mx-auto">
               {searchTerm 
-                ? 'Thử thay đổi từ khóa tìm kiếm hoặc bộ lọc để xem thêm quiz.'
-                : 'Hiện tại chưa có quiz nào trong hệ thống. Người tạo có thể tạo quiz từ trang Creator.'
+                ? t('admin.quizManagement.empty.noMatchDesc', 'Try changing the search keyword or filters to see more quizzes.')
+                : t('admin.quizManagement.empty.noQuizzesDesc', 'There are currently no quizzes in the system. Creators can create quizzes from the Creator page.')
               }
             </p>
             {!searchTerm && (
@@ -725,7 +725,7 @@ const AdminQuizManagement: React.FC = () => {
                   className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
                 >
                   <BookOpen className="w-5 h-5" />
-                  Đi đến trang Creator
+                  {t('admin.quizManagement.empty.goToCreator', 'Go to Creator')}
                 </button>
               </div>
             )}
@@ -746,13 +746,13 @@ const AdminQuizManagement: React.FC = () => {
                     
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm text-gray-600">
                       <div>
-                        <span className="font-medium">Danh mục:</span> {quiz.category}
+                        <span className="font-medium">{t('admin.quizManagement.table.category', 'Category')}:</span> {quiz.category}
                       </div>
                       <div>
-                        <span className="font-medium">Số câu hỏi:</span> {quiz.questions.length}
+                        <span className="font-medium">{t('quiz.questions', 'Questions')}:</span> {quiz.questions.length}
                       </div>
                       <div>
-                        <span className="font-medium">Tạo lúc:</span> {quiz.createdAt.toLocaleDateString('vi-VN')}
+                        <span className="font-medium">{t('admin.quizManagement.table.createdAt', 'Created at')}:</span> {quiz.createdAt.toLocaleDateString()}
                       </div>
                     </div>
                   </div>
@@ -760,19 +760,19 @@ const AdminQuizManagement: React.FC = () => {
                   {/* Actions - 6 chức năng: View, Edit, Approve, Reject, Reopen, Delete */}
                   <div className="flex items-center gap-2 ml-6">
                     {/* 1. Xem trước (luôn hiển thị) */}
-                    <button
+                      <button
                       onClick={() => handlePreview(quiz)}
                       className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="Xem trước chi tiết"
+                        title={t('admin.quizManagement.tooltips.preview', 'Preview details')}
                     >
                       <Eye className="w-5 h-5" />
                     </button>
 
                     {/* 2. Chỉnh sửa (luôn hiển thị) */}
-                    <button
+                      <button
                       onClick={() => handleEdit(quiz.id)}
                       className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                      title="Chỉnh sửa quiz"
+                        title={t('admin.quizManagement.tooltips.edit', 'Edit quiz')}
                     >
                       <Edit3 className="w-5 h-5" />
                     </button>
@@ -780,17 +780,17 @@ const AdminQuizManagement: React.FC = () => {
                     {/* 3 & 4. Duyệt & Từ chối (chỉ hiển thị khi pending) */}
                     {quiz.status === 'pending' && (
                       <>
-                        <button
+                          <button
                           onClick={() => handleApprove(quiz.id)}
                           className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                          title="Phê duyệt quiz"
+                            title={t('admin.quizManagement.tooltips.approve', 'Approve quiz')}
                         >
                           <Check className="w-5 h-5" />
                         </button>
-                        <button
+                          <button
                           onClick={() => handleReject(quiz.id)}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Từ chối quiz"
+                            title={t('admin.quizManagement.tooltips.reject', 'Reject quiz')}
                         >
                           <X className="w-5 h-5" />
                         </button>
@@ -798,21 +798,21 @@ const AdminQuizManagement: React.FC = () => {
                     )}
 
                     {/* 5. Mở lại (hiển thị khi đã duyệt hoặc từ chối) */}
-                    {(quiz.status === 'approved' || quiz.status === 'rejected') && (
+                      {(quiz.status === 'approved' || quiz.status === 'rejected') && (
                       <button
                         onClick={() => handleReopen(quiz.id)}
                         className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                        title="Mở lại để xem xét"
+                          title={t('admin.quizManagement.tooltips.reopen', 'Reopen for review')}
                       >
                         <RotateCcw className="w-5 h-5" />
                       </button>
                     )}
                     
                     {/* 6. Xóa (luôn hiển thị) */}
-                    <button
+                      <button
                       onClick={() => handleDelete(quiz.id)}
                       className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Xóa quiz vĩnh viễn"
+                        title={t('admin.quizManagement.tooltips.delete', 'Permanently delete quiz')}
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>
@@ -922,7 +922,7 @@ const AdminQuizManagement: React.FC = () => {
           <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">Xem trước Quiz: {previewQuiz.title}</h2>
+                <h2 className="text-xl font-bold">{t('admin.preview.title', 'Preview Quiz')}: {previewQuiz.title}</h2>
                 <button
                   onClick={() => setShowPreview(false)}
                   className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
@@ -935,28 +935,28 @@ const AdminQuizManagement: React.FC = () => {
             <div className="p-6">
               <div className="space-y-6">
                 <div>
-                  <h3 className="font-semibold mb-2">Mô tả:</h3>
+                  <h3 className="font-semibold mb-2">{t('admin.preview.description', 'Description')}:</h3>
                   <p className="text-gray-600">{previewQuiz.description}</p>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="font-semibold">Danh mục:</span> {previewQuiz.category}
+                    <span className="font-semibold">{t('admin.preview.category', 'Category')}:</span> {previewQuiz.category}
                   </div>
                   <div>
-                    <span className="font-semibold">Độ khó:</span> {previewQuiz.difficulty}
+                    <span className="font-semibold">{t('admin.preview.difficulty', 'Difficulty')}:</span> {previewQuiz.difficulty}
                   </div>
                   <div>
-                    <span className="font-semibold">Số câu hỏi:</span> {previewQuiz.questions.length}
+                    <span className="font-semibold">{t('admin.preview.questions', 'Questions')}:</span> {previewQuiz.questions.length}
                   </div>
                   <div>
-                    <span className="font-semibold">Trạng thái:</span> {getStatusBadge(previewQuiz.status || 'pending')}
+                    <span className="font-semibold">{t('admin.preview.status', 'Status')}:</span> {getStatusBadge(previewQuiz.status || 'pending')}
                   </div>
                 </div>
 
                 {previewQuiz.questions.length > 0 && (
                   <div>
-                    <h3 className="font-semibold mb-4">Câu hỏi:</h3>
+                    <h3 className="font-semibold mb-4">{t('admin.preview.questionList', 'Questions:')}</h3>
                     <div className="space-y-4">
                       {previewQuiz.questions.map((question: any, index: number) => (
                         <div key={index} className="border rounded-lg p-4">

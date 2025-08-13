@@ -6,6 +6,7 @@ import { db } from '../../../lib/firebase/config';
 import AdminLayout from '../components/AdminLayout';
 import Modal from '../../../shared/components/ui/Modal';
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 
 interface User {
   id: string;
@@ -19,6 +20,7 @@ interface User {
 
 const AdminUserManagement: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
+  const { t } = useTranslation();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'user' | 'creator' | 'admin'>('all');
@@ -52,17 +54,17 @@ const AdminUserManagement: React.FC = () => {
 
   const handleRoleChange = async (userId: string, newRole: 'user' | 'creator' | 'admin') => {
     if (userId === user?.uid && newRole !== 'admin') {
-      toast.error('Bạn không thể thay đổi quyền của chính mình!');
+      toast.error(t('admin.users.cannotChangeSelfRole', 'You cannot change your own role!'));
       return;
     }
     setLoading(true);
     try {
       await updateDoc(doc(db, 'users', userId), { role: newRole });
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
-      toast.success('Đã cập nhật quyền người dùng!');
+      toast.success(t('admin.roleUpdateSuccess', 'Role updated successfully!'));
     } catch (error) {
       console.error('Error updating user role:', error);
-      toast.error('Có lỗi xảy ra!');
+      toast.error(t('messages.error', 'An error occurred'));
     } finally {
       setLoading(false);
     }
@@ -70,17 +72,17 @@ const AdminUserManagement: React.FC = () => {
 
   const handleStatusToggle = async (userId: string, currentStatus: boolean) => {
     if (userId === user?.uid) {
-      toast.error('Bạn không thể khóa tài khoản của chính mình!');
+      toast.error(t('admin.users.cannotDeactivateSelf', 'You cannot change your own status!'));
       return;
     }
     setLoading(true);
     try {
       await updateDoc(doc(db, 'users', userId), { isActive: !currentStatus });
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, isActive: !currentStatus } : u));
-      toast.success(`Đã ${!currentStatus ? 'kích hoạt' : 'khóa'} tài khoản!`);
+      toast.success(t('admin.userStatusUpdateSuccess', { action: t(!currentStatus ? 'admin.activated' : 'admin.deactivated') }));
     } catch (error) {
       console.error('Error updating user status:', error);
-      toast.error('Có lỗi xảy ra!');
+      toast.error(t('messages.error', 'An error occurred'));
     } finally {
       setLoading(false);
     }
@@ -88,7 +90,7 @@ const AdminUserManagement: React.FC = () => {
 
   const handleDeleteUser = async (userId: string) => {
     if (userId === user?.uid) {
-      toast.error('Bạn không thể xóa tài khoản của chính mình!');
+      toast.error(t('admin.users.cannotDeleteSelf', 'You cannot delete your own account!'));
       return;
     }
     setLoading(true);
@@ -102,10 +104,10 @@ const AdminUserManagement: React.FC = () => {
       });
       
       setUsers(prev => prev.filter(u => u.id !== userId));
-      toast.success('Đã vô hiệu hóa tài khoản người dùng!');
+      toast.success(t('admin.userDeleteSuccess', 'User deleted successfully!'));
     } catch (error) {
       console.error('Error deleting user:', error);
-      toast.error('Có lỗi xảy ra khi xóa người dùng!');
+      toast.error(t('admin.userDeleteError', 'Error occurred while deleting user!'));
     } finally {
       setLoading(false);
     }
@@ -116,7 +118,7 @@ const AdminUserManagement: React.FC = () => {
   if (user?.role !== 'admin') {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-600">Bạn không có quyền truy cập trang này.</p>
+        <p className="text-gray-600">{t('admin.loginAsAdmin', 'You need admin rights to access this page.')}</p>
       </div>
     );
   }
@@ -130,15 +132,15 @@ const AdminUserManagement: React.FC = () => {
   }
 
   return (
-    <AdminLayout title="👥 Quản lý người dùng">
+    <AdminLayout title={`👥 ${t('admin.userManagement', 'User Management')}`}>
       {/* Filter Tabs */}
       <div className="mb-6">
         <div className="flex space-x-4">
           {[
-            { key: 'all', label: 'Tất cả', count: users.length },
-            { key: 'admin', label: 'Admin', count: users.filter(u => u.role === 'admin').length },
-            { key: 'creator', label: 'Creator', count: users.filter(u => u.role === 'creator').length },
-            { key: 'user', label: 'User', count: users.filter(u => u.role === 'user').length }
+            { key: 'all', label: t('common.all', 'All'), count: users.length },
+            { key: 'admin', label: t('ui.admin', 'Admin'), count: users.filter(u => u.role === 'admin').length },
+            { key: 'creator', label: t('ui.creator', 'Creator'), count: users.filter(u => u.role === 'creator').length },
+            { key: 'user', label: t('ui.user', 'User'), count: users.filter(u => u.role === 'user').length }
           ].map(tab => (
             <button
               key={tab.key}
@@ -158,23 +160,23 @@ const AdminUserManagement: React.FC = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-lg font-semibold text-gray-900">Tổng người dùng</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('admin.userManagementCards.totalUsers', 'Total users')}</h3>
           <p className="text-3xl font-bold text-blue-600">{users.length}</p>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-lg font-semibold text-gray-900">Đang hoạt động</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('admin.userManagementCards.activeUsers', 'Active users')}</h3>
           <p className="text-3xl font-bold text-green-600">
             {users.filter(u => u.isActive !== false).length}
           </p>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-lg font-semibold text-gray-900">Creator</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('ui.creator', 'Creator')}</h3>
           <p className="text-3xl font-bold text-purple-600">
             {users.filter(u => u.role === 'creator').length}
           </p>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-lg font-semibold text-gray-900">Admin</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('ui.admin', 'Admin')}</h3>
           <p className="text-3xl font-bold text-red-600">
             {users.filter(u => u.role === 'admin').length}
           </p>
@@ -187,19 +189,19 @@ const AdminUserManagement: React.FC = () => {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Người dùng
+                {t('ui.user', 'User')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Vai trò
+                {t('ui.role', 'Role')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Trạng thái
+                {t('status.label', 'Status')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Ngày tạo
+                {t('common.createdAt', 'Created at')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Thao tác
+                {t('action.actions', 'Actions')}
               </th>
             </tr>
           </thead>
@@ -217,10 +219,10 @@ const AdminUserManagement: React.FC = () => {
                     </div>
                     <div className="ml-4">
                       <div className="text-sm font-medium text-gray-900">
-                        {userData.displayName || 'Chưa có tên'}
+                        {userData.displayName || t('profile.displayName', 'Display Name')}
                         {userData.id === user?.uid && (
                           <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                            (Bạn)
+                            ({t('common.you', 'You')})
                           </span>
                         )}
                       </div>
@@ -241,12 +243,12 @@ const AdminUserManagement: React.FC = () => {
                   </select>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                     userData.isActive !== false 
                       ? 'bg-green-100 text-green-800' 
                       : 'bg-red-100 text-red-800'
                   }`}>
-                    {userData.isActive !== false ? 'Hoạt động' : 'Bị khóa'}
+                      {userData.isActive !== false ? t('status.active', 'Active') : t('status.inactive', 'Inactive')}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -261,14 +263,14 @@ const AdminUserManagement: React.FC = () => {
                           className={`px-3 py-1 rounded text-xs ${userData.isActive !== false ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-green-600 text-white hover:bg-green-700'}`}
                           disabled={loading}
                         >
-                          {userData.isActive !== false ? 'Khóa' : 'Kích hoạt'}
+                          {userData.isActive !== false ? t('action.deactivate', 'Deactivate') : t('action.activate', 'Activate')}
                         </button>
                         <button
-                          onClick={() => setConfirmModal({ open: true, type: 'deleteUser', payload: { userId: userData.id }, message: 'Bạn có chắc chắn muốn xóa người dùng này?' })}
+                          onClick={() => setConfirmModal({ open: true, type: 'deleteUser', payload: { userId: userData.id }, message: t('users.confirmDelete', 'Are you sure you want to delete this user?') })}
                           className="px-3 py-1 bg-red-100 text-red-600 rounded text-xs hover:bg-red-200"
                           disabled={loading}
                         >
-                          Xóa
+                          {t('delete', 'Delete')}
                         </button>
                       </>
                     )}
@@ -284,7 +286,7 @@ const AdminUserManagement: React.FC = () => {
       <Modal
         isOpen={confirmModal.open}
         onClose={() => setConfirmModal({ open: false, type: null })}
-        title="Xác nhận thao tác"
+        title={t('action.confirm', 'Confirm')}
       >
         <div className="mb-4">{confirmModal.message}</div>
         <div className="flex justify-end space-x-2">
@@ -293,7 +295,7 @@ const AdminUserManagement: React.FC = () => {
             className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
             disabled={loading}
           >
-            Hủy
+            {t('cancel', 'Cancel')}
           </button>
           <button
             onClick={async () => {
@@ -305,7 +307,7 @@ const AdminUserManagement: React.FC = () => {
             className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
             disabled={loading}
           >
-            Xác nhận
+            {t('action.confirm', 'Confirm')}
           </button>
         </div>
       </Modal>

@@ -302,10 +302,10 @@ const AdminDashboard: React.FC = () => {
     try {
       await updateDoc(doc(db, 'quizzes', quizId), { status: 'pending' });
       await loadData();
-      toast.success('Đã mở lại quiz để xem xét!');
+      toast.success(t('admin.quizReopened', 'Quiz reopened for review!'));
     } catch (error) {
       console.error('Error reopening quiz:', error);
-      toast.error('Có lỗi xảy ra khi mở lại quiz!');
+      toast.error(t('admin.quizReopenError', 'Error reopening quiz!'));
     } finally {
       setLoading(false);
     }
@@ -316,10 +316,10 @@ const AdminDashboard: React.FC = () => {
     try {
       await deleteDoc(doc(db, 'quizzes', quizId));
       await loadData();
-      toast.success('Đã xóa quiz thành công!');
+      toast.success(t('quiz.deleteSuccess', 'Quiz deleted successfully'));
     } catch (error) {
       console.error('Error deleting quiz:', error);
-      toast.error('Có lỗi xảy ra khi xóa quiz!');
+      toast.error(t('quiz.deleteError', 'Error deleting quiz'));
     } finally {
       setLoading(false);
     }
@@ -327,7 +327,7 @@ const AdminDashboard: React.FC = () => {
 
   const addCategory = async () => {
     if (!newCategory.name.trim()) {
-      toast.error('Vui lòng nhập tên danh mục!');
+      toast.error(t('admin.categories.enterName', 'Please enter category name!'));
       return;
     }
     setLoading(true);
@@ -341,10 +341,10 @@ const AdminDashboard: React.FC = () => {
       setNewCategory({ name: '', description: '' });
       setShowAddCategory(false);
       await loadData();
-      toast.success('Đã thêm danh mục thành công!');
+      toast.success(t('admin.categories.addSuccess', 'Category added successfully!'));
     } catch (error) {
       console.error('Error adding category:', error);
-      toast.error('Có lỗi xảy ra khi thêm danh mục!');
+      toast.error(t('admin.categories.addError', 'Error adding category!'));
     } finally {
       setLoading(false);
     }
@@ -355,10 +355,10 @@ const AdminDashboard: React.FC = () => {
     try {
       await deleteDoc(doc(db, 'categories', categoryId));
       await loadData();
-      toast.success('Đã xóa danh mục thành công!');
+      toast.success(t('admin.categories.deleteSuccess', 'Category deleted successfully!'));
     } catch (error) {
       console.error('Error deleting category:', error);
-      toast.error('Có lỗi xảy ra khi xóa danh mục!');
+      toast.error(t('admin.categories.deleteError', 'Error deleting category!'));
     } finally {
       setLoading(false);
     }
@@ -368,13 +368,13 @@ const AdminDashboard: React.FC = () => {
     console.log('Rendering dashboard with stats:', stats);
     return (
       <div className="space-y-6">
-        {/* Alert thông báo */}
+        {/* Alert */}
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <div className="flex items-center">
             <span className="text-2xl mr-3">✅</span>
             <div>
-              <h3 className="font-semibold text-green-800">{t('admin.viewingStatsSection', 'Bạn đang xem phần Thống kê & Tổng quan')}</h3>
-              <p className="text-green-700 text-sm">{t('admin.advancedStatsDescription', 'Đây là trang chứa biểu đồ và thống kê nâng cao mà bạn vừa thêm')}</p>
+              <h3 className="font-semibold text-green-800">{t('admin.viewingStatsSection', 'Viewing stats section')}</h3>
+              <p className="text-green-700 text-sm">{t('admin.advancedStatsDescription', 'Advanced statistics about system activity')}</p>
             </div>
           </div>
         </div>
@@ -475,20 +475,20 @@ const AdminDashboard: React.FC = () => {
 
   const renderQuizzes = () => (
     <div className="space-y-6" data-testid="quiz-review-system">
-      {/* Alert thông báo */}
+        {/* Alert */}
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
         <div className="flex items-center">
           <span className="text-2xl mr-3">📝</span>
           <div>
-            <h3 className="font-semibold text-yellow-800">Bạn đang xem phần Quản lý Quiz</h3>
-            <p className="text-yellow-700 text-sm">Đây là trang quản lý danh sách quiz (không phải thống kê)</p>
+            <h3 className="font-semibold text-yellow-800">{t('admin.quizManagement', 'Quiz Management')}</h3>
+            <p className="text-yellow-700 text-sm">{t('admin.tabs.quizzes', 'Quizzes')}</p>
           </div>
         </div>
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold">Quản lý Quiz</h3>
+          <h3 className="text-lg font-semibold">{t('admin.quizManagement', 'Quiz Management')}</h3>
         </div>
         
         <div className="overflow-x-auto">
@@ -496,16 +496,16 @@ const AdminDashboard: React.FC = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Tiêu đề
+                  {t('admin.quizManagement.table.title', 'Title')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Mô tả
+                  {t('quiz.description', 'Description')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Trạng thái
+                  {t('status.pending', 'Status')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Thao tác
+                  {t('action.action', 'Actions')}
                 </th>
               </tr>
             </thead>
@@ -524,8 +524,8 @@ const AdminDashboard: React.FC = () => {
                       quiz.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                       'bg-red-100 text-red-800'
                     }`}>
-                      {quiz.status === 'approved' ? 'Đã duyệt' :
-                       quiz.status === 'pending' ? 'Chờ duyệt' : 'Bị từ chối'}
+                       {quiz.status === 'approved' ? t('status.approved', 'Approved') :
+                        quiz.status === 'pending' ? t('status.pending', 'Pending') : t('status.rejected', 'Rejected')}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
@@ -535,13 +535,13 @@ const AdminDashboard: React.FC = () => {
                           onClick={() => approveQuiz(quiz.id)}
                           className="px-3 py-1 bg-green-100 text-green-600 rounded text-xs hover:bg-green-200"
                         >
-                          Duyệt
+                          {t('action.approve', 'Approve')}
                         </button>
                         <button
                           onClick={() => rejectQuiz(quiz.id)}
                           className="px-3 py-1 bg-yellow-100 text-yellow-600 rounded text-xs hover:bg-yellow-200"
                         >
-                          Từ chối
+                          {t('action.reject', 'Reject')}
                         </button>
                       </>
                     )}
@@ -551,15 +551,15 @@ const AdminDashboard: React.FC = () => {
                         onClick={() => reopenQuiz(quiz.id)}
                         className="px-3 py-1 bg-blue-100 text-blue-600 rounded text-xs hover:bg-blue-200"
                       >
-                        Mở lại
+                         {t('admin.quizManagement.tooltips.reopen', 'Reopen for review')}
                       </button>
                     )}
                     
                     <button
-                      onClick={() => setConfirmModal({ open: true, type: 'deleteQuiz', payload: { quizId: quiz.id }, message: 'Bạn có chắc chắn muốn xóa quiz này?' })}
+                       onClick={() => setConfirmModal({ open: true, type: 'deleteQuiz', payload: { quizId: quiz.id }, message: t('quiz.confirmDelete', 'Are you sure you want to delete this quiz?') })}
                       className="px-3 py-1 bg-red-100 text-red-600 rounded text-xs hover:bg-red-200"
                     >
-                      Xóa
+                      {t('delete', 'Delete')}
                     </button>
                   </td>
                 </tr>
@@ -576,12 +576,12 @@ const AdminDashboard: React.FC = () => {
       {/* Add Category Button */}
       <div className="bg-white p-6 rounded-lg shadow">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Quản lý danh mục</h3>
+          <h3 className="text-lg font-semibold">{t('admin.categoryManagement', 'Category Management')}</h3>
           <button
             onClick={() => setShowAddCategory(!showAddCategory)}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
-            Thêm danh mục
+            {t('categories.add', 'Add category')}
           </button>
         </div>
 
@@ -591,14 +591,14 @@ const AdminDashboard: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input
                 type="text"
-                placeholder="Tên danh mục"
+                placeholder={t('categories.name', 'Category name')}
                 value={newCategory.name}
                 onChange={(e) => setNewCategory(prev => ({ ...prev, name: e.target.value }))}
                 className="border border-gray-300 rounded px-3 py-2"
               />
               <input
                 type="text"
-                placeholder="Mô tả"
+                placeholder={t('categories.description', 'Description')}
                 value={newCategory.description}
                 onChange={(e) => setNewCategory(prev => ({ ...prev, description: e.target.value }))}
                 className="border border-gray-300 rounded px-3 py-2"
@@ -609,7 +609,7 @@ const AdminDashboard: React.FC = () => {
                 onClick={addCategory}
                 className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
               >
-                Lưu
+                {t('save', 'Save')}
               </button>
               <button
                 onClick={() => {
@@ -618,7 +618,7 @@ const AdminDashboard: React.FC = () => {
                 }}
                 className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
               >
-                Hủy
+                {t('cancel', 'Cancel')}
               </button>
             </div>
           </div>
@@ -632,16 +632,16 @@ const AdminDashboard: React.FC = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Tên danh mục
+                  {t('categories.name', 'Category name')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Mô tả
+                  {t('categories.description', 'Description')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Số lượng Quiz
+                  {t('categories.quizCount', 'Quiz count')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Thao tác
+                  {t('action.action', 'Actions')}
                 </th>
               </tr>
             </thead>
@@ -659,10 +659,10 @@ const AdminDashboard: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
-                      onClick={() => setConfirmModal({ open: true, type: 'deleteCategory', payload: { categoryId: category.id }, message: 'Bạn có chắc chắn muốn xóa danh mục này?' })}
+                       onClick={() => setConfirmModal({ open: true, type: 'deleteCategory', payload: { categoryId: category.id }, message: t('categories.confirmDelete', 'Are you sure you want to delete this category?') })}
                       className="px-3 py-1 bg-red-100 text-red-600 rounded text-xs hover:bg-red-200"
                     >
-                      Xóa
+                      {t('delete', 'Delete')}
                     </button>
                   </td>
                 </tr>
@@ -840,7 +840,7 @@ const AdminDashboard: React.FC = () => {
       <Modal
         isOpen={confirmModal.open}
         onClose={() => setConfirmModal({ open: false, type: null })}
-        title="Xác nhận thao tác"
+        title={t('action.confirm', 'Confirm')}
       >
         <div className="mb-4">{confirmModal.message}</div>
         <div className="flex justify-end space-x-2">
@@ -849,7 +849,7 @@ const AdminDashboard: React.FC = () => {
             className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
             disabled={loading}
           >
-            Hủy
+            {t('cancel', 'Cancel')}
           </button>
           <button
             onClick={async () => {
@@ -862,7 +862,7 @@ const AdminDashboard: React.FC = () => {
             className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
             disabled={loading}
           >
-            Xác nhận
+            {t('action.confirm', 'Confirm')}
           </button>
         </div>
       </Modal>

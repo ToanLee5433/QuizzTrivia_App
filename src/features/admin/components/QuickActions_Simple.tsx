@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 
@@ -16,6 +17,7 @@ interface QuickActionsProps {
 // Đổi tên component
 const QuickActionsSimple: React.FC<QuickActionsProps> = ({ stats }) => {
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [notificationData, setNotificationData] = useState({
     message: '',
@@ -26,7 +28,7 @@ const QuickActionsSimple: React.FC<QuickActionsProps> = ({ stats }) => {
   // 1. Tạo thông báo hệ thống
   const createSystemNotification = async () => {
     if (!notificationData.message.trim()) {
-      toast.error('Vui lòng nhập nội dung thông báo!');
+      toast.error(t('admin.quickActions.toasts.enterMessage', 'Please enter notification content!'));
       return;
     }
 
@@ -48,10 +50,10 @@ const QuickActionsSimple: React.FC<QuickActionsProps> = ({ stats }) => {
       });
       setShowNotificationModal(false);
       
-      toast.success('Đã gửi thông báo hệ thống!');
+      toast.success(t('admin.quickActions.toasts.createSuccess', 'Notification created successfully!'));
     } catch (error) {
       console.error('Error creating notification:', error);
-      toast.error('Lỗi khi gửi thông báo!');
+      toast.error(t('admin.quickActions.toasts.createError', 'Error creating notification!'));
     } finally {
       setLoading(false);
     }
@@ -67,7 +69,7 @@ const QuickActionsSimple: React.FC<QuickActionsProps> = ({ stats }) => {
     <div className="bg-white p-6 rounded-lg shadow">
       <h3 className="text-lg font-semibold mb-4 text-gray-900 flex items-center">
         <span className="mr-2">⚡</span>
-        Thao tác nhanh
+        {t('admin.quickActions.title', 'Quick actions')}
       </h3>
       
       {/* Nút gửi thông báo */}
@@ -78,8 +80,8 @@ const QuickActionsSimple: React.FC<QuickActionsProps> = ({ stats }) => {
           className="p-4 border-2 border-blue-200 rounded-lg transition-all duration-200 text-left hover:border-blue-500 hover:bg-blue-50"
         >
           <div className="text-3xl mb-2">📢</div>
-          <div className="font-medium mb-1">Gửi thông báo</div>
-          <div className="text-sm text-gray-600">Gửi thông báo đến tất cả người dùng</div>
+          <div className="font-medium mb-1">{t('admin.quickActions.items.notify.title', 'Send notification')}</div>
+          <div className="text-sm text-gray-600">{t('admin.quickActions.items.notify.desc', 'Send notification to all users')}</div>
         </button>
 
         {/* Nút test modal */}
@@ -92,36 +94,36 @@ const QuickActionsSimple: React.FC<QuickActionsProps> = ({ stats }) => {
           className="p-4 border-2 border-red-200 rounded-lg transition-all duration-200 text-left hover:border-red-500 hover:bg-red-50"
         >
           <div className="text-3xl mb-2">🧪</div>
-          <div className="font-medium mb-1">Test Modal</div>
-          <div className="text-sm text-gray-600">Test mở modal (Debug)</div>
+          <div className="font-medium mb-1">{t('admin.quickActions.testModal', 'Test Modal')}</div>
+          <div className="text-sm text-gray-600">{t('admin.quickActions.testModalDesc', 'Open modal (Debug)')}</div>
         </button>
 
         {/* Placeholder */}
         <div className="p-4 border-2 border-gray-200 rounded-lg text-left bg-gray-50">
           <div className="text-3xl mb-2">🚧</div>
-          <div className="font-medium mb-1">Đang phát triển</div>
-          <div className="text-sm text-gray-600">Các tính năng khác sẽ sớm có</div>
+          <div className="font-medium mb-1">{t('admin.quickActions.inDevelopment', 'In development')}</div>
+          <div className="text-sm text-gray-600">{t('admin.quickActions.moreSoon', 'More features coming soon')}</div>
         </div>
       </div>
 
       {/* Thống kê nhanh hiển thị */}
       <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-        <h4 className="font-medium mb-2">📊 Tình trạng hệ thống</h4>
+        <h4 className="font-medium mb-2">📊 {t('admin.quickActions.systemStatus', 'System status')}</h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
-            <div className="text-gray-600">Người dùng</div>
+            <div className="text-gray-600">{t('admin.quickActions.stats.users', 'Users')}</div>
             <div className="font-bold text-blue-600">{stats.totalUsers}</div>
           </div>
           <div>
-            <div className="text-gray-600">Chờ duyệt</div>
+            <div className="text-gray-600">{t('status.pending', 'Pending')}</div>
             <div className="font-bold text-yellow-600">{stats.pendingQuizzes}</div>
           </div>
           <div>
-            <div className="text-gray-600">Đã duyệt</div>
+            <div className="text-gray-600">{t('status.approved', 'Approved')}</div>
             <div className="font-bold text-green-600">{stats.approvedQuizzes}</div>
           </div>
           <div>
-            <div className="text-gray-600">Danh mục</div>
+            <div className="text-gray-600">{t('admin.tabs.categories', 'Categories')}</div>
             <div className="font-bold text-purple-600">{stats.totalCategories}</div>
           </div>
         </div>
@@ -129,12 +131,12 @@ const QuickActionsSimple: React.FC<QuickActionsProps> = ({ stats }) => {
 
       {/* Debug info */}
       <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-        <h4 className="font-medium mb-2 text-red-800">🧪 Debug Panel</h4>
+        <h4 className="font-medium mb-2 text-red-800">🧪 {t('admin.quickActions.debugPanel', 'Debug Panel')}</h4>
         <p className="text-sm text-red-600 mb-2">
-          Modal state: {showNotificationModal ? 'OPEN' : 'CLOSED'}
+          {t('admin.quickActions.modalState', 'Modal state')}: {showNotificationModal ? 'OPEN' : 'CLOSED'}
         </p>
         <p className="text-sm text-red-600">
-          Nhấn F12 để mở Developer Tools và xem Console log
+          {t('admin.quickActions.debugHint', 'Press F12 to open Developer Tools and check Console log')}
         </p>
       </div>
 
@@ -142,18 +144,16 @@ const QuickActionsSimple: React.FC<QuickActionsProps> = ({ stats }) => {
       {showNotificationModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <h2 className="text-xl font-semibold mb-4">Gửi thông báo hệ thống</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('admin.quickActions.modal.title', 'Send system notification')}</h2>
             
             <div className="space-y-4">
               {/* Nội dung thông báo */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nội dung thông báo
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.quickActions.modal.contentLabel', 'Notification content')}</label>
                 <textarea
                   value={notificationData.message}
                   onChange={(e) => setNotificationData(prev => ({ ...prev, message: e.target.value }))}
-                  placeholder="Nhập nội dung thông báo..."
+                  placeholder={t('admin.quickActions.modal.contentPlaceholder', 'Enter notification content...')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={4}
                 />
@@ -161,34 +161,30 @@ const QuickActionsSimple: React.FC<QuickActionsProps> = ({ stats }) => {
 
               {/* Loại thông báo */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Loại thông báo
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.quickActions.modal.typeLabel', 'Notification type')}</label>
                 <select
                   value={notificationData.type}
                   onChange={(e) => setNotificationData(prev => ({ ...prev, type: e.target.value as any }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="info">Thông tin (Xanh)</option>
-                  <option value="warning">Cảnh báo (Vàng)</option>
-                  <option value="success">Thành công (Xanh lá)</option>
-                  <option value="error">Lỗi (Đỏ)</option>
+                  <option value="info">{t('admin.quickActions.modal.type.info', 'Info (Blue)')}</option>
+                  <option value="warning">{t('admin.quickActions.modal.type.warning', 'Warning (Yellow)')}</option>
+                  <option value="success">{t('admin.quickActions.modal.type.success', 'Success (Green)')}</option>
+                  <option value="error">{t('admin.quickActions.modal.type.error', 'Error (Red)')}</option>
                 </select>
               </div>
 
               {/* Đối tượng nhận thông báo */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Đối tượng nhận
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('admin.quickActions.modal.targetLabel', 'Target audience')}</label>
                 <select
                   value={notificationData.targetRole}
                   onChange={(e) => setNotificationData(prev => ({ ...prev, targetRole: e.target.value as any }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="all">Tất cả người dùng</option>
-                  <option value="user">Chỉ User</option>
-                  <option value="creator">Chỉ Creator</option>
+                  <option value="all">{t('admin.quickActions.modal.target.all', 'All users')}</option>
+                  <option value="user">{t('admin.quickActions.modal.target.user', 'Users only')}</option>
+                  <option value="creator">{t('admin.quickActions.modal.target.creator', 'Creators only')}</option>
                 </select>
               </div>
 
@@ -202,14 +198,14 @@ const QuickActionsSimple: React.FC<QuickActionsProps> = ({ stats }) => {
                   className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
                   disabled={loading}
                 >
-                  Hủy
+                  {t('cancel', 'Cancel')}
                 </button>
                 <button
                   onClick={createSystemNotification}
                   disabled={loading || !notificationData.message.trim()}
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'Đang gửi...' : 'Gửi thông báo'}
+                  {loading ? t('admin.quickActions.modal.sending', 'Sending...') : t('admin.quickActions.modal.send', 'Send notification')}
                 </button>
               </div>
             </div>
