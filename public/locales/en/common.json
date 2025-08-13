@@ -1,6 +1,7 @@
 {
   "loading": "Loading...",
   "loadingData": "Loading data...",
+  "selectLanguage": "Select language",
   "save": "Save",
   "cancel": "Cancel",
   "delete": "Delete",
@@ -39,6 +40,8 @@
   "noData": "No data",
   "retry": "Retry",
   "refresh": "Refresh",
+  "createdAt": "Created At",
+  "actions": "Actions",
   "nav": {
     "home": "Home",
     "dashboard": "Dashboard",
@@ -54,39 +57,53 @@
     "logout": "Logout",
     "register": "Register"
   },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "time": "Time",
+    "filters": {
+      "allTime": "All time",
+      "thisWeek": "This week",
+      "thisMonth": "This month"
+    },
+    "collapse": "Collapse",
+    "searchPlayers": "Search players...",
+    "viewMore": "View more",
+    "viewAllCount": "View all ({{count}})",
+    "players": "Players",
+    "plays": "Plays",
+    "avgScore": "Avg score",
+    "avgShort": "AVG",
+    "activeToday": "Active today",
+    "perfectScores": "Perfect scores",
+    "topPlayers": "Top Players",
+    "noData": "No data yet",
+    "playToAppear": "Play quizzes to appear on the leaderboard!",
+    "perfect100": "perfect 100",
+    "activity": "Activity",
+    "yourPosition": "Your position",
+    "topQuizzes": "Most Popular Quizzes",
+    "noQuizzes": "No quizzes yet",
+    "createFirstQuiz": "Create your first quiz to appear here!"
+  },
   "ui": {
-    "hideStats": "Ẩn thống kê",
-    "showStats": "Hiện thống kê",
-    "sort": {
-      "newest": "Mới nhất",
-      "oldest": "Cũ nhất",
-      "popular": "Phổ biến",
-      "byDifficulty": "Theo độ khó"
-    },
-    "display": "Hiển thị:",
-    "grid": "Lưới",
-    "list": "Danh sách",
-    "searchResultPrefix": "Tìm thấy",
-    "searchResultSuffix": "quiz",
-    "for": "cho",
-    "inCategory": "trong danh mục",
-    "withDifficulty": "với độ khó",
-    "noQuizFound": "Không tìm thấy quiz",
-    "noQuizMatch": "Không có quiz nào phù hợp với bộ lọc hiện tại.",
-    "clearFilters": "Xóa bộ lọc",
-    "retryConnection": "Thử lại kết nối",
-    "firestoreHelp": {
-      "1": "1. Tắt Ad Blocker cho localhost:5174",
-      "2": "2. Thêm *.googleapis.com vào whitelist",
-      "3": "3. Thử chế độ Incognito/Private",
-      "4": "4. Kiểm tra Firewall/Antivirus"
-    },
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "user": "User",
     "admin": "Administrator",
     "creator": "Creator",
-    "user": "User"
+    "profile": "Profile",
+    "settings": "Settings",
+    "dashboard": "Dashboard",
+    "management": "Management",
+    "userManagement": "User Management",
+    "quizManagement": "Quiz Management",
+    "welcome": "Welcome",
+    "menu": "Menu",
+    "navigation": "Navigation",
+    "welcomeRole": "Welcome with role"
   },
   "status": {
-    "label": "Trạng thái",
     "pending": "Pending",
     "approved": "Approved",
     "rejected": "Rejected",
@@ -102,7 +119,6 @@
   "action": {
     "submit": "Submit",
     "confirm": "Confirm",
-    "actions": "Hành động",
     "approve": "Approve",
     "reject": "Reject",
     "activate": "Activate",
@@ -133,17 +149,11 @@
       },
       "realtime": {
         "title": "Real-time",
-        "desc": "Challenge yourself with countdown timer and track realtime progress",
-        "description": "Trải nghiệm chơi thời gian thực"
+        "desc": "Challenge yourself with countdown timer and track realtime progress"
       },
       "ranking": {
         "title": "Ranking & Achievements",
-        "desc": "Track scores, statistics and compare with friends",
-        "description": "Thi đấu và so tài với bạn bè"
-      },
-      "diversity": {
-        "title": "Đa dạng chủ đề",
-        "description": "Hàng nghìn quiz về mọi lĩnh vực"
+        "desc": "Track scores, statistics and compare with friends"
       }
     },
     "stats": {
@@ -190,155 +200,128 @@
       "userDisabled": "Account has been disabled",
       "tooManyRequests": "Too many attempts. Please try again later",
       "loginError": "Login error: {{message}}",
-      "googleLoginError": "Google login error: {{message}}",
-      "emailAlreadyInUse": "Email đã được sử dụng",
-      "otpSendError": "Lỗi gửi mã OTP",
-      "registerError": "Lỗi đăng ký",
-      "registrationDataNotFound": "Không tìm thấy dữ liệu đăng ký",
-      "weakPassword": "Mật khẩu quá yếu"
-    },
-    "logout": "Đăng xuất",
-    "registrationCancelled": "Đăng ký đã bị hủy",
-    "validation": {
-      "displayNameRequired": "Tên hiển thị là bắt buộc",
-      "emailInvalid": "Email không hợp lệ",
-      "emailRequired": "Email là bắt buộc",
-      "passwordMismatch": "Mật khẩu không khớp",
-      "passwordRequired": "Mật khẩu là bắt buộc",
-      "passwordTooShort": "Mật khẩu quá ngắn",
-      "termsRequired": "Bạn phải đồng ý với điều khoản"
-    }
-  },
-  "quizList": {
-    "title": "Khám phá Quiz",
-    "subtitle": "Tìm hiểu kiến thức mới qua các quiz thú vị",
-    "exploreQuizzes": "Khám phá Quiz",
-    "showStats": "Hiện thống kê",
-    "hideStats": "Ẩn thống kê",
-    "createNewQuiz": "Tạo Quiz mới",
-    "filters": {
-      "searchPlaceholder": "🔍 Tìm kiếm quiz, danh mục, tags...",
-      "allCategories": "🏷️ Tất cả danh mục",
-      "allDifficulties": "📊 Tất cả độ khó",
-      "easyDifficulty": "😊 Dễ",
-      "mediumDifficulty": "😐 Trung bình",
-      "hardDifficulty": "😤 Khó"
-    },
-    "sort": {
-      "newest": "🆕 Mới nhất",
-      "oldest": "📅 Cũ nhất",
-      "popular": "🔥 Phổ biến",
-      "difficulty": "📈 Theo độ khó"
-    },
-    "display": {
-      "label": "Hiển thị:",
-      "grid": "Lưới",
-      "list": "Danh sách"
-    },
-    "options": {
-      "showCompleted": "Hiện quiz đã hoàn thành"
-    },
-    "results": {
-      "found": "Tìm thấy",
-      "quizzes": "quiz",
-      "for": "cho",
-      "inCategory": "trong danh mục",
-      "withDifficulty": "với độ khó"
-    },
-    "empty": {
-      "noQuizFound": "Không tìm thấy quiz",
-      "noQuizMatch": "Không có quiz nào phù hợp với bộ lọc hiện tại.",
-      "clearFilters": "🔄 Xóa bộ lọc",
-      "createNewQuiz": "➕ Tạo quiz mới"
-    },
-    "errors": {
-      "connectionBlocked": "🚫 Kết nối Firestore bị chặn",
-      "errorOccurred": "❌ Có lỗi xảy ra",
-      "troubleshooting": "Khắc phục:",
-      "steps": {
-        "step1": "1. Tắt Ad Blocker cho localhost:5174",
-        "step2": "2. Thêm *.googleapis.com vào whitelist",
-        "step3": "3. Thử chế độ Incognito/Private",
-        "step4": "4. Kiểm tra Firewall/Antivirus"
-      },
-      "retryConnection": "🔄 Thử lại kết nối",
-      "tryAgain": "🔄 Thử lại",
-      "retrying": "Đang thử kết nối lại..."
+      "googleLoginError": "Google login error: {{message}}"
     }
   },
   "quiz": {
-    "unsupportedType": "Loại câu hỏi không được hỗ trợ",
-    "boolean": {
-      "true": "Đúng",
-      "false": "Sai"
-    },
+    "title": "Title",
+    "description": "Description",
+    "category": "Category",
+    "difficulty": "Difficulty",
+    "duration": "Duration",
+    "questions": "Questions",
+    "question": "Question",
+    "answer": "Answer",
+    "correctAnswer": "Correct Answer",
+    "startQuiz": "Start Quiz",
+    "submitQuiz": "Submit Quiz",
+    "score": "Score",
+    "result": "Result",
+    "playNow": "Play Now",
+    "preview": "Preview",
     "myQuizzes": "My Quizzes",
-    "selectedQuiz": "Quiz đã chọn",
-    "exploreQuizzes": "Khám phá Quiz",
-    "exploreDescription": "Tìm hiểu kiến thức mới qua các quiz thú vị",
-    "searchPlaceholder": "🔍 Search quizzes, categories, tags...",
+    "myQuizzesDescription": "Manage and track quizzes you've created",
+    "statusFilter": {
+      "all": "All statuses",
+      "draft": "Draft"
+    },
+    "stats": {
+      "totalQuizzes": "Total quizzes",
+      "totalViews": "Total views",
+      "totalAttempts": "Total attempts",
+      "views": "views",
+      "attempts": "attempts",
+      "completions": "completions"
+    },
+    "status": {
+      "hasEditRequests": "Has edit requests"
+    },
+    "categoryAndDifficulty": "Category & Difficulty",
+    "editRequest": {
+      "title": "Edit Quiz Request",
+      "reason": "Edit reason",
+      "placeholder": "Please describe why you want to edit this quiz...",
+      "warning": "Quiz has been approved. Edit request will be sent to admin for review. After getting permission to edit, you need to resubmit for admin approval of new content.",
+      "submit": "Send request",
+      "pendingExists": "There is a pending edit request",
+      "needPermission": "Quiz is approved, need admin permission to edit"
+    },
+    "noMatchFound": "No quizzes match the filter",
+    "noQuizzesYet": "You haven't created any quizzes yet. Create your first quiz!",
+    "createFirstQuiz": "Create First Quiz",
+    "loadingRealQuizzes": "Loading real quizzes list...",
+    "noQuizzesInDatabase": "No quizzes in database",
+    "createQuizzesToTest": "Create some quizzes to test the review system",
+    "noTitle": "No title",
+    "noDescription": "No description",
+    "create": "Create Quiz",
+    "takeQuiz": "Take Quiz",
+    "popularQuizzes": "Popular Quizzes",
     "completed": "Completed",
+    "averageScore": "Average Score",
+    "players": "Players",
+    "tags": "Tags",
+    "published": "Published",
+    "draft": "Draft",
+    "searchPlaceholder": "🔍 Search quizzes, categories, tags...",
+    "createLoginRequired": "You need to login to create quizzes",
+    "reviewsTitle": "Reviews",
+    "submitReview": "Submit Review",
+    "rating": "Rating",
+    "reviewText": "Review Content",
     "loadError": "Error loading quiz list",
     "editReasonRequired": "Please enter edit reason",
     "editRequestError": "Error sending edit request",
-    "untitled": "Quiz không tên",
-    "enterAnswer": "Nhập câu trả lời của bạn...",
-    "author": "[EN_MISSING] quiz.author",
-    "backToQuizList": "[EN_MISSING] quiz.backToQuizList",
-    "category": "[EN_MISSING] quiz.category",
-    "confirmDelete": "[EN_MISSING] quiz.confirmDelete",
-    "correctAnswer": "[EN_MISSING] quiz.correctAnswer",
-    "deleteError": "[EN_MISSING] quiz.deleteError",
-    "deleteSuccess": "[EN_MISSING] quiz.deleteSuccess",
-    "description": "[EN_MISSING] quiz.description",
-    "detailedInfo": "[EN_MISSING] quiz.detailedInfo",
-    "difficulty": "[EN_MISSING] quiz.difficulty",
-    "duration": "[EN_MISSING] quiz.duration",
-    "explanation": "[EN_MISSING] quiz.explanation",
-    "loading": "[EN_MISSING] quiz.loading",
-    "moreQuestions": "[EN_MISSING] quiz.moreQuestions",
-    "noTimeLimit": "[EN_MISSING] quiz.noTimeLimit",
-    "notFound": "[EN_MISSING] quiz.notFound",
-    "points": "[EN_MISSING] quiz.points",
-    "question": "[EN_MISSING] quiz.question",
-    "questionType": "[EN_MISSING] quiz.questionType",
+    "createSuccess": "Quiz created successfully",
+    "updateSuccess": "Quiz updated successfully",
+    "deleteSuccess": "Quiz deleted successfully",
+    "loading": "Loading quiz...",
+    "notFound": "Quiz not found",
+    "backToQuizList": "Back to quiz list",
+    "questionsCount": "{{count}} questions",
+    "timeLimit": "{{time}} minutes",
+    "noTimeLimit": "No time limit",
+    "startQuizButton": "Start Quiz",
+    "viewReviews": "View Reviews",
+    "detailedInfo": "Detailed Information",
+    "questionType": "Question Type",
     "questionTypes": {
-      "boolean": "[EN_MISSING] quiz.questionTypes.boolean",
-      "checkbox": "[EN_MISSING] quiz.questionTypes.checkbox",
-      "image": "[EN_MISSING] quiz.questionTypes.image",
-      "multiple": "[EN_MISSING] quiz.questionTypes.multiple",
-      "short_answer": "[EN_MISSING] quiz.questionTypes.short_answer"
+      "multiple": "Multiple Choice",
+      "boolean": "True/False",
+      "short_answer": "Short Answer"
     },
-    "questions": "[EN_MISSING] quiz.questions",
-    "questionsCount": "[EN_MISSING] quiz.questionsCount",
-    "rating": "[EN_MISSING] quiz.rating",
-    "ratingCount": "[EN_MISSING] quiz.ratingCount",
-    "reviewCount": "[EN_MISSING] quiz.reviewCount",
+    "stats": "Statistics",
+    "author": "Author",
+    "topics": "Topics",
+    "moreQuestions": "... and {{count}} more questions",
+    "points": "Points: {{points}}",
+    "type": "Type: {{type}}",
+    "ratingCount": "{{count}} ratings",
+    "reviewCount": "Review Count",
+    "previewPage": {
+      "title": "Quiz Preview",
+      "loadingQuiz": "Loading quiz...",
+      "quizNotFound": "Quiz not found",
+      "backToList": "Back to quiz list"
+    },
     "reviews": {
-      "alreadyReviewed": "[EN_MISSING] quiz.reviews.alreadyReviewed",
-      "beFirst": "[EN_MISSING] quiz.reviews.beFirst",
-      "comment": "[EN_MISSING] quiz.reviews.comment",
-      "commentPlaceholder": "[EN_MISSING] quiz.reviews.commentPlaceholder",
-      "commentTooShort": "[EN_MISSING] quiz.reviews.commentTooShort",
-      "loginRequired": "[EN_MISSING] quiz.reviews.loginRequired",
-      "noReviews": "[EN_MISSING] quiz.reviews.noReviews",
-      "ratingRequired": "[EN_MISSING] quiz.reviews.ratingRequired",
-      "reviewQuiz": "[EN_MISSING] quiz.reviews.reviewQuiz",
-      "reviewsCount": "[EN_MISSING] quiz.reviews.reviewsCount",
-      "submitError": "[EN_MISSING] quiz.reviews.submitError",
-      "submitReview": "[EN_MISSING] quiz.reviews.submitReview",
-      "submitSuccess": "[EN_MISSING] quiz.reviews.submitSuccess",
-      "submitting": "[EN_MISSING] quiz.reviews.submitting",
-      "title": "[EN_MISSING] quiz.reviews.title",
-      "yourRating": "[EN_MISSING] quiz.reviews.yourRating"
-    },
-    "startQuizButton": "[EN_MISSING] quiz.startQuizButton",
-    "stats": "[EN_MISSING] quiz.stats",
-    "timeLimit": "[EN_MISSING] quiz.timeLimit",
-    "title": "[EN_MISSING] quiz.title",
-    "topics": "[EN_MISSING] quiz.topics",
-    "type": "[EN_MISSING] quiz.type",
-    "viewReviews": "[EN_MISSING] quiz.viewReviews"
+      "title": "Quiz Reviews",
+      "reviewsCount": "reviews",
+      "loginRequired": "You need to login to review quizzes",
+      "ratingRequired": "Please select a star rating",
+      "commentTooShort": "Comment needs at least 10 characters",
+      "submitSuccess": "Thank you for reviewing the quiz!",
+      "submitError": "Error occurred while submitting review",
+      "reviewQuiz": "Review {{quizTitle}}",
+      "yourRating": "Your Rating",
+      "comment": "Comment",
+      "commentPlaceholder": "Share your thoughts about this quiz...",
+      "submitting": "Submitting...",
+      "submitReview": "Submit Review",
+      "alreadyReviewed": "You have already reviewed this quiz. Thank you for your feedback!",
+      "noReviews": "No reviews yet",
+      "beFirst": "Be the first to review this quiz!"
+    }
   },
   "createQuiz": {
     "title": "Create New Quiz",
@@ -400,7 +383,6 @@
     "adminPanel": "Manage users and system"
   },
   "profile": {
-    "displayName": "Tên hiển thị",
     "myProfile": "My Profile",
     "editProfile": "Edit Profile",
     "changePassword": "Change Password",
@@ -409,7 +391,6 @@
     "confirmNewPassword": "Confirm New Password",
     "updateProfile": "Update Profile",
     "avatarUrl": "Avatar URL",
-    "memberSince": "Thành viên từ",
     "passwordChangeSuccess": "Password changed successfully!",
     "passwordChangeError": "Error changing password",
     "currentPasswordRequired": "You need to enter the correct current password to authenticate before changing to a new password",
@@ -423,188 +404,12 @@
     "wrongPassword": "Old password is incorrect",
     "weakPassword": "New password is too weak. Please choose a stronger password (at least 6 characters)",
     "requiresRecentLogin": "Login session has expired. Please logout and login again",
-    "loginRequired": "Please login to view profile",
-    "tabs": {
-      "overview": "Tổng quan",
-      "history": "Lịch sử Quiz",
-      "achievements": "Thành tích",
-      "settings": "Cài đặt"
-    },
-    "stats": {
-      "completedQuizzes": "Quiz đã hoàn thành",
-      "averageScore": "Điểm trung bình",
-      "onTotal": "Trên tổng số quiz",
-      "accuracy": "Độ chính xác",
-      "correctRate": "Tỷ lệ trả lời đúng",
-      "highScores": "Điểm cao",
-      "over80": "Quiz đạt trên 80%"
-    },
-    "recentActivity": "Hoạt động gần đây",
-    "viewAllHistory": "Xem tất cả lịch sử",
-    "searchPlaceholder": "Tìm kiếm quiz...",
-    "filters": {
-      "score": {
-        "all": "Tất cả điểm",
-        "high": "Cao (≥80%)",
-        "medium": "Trung bình (60-79%)",
-        "low": "Thấp (<60%)"
-      }
-    },
-    "sort": {
-      "label": "Sắp xếp",
-      "date": "Ngày",
-      "score": "Điểm",
-      "percentage": "Phần trăm"
-    },
-    "pagination": {
-      "perPage10": "10/trang",
-      "perPage25": "25/trang",
-      "perPage50": "50/trang",
-      "perPage100": "100/trang",
-      "paginate": "Phân trang",
-      "showing": "Hiển thị",
-      "of": "trong tổng",
-      "results": "kết quả",
-      "prev": "Trước",
-      "pageXofY": "Trang {{x}}/{{y}}",
-      "next": "Sau"
-    },
-    "noResults": "Chưa có kết quả nào",
-    "noResultsDesc": "Bạn chưa hoàn thành quiz nào. Hãy bắt đầu làm quiz đầu tiên!",
-    "achievements": "Thành tích",
-    "achievementSystem": "Hệ thống thành tích",
-    "inDevelopment": "Tính năng đang được phát triển",
-    "settingsTitle": "Thông tin cá nhân",
-    "updating": "Đang cập nhật...",
-    "authenticating": "Đang xác thực...",
-    "viewAllCount": "Xem tất cả ({{count}})', { count: filteredResults.length })}\r\n                    </button>\r\n                  )}\r\n                </div>\r\n              </div>\r\n            </div>\r\n\r\n            {/* Results */}\r\n            <div className=\"space-y-4 mb-6\">\r\n              {loading ? (\r\n                <div className=\"text-center py-8\">\r\n                  <div className=\"animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto\"></div>\r\n                  <p className=\"mt-4 text-gray-600\">{t('common.loading', 'Đang tải...",
-    "settings": {
-      "title": "Thông tin cá nhân"
-    }
+    "loginRequired": "Please login to view profile"
   },
   "admin": {
-    "roles": "Phân quyền",
-    "dashboardSubtitle": "Quản lý toàn bộ hệ thống Quiz một cách hiệu quả",
-    "quickActions": {
-      "title": "Thao tác nhanh",
-      "systemStatus": "Tình trạng hệ thống",
-      "stats": {
-        "users": "Người dùng",
-        "totalQuizzes": "Tổng Quiz",
-        "completions": "Đã hoàn thành",
-        "creators": "Người tạo"
-      },
-      "items": {
-        "notify": {
-          "title": "Gửi thông báo",
-          "desc": "Gửi thông báo đến tất cả người dùng"
-        },
-        "deleteNotifications": {
-          "title": "Xóa thông báo",
-          "desc": "Tắt tất cả thông báo đang hiển thị"
-        },
-        "backup": {
-          "title": "Backup dữ liệu",
-          "desc": "Sao lưu toàn bộ dữ liệu hệ thống"
-        },
-        "cleanup": {
-          "title": "Dọn dẹp dữ liệu xoá",
-          "desc": "Đánh dấu quiz và user đã xoá là đã dọn dẹp"
-        }
-      },
-      "modal": {
-        "title": "Gửi thông báo hệ thống",
-        "contentLabel": "Nội dung thông báo",
-        "contentPlaceholder": "Nhập nội dung thông báo...",
-        "typeLabel": "Loại thông báo",
-        "type": {
-          "info": "Thông tin (Xanh)",
-          "warning": "Cảnh báo (Vàng)",
-          "success": "Thành công (Xanh lá)",
-          "error": "Lỗi (Đỏ)"
-        },
-        "targetLabel": "Đối tượng nhận",
-        "target": {
-          "all": "Tất cả người dùng",
-          "user": "Chỉ User",
-          "creator": "Chỉ Creator"
-        },
-        "cancel": "Hủy",
-        "send": "Gửi thông báo",
-        "sending": "Đang gửi..."
-      },
-      "toasts": {
-        "enterMessage": "Vui lòng nhập nội dung thông báo!",
-        "createSuccess": "Thông báo đã được tạo thành công!",
-        "createError": "Có lỗi xảy ra khi tạo thông báo!",
-        "backupSuccess": "Backup dữ liệu thành công!",
-        "backupError": "Lỗi khi backup dữ liệu!",
-        "confirmDeleteAll": "Bạn có chắc muốn xóa tất cả thông báo đang hiển thị?",
-        "deleteSuccess": "Đã tắt tất cả thông báo!",
-        "deleteError": "Lỗi khi xóa thông báo!",
-        "confirmCleanup": "Bạn có chắc muốn dọn dẹp dữ liệu đã xoá (quiz, user)?",
-        "cleanupSuccess": "Đã dọn dẹp dữ liệu xoá!",
-        "cleanupError": "Lỗi khi dọn dẹp dữ liệu xoá!"
-      },
-      "debugHint": "[EN_MISSING] admin.quickActions.debugHint",
-      "debugPanel": "[EN_MISSING] admin.quickActions.debugPanel",
-      "important": "[EN_MISSING] admin.quickActions.important",
-      "inDevelopment": "[EN_MISSING] admin.quickActions.inDevelopment",
-      "modalState": "[EN_MISSING] admin.quickActions.modalState",
-      "moreSoon": "[EN_MISSING] admin.quickActions.moreSoon",
-      "testModal": "[EN_MISSING] admin.quickActions.testModal",
-      "testModalDesc": "[EN_MISSING] admin.quickActions.testModalDesc"
-    },
-    "users": {
-      "cannotChangeSelfRole": "Bạn không thể thay đổi quyền của chính mình!",
-      "cannotDeactivateSelf": "Bạn không thể thay đổi trạng thái của chính mình!",
-      "cannotDeleteSelf": "Bạn không thể xóa tài khoản của chính mình!"
-    },
     "dashboard": "Admin Dashboard",
     "userManagement": "User Management",
-    "quizManagement": {
-      "label": "Quiz Management",
-      "": "Quiz Management",
-      "__self": "Quiz Management",
-      "adminBadge": "Admin",
-      "cards": {
-        "totalQuizzes": "Total Quizzes"
-      },
-      "description": "Review and manage all quizzes in the system",
-      "empty": {
-        "goToCreator": "Go to Creator",
-        "noMatchDesc": "Try changing the search keyword or filters to see more quizzes.",
-        "noMatchTitle": "No matching quizzes found",
-        "noQuizzesDesc": "There are currently no quizzes in the system. Creators can create quizzes from the Creator page.",
-        "noQuizzesTitle": "No quizzes yet"
-      },
-      "filter": {
-        "approved": "Approved",
-        "pending": "Pending"
-      },
-      "searchPlaceholder": "Search quizzes by title, description...",
-      "tab": {
-        "editRequests": "Edit requests",
-        "quizzes": "Manage Quizzes"
-      },
-      "table": {
-        "actions": "Actions",
-        "category": "Category",
-        "createdAt": "Created at",
-        "creator": "Creator",
-        "title": "Title",
-        "uncategorized": "Uncategorized"
-      },
-      "tooltips": {
-        "approve": "Approve quiz",
-        "delete": "Permanently delete quiz",
-        "edit": "Edit quiz",
-        "preview": "Preview details",
-        "reject": "Reject quiz",
-        "reopen": "Reopen for review",
-        "viewReviews": "View Reviews"
-      }
-    },
+    "quizManagement": "Quiz Management",
     "categoryManagement": "Category Management",
     "statistics": "Statistics",
     "settings": "Settings",
@@ -618,177 +423,44 @@
     "activated": "activated",
     "deactivated": "deactivated",
     "realDataLoadError": "Error loading real data",
-    "loadingRealData": "Loading real data...",
-    "advancedStatsDescription": "Thống kê chi tiết về hoạt động của hệ thống",
-    "backToOverview": "Quay lại tổng quan",
-    "currentTab": "Tab hiện tại",
-    "dataLoadSuccess": "Tải dữ liệu thành công",
-    "exportDataDevelopment": "Xuất dữ liệu phát triển",
-    "greeting": "Chào mừng đến trang quản trị",
-    "quizApprovalError": "Lỗi khi duyệt quiz",
-    "quizApproved": "Quiz đã được duyệt",
-    "quizRejected": "Quiz đã bị từ chối",
-    "quizRejectionError": "Lỗi khi từ chối quiz",
-    "viewingStatsSection": "Đang xem phần thống kê",
-    "stats": {
-      "completionAttempts": "Lượt hoàn thành",
-      "publishedQuizzes": "Quiz đã xuất bản",
-      "totalCreators": "Tổng số creator",
-      "totalUsers": "Tổng số người dùng",
-      "userGrowth": "Tăng trưởng người dùng",
-      "quizActivity": "Hoạt động Quiz",
-      "performanceOverview": "Hiệu suất tổng quan",
-      "averageScore": "Điểm trung bình",
-      "completionRate": "Tỷ lệ hoàn thành",
-      "totalReviews": "Tổng đánh giá",
-      "averageRating": "Đánh giá trung bình",
-      "topCategories": "Top danh mục",
-      "recentActivity": "Hoạt động gần đây",
-      "availableQuizzes": "{{count}} quiz có sẵn",
-      "registeredUsers": "{{count}} người dùng đăng ký",
-      "reviews": "{{count}} đánh giá",
-      "completions": "{{count}} lượt hoàn thành",
-      "createdQuizzes": "Quiz được tạo",
-      "completedAttempts": "Lượt hoàn thành",
-      "performanceMetrics": "Chỉ số hiệu suất",
-      "ratingDistribution": "Phân bố đánh giá",
-      "unnamedCategory": "Danh mục {{n}}"
-    },
-    "tabs": {
-      "categories": "Danh mục",
-      "categoryManagement": "Quản lý danh mục",
-      "overview": "Tổng quan",
-      "overviewStats": "Thống kê tổng quan",
-      "quizManagement": "Quản lý quiz",
-      "quizzes": "Quiz",
-      "userManagement": "Quản lý người dùng",
-      "users": "Người dùng",
-      "performance": "Hiệu suất"
-    },
-    "vsLastMonth": "so với tháng trước",
-    "header": {
-      "title": "Thống kê Admin (Dữ liệu thực)",
-      "subtitle": "Dashboard thống kê với dữ liệu thực từ Firebase"
-    },
-    "exportData": "Xuất dữ liệu",
-    "sidebar": {
-      "title": "Bảng quản trị",
-      "sectionAdmin": "Quản trị",
-      "quickActions": "Thao tác nhanh",
-      "createQuiz": "Tạo Quiz",
-      "backToDashboard": "Về Dashboard",
-      "nav": {
-        "dashboard": "Dashboard",
-        "quizManagement": "Quản lý Quiz",
-        "categories": "Quản lý danh mục",
-        "users": "Quản lý người dùng",
-        "utilities": "Tiện ích",
-        "roles": "Phân quyền"
-      }
-    },
-    "utilities": {
-      "title": "Tiện ích Admin",
-      "createTestQuizzes": {
-        "title": "Tạo Quiz Test",
-        "desc": "Tạo một số quiz mẫu để test tính năng duyệt quiz và hiển thị dữ liệu.",
-        "creating": "Đang tạo...",
-        "created": "Đã tạo xong",
-        "button": "Tạo Quiz Test",
-        "alreadyCreated": "Quiz test đã được tạo rồi!",
-        "success": "Đã tạo thành công các quiz test!",
-        "error": "Lỗi khi tạo quiz test"
-      }
-    },
-    "editRequests": {
-      "title": "Yêu cầu chỉnh sửa Quiz ({{count}})",
-      "emptyTitle": "Không có yêu cầu chỉnh sửa nào",
-      "emptyDesc": "Các yêu cầu chỉnh sửa sẽ hiển thị ở đây khi có quiz creator gửi yêu cầu",
-      "unknownUser": "Người dùng không xác định",
-      "unknownEmail": "Email không xác định",
-      "quiz": "Quiz",
-      "reason": "Lý do",
-      "noReason": "Không có lý do cụ thể",
-      "details": "Chi tiết",
-      "unknownTime": "Thời gian không xác định",
-      "pending": "Chờ xử lý",
-      "approve": "Duyệt",
-      "reject": "Từ chối",
-      "approveTitle": "Phê duyệt yêu cầu",
-      "rejectTitle": "Từ chối yêu cầu"
-    },
-    "preview": {
-      "title": "Xem trước Quiz",
-      "description": "Mô tả",
-      "category": "Danh mục",
-      "difficulty": "Độ khó",
-      "questions": "Câu hỏi",
-      "status": "Trạng thái",
-      "questionList": "Câu hỏi:"
-    },
-    "loginAsAdmin": "Bạn cần quyền admin để truy cập trang này.",
-    "categories": {
-      "addError": "[EN_MISSING] admin.categories.addError",
-      "addSuccess": "[EN_MISSING] admin.categories.addSuccess",
-      "deleteError": "[EN_MISSING] admin.categories.deleteError",
-      "deleteSuccess": "[EN_MISSING] admin.categories.deleteSuccess",
-      "enterName": "[EN_MISSING] admin.categories.enterName",
-      "headerDesc": "[EN_MISSING] admin.categories.headerDesc"
-    },
-    "quizReopenError": "[EN_MISSING] admin.quizReopenError",
-    "quizReopened": "[EN_MISSING] admin.quizReopened",
-    "userManagementCards": {
-      "activeUsers": "[EN_MISSING] admin.userManagementCards.activeUsers",
-      "totalUsers": "[EN_MISSING] admin.userManagementCards.totalUsers"
-    }
+    "loadingRealData": "Loading real data..."
   },
   "categories": {
-    "all": "Tất cả danh mục",
-    "add": "[EN_MISSING] categories.add",
-    "addSuccess": "[EN_MISSING] categories.addSuccess",
-    "addTitle": "[EN_MISSING] categories.addTitle",
-    "color": "[EN_MISSING] categories.color",
-    "colors": {
-      "blue": "[EN_MISSING] categories.colors.blue",
-      "gray": "[EN_MISSING] categories.colors.gray",
-      "green": "[EN_MISSING] categories.colors.green",
-      "indigo": "[EN_MISSING] categories.colors.indigo",
-      "pink": "[EN_MISSING] categories.colors.pink",
-      "purple": "[EN_MISSING] categories.colors.purple",
-      "red": "[EN_MISSING] categories.colors.red",
-      "yellow": "[EN_MISSING] categories.colors.yellow"
-    },
-    "confirmDelete": "[EN_MISSING] categories.confirmDelete",
-    "confirmDeleteName": "[EN_MISSING] categories.confirmDeleteName",
-    "create": "[EN_MISSING] categories.create",
-    "createFirst": "[EN_MISSING] categories.createFirst",
-    "createdAtLabel": "[EN_MISSING] categories.createdAtLabel",
-    "deleteError": "[EN_MISSING] categories.deleteError",
-    "deleteSuccess": "[EN_MISSING] categories.deleteSuccess",
-    "description": "[EN_MISSING] categories.description",
-    "descriptionPlaceholder": "[EN_MISSING] categories.descriptionPlaceholder",
-    "editTitle": "[EN_MISSING] categories.editTitle",
-    "empty": "[EN_MISSING] categories.empty",
-    "enterName": "[EN_MISSING] categories.enterName",
-    "loadError": "[EN_MISSING] categories.loadError",
-    "name": "[EN_MISSING] categories.name",
-    "namePlaceholder": "[EN_MISSING] categories.namePlaceholder",
-    "noCategories": "[EN_MISSING] categories.noCategories",
-    "noSearchMatch": "[EN_MISSING] categories.noSearchMatch",
-    "noneCreated": "[EN_MISSING] categories.noneCreated",
-    "quizCount": "[EN_MISSING] categories.quizCount",
-    "quizSuffix": "[EN_MISSING] categories.quizSuffix",
-    "saveError": "[EN_MISSING] categories.saveError",
-    "searchPlaceholder": "[EN_MISSING] categories.searchPlaceholder",
-    "total": "[EN_MISSING] categories.total",
-    "totalQuizzes": "[EN_MISSING] categories.totalQuizzes",
-    "updateSuccess": "[EN_MISSING] categories.updateSuccess",
-    "withQuizzes": "[EN_MISSING] categories.withQuizzes"
+    "programming": "Programming",
+    "webDevelopment": "Web Development",
+    "science": "Science",
+    "mathematics": "Mathematics",
+    "generalKnowledge": "General Knowledge",
+    "history": "History",
+    "sports": "Sports",
+    "entertainment": "Entertainment",
+    "geography": "Geography",
+    "music": "Music",
+    "movies": "Movies",
+    "literature": "Literature",
+    "physics": "Physics",
+    "chemistry": "Chemistry",
+    "biology": "Biology",
+    "english": "English",
+    "economics": "Economics",
+    "politics": "Politics"
   },
   "difficulty": {
-    "all": "Tất cả độ khó",
     "easy": "Easy",
     "medium": "Medium",
     "hard": "Hard"
+  },
+  "category": {
+    "general": "General",
+    "science": "Science",
+    "history": "History",
+    "sports": "Sports", 
+    "technology": "Technology",
+    "entertainment": "Entertainment",
+    "politics": "Politics",
+    "art": "Art",
+    "music": "Music",
+    "literature": "Literature"
   },
   "messages": {
     "error": "An error occurred",
@@ -797,8 +469,7 @@
     "networkError": "Network error",
     "unauthorized": "Unauthorized access",
     "notFound": "Not found",
-    "serverError": "Server error",
-    "retrying": "Đang thử lại..."
+    "serverError": "Server error"
   },
   "favorites": {
     "title": "Favorite Quizzes",
@@ -852,66 +523,14 @@
     "connectionFailed": "Connection Failed",
     "host": "Host",
     "spectator": "Spectator",
-    "lobby": "Lobby",
-    "avgScore": "Điểm trung bình",
-    "backToLobby": "Quay lại phòng chờ",
-    "chat": {
-      "disabled": "Chat đã tắt",
-      "noMessages": "Chưa có tin nhắn nào",
-      "placeholder": "Nhập tin nhắn...",
-      "title": "Chat"
-    },
-    "createRoomDesc": "Tạo phòng mới với quiz của bạn",
-    "easySetupDesc": "Tạo phòng đơn giản, chia sẻ mã tham gia",
-    "enterPassword": "Nhập mật khẩu...",
-    "enterRoomCode": "Nhập mã phòng...",
-    "enterRoomName": "Nhập tên phòng...",
-    "errors": {
-      "connectionFailed": "Kết nối thất bại",
-      "connectionLost": "Mất kết nối",
-      "gameInProgress": "Game đang diễn ra",
-      "reconnecting": "Đang kết nối lại",
-      "roomFull": "Phòng đã đầy",
-      "roomNotFound": "Không tìm thấy phòng",
-      "wrongPassword": "Mật khẩu không đúng"
-    },
-    "features": "Tính năng Multiplayer",
-    "game": {
-      "finalResults": "Kết quả cuối cùng",
-      "gameOver": "Game kết thúc"
-    },
-    "guideDesc": "Tìm hiểu cách chơi multiplayer",
-    "joinRoomDesc": "Tham gia phòng có sẵn hoặc nhập mã phòng",
-    "leaderboardDesc": "Bảng xếp hạng trực tiếp, cạnh tranh điểm số",
-    "maxPlayers": "Số người tối đa",
-    "password": "Mật khẩu",
-    "passwordRequired": "Phòng này yêu cầu mật khẩu",
-    "playAgain": "Chơi lại",
-    "private": "Phòng riêng tư",
-    "quickScoringDesc": "Điểm cao hơn khi trả lời nhanh và chính xác",
-    "readyPlayers": "Đã sẵn sàng",
-    "realTimeDesc": "Chơi cùng lúc với bạn bè, đồng bộ thời gian thực",
-    "roomCodeHint": "Mã phòng gồm 6 ký tự",
-    "roomName": "Tên phòng",
-    "roomSettings": "Cài đặt phòng",
-    "showLeaderboard": "Hiển thị bảng xếp hạng",
-    "startingIn": "Bắt đầu trong",
-    "subtitle": "Tham gia phòng và thi đấu với người khác",
-    "success": {
-      "connectionRestored": "Kết nối đã được khôi phục",
-      "gameStarted": "Game đã bắt đầu",
-      "joinedRoom": "Tham gia phòng thành công",
-      "leftRoom": "Đã rời phòng",
-      "roomCreated": "Tạo phòng thành công"
-    },
-    "timeLimit": "Thời gian mỗi câu",
-    "timePerQuestion": "Thời gian/câu",
-    "totalPlayers": "Tổng người chơi",
-    "totalQuestions": "Tổng số câu hỏi",
-    "totalTime": "Tổng thời gian",
-    "waitingForPlayer": "Chờ người chơi...",
-    "yourResult": "Kết quả của bạn"
+    "lobby": "Lobby"
   },
+  "ai": {
+    "description": "Use Vertex AI/Gemini to generate questions",
+    "testingConnection": "Testing Firebase AI connection...",
+    "configuration": "Question generation configuration"
+  },
+
   "email": {
     "required": "Email is required",
     "otpSent": "Verification code has been sent to {{email}}. Please check your inbox (including Spam folder).",
@@ -922,97 +541,5 @@
       "keyError": "Public Key Error: Key is invalid. Please check EmailJS Dashboard.",
       "sendFailed": "Cannot send email: {{error}}. Check internet connection and try again."
     }
-  },
-  "common": {
-    "selectLanguage": "Chọn ngôn ngữ",
-    "accuracy": "Độ chính xác",
-    "avgTime": "Thời gian trung bình",
-    "back": "Quay lại",
-    "cancel": "Hủy",
-    "checkingAuth": "Đang kiểm tra đăng nhập...",
-    "connecting": "Đang kết nối...",
-    "correct": "Đúng",
-    "guide": "Hướng dẫn",
-    "loading": "Đang tải...",
-    "loadingData": "Đang tải dữ liệu...",
-    "messages": "tin nhắn",
-    "minutes": "phút",
-    "offline": "Ngoại tuyến",
-    "online": "Trực tuyến",
-    "or": "hoặc",
-    "pleaseWait": "Vui lòng chờ...",
-    "points": "điểm",
-    "rank": "Xếp hạng",
-    "recommended": "Khuyến nghị",
-    "start": "Bắt đầu",
-    "submit": "Xác nhận",
-    "tryAgain": "Thử lại",
-    "all": "Tất cả",
-    "you": "Bạn",
-    "createdAt": "Tạo lúc",
-    "retry": "Thử lại"
-  },
-  "leaderboard": {
-    "title": "Bảng Xếp Hạng",
-    "time": "Thời gian",
-    "filters": {
-      "allTime": "Tất cả thời gian",
-      "thisWeek": "Tuần này",
-      "thisMonth": "Tháng này"
-    },
-    "collapse": "Thu gọn",
-    "searchPlayers": "Tìm kiếm người chơi",
-    "viewMore": "Xem thêm",
-    "viewAllCount": "Xem tất cả ({{count}})",
-    "players": "Người chơi",
-    "plays": "Lượt chơi",
-    "avgScore": "Điểm TB",
-    "avgShort": "TB",
-    "activeToday": "Hoạt động hôm nay",
-    "perfectScores": "Điểm tuyệt đối",
-    "topPlayers": "Top Người Chơi Xuất Sắc",
-    "noData": "Chưa có dữ liệu",
-    "playToAppear": "Hãy tham gia quiz để xuất hiện trên bảng xếp hạng!",
-    "perfect100": "điểm 100",
-    "activity": "Hoạt động",
-    "yourPosition": "Vị trí của bạn",
-    "topQuizzes": "Quiz Phổ Biến Nhất",
-    "noQuizzes": "Chưa có quiz nào",
-    "createFirstQuiz": "Hãy tạo quiz đầu tiên để xuất hiện ở đây!"
-  },
-  "errors": {
-    "firestoreConnection": "Lỗi kết nối Firestore",
-    "unauthorized": "[EN_MISSING] errors.unauthorized"
-  },
-  "connected": "Đã kết nối",
-  "disconnected": "Mất kết nối",
-  "gameMode": {
-    "becomeHost": "Trở thành chủ phòng",
-    "createRoom": "Tạo phòng",
-    "createRoomDesc": "Bắt đầu game mới và mời bạn bè",
-    "customizable": "Tùy chỉnh cài đặt",
-    "customizeSettings": "Tùy chỉnh cài đặt game",
-    "invitePlayers": "Mời tối đa 10 người chơi",
-    "multiplayer": "Chơi nhiều người",
-    "multiplayerDesc": "Thách thức bạn bè và thi đấu thời gian thực",
-    "noPressure": "Không áp lực thời gian",
-    "singlePlayer": "Chơi một mình",
-    "singlePlayerDesc": "Luyện tập theo tốc độ riêng và nâng cao kỹ năng",
-    "startSolo": "Bắt đầu chơi",
-    "trackProgress": "Theo dõi tiến độ"
-  },
-  "share": "Chia sẻ",
-  "achievement": {
-    "unlockedAt": "Mở khóa: {{date}}"
-  },
-  "unauthorized": {
-    "title": "Không có quyền truy cập",
-    "description": "Bạn không có quyền cần thiết để truy cập trang này. Vui lòng liên hệ quản trị viên nếu bạn cần hỗ trợ.",
-    "goHome": "Về trang chủ"
-  },
-  "notFound": {
-    "title": "Trang không tồn tại",
-    "description": "Rất tiếc, trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển.",
-    "backToHome": "Quay về trang chủ"
   }
 }

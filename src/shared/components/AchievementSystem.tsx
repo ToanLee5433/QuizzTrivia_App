@@ -174,7 +174,7 @@ const AchievementCard: React.FC<{ achievement: Achievement; onClaim: () => void 
         {/* Unlock Date */}
         {achievement.unlocked && achievement.unlockedAt && (
           <div className="text-xs text-gray-500 mt-2">
-            {t('achievement.unlockedAt', {date: achievement.unlockedAt.toLocaleDateString('vi-VN')},})}
+            {t('achievement.unlockedAt', {date: achievement.unlockedAt.toLocaleDateString('vi-VN')})}
           </div>
         )}
       </div>

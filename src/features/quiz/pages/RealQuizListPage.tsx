@@ -33,7 +33,7 @@ const RealQuizListPage: React.FC = () => {
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex items-center justify-center py-12">
             <RefreshCw className="w-8 h-8 animate-spin text-blue-600 mr-3" />
-            <span className="text-lg text-gray-600">Đang tải danh sách quiz thực tế...</span>
+            <span className="text-lg text-gray-600">{t('quiz.loadingRealQuizzes')}</span>
           </div>
         </div>
       </div>
@@ -78,10 +78,10 @@ const RealQuizListPage: React.FC = () => {
         {quizzes.length === 0 ? (
           <div className="bg-white rounded-lg p-8 shadow-sm text-center">
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Không có quiz nào trong database
+              {t('quiz.noQuizzesInDatabase')}
             </h3>
             <p className="text-gray-600">
-              Hãy tạo một số quiz để test hệ thống review
+              {t('quiz.createQuizzesToTest')}
             </p>
           </div>
         ) : (
@@ -91,24 +91,24 @@ const RealQuizListPage: React.FC = () => {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {quiz.title || 'Không có tiêu đề'}
+                      {quiz.title || t('quiz.noTitle')}
                     </h3>
                     
                     <p className="text-gray-600 mb-3">
-                      {quiz.description || 'Không có mô tả'}
+                      {quiz.description || t('quiz.noDescription')}
                     </p>
                     
                     <div className="flex items-center space-x-4 text-sm text-gray-500">
                       <span>ID: <code className="bg-gray-100 px-2 py-1 rounded">{quiz.id}</code></span>
-                      {quiz.category && <span>Danh mục: {quiz.category}</span>}
+                      {quiz.category && <span>{t('quiz.category')}: {quiz.category}</span>}
                       {quiz.status && (
                         <span className={`px-2 py-1 rounded-full text-xs ${
                           quiz.status === 'approved' ? 'bg-green-100 text-green-800' :
                           quiz.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                           'bg-red-100 text-red-800'
                         }`}>
-                          {quiz.status === 'approved' ? 'Đã duyệt' :
-                           quiz.status === 'pending' ? 'Chờ duyệt' : 'Bị từ chối'}
+                          {quiz.status === 'approved' ? t('admin.quizManagement.filter.approved') :
+                           quiz.status === 'pending' ? t('admin.quizManagement.filter.pending') : t('status.rejected')}
                         </span>
                       )}
                     </div>

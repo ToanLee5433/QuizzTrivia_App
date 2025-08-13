@@ -165,7 +165,7 @@ export const FirebaseAIQuestionGenerator: React.FC<FirebaseAIQuestionGeneratorPr
               </div>
               <div>
                 <h2 className="text-2xl font-bold">Firebase AI Generator</h2>
-                <p className="text-purple-100">Sử dụng Vertex AI/Gemini để tạo câu hỏi</p>
+                <p className="text-purple-100">{t('ai.description')}</p>
               </div>
             </div>
             <button
@@ -184,7 +184,7 @@ export const FirebaseAIQuestionGenerator: React.FC<FirebaseAIQuestionGeneratorPr
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
               <div className="flex items-center space-x-2">
                 <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-                <span className="text-blue-800">Đang kiểm tra kết nối Firebase AI...</span>
+                <span className="text-blue-800">{t('ai.testingConnection')}</span>
               </div>
             </div>
           )}
@@ -214,7 +214,7 @@ export const FirebaseAIQuestionGenerator: React.FC<FirebaseAIQuestionGeneratorPr
               <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-xl border border-blue-200">
                 <div className="flex items-center space-x-2 mb-4">
                   <Settings className="w-5 h-5 text-blue-600" />
-                  <h3 className="text-lg font-semibold text-gray-900">Cấu hình tạo câu hỏi</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">{t('ai.configuration')}</h3>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -227,11 +227,11 @@ export const FirebaseAIQuestionGenerator: React.FC<FirebaseAIQuestionGeneratorPr
                       onChange={(e) => setOptions(prev => ({ ...prev, numQuestions: parseInt(e.target.value) }))}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      <option value={3}>3 câu hỏi</option>
-                      <option value={5}>5 câu hỏi</option>
-                      <option value={10}>10 câu hỏi</option>
-                      <option value={15}>15 câu hỏi</option>
-                      <option value={20}>20 câu hỏi</option>
+                      <option value={3}>3 {t('quiz.questions')}</option>
+                      <option value={5}>5 {t('quiz.questions')}</option>
+                      <option value={10}>10 {t('quiz.questions')}</option>
+                      <option value={15}>15 {t('quiz.questions')}</option>
+                      <option value={20}>20 {t('quiz.questions')}</option>
                     </select>
                   </div>
 

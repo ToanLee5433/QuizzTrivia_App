@@ -182,10 +182,10 @@ const MyQuizzesPage: React.FC = () => {
     };
 
     const labels = {
-      pending: 'Chờ duyệt',
-      approved: 'Đã duyệt',
-      rejected: 'Bị từ chối',
-      draft: 'Bản nháp'
+      pending: t('status.pending'),
+      approved: t('status.approved'), 
+      rejected: t('status.rejected'),
+      draft: t('quiz.statusFilter.draft')
     };
 
     return (
@@ -196,6 +196,23 @@ const MyQuizzesPage: React.FC = () => {
     );
   };
 
+  const getCategoryLabel = (category: string) => {
+    const categoryMap: { [key: string]: string } = {
+      'general': t('category.general'),
+      'science': t('category.science'),
+      'history': t('category.history'),
+      'sports': t('category.sports'),
+      'technology': t('category.technology'),
+      'entertainment': t('category.entertainment'),
+      'politics': t('category.politics'),
+      'art': t('category.art'),
+      'music': t('category.music'),
+      'literature': t('category.literature')
+    };
+    
+    return categoryMap[category] || category;
+  };
+
   const getDifficultyBadge = (difficulty: string) => {
     const styles = {
       easy: 'bg-green-100 text-green-800',
@@ -204,9 +221,9 @@ const MyQuizzesPage: React.FC = () => {
     };
 
     const labels = {
-      easy: '🟢 Dễ',
-      medium: '🟡 Trung bình',
-      hard: '🔴 Khó'
+      easy: `🟢 ${t('difficulty.easy')}`,
+      medium: `🟡 ${t('difficulty.medium')}`,
+      hard: `🔴 ${t('difficulty.hard')}`
     };
 
     return (
@@ -220,12 +237,12 @@ const MyQuizzesPage: React.FC = () => {
     // Check if there's a pending edit request
     const pendingRequest = quiz.editRequests?.find(req => req.status === 'pending');
     if (pendingRequest) {
-      return { allowed: false, reason: 'Có yêu cầu chỉnh sửa đang chờ duyệt' };
+      return { allowed: false, reason: t('quiz.editRequest.pendingExists') };
     }
 
     // Check if quiz is approved and needs admin permission to edit
     if (quiz.status === 'approved') {
-      return { allowed: false, reason: 'Quiz đã được duyệt, cần xin phép admin để chỉnh sửa' };
+      return { allowed: false, reason: t('quiz.editRequest.needPermission') };
     }
 
     // Can edit if draft or rejected
@@ -273,15 +290,8 @@ const MyQuizzesPage: React.FC = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{t("quiz.myQuizzes")}</h1>
-            <p className="text-gray-600 mt-2">Quản lý và theo dõi quiz bạn đã tạo</p>
+            <p className="text-gray-600 mt-2">{t("quiz.myQuizzesDescription")}</p>
           </div>
-          
-          <button
-            onClick={() => navigate('/creator')}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 transition-colors"
-          >
-            <Plus className="w-5 h-5" />{t("createQuiz.title")}
-          </button>
         </div>
 
         {/* Filters */}
@@ -306,8 +316,8 @@ const MyQuizzesPage: React.FC = () => {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="all">Tất cả trạng thái</option>
-                <option value="draft">Bản nháp</option>
+                <option value="all">{t("quiz.statusFilter.all")}</option>
+                <option value="draft">{t("quiz.statusFilter.draft")}</option>
                 <option value="pending">{t("admin.quizManagement.filter.pending")}</option>
                 <option value="approved">{t("admin.quizManagement.filter.approved")}</option>
                 <option value="rejected">{t("status.rejected")}</option>
@@ -324,7 +334,7 @@ const MyQuizzesPage: React.FC = () => {
                 <MessageSquare className="w-6 h-6 text-blue-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm text-gray-600">Tổng quiz</p>
+                <p className="text-sm text-gray-600">{t("quiz.stats.totalQuizzes")}</p>
                 <p className="text-2xl font-bold text-gray-900">{quizzes.length}</p>
               </div>
             </div>
@@ -364,7 +374,7 @@ const MyQuizzesPage: React.FC = () => {
                 <Eye className="w-6 h-6 text-purple-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm text-gray-600">Tổng lượt xem</p>
+                <p className="text-sm text-gray-600">{t("quiz.stats.totalViews")}</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {quizzes.reduce((sum, q) => sum + (q.views || 0), 0)}
                 </p>
@@ -378,7 +388,7 @@ const MyQuizzesPage: React.FC = () => {
                 <TrendingUp className="w-6 h-6 text-blue-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm text-gray-600">Tổng lượt thử</p>
+                <p className="text-sm text-gray-600">{t("quiz.stats.totalAttempts")}</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {quizzes.reduce((sum, q) => sum + (q.attempts || 0), 0)}
                 </p>
@@ -413,17 +423,17 @@ const MyQuizzesPage: React.FC = () => {
               <h3 className="text-lg font-medium text-gray-900 mb-2">{t("leaderboard.noQuizzes")}</h3>
               <p className="text-gray-600 mb-4">
                 {searchTerm || statusFilter !== 'all' 
-                  ? 'Không tìm thấy quiz phù hợp với bộ lọc'
-                  : 'Bạn chưa tạo quiz nào. Hãy tạo quiz đầu tiên!'
+                  ? t('quiz.noMatchFound')
+                  : t('quiz.noQuizzesYet')
                 }
               </p>
               {!searchTerm && statusFilter === 'all' && (
                 <button
-                  onClick={() => navigate('/creator')}
+                  onClick={() => navigate('/quiz/create')}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold inline-flex items-center gap-2"
                 >
                   <Plus className="w-5 h-5" />
-                  Tạo Quiz Đầu Tiên
+                  {t('quiz.createFirstQuiz')}
                 </button>
               )}
             </div>
@@ -432,19 +442,19 @@ const MyQuizzesPage: React.FC = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t("admin.editRequests.quiz")}
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t("quiz.title")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Danh mục & Độ khó
+                      {t("quiz.categoryAndDifficulty")}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t("admin.preview.status")}
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t("status.label")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t("admin.statistics")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Ngày tạo
+                      {t("common.createdAt")}
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t("admin.quizManagement.table.actions")}
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t("common.actions")}
                     </th>
                   </tr>
                 </thead>
@@ -460,13 +470,13 @@ const MyQuizzesPage: React.FC = () => {
                             {quiz.description}
                           </div>
                           <div className="text-xs text-gray-400 mt-1">
-                            {quiz.questions?.length || 0} câu hỏi
+                            {quiz.questions?.length || 0} {t('quiz.questions')}
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="space-y-1">
-                          <div className="text-sm text-gray-900">{quiz.category}</div>
+                          <div className="text-sm text-gray-900">{getCategoryLabel(quiz.category)}</div>
                           {getDifficultyBadge(quiz.difficulty)}
                         </div>
                       </td>
@@ -476,7 +486,7 @@ const MyQuizzesPage: React.FC = () => {
                           {quiz.editRequests && quiz.editRequests.length > 0 && (
                             <div className="text-xs text-gray-500">
                               {quiz.editRequests.filter(req => req.status === 'pending').length > 0 && (
-                                <span className="text-yellow-600">Có yêu cầu chỉnh sửa</span>
+                                <span className="text-yellow-600">{t("quiz.status.hasEditRequests")}</span>
                               )}
                             </div>
                           )}
@@ -484,11 +494,11 @@ const MyQuizzesPage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900">
                         <div className="space-y-1">
-                          <div>👁️ {quiz.views || 0} lượt xem</div>
-                          <div>🎯 {quiz.attempts || 0} lượt thử</div>
-                          <div>✅ {quiz.completions || 0} hoàn thành</div>
+                          <div>👁️ {quiz.views || 0} {t('quiz.stats.views')}</div>
+                          <div>🎯 {quiz.attempts || 0} {t('quiz.stats.attempts')}</div>
+                          <div>✅ {quiz.completions || 0} {t('quiz.stats.completions')}</div>
                           {quiz.averageScore !== undefined && (
-                            <div>📊 {quiz.averageScore}% điểm TB</div>
+                            <div>📊 {quiz.averageScore}% {t('leaderboard.avgShort')}</div>
                           )}
                           {quiz.avgRating && (
                             <div>⭐ {quiz.avgRating.toFixed(1)}/5</div>
@@ -546,22 +556,22 @@ const MyQuizzesPage: React.FC = () => {
             <div className="bg-white rounded-lg max-w-md w-full">
               <div className="p-6 border-b border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Yêu cầu chỉnh sửa quiz
+                  {t('quiz.editRequest.title')}
                 </h3>
                 <p className="text-sm text-gray-600 mt-1">
-                  Quiz: {selectedQuiz.title}
+                  {t('nav.quiz')}: {selectedQuiz.title}
                 </p>
               </div>
               
               <div className="p-6">
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Lý do chỉnh sửa *
+                    {t('quiz.editRequest.reason')} *
                   </label>
                   <textarea
                     value={editReason}
                     onChange={(e) => setEditReason(e.target.value)}
-                    placeholder="Vui lòng mô tả lý do bạn muốn chỉnh sửa quiz này..."
+                    placeholder={t('quiz.editRequest.placeholder')}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     rows={4}
                   />
@@ -569,8 +579,7 @@ const MyQuizzesPage: React.FC = () => {
                 
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                   <p className="text-sm text-yellow-800">
-                    ⚠️ Quiz đã được duyệt. Yêu cầu chỉnh sửa sẽ được gửi tới admin để xét duyệt. 
-                    Sau khi được phép chỉnh sửa, bạn cần gửi lại để admin duyệt nội dung mới.
+                    ⚠️ {t('quiz.editRequest.warning')}
                   </p>
                 </div>
               </div>
@@ -595,7 +604,7 @@ const MyQuizzesPage: React.FC = () => {
                   ) : (
                     <Send className="w-4 h-4" />
                   )}
-                  Gửi yêu cầu
+                  {t('quiz.editRequest.submit')}
                 </button>
               </div>
             </div>

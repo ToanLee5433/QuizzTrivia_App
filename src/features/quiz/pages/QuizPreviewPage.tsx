@@ -5,6 +5,7 @@ import { Clock, Star, Play, Eye, BookOpen, Target } from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 import { Quiz } from '../types';
+import RichTextViewer from '../../../shared/components/ui/RichTextViewer';
 import { reviewService } from '../services/reviewService';
 import { QuizReviewStats } from '../types/review';
 import QuickReviewSection from '../../../shared/components/QuickReviewSection';
@@ -102,7 +103,10 @@ const QuizPreviewPage: React.FC = () => {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h1 className="text-3xl font-bold mb-4">{quiz.title}</h1>
-              <p className="text-blue-100 text-lg mb-6">{quiz.description}</p>
+              <RichTextViewer
+                content={quiz.description || ''}
+                className="text-blue-100 text-lg mb-6"
+              />
               
               <div className="flex flex-wrap gap-4 mb-6">
                 <div className="flex items-center space-x-2">

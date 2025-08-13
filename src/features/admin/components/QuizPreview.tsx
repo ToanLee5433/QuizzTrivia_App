@@ -1,5 +1,6 @@
 import React from 'react';
 import { Quiz, Question } from '../../quiz/types';
+import RichTextViewer from '../../../shared/components/ui/RichTextViewer';
 import { useTranslation } from 'react-i18next';
 
 interface QuizPreviewProps {
@@ -35,7 +36,7 @@ const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, isOpen, onClose }) => {
         <div className="flex justify-between items-start">
           <div className="flex-1 pr-4">
             <h2 className="text-2xl font-bold text-gray-900">{quiz.title}</h2>
-            <p className="text-gray-600 mt-2">{quiz.description}</p>
+            <RichTextViewer content={quiz.description || ''} className="text-gray-600 mt-2" />
           </div>
           <button
             onClick={onClose}
@@ -138,7 +139,7 @@ const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, isOpen, onClose }) => {
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-600">
-                    <span className="font-medium">Điểm: </span>
+                    <span className="font-medium">{t('common.points')}: </span>
                     <span className="text-blue-600 font-semibold">{question.points}</span>
                   </span>
                   {question.explanation && (
@@ -158,8 +159,8 @@ const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, isOpen, onClose }) => {
           <div className="flex justify-between items-center">
             <div className="text-sm text-gray-600">
               {t('quiz.questions')}: <span className="font-semibold">{quiz.questions.length}</span> - 
-              <span className="font-semibold ml-1">{t('quiz.points', {points: quiz.questions.reduce((sum, q)} => sum + q.points, 0),
-                defaultValue: `Points: ${quiz.questions.reduce((sum, q) => sum + q.points, 0)}`})}</span>
+              <span className="font-semibold ml-1">{t('quiz.points', {points: quiz.questions.reduce((sum, q) => sum + (q.points || 0), 0),
+                defaultValue: `Points: ${quiz.questions.reduce((sum, q) => sum + (q.points || 0), 0)}`})}</span>
             </div>
             <button
               onClick={onClose}

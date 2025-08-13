@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { RootState } from '../../lib/store';
 import CreateQuizPage from '../../features/quiz/pages/CreateQuizPage';
 import MyQuizzesPage from '../../features/quiz/pages/MyQuizzesPage';
@@ -9,7 +10,15 @@ import { Plus, BookOpen } from 'lucide-react';
 const Creator: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<'create' | 'my-quizzes'>('my-quizzes');
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'create') {
+      setActiveTab('create');
+    }
+  }, [searchParams]);
 
   // Kiểm tra quyền creator
   if (!user) {

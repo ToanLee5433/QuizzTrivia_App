@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+// import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { RootState } from '../../../lib/store';
-import { logout } from '../../auth/store';
-import { signOut } from 'firebase/auth';
-import { auth, db } from '../../../lib/firebase/config';
+// import { RootState } from '../../../lib/store';
+// import { logout } from '../../auth/store';
+// import { signOut } from 'firebase/auth';
+import { db } from '../../../lib/firebase/config';
 import { 
   collection, 
   getDocs, 
@@ -48,21 +48,17 @@ interface Category {
 
 const AdminDashboard: React.FC = () => {
   const { t } = useTranslation();
-  const { user } = useSelector((state: RootState) => state.auth);
-  const dispatch = useDispatch();
+  // const navigate = useNavigate();
+  // const { user } = useSelector((state: RootState) => state.auth);
+  // const dispatch = useDispatch();
   
   // States
   const [activeTab, setActiveTab] = useState('dashboard');
   const [users, setUsers] = useState<User[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalQuizzes: 0,
-    completedQuizzes: 0,
-    totalCreators: 0
-  });
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<any>(null);
 
   // Function to calculate and update stats from actual data
   const updateStatsFromData = (users: User[], quizzes: Quiz[]) => {
@@ -218,18 +214,6 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      dispatch(logout());
-      // Clear all cached data
-      localStorage.clear();
-      sessionStorage.clear();
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
-
   const updateUserRole = async (userId: string, newRole: 'user' | 'admin') => {
     try {
       await updateDoc(doc(db, 'users', userId), { role: newRole });
@@ -379,10 +363,8 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Advanced Stats */}
-        <AdminStats 
-          key={lastUpdate?.getTime() || 'initial'} // Force re-render when data updates
-        />
+        {/* Advanced Stats synced with real data */}
+        <AdminStats key={lastUpdate?.getTime() || 'initial'} />
         
         {/* Quick Actions */}
         <QuickActions 
@@ -670,13 +652,31 @@ const AdminDashboard: React.FC = () => {
     </div>
   );
 
+  /*
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      navigate('/admin/login');
+    } catch (err)      console.error("Logout failed", err);
+    }
+  };
+  */
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">{/* Notice Banner */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">            <div className="flex items-center gap-3">
               <span className="text-2xl">📊</span>
               <div>
-                <h3 className="font-bold">Để xem thống kê biểu đồ</h3>
+                <h3 className="font-bold">{t('admin.stats.chartTitle')}</h3>
                 <p className="text-blue-100 text-sm">
                   Nhấn vào tab "📊 Tổng quan" bên dưới hoặc 
                   <a href="/admin/quiz-stats" className="underline font-bold ml-1 hover:text-white">
@@ -686,7 +686,7 @@ const AdminDashboard: React.FC = () => {
               </div>
             </div>
           <div className="text-right">
-            <p className="text-sm text-blue-100">Tab hiện tại: <span className="font-bold text-white">{activeTab}</span></p>
+            <p className="text-sm text-blue-100">{t('admin.currentTab', { tab: activeTab })}</p>
           </div>
         </div>
       </div>
@@ -711,7 +711,7 @@ const AdminDashboard: React.FC = () => {
                 title="Xem trang thống kê riêng với biểu đồ"
               >
                 <span>📊</span>
-                <span>Thống kê riêng</span>
+                <span>{t('admin.stats.separateStats')}</span>
               </a>
               <button
                 onClick={() => {
@@ -742,7 +742,7 @@ const AdminDashboard: React.FC = () => {
               )}
               <div className="text-sm text-gray-600">
                 {t('admin.greeting')}
-              </button>
+              </div>
             </div>
           </div>
         </div>
@@ -798,6 +798,10 @@ const AdminDashboard: React.FC = () => {
             <div className="flex items-center gap-3">
               <span className="text-sm text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
                 {t('admin.currentTab')}
+              </span>
+              {activeTab !== 'dashboard' && (
+                <button
+                  onClick={() => setActiveTab('dashboard')}
                   className="text-sm bg-blue-600 text-white px-3 py-1 rounded-full hover:bg-blue-700"
                 >
                   {t('admin.backToOverview')}

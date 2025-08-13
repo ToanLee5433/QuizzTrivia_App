@@ -39,6 +39,8 @@
   "noData": "Không có dữ liệu",
   "retry": "Thử lại",
   "refresh": "Làm mới",
+  "createdAt": "Tạo lúc",
+  "actions": "Hành động",
   "nav": {
     "home": "Trang chủ",
     "dashboard": "Bảng điều khiển",
@@ -273,6 +275,7 @@
       "false": "Sai"
     },
     "myQuizzes": "Quiz của tôi",
+    "myQuizzesDescription": "Quản lý và theo dõi quiz bạn đã tạo",
     "selectedQuiz": "Quiz đã chọn",
     "exploreQuizzes": "Khám phá Quiz",
     "exploreDescription": "Tìm hiểu kiến thức mới qua các quiz thú vị",
@@ -283,6 +286,39 @@
     "editRequestError": "Lỗi khi gửi yêu cầu chỉnh sửa",
     "untitled": "Quiz không tên",
     "enterAnswer": "Nhập câu trả lời của bạn...",
+    "statusFilter": {
+      "all": "Tất cả trạng thái",
+      "draft": "Bản nháp"
+    },
+    "stats": {
+      "totalQuizzes": "Tổng quiz",
+      "totalViews": "Tổng lượt xem",
+      "totalAttempts": "Tổng lượt thử",
+      "views": "lượt xem",
+      "attempts": "lượt thử", 
+      "completions": "hoàn thành"
+    },
+    "status": {
+      "hasEditRequests": "Có yêu cầu chỉnh sửa"
+    },
+    "categoryAndDifficulty": "Danh mục & Độ khó",
+    "editRequest": {
+      "title": "Yêu cầu chỉnh sửa quiz",
+      "reason": "Lý do chỉnh sửa", 
+      "placeholder": "Vui lòng mô tả lý do bạn muốn chỉnh sửa quiz này...",
+      "warning": "Quiz đã được duyệt. Yêu cầu chỉnh sửa sẽ được gửi tới admin để xét duyệt. Sau khi được phép chỉnh sửa, bạn cần gửi lại để admin duyệt nội dung mới.",
+      "submit": "Gửi yêu cầu",
+      "pendingExists": "Có yêu cầu chỉnh sửa đang chờ duyệt",
+      "needPermission": "Quiz đã được duyệt, cần xin phép admin để chỉnh sửa"
+    },
+    "noMatchFound": "Không tìm thấy quiz phù hợp với bộ lọc",
+    "noQuizzesYet": "Bạn chưa tạo quiz nào. Hãy tạo quiz đầu tiên!",
+    "createFirstQuiz": "Tạo Quiz Đầu Tiên",
+    "loadingRealQuizzes": "Đang tải danh sách quiz thực tế...",
+    "noQuizzesInDatabase": "Không có quiz nào trong database",
+    "createQuizzesToTest": "Hãy tạo một số quiz để test hệ thống review",
+    "noTitle": "Không có tiêu đề",
+    "noDescription": "Không có mô tả",
     "author": "[VI_MISSING] quiz.author",
     "backToQuizList": "[VI_MISSING] quiz.backToQuizList",
     "category": "[VI_MISSING] quiz.category",
@@ -485,6 +521,11 @@
   "admin": {
     "roles": "Phân quyền",
     "dashboardSubtitle": "Quản lý toàn bộ hệ thống Quiz một cách hiệu quả",
+    "currentTab": "Tab hiện tại: {{tab}}",
+    "stats": {
+      "chartTitle": "Để xem thống kê biểu đồ",
+      "separateStats": "Thống kê riêng"
+    },
     "quickActions": {
       "title": "Thao tác nhanh",
       "systemStatus": "Tình trạng hệ thống",
@@ -790,6 +831,18 @@
     "medium": "Trung bình",
     "hard": "Khó"
   },
+  "category": {
+    "general": "Tổng quát",
+    "science": "Khoa học",
+    "history": "Lịch sử", 
+    "sports": "Thể thao",
+    "technology": "Công nghệ",
+    "entertainment": "Giải trí",
+    "politics": "Chính trị",
+    "art": "Nghệ thuật",
+    "music": "Âm nhạc",
+    "literature": "Văn học"
+  },
   "messages": {
     "error": "Có lỗi xảy ra",
     "success": "Thành công",
@@ -937,8 +990,13 @@
     "loadingData": "Đang tải dữ liệu...",
     "messages": "tin nhắn",
     "minutes": "phút",
-    "offline": "Ngoại tuyến",
-    "online": "Trực tuyến",
+      "ai": {
+    "description": "Sử dụng Vertex AI/Gemini để tạo câu hỏi",
+    "testingConnection": "Đang kiểm tra kết nối Firebase AI...",
+    "configuration": "Cấu hình tạo câu hỏi"
+  },
+  "offline": "Ngoại tuyến",
+  "online": "Trực tuyến",
     "or": "hoặc",
     "pleaseWait": "Vui lòng chờ...",
     "points": "điểm",

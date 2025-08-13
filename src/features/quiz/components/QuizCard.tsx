@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Quiz } from '../types';
+import RichTextViewer from '../../../shared/components/ui/RichTextViewer';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
 import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
@@ -157,7 +158,9 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, viewMode = 'grid' }) => {
               </div>
             </div>
             
-            <p className="text-gray-600 text-sm mb-3 line-clamp-1">{quiz.description}</p>
+            <div className="text-gray-600 text-sm mb-3 line-clamp-1">
+              <RichTextViewer content={quiz.description || ''} />
+            </div>
             
             <div className="flex items-center gap-6 text-sm text-gray-500 mb-4">
               <div className="flex items-center">
@@ -318,9 +321,9 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, viewMode = 'grid' }) => {
           </h3>
         </div>
         
-        <p className="text-gray-600 text-sm mb-6 line-clamp-2 leading-relaxed">
-          {quiz.description}
-        </p>
+        <div className="text-gray-600 text-sm mb-6 leading-relaxed">
+          <RichTextViewer content={quiz.description || ''} />
+        </div>
 
         {/* **THÊM MỚI**: Quiz metadata */}
         <div className="space-y-4 mb-6">
