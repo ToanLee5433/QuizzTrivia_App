@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Lock, AlertCircle } from 'lucide-react';
+import { collection, query, where, limit, getDocs } from 'firebase/firestore';
+import { db } from '../../../lib/firebase/config';
 
 interface JoinRoomModalProps {
   isOpen: boolean;
@@ -30,6 +32,7 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({
   const [password, setPassword] = useState('');
   const [showPasswordField, setShowPasswordField] = useState(false);
   const [step, setStep] = useState<'code' | 'password'>('code');
+  const [checkingCode, setCheckingCode] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,11 +60,38 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({
 
   // Handle specific errors
   React.useEffect(() => {
-    if (error === 'room_requires_password') {
+    if (!error) return;
+    const lower = error.toLowerCase();
+    if (lower.includes('yêu cầu mật khẩu') || lower.includes('password')) {
       setStep('password');
       setShowPasswordField(true);
     }
   }, [error]);
+
+  // Auto-check room code to know if password is required without forcing a failed join
+  React.useEffect(() => {
+    const check = async () => {
+      const code = roomCode.trim().toUpperCase();
+      if (step !== 'code' || code.length !== 6 || loading || checkingCode) return;
+      try {
+        setCheckingCode(true);
+        const q = query(collection(db, 'multiplayer_rooms'), where('code', '==', code), limit(1));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const data = snap.docs[0].data() as any;
+          if (data.isPrivate) {
+            setShowPasswordField(true);
+            setStep('password');
+          }
+        }
+      } catch (e) {
+        // Silent fail; will be handled on submit
+      } finally {
+        setCheckingCode(false);
+      }
+    };
+    check();
+  }, [roomCode, step, loading, checkingCode]);
 
   if (!isOpen) return null;
 
@@ -123,15 +153,11 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({
           )}
 
           {/* Error Display */}
-          {error && error !== 'room_requires_password' && (
+          {error && error !== 'Phòng này yêu cầu mật khẩu' && (
             <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
               <span className="text-red-700 text-sm">
-                {error === 'room_not_found' && t('multiplayer.errors.roomNotFound')}
-                {error === 'room_full' && t('multiplayer.errors.roomFull')}
-                {error === 'wrong_password' && t('multiplayer.errors.wrongPassword')}
-                {error === 'game_in_progress' && t('multiplayer.errors.gameInProgress')}
-                {!['room_not_found', 'room_full', 'wrong_password', 'game_in_progress'].includes(error) && error}
+                {error}
               </span>
             </div>
           )}

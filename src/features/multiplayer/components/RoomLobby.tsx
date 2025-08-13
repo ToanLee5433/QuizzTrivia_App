@@ -55,11 +55,11 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
   const readyCount = useMemo(() => players.filter(p => p.isReady).length, [players]);
   const allReady = useMemo(() => players.length >= 2 && players.every(p => p.isReady), [players]);
   const currentPlayer = players.find(p => p.id === currentUserId);
-  // const isHost = currentPlayer?.isHost || false;
+  const isHost = roomData?.hostId === currentUserId;
 
-  // Auto-start countdown when all players are ready
+  // Auto-start countdown when all players are ready (host only)
   useEffect(() => {
-    if (allReady && players.length >= 2) {
+    if (isHost && allReady && players.length >= 2) {
       setReadyCountdown(5);
       const interval = setInterval(() => {
         setReadyCountdown(prev => {
@@ -79,7 +79,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
     } else {
       setReadyCountdown(null);
     }
-  }, [allReady, players.length, multiplayerService, roomData?.id]);
+  }, [isHost, allReady, players.length, multiplayerService, roomData?.id]);
 
   const handleCopyRoomCode = async () => {
     if (roomData?.code) {

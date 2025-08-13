@@ -1,6 +1,10 @@
 {
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
   "hosting": {
-    "public": "dist",
+    "public": "build",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -10,25 +14,6 @@
       {
         "source": "**",
         "destination": "/index.html"
-      }
-    ],
-    "headers": [
-      {
-        "source": "**/*.@(js|css|html|json|svg|png|jpg|jpeg|gif|webp|ico)",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache, no-store, must-revalidate, max-age=0"
-          },
-          {
-            "key": "Pragma", 
-            "value": "no-cache"
-          },
-          {
-            "key": "Expires",
-            "value": "0"
-          }
-        ]
       }
     ]
   }

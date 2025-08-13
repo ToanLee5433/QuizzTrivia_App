@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Clock, Star, Play, Eye, BookOpen, Target } from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
@@ -11,15 +11,18 @@ import { QuizReviewStats } from '../types/review';
 import QuickReviewSection from '../../../shared/components/QuickReviewSection';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
+import GameModeSelector from '../../multiplayer/components/GameModeSelector';
 
 const QuizPreviewPage: React.FC = () => {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const user = useSelector((state: RootState) => state.auth.user);
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [loading, setLoading] = useState(true);
   const [reviewStats, setReviewStats] = useState<QuizReviewStats | null>(null);
+  const [showGameModeSelector, setShowGameModeSelector] = useState(false);
 
   useEffect(() => {
     const fetchQuiz = async () => {
@@ -51,6 +54,14 @@ const QuizPreviewPage: React.FC = () => {
 
     fetchQuiz();
   }, [id, navigate]);
+
+  // Auto-open GameModeSelector if coming from QuizCard
+  useEffect(() => {
+    const locationState = location.state as any;
+    if (locationState?.openGameModeSelector) {
+      setShowGameModeSelector(true);
+    }
+  }, [location.state]);
 
   if (loading) {
     return (
@@ -150,24 +161,13 @@ const QuizPreviewPage: React.FC = () => {
               )}
 
               <div className="flex flex-wrap gap-4">
-                <Link
-                  to={`/quiz/${quiz.id}`}
-                  className="inline-flex items-center px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors shadow-md"
+                <button
+                  onClick={() => setShowGameModeSelector(true)}
+                  className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg"
                 >
-                  <Play className="w-5 h-5 mr-2" />
+                  <Play className="w-6 h-6 mr-2" />
                   {t('quiz.startQuizButton')}
-                </Link>
-
-                <Link
-                  to={`/multiplayer`}
-                  state={{ selectedQuiz: quiz }}
-                  className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-lg hover:from-green-600 hover:to-emerald-700 transition-colors shadow-md"
-                >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.196-2.121M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.196-2.121M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  Chơi cùng bạn bè
-                </Link>
+                </button>
                 
                 <Link
                   to={`/quiz/${quiz.id}/reviews`}
@@ -318,6 +318,21 @@ const QuizPreviewPage: React.FC = () => {
           <QuickReviewSection quizId={quiz.id} quizTitle={quiz.title} />
         )}
       </div>
+      
+      {/* Game Mode Selector Modal */}
+      <GameModeSelector
+        isOpen={showGameModeSelector}
+        onClose={() => setShowGameModeSelector(false)}
+        onSelectSinglePlayer={() => {
+          setShowGameModeSelector(false);
+          navigate(`/quiz/${quiz.id}`);
+        }}
+        onSelectMultiplayer={() => {
+          setShowGameModeSelector(false);
+          navigate('/multiplayer', { state: { selectedQuiz: quiz } });
+        }}
+        connectionStatus="connected"
+      />
     </div>
   );
 };
