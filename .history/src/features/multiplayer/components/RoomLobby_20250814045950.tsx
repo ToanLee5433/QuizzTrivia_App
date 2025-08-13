@@ -5,8 +5,8 @@ import {
   CheckCircle, 
   Clock,
   Copy,
-  LogOut
-  // Removed Crown - no more host distinction
+  LogOut,
+  Crown
 } from 'lucide-react';
 
 interface Player {

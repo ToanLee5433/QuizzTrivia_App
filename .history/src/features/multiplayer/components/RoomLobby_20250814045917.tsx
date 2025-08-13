@@ -5,8 +5,8 @@ import {
   CheckCircle, 
   Clock,
   Copy,
-  LogOut
-  // Removed Crown - no more host distinction
+  LogOut,
+  Crown
 } from 'lucide-react';
 
 interface Player {
@@ -55,9 +55,9 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
   const readyCount = useMemo(() => players.filter(p => p.isReady).length, [players]);
   const allReady = useMemo(() => players.length >= 2 && players.every(p => p.isReady), [players]);
   const currentPlayer = players.find(p => p.id === currentUserId);
-  // Removed isHost logic - all players are equal
+  const isHost = roomData?.hostId === currentUserId;
 
-  // Show countdown for everyone when all players are ready; any player can trigger start
+  // Show countdown for everyone when all players are ready; only host triggers start
   useEffect(() => {
     if (allReady && players.length >= 2) {
       setReadyCountdown(5);
@@ -65,8 +65,8 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
         setReadyCountdown(prev => {
           if (prev === null || prev <= 1) {
             clearInterval(interval);
-            // Any player can start the game when countdown reaches 0
-            if (multiplayerService && roomData?.id) {
+            // Start the game when countdown reaches 0
+            if (isHost && multiplayerService && roomData?.id) {
               multiplayerService.startGame(roomData.id);
             }
             return null;
@@ -79,7 +79,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
     } else {
       setReadyCountdown(null);
     }
-  }, [allReady, players.length, multiplayerService, roomData?.id]);
+  }, [isHost, allReady, players.length, multiplayerService, roomData?.id]);
 
   const handleCopyRoomCode = async () => {
     if (roomData?.code) {
@@ -217,7 +217,9 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                 <div className="flex items-center gap-4">
                   <div className="relative w-14 h-14 rounded-2xl flex items-center justify-center text-white font-bold text-lg bg-gradient-to-br from-blue-500 to-purple-600">
                     {player.username.charAt(0).toUpperCase()}
-                    {/* Removed Crown icon - no more host distinction */}
+                    {player.isHost && (
+                      <Crown className="absolute -top-2 -right-2 w-5 h-5 text-yellow-500" />
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="font-bold text-gray-800 text-lg flex items-center gap-2">

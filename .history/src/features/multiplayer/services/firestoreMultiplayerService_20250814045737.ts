@@ -291,7 +291,7 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
         id: this.userId,
         username: this.username,
         isReady: false,
-        // Removed isHost - all players are equal
+        isHost: false,
         score: 0,
         answers: [],
         joinedAt: new Date()
@@ -316,7 +316,7 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
         id: roomDoc.id,
         code: roomData.code,
         name: roomData.name,
-        // Removed hostId - all players are equal
+        hostId: roomData.hostId,
         players: [player], // Will be updated by listener
         maxPlayers: roomData.maxPlayers,
         isPrivate: roomData.isPrivate,
@@ -712,7 +712,7 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
           id: doc.id,
           code: roomData.code,
           name: roomData.name,
-          // Removed hostId - all players are equal
+          hostId: roomData.hostId,
           players: [], // Will be populated by players listener
           maxPlayers: roomData.maxPlayers,
           isPrivate: roomData.isPrivate,

@@ -41,13 +41,22 @@ service cloud.firestore {
         allow create: if request.auth != null 
           && request.auth.uid == playerId;
         
-        // Allow players to update their own data (presence/ready/answers)
+        // Allow players to update only presence/ready status and answers on their own doc
         allow update: if request.auth != null 
-          && request.auth.uid == playerId;
+          && (
+            (
+              request.auth.uid == playerId &&
+              request.resource.data.diff(resource.data).changedKeys().hasOnly(['isOnline','isReady','answers'])
+            ) || (
+              // Host may update player score
+              get(/databases/$(database)/documents/multiplayer_rooms/$(roomId)).data.hostId == request.auth.uid &&
+              request.resource.data.diff(resource.data).changedKeys().hasOnly(['score'])
+            )
+          );
         
-        // Allow any player in the room to delete others (vote-kick system)
+        // Allow host to delete players (kick)
         allow delete: if request.auth != null 
-          && exists(/databases/$(database)/documents/multiplayer_rooms/$(roomId)/players/$(request.auth.uid));
+          && get(/databases/$(database)/documents/multiplayer_rooms/$(roomId)).data.hostId == request.auth.uid;
       }
       
       // Messages subcollection
@@ -73,9 +82,9 @@ service cloud.firestore {
         // Allow authenticated users to read game state
         allow read: if request.auth != null;
         
-        // Allow any player in the room to update game state
+        // Only host can update game state
         allow write: if request.auth != null 
-          && exists(/databases/$(database)/documents/multiplayer_rooms/$(roomId)/players/$(request.auth.uid));
+          && get(/databases/$(database)/documents/multiplayer_rooms/$(roomId)).data.hostId == request.auth.uid;
       }
     }
 

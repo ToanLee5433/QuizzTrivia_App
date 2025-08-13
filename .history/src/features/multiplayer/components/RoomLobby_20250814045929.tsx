@@ -5,8 +5,8 @@ import {
   CheckCircle, 
   Clock,
   Copy,
-  LogOut
-  // Removed Crown - no more host distinction
+  LogOut,
+  Crown
 } from 'lucide-react';
 
 interface Player {
@@ -217,7 +217,9 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                 <div className="flex items-center gap-4">
                   <div className="relative w-14 h-14 rounded-2xl flex items-center justify-center text-white font-bold text-lg bg-gradient-to-br from-blue-500 to-purple-600">
                     {player.username.charAt(0).toUpperCase()}
-                    {/* Removed Crown icon - no more host distinction */}
+                    {player.isHost && (
+                      <Crown className="absolute -top-2 -right-2 w-5 h-5 text-yellow-500" />
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="font-bold text-gray-800 text-lg flex items-center gap-2">
