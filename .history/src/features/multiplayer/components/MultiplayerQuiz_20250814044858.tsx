@@ -352,11 +352,10 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
 
   // Handle time up
   useEffect(() => {
-    if (timeLeft <= 0 && !locked) {
-      // Auto-submit with selected answer, or undefined if no selection
-      handleSubmit(selectedIndex ?? undefined);
+    if (timeLeft <= 0 && !locked && selectedIndex !== null) {
+      handleSubmit();
     }
-  }, [timeLeft, locked]);
+  }, [timeLeft, locked, selectedIndex]);
 
   // Next question countdown (server-controlled)
   useEffect(() => {
@@ -377,14 +376,11 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
   const handleSelect = (answerIndex: number) => {
     if (locked) return;
     setSelectedIndex(answerIndex);
-    // Auto-submit immediately after selection (like MultiplayerGameSimple)
-    setTimeout(() => handleSubmit(answerIndex), 100);
   };
   
   const handleSubmit = async (answerIndex?: number) => {
     const indexToSubmit = answerIndex !== undefined ? answerIndex : selectedIndex;
-    if (locked) return; // Prevent double submission
-    
+    if (locked || indexToSubmit === null) return;
     setLocked(true);
     
     if (!multiplayerService || !currentRoomData?.id || !finalQuestion?.id || !currentUser?.uid) {
@@ -394,13 +390,12 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
         questionId: finalQuestion?.id,
         userId: currentUser?.uid
       });
-      setLocked(false); // Allow retry
       return;
     }
     
     try {
       const timeSpent = timePerQuestion - timeLeft;
-      const isCorrect = indexToSubmit !== null ? indexToSubmit === finalQuestion.correct : false;
+      const isCorrect = indexToSubmit === finalQuestion.correct;
       const points = isCorrect ? Math.max(10, Math.floor(100 - (timeSpent * 2))) : 0; // 10-100 points based on speed
       
       // Update client-side scores immediately for fast UI response
@@ -413,7 +408,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
       setCurrentQuestionAnswers(prev => ({
         ...prev,
         [currentUser.uid]: {
-          answer: indexToSubmit ?? -1,
+          answer: indexToSubmit,
           timeSpent,
           isCorrect,
           points
@@ -427,7 +422,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
           ...(prev[currentUser.uid] || []),
           {
             questionId: finalQuestion.id,
-            selectedAnswer: indexToSubmit ?? -1,
+            selectedAnswer: indexToSubmit,
             isCorrect,
             timeSpent,
             points
@@ -435,10 +430,8 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
         ]
       }));
       
-      // Submit to server (for sync with other players) - only if answer was selected
-      if (indexToSubmit !== null) {
-        await multiplayerService.submitAnswer(currentRoomData.id, finalQuestion.id, indexToSubmit, timeSpent);
-      }
+      // Submit to server (for sync with other players)
+      await multiplayerService.submitAnswer(currentRoomData.id, finalQuestion.id, indexToSubmit, timeSpent);
       
       // Set waiting state
       setWaitingForOthers(true);
@@ -448,7 +441,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
         setQuestionResults({
           isCorrect,
           correctAnswer: finalQuestion.correct,
-          selectedAnswer: indexToSubmit ?? -1,
+          selectedAnswer: indexToSubmit,
           points,
           explanation: finalQuestion.explanation || ''
         });
@@ -906,7 +899,13 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
                 return (
                   <button
                     key={idx}
-                    onClick={() => handleSelect(idx)}
+                    onClick={() => {
+                      if (!locked) {
+                        handleSelect(idx);
+                        // Auto-submit when option is selected
+                        setTimeout(() => handleSubmit(idx), 100);
+                      }
+                    }}
                     className={`group relative px-4 sm:px-6 py-3 sm:py-4 rounded-2xl text-left transition-all duration-200 transform hover:scale-105 ${
                       isSelected 
                         ? 'border-2 border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg' 

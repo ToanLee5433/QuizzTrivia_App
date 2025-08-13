@@ -906,7 +906,13 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
                 return (
                   <button
                     key={idx}
-                    onClick={() => handleSelect(idx)}
+                    onClick={() => {
+                      if (!locked) {
+                        handleSelect(idx);
+                        // Auto-submit when option is selected
+                        setTimeout(() => handleSubmit(idx), 100);
+                      }
+                    }}
                     className={`group relative px-4 sm:px-6 py-3 sm:py-4 rounded-2xl text-left transition-all duration-200 transform hover:scale-105 ${
                       isSelected 
                         ? 'border-2 border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg' 
