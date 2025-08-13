@@ -54,17 +54,17 @@ const AdminUserManagement: React.FC = () => {
 
   const handleRoleChange = async (userId: string, newRole: 'user' | 'creator' | 'admin') => {
     if (userId === user?.uid && newRole !== 'admin') {
-      toast.error(t('admin.users.cannotChangeSelfRole', 'You cannot change your own role!'));
+      toast.error(t('admin.users.cannotChangeSelfRole'));
       return;
     }
     setLoading(true);
     try {
       await updateDoc(doc(db, 'users', userId), { role: newRole });
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
-      toast.success(t('admin.roleUpdateSuccess', 'Role updated successfully!'));
+      toast.success(t('admin.roleUpdateSuccess'));
     } catch (error) {
       console.error('Error updating user role:', error);
-      toast.error(t('messages.error', 'An error occurred'));
+      toast.error(t('messages.error'));
     } finally {
       setLoading(false);
     }
@@ -72,17 +72,17 @@ const AdminUserManagement: React.FC = () => {
 
   const handleStatusToggle = async (userId: string, currentStatus: boolean) => {
     if (userId === user?.uid) {
-      toast.error(t('admin.users.cannotDeactivateSelf', 'You cannot change your own status!'));
+      toast.error(t('admin.users.cannotDeactivateSelf'));
       return;
     }
     setLoading(true);
     try {
       await updateDoc(doc(db, 'users', userId), { isActive: !currentStatus });
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, isActive: !currentStatus } : u));
-      toast.success(t('admin.userStatusUpdateSuccess', { action: t(!currentStatus ? 'admin.activated' : 'admin.deactivated') }));
+      toast.success(t('admin.userStatusUpdateSuccess', {action: t(!currentStatus ? 'admin.activated' : 'admin.deactivated')}));
     } catch (error) {
       console.error('Error updating user status:', error);
-      toast.error(t('messages.error', 'An error occurred'));
+      toast.error(t('messages.error'));
     } finally {
       setLoading(false);
     }
@@ -90,7 +90,7 @@ const AdminUserManagement: React.FC = () => {
 
   const handleDeleteUser = async (userId: string) => {
     if (userId === user?.uid) {
-      toast.error(t('admin.users.cannotDeleteSelf', 'You cannot delete your own account!'));
+      toast.error(t('admin.users.cannotDeleteSelf'));
       return;
     }
     setLoading(true);
@@ -104,10 +104,10 @@ const AdminUserManagement: React.FC = () => {
       });
       
       setUsers(prev => prev.filter(u => u.id !== userId));
-      toast.success(t('admin.userDeleteSuccess', 'User deleted successfully!'));
+      toast.success(t('admin.userDeleteSuccess'));
     } catch (error) {
       console.error('Error deleting user:', error);
-      toast.error(t('admin.userDeleteError', 'Error occurred while deleting user!'));
+      toast.error(t('admin.userDeleteError'));
     } finally {
       setLoading(false);
     }
@@ -118,7 +118,7 @@ const AdminUserManagement: React.FC = () => {
   if (user?.role !== 'admin') {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-600">{t('admin.loginAsAdmin', 'You need admin rights to access this page.')}</p>
+        <p className="text-gray-600">{t('admin.loginAsAdmin')}</p>
       </div>
     );
   }
@@ -132,15 +132,15 @@ const AdminUserManagement: React.FC = () => {
   }
 
   return (
-    <AdminLayout title={`👥 ${t('admin.userManagement', 'User Management')}`}>
+    <AdminLayout title={`👥 ${t('admin.userManagement')}`}>
       {/* Filter Tabs */}
       <div className="mb-6">
         <div className="flex space-x-4">
           {[
-            { key: 'all', label: t('common.all', 'All'), count: users.length },
-            { key: 'admin', label: t('ui.admin', 'Admin'), count: users.filter(u => u.role === 'admin').length },
-            { key: 'creator', label: t('ui.creator', 'Creator'), count: users.filter(u => u.role === 'creator').length },
-            { key: 'user', label: t('ui.user', 'User'), count: users.filter(u => u.role === 'user').length }
+            { key: 'all', label: t('common.all'), count: users.length },
+            { key: 'admin', label: t('ui.admin'), count: users.filter(u => u.role === 'admin').length },
+            { key: 'creator', label: t('ui.creator'), count: users.filter(u => u.role === 'creator').length },
+            { key: 'user', label: t('ui.user'), count: users.filter(u => u.role === 'user').length }
           ].map(tab => (
             <button
               key={tab.key}
@@ -160,23 +160,23 @@ const AdminUserManagement: React.FC = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-lg font-semibold text-gray-900">{t('admin.userManagementCards.totalUsers', 'Total users')}</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('admin.userManagementCards.totalUsers')}</h3>
           <p className="text-3xl font-bold text-blue-600">{users.length}</p>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-lg font-semibold text-gray-900">{t('admin.userManagementCards.activeUsers', 'Active users')}</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('admin.userManagementCards.activeUsers')}</h3>
           <p className="text-3xl font-bold text-green-600">
             {users.filter(u => u.isActive !== false).length}
           </p>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-lg font-semibold text-gray-900">{t('ui.creator', 'Creator')}</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('ui.creator')}</h3>
           <p className="text-3xl font-bold text-purple-600">
             {users.filter(u => u.role === 'creator').length}
           </p>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-lg font-semibold text-gray-900">{t('ui.admin', 'Admin')}</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('ui.admin')}</h3>
           <p className="text-3xl font-bold text-red-600">
             {users.filter(u => u.role === 'admin').length}
           </p>
@@ -189,19 +189,19 @@ const AdminUserManagement: React.FC = () => {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t('ui.user', 'User')}
+                {t('ui.user')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t('ui.role', 'Role')}
+                {t('ui.role')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t('status.label', 'Status')}
+                {t('status.label')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t('common.createdAt', 'Created at')}
+                {t('common.createdAt')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {t('action.actions', 'Actions')}
+                {t('action.actions')}
               </th>
             </tr>
           </thead>
@@ -219,10 +219,10 @@ const AdminUserManagement: React.FC = () => {
                     </div>
                     <div className="ml-4">
                       <div className="text-sm font-medium text-gray-900">
-                        {userData.displayName || t('profile.displayName', 'Display Name')}
+                        {userData.displayName || t('profile.displayName')}
                         {userData.id === user?.uid && (
                           <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                            ({t('common.you', 'You')})
+                            ({t('common.you')})
                           </span>
                         )}
                       </div>
@@ -238,8 +238,8 @@ const AdminUserManagement: React.FC = () => {
                     className="text-sm border border-gray-300 rounded px-2 py-1"
                   >
                     <option value="user">User</option>
-                    <option value="creator">Creator</option>
-                    <option value="admin">Admin</option>
+                    <option value="creator">{t("nav.creator")}</option>
+                    <option value="admin">{t("admin.quizManagement.adminBadge")}</option>
                   </select>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -248,7 +248,7 @@ const AdminUserManagement: React.FC = () => {
                       ? 'bg-green-100 text-green-800' 
                       : 'bg-red-100 text-red-800'
                   }`}>
-                      {userData.isActive !== false ? t('status.active', 'Active') : t('status.inactive', 'Inactive')}
+                      {userData.isActive !== false ? t('status.active') : t('status.inactive')}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -263,14 +263,14 @@ const AdminUserManagement: React.FC = () => {
                           className={`px-3 py-1 rounded text-xs ${userData.isActive !== false ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-green-600 text-white hover:bg-green-700'}`}
                           disabled={loading}
                         >
-                          {userData.isActive !== false ? t('action.deactivate', 'Deactivate') : t('action.activate', 'Activate')}
+                          {userData.isActive !== false ? t('action.deactivate') : t('action.activate')}
                         </button>
                         <button
-                          onClick={() => setConfirmModal({ open: true, type: 'deleteUser', payload: { userId: userData.id }, message: t('users.confirmDelete', 'Are you sure you want to delete this user?') })}
+                          onClick={() => setConfirmModal({ open: true, type: 'deleteUser', payload: { userId: userData.id }, message: t('users.confirmDelete') })}
                           className="px-3 py-1 bg-red-100 text-red-600 rounded text-xs hover:bg-red-200"
                           disabled={loading}
                         >
-                          {t('delete', 'Delete')}
+                          {t('delete')}
                         </button>
                       </>
                     )}
@@ -286,7 +286,7 @@ const AdminUserManagement: React.FC = () => {
       <Modal
         isOpen={confirmModal.open}
         onClose={() => setConfirmModal({ open: false, type: null })}
-        title={t('action.confirm', 'Confirm')}
+        title={t('action.confirm')}
       >
         <div className="mb-4">{confirmModal.message}</div>
         <div className="flex justify-end space-x-2">
@@ -295,7 +295,7 @@ const AdminUserManagement: React.FC = () => {
             className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
             disabled={loading}
           >
-            {t('cancel', 'Cancel')}
+            {t('cancel')}
           </button>
           <button
             onClick={async () => {
@@ -307,7 +307,7 @@ const AdminUserManagement: React.FC = () => {
             className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
             disabled={loading}
           >
-            {t('action.confirm', 'Confirm')}
+            {t('action.confirm')}
           </button>
         </div>
       </Modal>

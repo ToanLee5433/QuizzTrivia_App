@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 
+import { useTranslation } from 'react-i18next';
 interface BulkActionsProps {
   selectedItems: string[];
   itemType: 'users' | 'quizzes';
@@ -16,6 +17,8 @@ const BulkActions: React.FC<BulkActionsProps> = ({
   onClearSelection, 
   onRefresh 
 }) => {
+  const { t } = useTranslation();
+
   const [loading, setLoading] = useState(false);
 
   if (selectedItems.length === 0) return null;
@@ -73,15 +76,13 @@ const BulkActions: React.FC<BulkActionsProps> = ({
                 onClick={() => bulkUpdateStatus(true)}
                 disabled={loading}
                 className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
-              >
-                Kích hoạt
+              >{t("action.activate")}
               </button>
               <button
                 onClick={() => bulkUpdateStatus(false)}
                 disabled={loading}
                 className="px-3 py-1 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700"
-              >
-                Vô hiệu hóa
+              >{t("action.deactivate")}
               </button>
             </>
           )}
@@ -92,15 +93,13 @@ const BulkActions: React.FC<BulkActionsProps> = ({
                 onClick={() => bulkUpdateStatus('approved')}
                 disabled={loading}
                 className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
-              >
-                Duyệt
+              >{t("admin.editRequests.approve")}
               </button>
               <button
                 onClick={() => bulkUpdateStatus('rejected')}
                 disabled={loading}
                 className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
-              >
-                Từ chối
+              >{t("admin.editRequests.reject")}
               </button>
             </>
           )}
@@ -109,15 +108,13 @@ const BulkActions: React.FC<BulkActionsProps> = ({
             onClick={bulkDelete}
             disabled={loading}
             className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
-          >
-            Xóa
+          >{t("action.clear")}
           </button>
           
           <button
             onClick={onClearSelection}
             className="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
-          >
-            Hủy
+          >{t("common.cancel")}
           </button>
         </div>
       </div>

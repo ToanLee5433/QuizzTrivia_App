@@ -3,7 +3,10 @@ import { getRealQuizData } from '../services/realDataService';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, RefreshCw, Eye, MessageSquare } from 'lucide-react';
 
+import { useTranslation } from 'react-i18next';
 const RealQuizListPage: React.FC = () => {
+  const { t } = useTranslation();
+
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -65,8 +68,7 @@ const RealQuizListPage: React.FC = () => {
                 onClick={loadRealQuizzes}
                 className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Làm mới
+                <RefreshCw className="w-4 h-4 mr-2" />{t("refresh")}
               </button>
             </div>
           </div>
@@ -150,21 +152,21 @@ const RealQuizListPage: React.FC = () => {
                 <p className="text-2xl font-bold text-green-600">
                   {quizzes.filter(q => q.status === 'approved').length}
                 </p>
-                <p className="text-sm text-gray-600">Đã duyệt</p>
+                <p className="text-sm text-gray-600">{t("admin.quizManagement.filter.approved")}</p>
               </div>
               
               <div className="text-center">
                 <p className="text-2xl font-bold text-yellow-600">
                   {quizzes.filter(q => q.status === 'pending').length}
                 </p>
-                <p className="text-sm text-gray-600">Chờ duyệt</p>
+                <p className="text-sm text-gray-600">{t("admin.quizManagement.filter.pending")}</p>
               </div>
               
               <div className="text-center">
                 <p className="text-2xl font-bold text-purple-600">
                   {new Set(quizzes.map(q => q.category).filter(Boolean)).size}
                 </p>
-                <p className="text-sm text-gray-600">Danh mục</p>
+                <p className="text-sm text-gray-600">{t("admin.preview.category")}</p>
               </div>
             </div>
           </div>

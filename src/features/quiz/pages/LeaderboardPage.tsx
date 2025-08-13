@@ -302,27 +302,27 @@ const LeaderboardPage: React.FC = () => {
       <div className="max-w-6xl mx-auto px-4">
         <h1 className="text-4xl font-bold text-gray-900 mb-8 text-center flex items-center justify-center gap-3">
           <FaTrophy className="text-yellow-500" />
-          {t('leaderboard.title', 'Bảng Xếp Hạng')}
+          {t('leaderboard.title')}
           <FaTrophy className="text-yellow-500" />
         </h1>
         
         {/* Filters and Search */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
           <div className="flex gap-4 items-center">
-            <label className="font-medium text-gray-700">{t('leaderboard.time', 'Thời gian')}:</label>
+            <label className="font-medium text-gray-700">{t('leaderboard.time')}:</label>
             <select
               className="border border-gray-300 rounded-lg px-3 py-2 bg-white"
               value={timeFilter}
               onChange={e => setTimeFilter(e.target.value as any)}
             >
-              <option value="all">{t('leaderboard.filters.allTime', 'Tất cả thời gian')}</option>
-              <option value="week">{t('leaderboard.filters.thisWeek', 'Tuần này')}</option>
-              <option value="month">{t('leaderboard.filters.thisMonth', 'Tháng này')}</option>
+              <option value="all">{t('leaderboard.filters.allTime')}</option>
+              <option value="week">{t('leaderboard.filters.thisWeek')}</option>
+              <option value="month">{t('leaderboard.filters.thisMonth')}</option>
             </select>
           </div>
           <input
             className="border border-gray-300 rounded-lg px-4 py-2 w-full md:w-80 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder={t('leaderboard.searchPlayers', '🔍 Tìm kiếm người chơi...')}
+            placeholder={t('leaderboard.searchPlayers')}
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -332,27 +332,27 @@ const LeaderboardPage: React.FC = () => {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-4 text-center shadow-lg">
             <div className="text-2xl font-bold">{stats?.totalUsers || '--'}</div>
-            <div className="text-blue-100 text-sm">{t('leaderboard.players', 'Người chơi')}</div>
+            <div className="text-blue-100 text-sm">{t('leaderboard.players')}</div>
           </div>
           <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-4 text-center shadow-lg">
             <div className="text-2xl font-bold">{stats?.totalQuizzes || '--'}</div>
-            <div className="text-green-100 text-sm">{t('nav.quizzes', 'Quiz')}</div>
+            <div className="text-green-100 text-sm">{t('nav.quizzes')}</div>
           </div>
           <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white rounded-xl p-4 text-center shadow-lg">
             <div className="text-2xl font-bold">{stats?.totalAttempts || '--'}</div>
-            <div className="text-yellow-100 text-sm">{t('leaderboard.plays', 'Lượt chơi')}</div>
+            <div className="text-yellow-100 text-sm">{t('leaderboard.plays')}</div>
           </div>
           <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl p-4 text-center shadow-lg">
             <div className="text-2xl font-bold">{stats?.averageScore || '--'}%</div>
-            <div className="text-purple-100 text-sm">{t('leaderboard.avgScore', 'Điểm TB')}</div>
+            <div className="text-purple-100 text-sm">{t('leaderboard.avgScore')}</div>
           </div>
           <div className="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-xl p-4 text-center shadow-lg">
             <div className="text-2xl font-bold">{stats?.activeToday || '--'}</div>
-            <div className="text-red-100 text-sm">{t('leaderboard.activeToday', 'Hoạt động hôm nay')}</div>
+            <div className="text-red-100 text-sm">{t('leaderboard.activeToday')}</div>
           </div>
           <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-xl p-4 text-center shadow-lg">
             <div className="text-2xl font-bold">{stats?.perfectScoresCount || '--'}</div>
-            <div className="text-indigo-100 text-sm">{t('leaderboard.perfectScores', 'Điểm tuyệt đối')}</div>
+            <div className="text-indigo-100 text-sm">{t('leaderboard.perfectScores')}</div>
           </div>
         </div>
 
@@ -360,7 +360,7 @@ const LeaderboardPage: React.FC = () => {
         <div className="mb-10">
             <h2 className="text-2xl font-bold mb-6 text-center flex items-center justify-center gap-2">
             <FaCrown className="text-yellow-500" />
-            {t('leaderboard.topPlayers', 'Top Người Chơi Xuất Sắc')}
+            {t('leaderboard.topPlayers')}
           </h2>
           
           <div className="bg-white rounded-2xl shadow-lg p-6">
@@ -379,8 +379,8 @@ const LeaderboardPage: React.FC = () => {
             ) : filteredUsers.length === 0 ? (
               <div className="text-center py-12">
                 <FaUserCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">{t('leaderboard.noData', 'Chưa có dữ liệu')}</h3>
-                <p className="text-gray-500">{t('leaderboard.playToAppear', 'Hãy tham gia quiz để xuất hiện trên bảng xếp hạng!')}</p>
+                <h3 className="text-lg font-semibold text-gray-600 mb-2">{t('leaderboard.noData')}</h3>
+                <p className="text-gray-500">{t('leaderboard.playToAppear')}</p>
               </div>
             ) : (
               <>
@@ -407,9 +407,9 @@ const LeaderboardPage: React.FC = () => {
                         <div className={`text-sm font-semibold ${
                           idx === 0 ? 'text-yellow-600' : idx === 1 ? 'text-gray-600' : 'text-orange-600'
                         }`}>
-                          🎯 {user.totalAttempts} {t('nav.quizzes', 'quiz')}
+                          🎯 {user.totalAttempts} {t('nav.quizzes')}
                         </div>
-                        <div className="text-xs text-gray-500">{Math.round(user.averageScore)}% {t('leaderboard.avgShort', 'TB')}</div>
+                        <div className="text-xs text-gray-500">{Math.round(user.averageScore)}% {t('leaderboard.avgShort')}</div>
                         <div className={`mt-2 px-2 py-1 rounded-full text-xs font-bold ${
                           idx === 0 ? 'bg-yellow-100 text-yellow-800' :
                           idx === 1 ? 'bg-gray-100 text-gray-800' :
@@ -435,7 +435,7 @@ const LeaderboardPage: React.FC = () => {
                               {getBadgeIcon(user.badge)}
                             </div>
                               <div className="text-sm text-blue-600 font-medium">
-                              🎯 {user.totalAttempts} {t('nav.quizzes', 'quiz')} • {Math.round(user.averageScore)}% {t('leaderboard.avgShort', 'TB')}
+                              🎯 {user.totalAttempts} {t('nav.quizzes')} • {Math.round(user.averageScore)}% {t('leaderboard.avgShort')}
                             </div>
                           </div>
                         </div>
@@ -463,7 +463,7 @@ const LeaderboardPage: React.FC = () => {
                             </span>
                           </div>
                             <div className="text-sm text-gray-500">
-                              🎯 {user.totalAttempts} {t('nav.quizzes', 'quiz')} • {user.perfectScores} {t('leaderboard.perfect100', 'điểm 100')} • {t('leaderboard.activity', 'Hoạt động')}: {user.recentActivity}
+                              🎯 {user.totalAttempts} {t('nav.quizzes')} • {user.perfectScores} {t('leaderboard.perfect100')} • {t('leaderboard.activity')}: {user.recentActivity}
                           </div>
                         </div>
                       </div>
@@ -485,21 +485,7 @@ const LeaderboardPage: React.FC = () => {
                       onClick={() => setShowAllUsers(!showAllUsers)}
                       className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
                     >
-                        {showAllUsers ? t('leaderboard.collapse', 'Thu gọn') : t('leaderboard.viewAllCount', 'Xem tất cả ({{count}})', { count: filteredUsers.length - 20 })}
-                    </button>
-                  </div>
-                )}
-
-                {/* Current User Position */}
-                {user && currentUserRank && currentUserRank > 20 && !showAllUsers && (
-                    <div className="mt-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <span className="font-bold text-blue-700">#{currentUserRank}</span>
-                      <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
-                        {user.displayName?.charAt(0).toUpperCase() || 'U'}
-                      </div>
-                      <div className="flex-1">
-                          <div className="font-semibold text-blue-900">{t('leaderboard.yourPosition', 'Vị trí của bạn')}</div>
+                        {showAllUsers ? t('leaderboard.collapse') : t('leaderboard.viewAllCount')}</div>
                         <div className="text-sm text-blue-700">{user.displayName || user.email}</div>
                       </div>
                     </div>
@@ -515,28 +501,15 @@ const LeaderboardPage: React.FC = () => {
             <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-center flex items-center gap-2">
               <FaFire className="text-red-500" />
-                {t('leaderboard.topQuizzes', 'Quiz Phổ Biến Nhất')}
+                {t('leaderboard.topQuizzes')}
             </h2>
             {topQuizzes.length > 12 && (
               <button
                 onClick={() => setShowAllQuizzes(!showAllQuizzes)}
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
               >
-                  {showAllQuizzes ? t('leaderboard.collapse', 'Thu gọn') : t('leaderboard.viewAllCount', 'Xem tất cả ({{count}})', { count: topQuizzes.length })}
-              </button>
-            )}
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {loading ? (
-              Array.from({length: 6}).map((_, i) => (
-                <div key={i} className="animate-pulse bg-white rounded-xl shadow-lg h-32"></div>
-              ))
-            ) : topQuizzes.length === 0 ? (
-              <div className="col-span-full text-center py-12">
-                <FaGamepad className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">{t('leaderboard.noQuizzes', 'Chưa có quiz nào')}</h3>
-                <p className="text-gray-500">{t('leaderboard.createFirstQuiz', 'Hãy tạo quiz đầu tiên để xuất hiện ở đây!')}</p>
+                  {showAllQuizzes ? t('leaderboard.collapse') : t('leaderboard.viewAllCount')}</h3>
+                <p className="text-gray-500">{t('leaderboard.createFirstQuiz')}</p>
               </div>
             ) : (
               (showAllQuizzes ? topQuizzes : topQuizzes.slice(0, 12)).map((quiz, idx) => (
@@ -553,22 +526,22 @@ const LeaderboardPage: React.FC = () => {
                   
                   <div className="flex items-center justify-between mb-4">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(quiz.difficulty)}`}>
-                      {quiz.difficulty === 'easy' ? t('difficulty.easy', 'Dễ') : quiz.difficulty === 'hard' ? t('difficulty.hard', 'Khó') : t('difficulty.medium', 'Trung bình')}
+                      {quiz.difficulty === 'easy' ? t('difficulty.easy') : quiz.difficulty === 'hard' ? t('difficulty.hard') : t('difficulty.medium')}
                     </span>
                     <span className="text-gray-500 text-sm capitalize">{quiz.category}</span>
                   </div>
                   
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600 text-sm">{t('leaderboard.plays', 'Lượt chơi')}:</span>
+                      <span className="text-gray-600 text-sm">{t('leaderboard.plays')}:</span>
                       <span className="font-semibold text-blue-600">{quiz.totalAttempts}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600 text-sm">{t('leaderboard.avgScore', 'Điểm TB')}:</span>
+                      <span className="text-gray-600 text-sm">{t('leaderboard.avgScore')}:</span>
                       <span className="font-semibold text-green-600">{Math.round(quiz.averageScore)}%</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600 text-sm">{t('leaderboard.activity', 'Hoạt động')}:</span>
+                      <span className="text-gray-600 text-sm">{t('leaderboard.activity')}:</span>
                       <span className="text-gray-500 text-xs">{quiz.recentActivity}</span>
                     </div>
                   </div>

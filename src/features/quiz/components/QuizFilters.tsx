@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 
+import { useTranslation } from 'react-i18next';
 interface QuizFiltersProps {
   onFilterChange: (filters: FilterOptions) => void;
   categories: string[];
@@ -26,6 +27,8 @@ const QuizFilters: React.FC<QuizFiltersProps> = ({
   totalQuizzes,
   filteredCount
 }) => {
+  const { t } = useTranslation();
+
   const [filters, setFilters] = useState<FilterOptions>({
     search: '',
     category: 'all',
@@ -65,15 +68,13 @@ const QuizFilters: React.FC<QuizFiltersProps> = ({
       {/* Quick Stats */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-6">
-          <div className="text-sm text-gray-600">
-            Hiển thị <span className="font-semibold text-blue-600">{filteredCount}</span> / {totalQuizzes} quiz
+          <div className="text-sm text-gray-600">{t("profile.pagination.showing")} <span className="font-semibold text-blue-600">{filteredCount}</span> / {totalQuizzes} quiz
           </div>
           {filteredCount !== totalQuizzes && (
             <button
               onClick={resetFilters}
               className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-            >
-              🔄 Xóa bộ lọc
+            >{t("quizList.empty.clearFilters")}
             </button>
           )}
         </div>
@@ -112,7 +113,7 @@ const QuizFilters: React.FC<QuizFiltersProps> = ({
           onChange={(e) => updateFilter('category', e.target.value)}
           className="border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
-          <option value="all">🏷️ Tất cả danh mục</option>
+          <option value="all">{t("quizList.filters.allCategories")}</option>
           {categories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
         
@@ -122,7 +123,7 @@ const QuizFilters: React.FC<QuizFiltersProps> = ({
           onChange={(e) => updateFilter('difficulty', e.target.value)}
           className="border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
-          <option value="all">📊 Tất cả độ khó</option>
+          <option value="all">{t("quizList.filters.allDifficulties")}</option>
           {difficulties.map(d => <option key={d} value={d}>
             {d === 'easy' ? '😊 Dễ' : d === 'medium' ? '😐 Trung bình' : '😤 Khó'}
           </option>)}
@@ -139,10 +140,10 @@ const QuizFilters: React.FC<QuizFiltersProps> = ({
               onChange={(e) => updateFilter('sortBy', e.target.value)}
               className="border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="newest">🆕 Mới nhất</option>
-              <option value="oldest">📅 Cũ nhất</option>
+              <option value="newest">{t("quizList.sort.newest")}</option>
+              <option value="oldest">{t("quizList.sort.oldest")}</option>
               <option value="popular">🔥 Phổ biến nhất</option>
-              <option value="difficulty">📈 Theo độ khó</option>
+              <option value="difficulty">{t("quizList.sort.difficulty")}</option>
               <option value="questions">🔢 Theo số câu hỏi</option>
               <option value="duration">⏱️ Theo thời lượng</option>
             </select>
@@ -182,8 +183,7 @@ const QuizFilters: React.FC<QuizFiltersProps> = ({
                 checked={filters.showCompleted}
                 onChange={(e) => updateFilter('showCompleted', e.target.checked)}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              Hiện quiz đã hoàn thành
+              />{t("quizList.options.showCompleted")}
             </label>
           </div>
         </div>

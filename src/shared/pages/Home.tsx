@@ -10,6 +10,7 @@ import PopularQuizzesRanking from '../components/PopularQuizzesRanking';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../lib/firebase/config';
 
+import { useTranslation } from 'react-i18next';
 // **THÊM MỚI**: Dashboard stats interface
 interface DashboardStats {
   totalQuizzes: number;
@@ -19,6 +20,8 @@ interface DashboardStats {
 }
 
 const Home: React.FC = () => {
+  const { t } = useTranslation();
+
   const dispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
   const { quizzes, loading } = useSelector((state: RootState) => state.quiz);
@@ -132,14 +135,12 @@ const Home: React.FC = () => {
           <div className="flex flex-col sm:flex-row gap-4 lg:gap-6">
             <Link to="/quizzes">
               <Button className="w-full sm:w-auto bg-white text-blue-600 hover:bg-blue-50 font-bold px-8 py-4 text-lg rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                <span className="mr-2">📚</span>
-                Khám phá Quiz
+                <span className="mr-2">📚</span>{t("quizList.exploreQuizzes")}
               </Button>
             </Link>
             <Link to="/creator">
               <Button className="w-full sm:w-auto border-2 border-white text-white hover:bg-white hover:text-blue-600 font-bold px-8 py-4 text-lg rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-                <span className="mr-2">✨</span>
-                Tạo Quiz mới
+                <span className="mr-2">✨</span>{t("creator.createNewQuiz")}
               </Button>
             </Link>
           </div>
@@ -151,7 +152,7 @@ const Home: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 group hover:border-blue-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium mb-2">Tổng số Quiz</p>
+              <p className="text-gray-600 text-sm font-medium mb-2">{t("dashboard.totalQuizzes")}</p>
               <p className="text-3xl font-bold text-gray-900">
                 {statsLoading ? '...' : stats.totalQuizzes}
               </p>
@@ -168,7 +169,7 @@ const Home: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 group hover:border-green-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium mb-2">Người dùng</p>
+              <p className="text-gray-600 text-sm font-medium mb-2">{t("admin.tabs.users")}</p>
               <p className="text-3xl font-bold text-gray-900">
                 {statsLoading ? '...' : stats.totalUsers}
               </p>
@@ -185,7 +186,7 @@ const Home: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 group hover:border-purple-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium mb-2">Quiz hoàn thành</p>
+              <p className="text-gray-600 text-sm font-medium mb-2">{t("dashboard.completedQuizzes")}</p>
               <p className="text-3xl font-bold text-gray-900">
                 {statsLoading ? '...' : stats.completedQuizzes}
               </p>
@@ -202,7 +203,7 @@ const Home: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 group hover:border-yellow-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium mb-2">Người tạo</p>
+              <p className="text-gray-600 text-sm font-medium mb-2">{t("admin.quizManagement.table.creator")}</p>
               <p className="text-3xl font-bold text-gray-900">
                 {statsLoading ? '...' : stats.totalCreators}
               </p>
@@ -288,7 +289,7 @@ const Home: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-3">Tạo Quiz mới</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">{t("creator.createNewQuiz")}</h3>
             <p className="text-gray-600 leading-relaxed">Thiết kế và chia sẻ quiz của riêng bạn với mọi người</p>
             <div className="mt-4 text-blue-600 font-semibold group-hover:translate-x-1 transition-transform duration-300 flex items-center">
               Bắt đầu tạo <span className="ml-2">→</span>
@@ -322,8 +323,7 @@ const Home: React.FC = () => {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-3">Xem tiến độ</h3>
             <p className="text-gray-600 leading-relaxed">Kiểm tra thành tích và lịch sử làm quiz của bạn</p>
-            <div className="mt-4 text-purple-600 font-semibold group-hover:translate-x-1 transition-transform duration-300 flex items-center">
-              Xem chi tiết <span className="ml-2">→</span>
+            <div className="mt-4 text-purple-600 font-semibold group-hover:translate-x-1 transition-transform duration-300 flex items-center">{t("viewDetails")} <span className="ml-2">→</span>
             </div>
           </Link>
         </div>

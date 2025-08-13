@@ -105,7 +105,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">{t('common.loading', 'Đang tải...')}</p>
+          <p className="mt-4 text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -125,12 +125,12 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                 <div className="flex items-center gap-2 text-gray-600">
                   <Users size={18} className="text-blue-500" />
                   <span className="font-semibold">{players.length}</span>
-                  <span className="text-sm">/{roomData.maxPlayers} {t('multiplayer.players', 'người chơi')}</span>
+                  <span className="text-sm">/{roomData.maxPlayers} {t('multiplayer.players')}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-600">
                   <CheckCircle size={18} className="text-green-500" />
                   <span className="font-semibold">{readyCount}</span>
-                  <span className="text-sm">{t('multiplayer.ready', 'sẵn sàng')}</span>
+                  <span className="text-sm">{t('multiplayer.ready')}</span>
                 </div>
                 <button
                   onClick={handleCopyRoomCode}
@@ -152,7 +152,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
               {readyCountdown && (
                 <div className="flex items-center justify-center gap-2 bg-orange-100 text-orange-700 px-4 py-2 rounded-xl font-bold">
                   <Clock size={18} />
-                  <span>{t('multiplayer.startingIn', 'Bắt đầu trong')} {readyCountdown}s</span>
+                  <span>{t('multiplayer.startingIn')} {readyCountdown}s</span>
                 </div>
               )}
               
@@ -163,7 +163,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                   className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl border border-gray-300 transition-colors flex items-center gap-2"
                 >
                   <LogOut size={16} />
-                  {t('multiplayer.leaveRoom', 'Rời phòng')}
+                  {t('multiplayer.leaveRoom')}
                 </button>
                 
                 <button
@@ -176,8 +176,8 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                 >
                   <CheckCircle size={18} />
                   {currentPlayer?.isReady 
-                    ? t('multiplayer.notReady', 'Chưa sẵn sàng')
-                    : t('multiplayer.ready', 'Sẵn sàng!')
+                    ? t('multiplayer.notReady')
+                    : t('multiplayer.ready')
                   }
                 </button>
               </div>
@@ -188,15 +188,15 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
           <div className="grid grid-cols-3 gap-4 mt-6">
             <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-4 text-center">
               <div className="text-2xl font-bold text-blue-600">{players.length}</div>
-              <div className="text-sm text-blue-700">{t('multiplayer.totalPlayers', 'Tổng người chơi')}</div>
+              <div className="text-sm text-blue-700">{t('multiplayer.totalPlayers')}</div>
             </div>
             <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-4 text-center">
               <div className="text-2xl font-bold text-green-600">{readyCount}</div>
-              <div className="text-sm text-green-700">{t('multiplayer.readyPlayers', 'Đã sẵn sàng')}</div>
+              <div className="text-sm text-green-700">{t('multiplayer.readyPlayers')}</div>
             </div>
             <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-4 text-center">
               <div className="text-2xl font-bold text-purple-600">{roomData.settings.timeLimit}s</div>
-              <div className="text-sm text-purple-700">{t('multiplayer.timePerQuestion', 'Thời gian/câu')}</div>
+              <div className="text-sm text-purple-700">{t('multiplayer.timePerQuestion')}</div>
             </div>
           </div>
         </div>
@@ -226,14 +226,14 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                       <span className="truncate">{player.username}</span>
                       {player.id === currentUserId && (
                         <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full shrink-0">
-                          {t('common.you', 'Bạn')}
+                          {t('common.you')}
                         </span>
                       )}
                     </div>
                     <div className="flex items-center gap-2 mt-1">
                       <div className={`w-2 h-2 rounded-full ${player.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
                       <span className="text-sm text-gray-600">
-                        {player.isOnline ? t('common.online', 'Trực tuyến') : t('common.offline', 'Ngoại tuyến')}
+                        {player.isOnline ? t('common.online') : t('common.offline')}
                       </span>
                     </div>
                   </div>
@@ -250,12 +250,12 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                   {player.isReady ? (
                     <>
                       <CheckCircle size={16} />
-                      <span>{t('multiplayer.ready', 'Sẵn sàng')}</span>
+                      <span>{t('multiplayer.ready')}</span>
                     </>
                   ) : (
                     <>
                       <Clock size={16} />
-                      <span>{t('multiplayer.waiting', 'Đang chờ')}</span>
+                      <span>{t('multiplayer.waiting')}</span>
                     </>
                   )}
                 </div>
@@ -271,7 +271,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
             >
               <div className="text-center">
                 <Users size={24} className="mx-auto mb-2 opacity-50" />
-                <div className="text-sm font-medium">{t('multiplayer.waitingForPlayer', 'Chờ người chơi...')}</div>
+                <div className="text-sm font-medium">{t('multiplayer.waitingForPlayer')}</div>
               </div>
             </div>
           ))}

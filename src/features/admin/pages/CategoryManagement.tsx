@@ -56,14 +56,14 @@ const CategoryManagement: React.FC = () => {
   });
 
   const colors = [
-    { value: 'blue', label: t('categories.colors.blue', 'Blue'), class: 'bg-blue-500' },
-    { value: 'green', label: t('categories.colors.green', 'Green'), class: 'bg-green-500' },
-    { value: 'purple', label: t('categories.colors.purple', 'Purple'), class: 'bg-purple-500' },
-    { value: 'red', label: t('categories.colors.red', 'Red'), class: 'bg-red-500' },
-    { value: 'yellow', label: t('categories.colors.yellow', 'Yellow'), class: 'bg-yellow-500' },
-    { value: 'pink', label: t('categories.colors.pink', 'Pink'), class: 'bg-pink-500' },
-    { value: 'indigo', label: t('categories.colors.indigo', 'Indigo'), class: 'bg-indigo-500' },
-    { value: 'gray', label: t('categories.colors.gray', 'Gray'), class: 'bg-gray-500' }
+    { value: 'blue', label: t('categories.colors.blue'), class: 'bg-blue-500' },
+    { value: 'green', label: t('categories.colors.green'), class: 'bg-green-500' },
+    { value: 'purple', label: t('categories.colors.purple'), class: 'bg-purple-500' },
+    { value: 'red', label: t('categories.colors.red'), class: 'bg-red-500' },
+    { value: 'yellow', label: t('categories.colors.yellow'), class: 'bg-yellow-500' },
+    { value: 'pink', label: t('categories.colors.pink'), class: 'bg-pink-500' },
+    { value: 'indigo', label: t('categories.colors.indigo'), class: 'bg-indigo-500' },
+    { value: 'gray', label: t('categories.colors.gray'), class: 'bg-gray-500' }
   ];
 
   const icons = ['📚', '🔬', '💻', '🎨', '📊', '🌍', '🏃‍♂️', '🎵', '🍳', '📈', '🧮', '📝'];
@@ -76,8 +76,8 @@ const CategoryManagement: React.FC = () => {
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <X className="w-8 h-8 text-red-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">{t('errors.unauthorized', 'Unauthorized access')}</h2>
-          <p className="text-gray-600">{t('admin.loginAsAdmin', 'You need admin rights to access this page.')}</p>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">{t('errors.unauthorized')}</h2>
+          <p className="text-gray-600">{t('admin.loginAsAdmin')}</p>
         </div>
       </div>
     );
@@ -124,7 +124,7 @@ const CategoryManagement: React.FC = () => {
       setCategories(loadedCategories.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()));
     } catch (error) {
       console.error('❌ Error loading categories:', error);
-      toast.error(t('categories.loadError', 'Cannot load categories'));
+      toast.error(t('categories.loadError'));
     } finally {
       setLoading(false);
     }
@@ -134,7 +134,7 @@ const CategoryManagement: React.FC = () => {
     e.preventDefault();
     
     if (!formData.name.trim()) {
-      toast.error(t('categories.enterName', 'Please enter category name!'));
+      toast.error(t('categories.enterName'));
       return;
     }
 
@@ -156,7 +156,7 @@ const CategoryManagement: React.FC = () => {
             : cat
         ));
         
-        toast.success(t('categories.updateSuccess', 'Category updated successfully'));
+        toast.success(t('categories.updateSuccess'));
       } else {
         // Add new category
         const docRef = await addDoc(collection(db, 'categories'), {
@@ -178,7 +178,7 @@ const CategoryManagement: React.FC = () => {
         };
         
         setCategories(prev => [newCategory, ...prev]);
-        toast.success(t('categories.addSuccess', 'Category added successfully!'));
+        toast.success(t('categories.addSuccess'));
       }
       
       // Reset form
@@ -187,7 +187,7 @@ const CategoryManagement: React.FC = () => {
       setEditingCategory(null);
     } catch (error) {
       console.error('Error saving category:', error);
-      toast.error(t('categories.saveError', 'Cannot save category'));
+      toast.error(t('categories.saveError'));
     }
   };
 
@@ -203,17 +203,17 @@ const CategoryManagement: React.FC = () => {
   };
 
   const handleDelete = async (categoryId: string, categoryName: string) => {
-    if (!confirm(t('categories.confirmDeleteName', { name: categoryName, defaultValue: `Are you sure you want to delete category "${categoryName}"?` }))) {
+    if (!confirm(t('categories.confirmDeleteName', {name: categoryName, defaultValue: `Are you sure you want to delete category "${categoryName}"?`}))) {
       return;
     }
 
     try {
       await deleteDoc(doc(db, 'categories', categoryId));
       setCategories(prev => prev.filter(cat => cat.id !== categoryId));
-      toast.success(t('categories.deleteSuccess', 'Category deleted successfully!'));
+      toast.success(t('categories.deleteSuccess'));
     } catch (error) {
       console.error('Error deleting category:', error);
-      toast.error(t('categories.deleteError', 'Error deleting category!'));
+      toast.error(t('categories.deleteError'));
     }
   };
 
@@ -241,7 +241,7 @@ const CategoryManagement: React.FC = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">{t('loadingData', 'Loading data...')}</p>
+          <p className="mt-4 text-gray-600">{t('loadingData')}</p>
         </div>
       </div>
     );
@@ -258,8 +258,8 @@ const CategoryManagement: React.FC = () => {
                 <FolderOpen className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">{t('admin.categoryManagement', 'Category Management')}</h1>
-                <p className="text-gray-600">{t('admin.categories.headerDesc', 'Create and manage quiz categories')}</p>
+                <h1 className="text-2xl font-bold text-gray-900">{t('admin.categoryManagement')}</h1>
+                <p className="text-gray-600">{t('admin.categories.headerDesc')}</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -272,12 +272,12 @@ const CategoryManagement: React.FC = () => {
                 className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
               >
                 <Plus className="w-5 h-5" />
-                {t('categories.add', 'Add category')}
+                {t('categories.add')}
               </button>
               <div className="flex items-center space-x-2 text-sm text-gray-600">
                 <User className="w-4 h-4" />
                 <span>{user?.email}</span>
-                <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">{t('ui.admin', 'Admin')}</span>
+                <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">{t('ui.admin')}</span>
               </div>
             </div>
           </div>
@@ -290,7 +290,7 @@ const CategoryManagement: React.FC = () => {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">{t('categories.total', 'Total Categories')}</p>
+                <p className="text-sm font-medium text-gray-600">{t('categories.total')}</p>
                 <p className="text-2xl font-bold text-gray-900">{categories.length}</p>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -302,7 +302,7 @@ const CategoryManagement: React.FC = () => {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">{t('categories.withQuizzes', 'Categories with quizzes')}</p>
+                <p className="text-sm font-medium text-gray-600">{t('categories.withQuizzes')}</p>
                 <p className="text-2xl font-bold text-green-600">{categories.filter(c => c.quizCount && c.quizCount > 0).length}</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -314,7 +314,7 @@ const CategoryManagement: React.FC = () => {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">{t('categories.totalQuizzes', 'Total Quizzes')}</p>
+                <p className="text-sm font-medium text-gray-600">{t('categories.totalQuizzes')}</p>
                 <p className="text-2xl font-bold text-blue-600">{categories.reduce((sum, c) => sum + (c.quizCount || 0), 0)}</p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -326,7 +326,7 @@ const CategoryManagement: React.FC = () => {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">{t('categories.empty', 'Empty Categories')}</p>
+                <p className="text-sm font-medium text-gray-600">{t('categories.empty')}</p>
                 <p className="text-2xl font-bold text-orange-600">{categories.filter(c => !c.quizCount || c.quizCount === 0).length}</p>
               </div>
               <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -342,7 +342,7 @@ const CategoryManagement: React.FC = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
               type="text"
-                placeholder={t('categories.searchPlaceholder', 'Search categories...')}
+                placeholder={t('categories.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
@@ -354,9 +354,9 @@ const CategoryManagement: React.FC = () => {
         {filteredCategories.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
             <FolderOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('categories.noCategories', 'No categories')}</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('categories.noCategories')}</h3>
             <p className="text-gray-600 mb-4">
-              {searchTerm ? t('categories.noSearchMatch', 'No categories match your search.') : t('categories.noneCreated', 'No categories created yet.')}
+              {searchTerm ? t('categories.noSearchMatch') : t('categories.noneCreated')}
             </p>
             <button
               onClick={() => {
@@ -367,7 +367,7 @@ const CategoryManagement: React.FC = () => {
               className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors mx-auto"
             >
               <Plus className="w-5 h-5" />
-              {t('categories.createFirst', 'Create the first category')}
+              {t('categories.createFirst')}
             </button>
           </div>
         ) : (
@@ -381,21 +381,21 @@ const CategoryManagement: React.FC = () => {
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-gray-900">{category.name}</h3>
-                      <p className="text-sm text-gray-600">{category.quizCount || 0} {t('categories.quizSuffix', 'quizzes')}</p>
+                      <p className="text-sm text-gray-600">{category.quizCount || 0} {t('categories.quizSuffix')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleEdit(category)}
                       className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title={t('edit', 'Edit')}
+                      title={t('edit')}
                     >
                       <Edit className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(category.id, category.name)}
                       className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title={t('delete', 'Delete')}
+                      title={t('delete')}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -405,7 +405,7 @@ const CategoryManagement: React.FC = () => {
                 <p className="text-gray-600 text-sm mb-4">{category.description}</p>
                 
                 <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span>{t('categories.createdAtLabel', 'Created')}: {category.createdAt.toLocaleDateString()}</span>
+                  <span>{t('categories.createdAtLabel')}: {category.createdAt.toLocaleDateString()}</span>
                   <span className={`px-2 py-1 rounded-full text-white ${getColorClass(category.color)}`}>
                     {category.color}
                   </span>
@@ -422,7 +422,7 @@ const CategoryManagement: React.FC = () => {
           <div className="bg-white rounded-2xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold">
-                {editingCategory ? t('categories.editTitle', 'Edit category') : t('categories.addTitle', 'Add new category')}
+                {editingCategory ? t('categories.editTitle') : t('categories.addTitle')}
               </h2>
               <button
                 onClick={() => {
@@ -439,28 +439,28 @@ const CategoryManagement: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('categories.name', 'Category name')} *
+                  {t('categories.name')} *
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  placeholder={t('categories.namePlaceholder', 'Enter category name...')}
+                  placeholder={t('categories.namePlaceholder')}
                   required
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('categories.description', 'Description')}
+                  {t('categories.description')}
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"
                   rows={3}
-                  placeholder={t('categories.descriptionPlaceholder', 'Enter category description...')}
+                  placeholder={t('categories.descriptionPlaceholder')}
                 />
               </div>
               
@@ -486,7 +486,7 @@ const CategoryManagement: React.FC = () => {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('categories.color', 'Color')}
+                  {t('categories.color')}
                 </label>
                 <div className="grid grid-cols-4 gap-2">
                   {colors.map((color) => (
@@ -515,14 +515,14 @@ const CategoryManagement: React.FC = () => {
                   }}
                   className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  {t('cancel', 'Cancel')}
+                  {t('cancel')}
                 </button>
                 <button
                   type="submit"
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                 >
                   <Save className="w-4 h-4" />
-                  {editingCategory ? t('update', 'Update') : t('categories.create', 'Create category')}
+                  {editingCategory ? t('update') : t('categories.create')}
                 </button>
               </div>
             </form>

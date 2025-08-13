@@ -75,10 +75,10 @@ const Profile: React.FC = () => {
         if (!titles[result.quizId]) {
           try {
             const quiz = await getQuizById(result.quizId);
-            titles[result.quizId] = quiz?.title || t('quiz.untitled', 'Quiz không tên');
+            titles[result.quizId] = quiz?.title || t('quiz.untitled');
           } catch (error) {
             console.error('Error fetching quiz:', error);
-            titles[result.quizId] = t('quiz.untitled', 'Quiz không tên');
+            titles[result.quizId] = t('quiz.untitled');
           }
         }
       }
@@ -187,7 +187,7 @@ const Profile: React.FC = () => {
     .filter(result => {
       // Search filter
       if (searchTerm) {
-        const quizTitle = quizTitles[result.quizId] || t('quiz.untitled', 'Quiz không tên');
+        const quizTitle = quizTitles[result.quizId] || t('quiz.untitled');
         return quizTitle.toLowerCase().includes(searchTerm.toLowerCase());
       }
       return true;
@@ -296,7 +296,7 @@ const Profile: React.FC = () => {
       } else if (error.code === 'auth/requires-recent-login') {
         toast.error(t('profile.requiresRecentLogin'));
       } else {
-        toast.error(t('profile.passwordChangeError', { message: error.message }));
+        toast.error(t('profile.passwordChangeError', {message: error.message}));
       }
     } finally {
       setSaving(false);
@@ -437,7 +437,7 @@ const Profile: React.FC = () => {
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-gray-900">{user.displayName || user.email}</h1>
               <p className="text-gray-600">{user.email}</p>
-              <p className="text-sm text-gray-500 mt-1">{t('profile.memberSince', 'Thành viên từ')} {new Date().toLocaleDateString('vi-VN')}</p>
+              <p className="text-sm text-gray-500 mt-1">{t('profile.memberSince')} {new Date().toLocaleDateString('vi-VN')}</p>
             </div>
             <button
               onClick={() => setTab('settings')}
@@ -452,10 +452,10 @@ const Profile: React.FC = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-8">
           <div className="flex space-x-8 px-6">
             {[
-              { id: 'overview', label: t('profile.tabs.overview', 'Tổng quan'), icon: TrendingUp },
-              { id: 'history', label: t('profile.tabs.history', 'Lịch sử Quiz'), icon: Clock },
-              { id: 'achievements', label: t('profile.tabs.achievements', 'Thành tích'), icon: Trophy },
-              { id: 'settings', label: t('profile.tabs.settings', 'Cài đặt'), icon: User }
+              { id: 'overview', label: t('profile.tabs.overview'), icon: TrendingUp },
+              { id: 'history', label: t('profile.tabs.history'), icon: Clock },
+              { id: 'achievements', label: t('profile.tabs.achievements'), icon: Trophy },
+              { id: 'settings', label: t('profile.tabs.settings'), icon: User }
             ].map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
@@ -480,37 +480,37 @@ const Profile: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               {renderStatCard(
                 <Trophy className="w-6 h-6 text-white" />,
-                t('profile.stats.completedQuizzes', 'Quiz đã hoàn thành'),
+                t('profile.stats.completedQuizzes'),
                 stats.totalQuizzes,
                 undefined,
                 'bg-yellow-500'
               )}
               {renderStatCard(
                 <Star className="w-6 h-6 text-white" />,
-                t('profile.stats.averageScore', 'Điểm trung bình'),
+                t('profile.stats.averageScore'),
                 stats.averageScore.toFixed(1),
-                t('profile.stats.onTotal', 'Trên tổng số quiz'),
+                t('profile.stats.onTotal'),
                 'bg-blue-500'
               )}
               {renderStatCard(
                 <Target className="w-6 h-6 text-white" />,
-                t('profile.stats.accuracy', 'Độ chính xác'),
+                t('profile.stats.accuracy'),
                 `${stats.accuracy.toFixed(1)}%`,
-                t('profile.stats.correctRate', 'Tỷ lệ trả lời đúng'),
+                t('profile.stats.correctRate'),
                 'bg-green-500'
               )}
               {renderStatCard(
                 <TrendingUp className="w-6 h-6 text-white" />,
-                t('profile.stats.highScores', 'Điểm cao'),
+                t('profile.stats.highScores'),
                 `${stats.highScores}/${stats.totalQuizzes}`,
-                t('profile.stats.over80', 'Quiz đạt trên 80%'),
+                t('profile.stats.over80'),
                 'bg-purple-500'
               )}
             </div>
 
             {/* Recent Activity */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">{t('profile.recentActivity', 'Hoạt động gần đây')}</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">{t('profile.recentActivity')}</h3>
               <div className="space-y-4">
                 {stats.recentActivity.map((result: QuizResult) => renderQuizHistoryItem(result))}
               </div>
@@ -520,7 +520,7 @@ const Profile: React.FC = () => {
                     onClick={() => setTab('history')}
                     className="text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1 mx-auto"
                   >
-                    <span>{t('profile.viewAllHistory', 'Xem tất cả lịch sử')}</span>
+                    <span>{t('profile.viewAllHistory')}</span>
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -539,7 +539,7 @@ const Profile: React.FC = () => {
                     <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
-                      placeholder={t('profile.searchPlaceholder', 'Tìm kiếm quiz...')}
+                      placeholder={t('profile.searchPlaceholder')}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -551,24 +551,24 @@ const Profile: React.FC = () => {
                     onChange={(e) => setFilterByScore(e.target.value as any)}
                     className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="all">{t('profile.filters.score.all', 'Tất cả điểm')}</option>
-                    <option value="high">{t('profile.filters.score.high', 'Cao (≥80%)')}</option>
-                    <option value="medium">{t('profile.filters.score.medium', 'Trung bình (60-79%)')}</option>
-                    <option value="low">{t('profile.filters.score.low', 'Thấp (<60%)')}</option>
+                    <option value="all">{t('profile.filters.score.all')}</option>
+                    <option value="high">{t('profile.filters.score.high')}</option>
+                    <option value="medium">{t('profile.filters.score.medium')}</option>
+                    <option value="low">{t('profile.filters.score.low')}</option>
                   </select>
                 </div>
 
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-600">{t('profile.sort.label', 'Sắp xếp')}:</span>
+                    <span className="text-sm text-gray-600">{t('profile.sort.label')}:</span>
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value as any)}
                       className="px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="date">{t('profile.sort.date', 'Ngày')}</option>
-                      <option value="score">{t('profile.sort.score', 'Điểm')}</option>
-                      <option value="percentage">{t('profile.sort.percentage', 'Phần trăm')}</option>
+                      <option value="date">{t('profile.sort.date')}</option>
+                      <option value="score">{t('profile.sort.score')}</option>
+                      <option value="percentage">{t('profile.sort.percentage')}</option>
                     </select>
                     <button
                       onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
@@ -583,10 +583,10 @@ const Profile: React.FC = () => {
                     onChange={(e) => setItemsPerPage(Number(e.target.value))}
                     className="px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value={10}>{t('profile.pagination.perPage10', '10/trang')}</option>
-                    <option value={25}>{t('profile.pagination.perPage25', '25/trang')}</option>
-                    <option value={50}>{t('profile.pagination.perPage50', '50/trang')}</option>
-                    <option value={100}>{t('profile.pagination.perPage100', '100/trang')}</option>
+                    <option value={10}>{t('profile.pagination.perPage10')}</option>
+                    <option value={25}>{t('profile.pagination.perPage25')}</option>
+                    <option value={50}>{t('profile.pagination.perPage50')}</option>
+                    <option value={100}>{t('profile.pagination.perPage100')}</option>
                   </select>
 
                   {filteredResults.length > itemsPerPage && (
@@ -594,32 +594,20 @@ const Profile: React.FC = () => {
                       onClick={() => setShowAll(!showAll)}
                       className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                     >
-                      {showAll ? t('profile.pagination.paginate', 'Phân trang') : t('profile.viewAllCount', 'Xem tất cả ({{count}})', { count: filteredResults.length })}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Results */}
-            <div className="space-y-4 mb-6">
-              {loading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="mt-4 text-gray-600">{t('common.loading', 'Đang tải...')}</p>
+                      {showAll ? t('profile.pagination.paginate') : t('profile.viewAllCount')}</p>
                 </div>
               ) : paginatedResults.length > 0 ? (
                 paginatedResults.map(result => renderQuizHistoryItem(result))
               ) : (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
                   <Trophy className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">{t('profile.noResults', 'Chưa có kết quả nào')}</h3>
-                  <p className="text-gray-600 mb-4">{t('profile.noResultsDesc', 'Bạn chưa hoàn thành quiz nào. Hãy bắt đầu làm quiz đầu tiên!')}</p>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">{t('profile.noResults')}</h3>
+                  <p className="text-gray-600 mb-4">{t('profile.noResultsDesc')}</p>
                   <Link
                     to="/quizzes"
                     className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    {t('quiz.exploreQuizzes', 'Khám phá Quiz')}
+                    {t('quiz.exploreQuizzes')}
                   </Link>
                 </div>
               )}
@@ -630,7 +618,7 @@ const Profile: React.FC = () => {
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-gray-600">
-                    {t('profile.pagination.showing', 'Hiển thị')} {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredResults.length)} {t('profile.pagination.of', 'trong tổng')} {filteredResults.length} {t('profile.pagination.results', 'kết quả')}
+                    {t('profile.pagination.showing')} {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredResults.length)} {t('profile.pagination.of')} {filteredResults.length} {t('profile.pagination.results')}
                   </p>
                   <div className="flex items-center space-x-2">
                     <button
@@ -638,17 +626,10 @@ const Profile: React.FC = () => {
                       disabled={currentPage === 1}
                       className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                     >
-                      {t('profile.pagination.prev', 'Trước')}
+                      {t('profile.pagination.prev')}
                     </button>
                     <span className="px-3 py-1 text-sm text-gray-600">
-                      {t('profile.pagination.pageXofY', 'Trang {{x}}/{{y}}', { x: currentPage, y: totalPages })}
-                    </span>
-                    <button
-                      onClick={() => setCurrentPage(Math.min(currentPage + 1, totalPages))}
-                      disabled={currentPage === totalPages}
-                      className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                    >
-                      {t('profile.pagination.next', 'Sau')}
+                      {t('profile.pagination.pageXofY')}
                     </button>
                   </div>
                 </div>
@@ -659,11 +640,11 @@ const Profile: React.FC = () => {
 
         {tab === 'achievements' && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">{t('profile.achievements', 'Thành tích')}</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">{t('profile.achievements')}</h3>
               <div className="text-center py-8">
                 <Trophy className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h4 className="text-lg font-medium text-gray-900 mb-2">{t('profile.achievementSystem', 'Hệ thống thành tích')}</h4>
-                <p className="text-gray-600">{t('profile.inDevelopment', 'Tính năng đang được phát triển')}</p>
+                <h4 className="text-lg font-medium text-gray-900 mb-2">{t('profile.achievementSystem')}</h4>
+                <p className="text-gray-600">{t('profile.inDevelopment')}</p>
               </div>
             </div>
         )}
@@ -672,10 +653,10 @@ const Profile: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Profile Settings */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">{t('profile.settings.title', 'Thông tin cá nhân')}</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">{t('profile.settings.title')}</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('auth.displayName', 'Tên hiển thị')}</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('auth.displayName')}</label>
                   <input
                     type="text"
                     value={displayName}
@@ -684,7 +665,7 @@ const Profile: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('profile.avatarUrl', 'URL Avatar')}</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('profile.avatarUrl')}</label>
                   <input
                     type="url"
                     value={avatarUrl}
@@ -697,27 +678,27 @@ const Profile: React.FC = () => {
                   disabled={saving}
                   className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >
-                  {saving ? t('profile.updating', 'Đang cập nhật...') : t('profile.updateProfile', 'Cập nhật Profile')}
+                  {saving ? t('profile.updating') : t('profile.updateProfile')}
                 </button>
               </div>
             </div>
 
             {/* Password Settings */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">{t('profile.changePassword', 'Đổi mật khẩu')}</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">{t('profile.changePassword')}</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('profile.currentPassword', 'Mật khẩu hiện tại')}</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('profile.currentPassword')}</label>
                   <input
                     type="password"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder={t('profile.currentPasswordRequired', 'Bạn cần nhập đúng mật khẩu hiện tại để xác thực trước khi đổi mật khẩu mới')}
+                    placeholder={t('profile.currentPasswordRequired')}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('profile.newPassword', 'Mật khẩu mới')}</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('profile.newPassword')}</label>
                   <input
                     type="password"
                     value={newPassword}
@@ -725,14 +706,14 @@ const Profile: React.FC = () => {
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                       newPassword && newPassword.length < 6 ? 'border-red-300' : 'border-gray-300'
                     }`}
-                    placeholder={t('profile.passwordTooShort', 'Mật khẩu mới phải có ít nhất 6 ký tự')}
+                    placeholder={t('profile.passwordTooShort')}
                   />
                   {newPassword && newPassword.length < 6 && (
-                    <p className="text-xs text-red-500 mt-1">{t('profile.passwordTooShort', 'Mật khẩu mới phải có ít nhất 6 ký tự')}</p>
+                    <p className="text-xs text-red-500 mt-1">{t('profile.passwordTooShort')}</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('profile.confirmNewPassword', 'Xác nhận mật khẩu mới')}</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('profile.confirmNewPassword')}</label>
                   <input
                     type="password"
                     value={confirmPassword}
@@ -740,10 +721,10 @@ const Profile: React.FC = () => {
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                       confirmPassword && newPassword !== confirmPassword ? 'border-red-300' : 'border-gray-300'
                     }`}
-                    placeholder={t('profile.passwordMismatch', 'Mật khẩu mới và xác nhận mật khẩu không khớp')}
+                    placeholder={t('profile.passwordMismatch')}
                   />
                   {confirmPassword && newPassword !== confirmPassword && (
-                    <p className="text-xs text-red-500 mt-1">{t('profile.passwordMismatch', 'Mật khẩu mới và xác nhận mật khẩu không khớp')}</p>
+                    <p className="text-xs text-red-500 mt-1">{t('profile.passwordMismatch')}</p>
                   )}
                 </div>
                 <button
@@ -759,12 +740,12 @@ const Profile: React.FC = () => {
                   }
                   className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
                 >
-                  {saving ? t('profile.authenticating', 'Đang xác thực...') : t('profile.changePassword', 'Đổi mật khẩu')}
+                  {saving ? t('profile.authenticating') : t('profile.changePassword')}
                 </button>
                 <div className="text-xs text-gray-500 space-y-1">
-                  <p>⚠️ {t('profile.currentPasswordRequired', 'Bạn cần nhập đúng mật khẩu hiện tại để xác thực trước khi đổi mật khẩu mới')}</p>
-                  <p>✓ {t('profile.passwordTooShort', 'Mật khẩu mới phải có ít nhất 6 ký tự')}</p>
-                  <p>✓ {t('profile.passwordMustDiffer', 'Mật khẩu mới phải khác mật khẩu hiện tại')}</p>
+                  <p>⚠️ {t('profile.currentPasswordRequired')}</p>
+                  <p>✓ {t('profile.passwordTooShort')}</p>
+                  <p>✓ {t('profile.passwordMustDiffer')}</p>
                 </div>
               </div>
             </div>

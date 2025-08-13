@@ -41,10 +41,10 @@ const AdminStats: React.FC = () => {
         categories: categories || []
       });
 
-      toast.success(t('admin.dataLoadSuccess', 'Đã tải dữ liệu thực tế từ Firebase!'));
+      toast.success(t('admin.dataLoadSuccess'));
     } catch (error) {
       console.error('Error loading real data:', error);
-      toast.error(t('admin.realDataLoadError', 'Lỗi khi tải dữ liệu thực tế'));
+      toast.error(t('admin.realDataLoadError'));
     } finally {
       setLoading(false);
     }
@@ -56,7 +56,7 @@ const AdminStats: React.FC = () => {
 
   const exportData = () => {
     console.log('Exporting data...');
-    toast.info(t('admin.exportDataDevelopment', 'Chức năng xuất dữ liệu đang được phát triển'));
+    toast.info(t('admin.exportDataDevelopment'));
   };
 
   // Calculate enhanced stats from real data
@@ -123,20 +123,20 @@ const AdminStats: React.FC = () => {
         <span className={`text-sm font-medium ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
           {change >= 0 ? '+' : ''}{change}%
         </span>
-        <span className="text-sm text-gray-500 ml-1">{t('admin.vsLastMonth', 'vs last month')}</span>
+        <span className="text-sm text-gray-500 ml-1">{t('admin.vsLastMonth')}</span>
       </div>
     </div>
   );
 
   const renderOverview = () => {
-    if (!enhancedStats) return <div>{t('loading', 'Loading...')}</div>;
+    if (!enhancedStats) return <div>{t('loading')}</div>;
 
     return (
       <div className="space-y-6">
         {/* Main Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
-            title={t('admin.stats.totalUsers', 'Tổng tài khoản')}
+            title={t('admin.stats.totalUsers')}
             value={enhancedStats.totalUsers.toLocaleString()}
             icon={<Users className="w-6 h-6 text-blue-600" />}
             change={enhancedStats.userGrowthRate}
@@ -144,7 +144,7 @@ const AdminStats: React.FC = () => {
             onClick={() => setActiveTab('users')}
           />
           <StatCard
-            title={t('admin.stats.publishedQuizzes', 'Quiz đã xuất bản')}
+            title={t('admin.stats.publishedQuizzes')}
             value={enhancedStats.publishedQuizzes.toLocaleString()}
             icon={<BookOpen className="w-6 h-6 text-green-600" />}
             change={15.3}
@@ -152,14 +152,14 @@ const AdminStats: React.FC = () => {
             onClick={() => setActiveTab('quizzes')}
           />
           <StatCard
-            title={t('admin.stats.completionAttempts', 'Lượt làm bài')}
+            title={t('admin.stats.completionAttempts')}
             value={enhancedStats.completedQuizzes.toLocaleString()}
             icon={<Target className="w-6 h-6 text-purple-600" />}
             change={enhancedStats.quizCompletionGrowth}
             color="purple"
           />
           <StatCard
-            title={t('admin.stats.totalCreators', 'Người sáng tạo')}
+            title={t('admin.stats.totalCreators')}
             value={enhancedStats.totalCreators.toLocaleString()}
             icon={<Award className="w-6 h-6 text-orange-600" />}
             change={8.2}
@@ -172,7 +172,7 @@ const AdminStats: React.FC = () => {
           {/* User Growth Chart */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">{t('admin.stats.userGrowth', 'User Growth')}</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t('admin.stats.userGrowth')}</h3>
               <div className="flex space-x-2">
                 {['7d', '30d', '90d', '1y'].map((range) => (
                   <button
@@ -218,7 +218,7 @@ const AdminStats: React.FC = () => {
 
           {/* Quiz Activity Chart */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">{t('admin.stats.quizActivity', 'Quiz activity')}</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">{t('admin.stats.quizActivity')}</h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={[
                 { date: 'T1', created: Math.floor(enhancedStats.totalQuizzes * 0.2), completed: Math.floor(enhancedStats.completedQuizzes * 0.2) },
@@ -230,8 +230,8 @@ const AdminStats: React.FC = () => {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="created" fill="#10B981" name={t('admin.stats.createdQuizzes', 'Created quizzes')} />
-                <Bar dataKey="completed" fill="#3B82F6" name={t('admin.stats.completedAttempts', 'Completed attempts')} />
+                <Bar dataKey="created" fill="#10B981" name={t('admin.stats.createdQuizzes')} />
+                <Bar dataKey="completed" fill="#3B82F6" name={t('admin.stats.completedAttempts')} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -241,22 +241,22 @@ const AdminStats: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Performance Overview */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.stats.performanceOverview', 'Performance overview')}</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.stats.performanceOverview')}</h3>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">{t('admin.stats.averageScore', 'Average score')}</span>
+                <span className="text-gray-600">{t('admin.stats.averageScore')}</span>
                 <span className="font-semibold text-green-600">{enhancedStats.averageScore}%</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">{t('admin.stats.completionRate', 'Completion rate')}</span>
+                <span className="text-gray-600">{t('admin.stats.completionRate')}</span>
                 <span className="font-semibold text-blue-600">{enhancedStats.completionRate}%</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">{t('admin.stats.totalReviews', 'Total reviews')}</span>
+                <span className="text-gray-600">{t('admin.stats.totalReviews')}</span>
                 <span className="font-semibold text-purple-600">{enhancedStats.totalReviews}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">{t('admin.stats.averageRating', 'Average rating')}</span>
+                <span className="text-gray-600">{t('admin.stats.averageRating')}</span>
                 <span className="font-semibold text-yellow-600">
                   {enhancedStats.averageRating.toFixed(1)} ⭐
                 </span>
@@ -266,11 +266,11 @@ const AdminStats: React.FC = () => {
 
           {/* Top Categories */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.stats.topCategories', 'Top categories')}</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.stats.topCategories')}</h3>
             <div className="space-y-3">
               {realData?.categories?.slice(0, 5).map((category: any, index: number) => (
                 <div key={category.id} className="flex items-center justify-between">
-                  <span className="text-gray-600">{category.name || t('admin.stats.unnamedCategory', { n: index + 1, defaultValue: `Category ${index + 1}` })}</span>
+                  <span className="text-gray-600">{category.name || t('admin.stats.unnamedCategory', {n: index + 1, defaultValue: `Category ${index + 1}`})}</span>
                   <span className="font-semibold text-blue-600">
                     {realData.quizzes.filter((q: any) => q.category === category.id).length}
                   </span>
@@ -281,23 +281,23 @@ const AdminStats: React.FC = () => {
 
           {/* Recent Activity */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.stats.recentActivity', 'Recent activity')}</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.stats.recentActivity')}</h3>
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-gray-600">{t('admin.stats.availableQuizzes', { count: enhancedStats.totalQuizzes, defaultValue: `${enhancedStats.totalQuizzes} quizzes available` })}</span>
+                <span className="text-sm text-gray-600">{t('admin.stats.availableQuizzes', {count: enhancedStats.totalQuizzes, defaultValue: `${enhancedStats.totalQuizzes} quizzes available`})}</span>
               </div>
               <div className="flex items-center space-x-3">
                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span className="text-sm text-gray-600">{t('admin.stats.registeredUsers', { count: enhancedStats.totalUsers, defaultValue: `${enhancedStats.totalUsers} users registered` })}</span>
+                <span className="text-sm text-gray-600">{t('admin.stats.registeredUsers', {count: enhancedStats.totalUsers, defaultValue: `${enhancedStats.totalUsers} users registered`})}</span>
               </div>
               <div className="flex items-center space-x-3">
                 <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                <span className="text-sm text-gray-600">{t('admin.stats.reviews', { count: enhancedStats.totalReviews, defaultValue: `${enhancedStats.totalReviews} reviews` })}</span>
+                <span className="text-sm text-gray-600">{t('admin.stats.reviews', {count: enhancedStats.totalReviews, defaultValue: `${enhancedStats.totalReviews} reviews`})}</span>
               </div>
               <div className="flex items-center space-x-3">
                 <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                <span className="text-sm text-gray-600">{t('admin.stats.completions', { count: enhancedStats.completedQuizzes, defaultValue: `${enhancedStats.completedQuizzes} completions` })}</span>
+                <span className="text-sm text-gray-600">{t('admin.stats.completions', {count: enhancedStats.completedQuizzes, defaultValue: `${enhancedStats.completedQuizzes} completions`})}</span>
               </div>
             </div>
           </div>
@@ -309,15 +309,15 @@ const AdminStats: React.FC = () => {
   const renderUsers = () => (
     <div className="space-y-6">
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.userManagement', 'User Management')}</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.userManagement')}</h3>
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead>
               <tr className="border-b border-gray-200">
                 <th className="text-left py-3 px-4 font-medium text-gray-600">ID</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-600">Email</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-600">{t('ui.user', 'User')}</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-600">{t('status.active', 'Active')}</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-600">{t("auth.email")}</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-600">{t('ui.user')}</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-600">{t('status.active')}</th>
               </tr>
             </thead>
             <tbody>
@@ -328,7 +328,7 @@ const AdminStats: React.FC = () => {
                   <td className="py-3 px-4 text-sm text-gray-600">{user.role || 'user'}</td>
                   <td className="py-3 px-4">
                     <span className="inline-flex px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                      {t('status.active', 'Active')}
+                      {t('status.active')}
                     </span>
                   </td>
                 </tr>
@@ -344,33 +344,33 @@ const AdminStats: React.FC = () => {
     <div className="space-y-6">
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">{t('admin.quizManagement', 'Quiz Management')}</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('admin.quizManagement.label')}</h3>
           <button
             onClick={() => navigate('/admin/quiz-management')}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            {t('viewDetails', 'View details')}
+            {t('viewDetails')}
           </button>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 font-medium text-gray-600">{t('admin.quizManagement.table.title', 'Title')}</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-600">{t('admin.quizManagement.table.category', 'Category')}</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-600">{t('admin.quizManagement.table.creator', 'Creator')}</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-600">{t('admin.quizManagement.table.createdAt', 'Created at')}</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-600">{t('admin.quizManagement.table.actions', 'Actions')}</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-600">{t('admin.quizManagement.table.title')}</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-600">{t('admin.quizManagement.table.category')}</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-600">{t('admin.quizManagement.table.creator')}</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-600">{t('admin.quizManagement.table.createdAt')}</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-600">{t('admin.quizManagement.table.actions')}</th>
               </tr>
             </thead>
             <tbody>
               {realData?.quizzes?.slice(0, 10).map((quiz: any) => (
                 <tr key={quiz.id} className="border-b border-gray-100">
                   <td className="py-3 px-4 text-sm font-medium text-gray-900">
-                    {quiz.title || t('quiz.untitled', 'Untitled')}
+                    {quiz.title || t('quiz.untitled')}
                   </td>
                   <td className="py-3 px-4 text-sm text-gray-600">
-                    {quiz.category || t('admin.quizManagement.table.uncategorized', 'Uncategorized')}
+                    {quiz.category || t('admin.quizManagement.table.uncategorized')}
                   </td>
                   <td className="py-3 px-4 text-sm text-gray-600">
                     {quiz.createdBy || 'N/A'}
@@ -383,21 +383,21 @@ const AdminStats: React.FC = () => {
                       <button
                         onClick={() => navigate(`/quiz/${quiz.id}`)}
                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title={t('admin.quizManagement.tooltips.preview', 'Preview details')}
+                        title={t('admin.quizManagement.tooltips.preview')}
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => navigate(`/admin/edit-quiz/${quiz.id}`)}
                         className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                        title={t('admin.quizManagement.tooltips.edit', 'Edit quiz')}
+                        title={t('admin.quizManagement.tooltips.edit')}
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => navigate(`/quiz/${quiz.id}/reviews`)}
                         className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                        title={t('admin.quizManagement.tooltips.viewReviews', 'View reviews')}
+                        title={t('admin.quizManagement.tooltips.viewReviews')}
                       >
                         <MessageSquare className="w-4 h-4" />
                       </button>
@@ -417,7 +417,7 @@ const AdminStats: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Performance Metrics */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.stats.performanceMetrics', 'Performance metrics')}</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.stats.performanceMetrics')}</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={[
               { month: 'T1', score: 75, completion: 80 },
@@ -429,15 +429,15 @@ const AdminStats: React.FC = () => {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="score" stroke="#10B981" name={t('admin.stats.averageScore', 'Average score')} />
-              <Line type="monotone" dataKey="completion" stroke="#3B82F6" name={t('admin.stats.completionRate', 'Completion rate')} />
+              <Line type="monotone" dataKey="score" stroke="#10B981" name={t('admin.stats.averageScore')} />
+              <Line type="monotone" dataKey="completion" stroke="#3B82F6" name={t('admin.stats.completionRate')} />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
         {/* Quiz Rating Distribution */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.stats.ratingDistribution', 'Rating distribution')}</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.stats.ratingDistribution')}</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -477,17 +477,17 @@ const AdminStats: React.FC = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">{t('admin.loadingRealData', 'Loading real data...')}</p>
+          <p className="mt-4 text-gray-600">{t('admin.loadingRealData')}</p>
         </div>
       </div>
     );
   }
 
   const tabs = [
-    { id: 'overview', label: t('admin.tabs.overview', 'Overview'), icon: Target },
-    { id: 'users', label: t('admin.tabs.users', 'Users'), icon: Users },
-    { id: 'quizzes', label: t('admin.tabs.quizzes', 'Quizzes'), icon: BookOpen },
-    { id: 'performance', label: t('admin.tabs.performance', 'Performance'), icon: Award }
+    { id: 'overview', label: t('admin.tabs.overview'), icon: Target },
+    { id: 'users', label: t('admin.tabs.users'), icon: Users },
+    { id: 'quizzes', label: t('admin.tabs.quizzes'), icon: BookOpen },
+    { id: 'performance', label: t('admin.tabs.performance'), icon: Award }
   ];
 
   return (
@@ -497,8 +497,8 @@ const AdminStats: React.FC = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">📊 {t('admin.header.title', 'Admin Statistics (Real Data)')}</h1>
-              <p className="text-gray-600">{t('admin.header.subtitle', 'Statistics dashboard with real data from Firebase')}</p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">📊 {t('admin.header.title')}</h1>
+              <p className="text-gray-600">{t('admin.header.subtitle')}</p>
             </div>
             <div className="flex space-x-3">
               <button
@@ -507,14 +507,14 @@ const AdminStats: React.FC = () => {
                 className="flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                {t('refresh', 'Refresh')}
+                {t('refresh')}
               </button>
               <button
                 onClick={exportData}
                 className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Download className="w-4 h-4 mr-2" />
-                {t('admin.exportData', 'Export data')}
+                {t('admin.exportData')}
               </button>
             </div>
           </div>

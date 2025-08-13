@@ -9,7 +9,7 @@ const TestI18n: React.FC = () => {
     isInitialized: i18n.isInitialized,
     hasCommonBundle: i18n.hasResourceBundle(i18n.language, 'common'),
     store: i18n.store.data,
-    dashboardWelcome: t('dashboard.welcome', { name: 'Test' }),
+    dashboardWelcome: t('dashboard.welcome', {name: 'Test'}),
     favoritesTitle: t('favorites.title'),
     quizSearchPlaceholder: t('quiz.searchPlaceholder')
   });
@@ -28,7 +28,7 @@ const TestI18n: React.FC = () => {
       <p>Language: {i18n.language}</p>
       <p>Is Ready: {i18n.isInitialized ? 'Yes' : 'No'}</p>
       <p>Has Bundle: {i18n.hasResourceBundle(i18n.language, 'common') ? 'Yes' : 'No'}</p>
-      <p>dashboard.welcome: "{t('dashboard.welcome', { name: 'Test' })}"</p>
+      <p>dashboard.welcome: "{t('dashboard.welcome', {name: 'Test'})}"</p>
       <p>favorites.title: "{t('favorites.title')}"</p>
       <p>quiz.searchPlaceholder: "{t('quiz.searchPlaceholder')}"</p>
     </div>

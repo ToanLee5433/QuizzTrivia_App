@@ -468,8 +468,8 @@ const AdminQuizManagement: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">⛔ {t('errors.unauthorized', 'Unauthorized access')}</h1>
-          <p className="text-gray-600">{t('admin.loginAsAdmin', 'You need admin rights to access this page.')}</p>
+          <h1 className="text-2xl font-bold text-red-600 mb-4">⛔ {t('errors.unauthorized')}</h1>
+          <p className="text-gray-600">{t('admin.loginAsAdmin')}</p>
         </div>
       </div>
     );
@@ -480,7 +480,7 @@ const AdminQuizManagement: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">{t('loadingData', 'Loading data...')}</p>
+          <p className="mt-4 text-gray-600">{t('loadingData')}</p>
         </div>
       </div>
     );
@@ -490,13 +490,13 @@ const AdminQuizManagement: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">❌ {t('error', 'Error')}</h1>
+          <h1 className="text-2xl font-bold text-red-600 mb-4">❌ {t('error')}</h1>
           <p className="text-gray-600 mb-4">{error}</p>
           <button 
             onClick={loadQuizzes}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
-            {t('tryAgain', 'Try again')}
+            {t('tryAgain')}
           </button>
         </div>
       </div>
@@ -516,8 +516,8 @@ const AdminQuizManagement: React.FC = () => {
                 <BookOpen className="w-6 h-6 lg:w-7 lg:h-7 text-white drop-shadow-sm" />
               </div>
               <div>
-                <h1 className="text-2xl lg:text-3xl font-bold text-white drop-shadow-sm">{t('admin.quizManagement', 'Quiz Management')}</h1>
-                <p className="text-blue-100 text-sm lg:text-base mt-1">{t('admin.quizManagement.description', 'Review and manage all quizzes in the system')}</p>
+                <h1 className="text-2xl lg:text-3xl font-bold text-white drop-shadow-sm">{t('admin.quizManagement.label')}</h1>
+                <p className="text-blue-100 text-sm lg:text-base mt-1">{t('admin.quizManagement.description')}</p>
               </div>
             </div>
             
@@ -529,7 +529,7 @@ const AdminQuizManagement: React.FC = () => {
                 title="Làm mới danh sách"
               >
                 <RotateCcw className="w-4 h-4" />
-                <span className="font-medium">{t('refresh', 'Refresh')}</span>
+                <span className="font-medium">{t('refresh')}</span>
               </button>
               
               {/* User Badge */}
@@ -539,7 +539,7 @@ const AdminQuizManagement: React.FC = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
                   <span className="text-white text-sm font-medium truncate max-w-32 lg:max-w-none">{user?.email}</span>
                   <span className="px-2 py-1 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 rounded-full text-xs font-bold shadow-sm">
-                    {t('admin.quizManagement.adminBadge', 'Admin')}
+                    {t('admin.quizManagement.adminBadge')}
                   </span>
                 </div>
               </div>
@@ -554,7 +554,7 @@ const AdminQuizManagement: React.FC = () => {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">{t('admin.quizManagement.cards.totalQuizzes', 'Total Quizzes')}</p>
+                <p className="text-sm font-medium text-gray-600">{t('admin.quizManagement.cards.totalQuizzes')}</p>
                 <p className="text-2xl font-bold text-gray-900">{statusCounts.all}</p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -566,7 +566,7 @@ const AdminQuizManagement: React.FC = () => {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">{t('status.pending', 'Pending')}</p>
+                <p className="text-sm font-medium text-gray-600">{t('status.pending')}</p>
                 <p className="text-2xl font-bold text-orange-600">{statusCounts.pending}</p>
               </div>
               <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -578,7 +578,7 @@ const AdminQuizManagement: React.FC = () => {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">{t('status.approved', 'Approved')}</p>
+                <p className="text-sm font-medium text-gray-600">{t('status.approved')}</p>
                 <p className="text-2xl font-bold text-green-600">{statusCounts.approved}</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -590,7 +590,7 @@ const AdminQuizManagement: React.FC = () => {
           <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">{t('status.rejected', 'Rejected')}</p>
+                <p className="text-sm font-medium text-gray-600">{t('status.rejected')}</p>
                 <p className="text-2xl font-bold text-red-600">{statusCounts.rejected}</p>
               </div>
               <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
@@ -613,7 +613,7 @@ const AdminQuizManagement: React.FC = () => {
             >
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4" />
-                {t('admin.quizManagement.tab.quizzes', 'Manage Quizzes')}
+                {t('admin.quizManagement.tab.quizzes')}
                 <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
                   {quizzes.length}
                 </span>
@@ -629,7 +629,7 @@ const AdminQuizManagement: React.FC = () => {
             >
               <div className="flex items-center gap-2">
                 <AlertCircle className="w-4 h-4" />
-                {t('admin.quizManagement.tab.editRequests', 'Edit requests')}
+                {t('admin.quizManagement.tab.editRequests')}
                 <span className="bg-orange-100 text-orange-600 px-2 py-1 rounded-full text-xs">
                   {editRequests.length}
                 </span>
@@ -649,7 +649,7 @@ const AdminQuizManagement: React.FC = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
-                  placeholder={t('admin.quizManagement.searchPlaceholder', 'Search quizzes by title, description...')}
+                  placeholder={t('admin.quizManagement.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -667,7 +667,7 @@ const AdminQuizManagement: React.FC = () => {
                     : 'text-gray-700 hover:text-gray-900'
                 }`}
               >
-                {t('common.all', 'All')}
+                {t('common.all')}
               </button>
               <button
                 onClick={() => setFilterStatus('pending')}
@@ -677,7 +677,7 @@ const AdminQuizManagement: React.FC = () => {
                     : 'text-gray-700 hover:text-gray-900'
                 }`}
               >
-                {t('status.pending', 'Pending')}
+                {t('status.pending')}
               </button>
               <button
                 onClick={() => setFilterStatus('approved')}
@@ -687,7 +687,7 @@ const AdminQuizManagement: React.FC = () => {
                     : 'text-gray-700 hover:text-gray-900'
                 }`}
               >
-                {t('status.approved', 'Approved')}
+                {t('status.approved')}
               </button>
               <button
                 onClick={() => setFilterStatus('rejected')}
@@ -697,7 +697,7 @@ const AdminQuizManagement: React.FC = () => {
                     : 'text-gray-700 hover:text-gray-900'
                 }`}
               >
-                {t('status.rejected', 'Rejected')}
+                {t('status.rejected')}
               </button>
             </div>
           </div>
@@ -710,12 +710,12 @@ const AdminQuizManagement: React.FC = () => {
               <BookOpen className="w-10 h-10 text-gray-400" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-3">
-              {searchTerm ? t('admin.quizManagement.empty.noMatchTitle', 'No matching quizzes found') : t('admin.quizManagement.empty.noQuizzesTitle', 'No quizzes yet')}
+              {searchTerm ? t('admin.quizManagement.empty.noMatchTitle') : t('admin.quizManagement.empty.noQuizzesTitle')}
             </h3>
             <p className="text-gray-600 mb-8 max-w-md mx-auto">
               {searchTerm 
-                ? t('admin.quizManagement.empty.noMatchDesc', 'Try changing the search keyword or filters to see more quizzes.')
-                : t('admin.quizManagement.empty.noQuizzesDesc', 'There are currently no quizzes in the system. Creators can create quizzes from the Creator page.')
+                ? t('admin.quizManagement.empty.noMatchDesc')
+                : t('admin.quizManagement.empty.noQuizzesDesc')
               }
             </p>
             {!searchTerm && (
@@ -725,7 +725,7 @@ const AdminQuizManagement: React.FC = () => {
                   className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
                 >
                   <BookOpen className="w-5 h-5" />
-                  {t('admin.quizManagement.empty.goToCreator', 'Go to Creator')}
+                  {t('admin.quizManagement.empty.goToCreator')}
                 </button>
               </div>
             )}
@@ -746,13 +746,13 @@ const AdminQuizManagement: React.FC = () => {
                     
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm text-gray-600">
                       <div>
-                        <span className="font-medium">{t('admin.quizManagement.table.category', 'Category')}:</span> {quiz.category}
+                        <span className="font-medium">{t('admin.quizManagement.table.category')}:</span> {quiz.category}
                       </div>
                       <div>
-                        <span className="font-medium">{t('quiz.questions', 'Questions')}:</span> {quiz.questions.length}
+                        <span className="font-medium">{t('quiz.questions')}:</span> {quiz.questions.length}
                       </div>
                       <div>
-                        <span className="font-medium">{t('admin.quizManagement.table.createdAt', 'Created at')}:</span> {quiz.createdAt.toLocaleDateString()}
+                        <span className="font-medium">{t('admin.quizManagement.table.createdAt')}:</span> {quiz.createdAt.toLocaleDateString()}
                       </div>
                     </div>
                   </div>
@@ -763,7 +763,7 @@ const AdminQuizManagement: React.FC = () => {
                       <button
                       onClick={() => handlePreview(quiz)}
                       className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title={t('admin.quizManagement.tooltips.preview', 'Preview details')}
+                        title={t('admin.quizManagement.tooltips.preview')}
                     >
                       <Eye className="w-5 h-5" />
                     </button>
@@ -772,7 +772,7 @@ const AdminQuizManagement: React.FC = () => {
                       <button
                       onClick={() => handleEdit(quiz.id)}
                       className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                        title={t('admin.quizManagement.tooltips.edit', 'Edit quiz')}
+                        title={t('admin.quizManagement.tooltips.edit')}
                     >
                       <Edit3 className="w-5 h-5" />
                     </button>
@@ -783,14 +783,14 @@ const AdminQuizManagement: React.FC = () => {
                           <button
                           onClick={() => handleApprove(quiz.id)}
                           className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                            title={t('admin.quizManagement.tooltips.approve', 'Approve quiz')}
+                            title={t('admin.quizManagement.tooltips.approve')}
                         >
                           <Check className="w-5 h-5" />
                         </button>
                           <button
                           onClick={() => handleReject(quiz.id)}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title={t('admin.quizManagement.tooltips.reject', 'Reject quiz')}
+                            title={t('admin.quizManagement.tooltips.reject')}
                         >
                           <X className="w-5 h-5" />
                         </button>
@@ -802,7 +802,7 @@ const AdminQuizManagement: React.FC = () => {
                       <button
                         onClick={() => handleReopen(quiz.id)}
                         className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                          title={t('admin.quizManagement.tooltips.reopen', 'Reopen for review')}
+                          title={t('admin.quizManagement.tooltips.reopen')}
                       >
                         <RotateCcw className="w-5 h-5" />
                       </button>
@@ -812,7 +812,7 @@ const AdminQuizManagement: React.FC = () => {
                       <button
                       onClick={() => handleDelete(quiz.id)}
                       className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title={t('admin.quizManagement.tooltips.delete', 'Permanently delete quiz')}
+                        title={t('admin.quizManagement.tooltips.delete')}
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>
@@ -837,8 +837,8 @@ const AdminQuizManagement: React.FC = () => {
             {editRequests.length === 0 ? (
               <div className="text-center py-12">
                 <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 mb-4">Không có yêu cầu chỉnh sửa nào</p>
-                <p className="text-sm text-gray-400">Các yêu cầu chỉnh sửa sẽ hiển thị ở đây khi có quiz creator gửi yêu cầu</p>
+                <p className="text-gray-500 mb-4">{t("admin.editRequests.emptyTitle")}</p>
+                <p className="text-sm text-gray-400">{t("admin.editRequests.emptyDesc")}</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -885,8 +885,7 @@ const AdminQuizManagement: React.FC = () => {
                               minute: '2-digit'
                             }) || 'Thời gian không xác định'}
                           </span>
-                          <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
-                            Chờ xử lý
+                          <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">{t("admin.editRequests.pending")}
                           </span>
                         </div>
                       </div>
@@ -894,18 +893,16 @@ const AdminQuizManagement: React.FC = () => {
                         <button
                           onClick={() => handleApproveEditRequest(request.id, request.quizId)}
                           className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 shadow-sm"
-                          title="Phê duyệt yêu cầu"
+                          title={t("admin.editRequests.approveTitle")}
                         >
-                          <Check className="w-4 h-4" />
-                          Duyệt
+                          <Check className="w-4 h-4" />{t("admin.editRequests.approve")}
                         </button>
                         <button
                           onClick={() => handleRejectEditRequest(request.id)}
                           className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 shadow-sm"
-                          title="Từ chối yêu cầu"
+                          title={t("admin.editRequests.rejectTitle")}
                         >
-                          <X className="w-4 h-4" />
-                          Từ chối
+                          <X className="w-4 h-4" />{t("admin.editRequests.reject")}
                         </button>
                       </div>
                     </div>
@@ -922,7 +919,7 @@ const AdminQuizManagement: React.FC = () => {
           <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">{t('admin.preview.title', 'Preview Quiz')}: {previewQuiz.title}</h2>
+                <h2 className="text-xl font-bold">{t('admin.preview.title')}: {previewQuiz.title}</h2>
                 <button
                   onClick={() => setShowPreview(false)}
                   className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
@@ -935,28 +932,28 @@ const AdminQuizManagement: React.FC = () => {
             <div className="p-6">
               <div className="space-y-6">
                 <div>
-                  <h3 className="font-semibold mb-2">{t('admin.preview.description', 'Description')}:</h3>
+                  <h3 className="font-semibold mb-2">{t('admin.preview.description')}:</h3>
                   <p className="text-gray-600">{previewQuiz.description}</p>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="font-semibold">{t('admin.preview.category', 'Category')}:</span> {previewQuiz.category}
+                    <span className="font-semibold">{t('admin.preview.category')}:</span> {previewQuiz.category}
                   </div>
                   <div>
-                    <span className="font-semibold">{t('admin.preview.difficulty', 'Difficulty')}:</span> {previewQuiz.difficulty}
+                    <span className="font-semibold">{t('admin.preview.difficulty')}:</span> {previewQuiz.difficulty}
                   </div>
                   <div>
-                    <span className="font-semibold">{t('admin.preview.questions', 'Questions')}:</span> {previewQuiz.questions.length}
+                    <span className="font-semibold">{t('admin.preview.questions')}:</span> {previewQuiz.questions.length}
                   </div>
                   <div>
-                    <span className="font-semibold">{t('admin.preview.status', 'Status')}:</span> {getStatusBadge(previewQuiz.status || 'pending')}
+                    <span className="font-semibold">{t('admin.preview.status')}:</span> {getStatusBadge(previewQuiz.status || 'pending')}
                   </div>
                 </div>
 
                 {previewQuiz.questions.length > 0 && (
                   <div>
-                    <h3 className="font-semibold mb-4">{t('admin.preview.questionList', 'Questions:')}</h3>
+                    <h3 className="font-semibold mb-4">{t('admin.preview.questionList')}</h3>
                     <div className="space-y-4">
                       {previewQuiz.questions.map((question: any, index: number) => (
                         <div key={index} className="border rounded-lg p-4">

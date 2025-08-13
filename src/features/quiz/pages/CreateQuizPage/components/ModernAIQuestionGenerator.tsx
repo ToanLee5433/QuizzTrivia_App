@@ -17,6 +17,7 @@ import { toast } from 'react-toastify';
 import { aiQuestionService, AIConfig, AIProvider } from '../../../services/aiQuestionService';
 import { Question } from '../types';
 
+import { useTranslation } from 'react-i18next';
 interface ModernAIQuestionGeneratorProps {
   content: string;
   onQuestionsGenerated: (questions: Question[]) => void;
@@ -30,6 +31,8 @@ export const ModernAIQuestionGenerator: React.FC<ModernAIQuestionGeneratorProps>
   isOpen,
   onClose
 }) => {
+  const { t } = useTranslation();
+
   const [step, setStep] = useState<'provider' | 'config' | 'generate' | 'review'>('provider');
   const [selectedProvider, setSelectedProvider] = useState<AIProvider | null>(null);
   const [config, setConfig] = useState<AIConfig | null>(null);
@@ -317,15 +320,15 @@ export const ModernAIQuestionGenerator: React.FC<ModernAIQuestionGeneratorProps>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Độ khó</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{t("admin.preview.difficulty")}</label>
                     <select
                       value={config.difficulty}
                       onChange={(e) => setConfig({...config, difficulty: e.target.value as any})}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="easy">Dễ</option>
-                      <option value="medium">Trung bình</option>
-                      <option value="hard">Khó</option>
+                      <option value="easy">{t("difficulty.easy")}</option>
+                      <option value="medium">{t("difficulty.medium")}</option>
+                      <option value="hard">{t("difficulty.hard")}</option>
                       <option value="mixed">Đa dạng</option>
                     </select>
                   </div>
@@ -381,15 +384,13 @@ export const ModernAIQuestionGenerator: React.FC<ModernAIQuestionGeneratorProps>
                 <button
                   onClick={() => setStep('provider')}
                   className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                >
-                  Quay lại
+                >{t("common.back")}
                 </button>
                 <button
                   onClick={() => setStep('generate')}
                   disabled={selectedProvider.requiresApiKey && !config.apiKey}
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Tiếp tục
+                >{t("createQuiz.continue")}
                 </button>
               </div>
             </div>
@@ -428,8 +429,7 @@ export const ModernAIQuestionGenerator: React.FC<ModernAIQuestionGeneratorProps>
                   <button
                     onClick={() => setStep('config')}
                     className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                  >
-                    Quay lại
+                  >{t("common.back")}
                   </button>
                   <button
                     onClick={handleGenerate}

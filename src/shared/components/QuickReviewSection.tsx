@@ -5,12 +5,15 @@ import { Star, MessageSquare, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ReviewForm from '../../features/quiz/components/ReviewForm';
 
+import { useTranslation } from 'react-i18next';
 interface QuickReviewSectionProps {
   quizId: string;
   quizTitle: string;
 }
 
 const QuickReviewSection: React.FC<QuickReviewSectionProps> = ({ quizId, quizTitle }) => {
+  const { t } = useTranslation();
+
   const user = useSelector((state: RootState) => state.auth.user);
   const [showReviewForm, setShowReviewForm] = useState(false);
 
@@ -60,8 +63,7 @@ const QuickReviewSection: React.FC<QuickReviewSectionProps> = ({ quizId, quizTit
               <Link
                 to="/login"
                 className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Đăng nhập
+              >{t("auth.login")}
               </Link>
             </div>
           )}

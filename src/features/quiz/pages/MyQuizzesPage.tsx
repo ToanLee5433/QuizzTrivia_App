@@ -131,7 +131,7 @@ const MyQuizzesPage: React.FC = () => {
       setQuizzes(loadedQuizzes);
     } catch (error) {
       console.error('Error loading quizzes:', error);
-      toast.error(t('quiz.loadError', 'Lỗi khi tải danh sách quiz'));
+      toast.error(t('quiz.loadError'));
     } finally {
       setLoading(false);
     }
@@ -139,7 +139,7 @@ const MyQuizzesPage: React.FC = () => {
 
   const handleEditRequest = async () => {
     if (!selectedQuiz || !editReason.trim()) {
-      toast.error(t('quiz.editReasonRequired', 'Vui lòng nhập lý do chỉnh sửa'));
+      toast.error(t('quiz.editReasonRequired'));
       return;
     }
 
@@ -160,7 +160,7 @@ const MyQuizzesPage: React.FC = () => {
       loadMyQuizzes(); // Reload to get updated data
     } catch (error) {
       console.error('Error submitting edit request:', error);
-      toast.error(t('quiz.editRequestError', 'Lỗi khi gửi yêu cầu chỉnh sửa'));
+      toast.error(t('quiz.editRequestError'));
     } finally {
       setSubmittingRequest(false);
     }
@@ -259,8 +259,8 @@ const MyQuizzesPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('messages.unauthorized', 'Không có quyền truy cập')}</h2>
-          <p className="text-gray-600">{t('creator.roleRequired', 'Bạn cần có vai trò Creator hoặc Admin để xem trang này')}</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('messages.unauthorized')}</h2>
+          <p className="text-gray-600">{t('creator.roleRequired')}</p>
         </div>
       </div>
     );
@@ -272,7 +272,7 @@ const MyQuizzesPage: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Quiz của tôi</h1>
+            <h1 className="text-3xl font-bold text-gray-900">{t("quiz.myQuizzes")}</h1>
             <p className="text-gray-600 mt-2">Quản lý và theo dõi quiz bạn đã tạo</p>
           </div>
           
@@ -280,8 +280,7 @@ const MyQuizzesPage: React.FC = () => {
             onClick={() => navigate('/creator')}
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 transition-colors"
           >
-            <Plus className="w-5 h-5" />
-            Tạo Quiz Mới
+            <Plus className="w-5 h-5" />{t("createQuiz.title")}
           </button>
         </div>
 
@@ -293,7 +292,7 @@ const MyQuizzesPage: React.FC = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
-                  placeholder="Tìm kiếm quiz..."
+                  placeholder={t("profile.searchPlaceholder")}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -309,9 +308,9 @@ const MyQuizzesPage: React.FC = () => {
               >
                 <option value="all">Tất cả trạng thái</option>
                 <option value="draft">Bản nháp</option>
-                <option value="pending">Chờ duyệt</option>
-                <option value="approved">Đã duyệt</option>
-                <option value="rejected">Bị từ chối</option>
+                <option value="pending">{t("admin.quizManagement.filter.pending")}</option>
+                <option value="approved">{t("admin.quizManagement.filter.approved")}</option>
+                <option value="rejected">{t("status.rejected")}</option>
               </select>
             </div>
           </div>
@@ -337,7 +336,7 @@ const MyQuizzesPage: React.FC = () => {
                 <CheckCircle className="w-6 h-6 text-green-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm text-gray-600">Đã duyệt</p>
+                <p className="text-sm text-gray-600">{t("admin.quizManagement.filter.approved")}</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {quizzes.filter(q => q.status === 'approved').length}
                 </p>
@@ -351,7 +350,7 @@ const MyQuizzesPage: React.FC = () => {
                 <Clock className="w-6 h-6 text-yellow-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm text-gray-600">Chờ duyệt</p>
+                <p className="text-sm text-gray-600">{t("admin.quizManagement.filter.pending")}</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {quizzes.filter(q => q.status === 'pending').length}
                 </p>
@@ -393,7 +392,7 @@ const MyQuizzesPage: React.FC = () => {
                 <CheckCircle className="w-6 h-6 text-green-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm text-gray-600">Hoàn thành</p>
+                <p className="text-sm text-gray-600">{t("complete")}</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {quizzes.reduce((sum, q) => sum + (q.completions || 0), 0)}
                 </p>
@@ -411,7 +410,7 @@ const MyQuizzesPage: React.FC = () => {
           ) : filteredQuizzes.length === 0 ? (
             <div className="text-center py-12">
               <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có quiz nào</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">{t("leaderboard.noQuizzes")}</h3>
               <p className="text-gray-600 mb-4">
                 {searchTerm || statusFilter !== 'all' 
                   ? 'Không tìm thấy quiz phù hợp với bộ lọc'
@@ -433,23 +432,19 @@ const MyQuizzesPage: React.FC = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Quiz
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t("admin.editRequests.quiz")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Danh mục & Độ khó
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Trạng thái
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t("admin.preview.status")}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Thống kê
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t("admin.statistics")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Ngày tạo
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Hành động
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t("admin.quizManagement.table.actions")}
                     </th>
                   </tr>
                 </thead>
@@ -516,7 +511,7 @@ const MyQuizzesPage: React.FC = () => {
                           <button
                             onClick={() => handleEditQuiz(quiz)}
                             className="text-green-600 hover:text-green-900 p-1"
-                            title="Chỉnh sửa"
+                            title={t("edit")}
                           >
                             <Edit className="w-4 h-4" />
                           </button>
@@ -530,7 +525,7 @@ const MyQuizzesPage: React.FC = () => {
                                 }
                               }}
                               className="text-red-600 hover:text-red-900 p-1"
-                              title="Xóa"
+                              title={t("action.clear")}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -588,8 +583,7 @@ const MyQuizzesPage: React.FC = () => {
                     setSelectedQuiz(null);
                   }}
                   className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
-                >
-                  Hủy
+                >{t("common.cancel")}
                 </button>
                 <button
                   onClick={handleEditRequest}

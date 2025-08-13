@@ -10,7 +10,7 @@ const AdminUtilities: React.FC = () => {
 
   const handleCreateTestQuizzes = async () => {
     if (created) {
-      toast.warning(t('admin.utilities.createTestQuizzes.alreadyCreated', 'Test quizzes already created!'));
+      toast.warning(t('admin.utilities.createTestQuizzes.alreadyCreated'));
       return;
     }
 
@@ -19,10 +19,10 @@ const AdminUtilities: React.FC = () => {
       // TODO: Implement createTestQuizzes function if needed
       console.log('Creating test quizzes...');
       setCreated(true);
-      toast.success(t('admin.utilities.createTestQuizzes.success', 'Successfully created test quizzes!'));
+      toast.success(t('admin.utilities.createTestQuizzes.success'));
     } catch (error) {
       console.error('Error creating test quizzes:', error);
-      toast.error(t('admin.utilities.createTestQuizzes.error', 'Error creating test quizzes'));
+      toast.error(t('admin.utilities.createTestQuizzes.error'));
     } finally {
       setLoading(false);
     }
@@ -32,14 +32,14 @@ const AdminUtilities: React.FC = () => {
     <div className="p-6 bg-white rounded-lg shadow-sm">
       <div className="flex items-center gap-3 mb-6">
         <Database className="w-6 h-6 text-blue-600" />
-        <h2 className="text-xl font-bold text-gray-900">{t('admin.utilities.title', 'Admin Utilities')}</h2>
+        <h2 className="text-xl font-bold text-gray-900">{t('admin.utilities.title')}</h2>
       </div>
 
       <div className="space-y-4">
         <div className="border border-gray-200 rounded-lg p-4">
-          <h3 className="font-semibold text-gray-900 mb-2">{t('admin.utilities.createTestQuizzes.title', 'Create Test Quizzes')}</h3>
+          <h3 className="font-semibold text-gray-900 mb-2">{t('admin.utilities.createTestQuizzes.title')}</h3>
           <p className="text-gray-600 mb-4">
-            {t('admin.utilities.createTestQuizzes.desc', 'Create sample quizzes for testing review and data display.')}
+            {t('admin.utilities.createTestQuizzes.desc')}
           </p>
           
           <button
@@ -56,17 +56,17 @@ const AdminUtilities: React.FC = () => {
             {loading ? (
               <>
                 <Loader className="w-4 h-4 animate-spin" />
-                {t('admin.utilities.createTestQuizzes.creating', 'Creating...')}
+                {t('admin.utilities.createTestQuizzes.creating')}
               </>
             ) : created ? (
               <>
                 <CheckCircle className="w-4 h-4" />
-                {t('admin.utilities.createTestQuizzes.created', 'Created')}
+                {t('admin.utilities.createTestQuizzes.created')}
               </>
             ) : (
               <>
                 <Database className="w-4 h-4" />
-                {t('admin.utilities.createTestQuizzes.button', 'Create Test Quizzes')}
+                {t('admin.utilities.createTestQuizzes.button')}
               </>
             )}
           </button>

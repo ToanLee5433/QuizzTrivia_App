@@ -8,7 +8,10 @@ import { getQuizById } from '../api';
 import { Star, Users, TrendingUp, MessageSquare, BarChart3, RefreshCw } from 'lucide-react';
 import { toast } from 'react-toastify';
 
+import { useTranslation } from 'react-i18next';
 const QuizReviewsPage: React.FC = () => {
+  const { t } = useTranslation();
+
   const { id: quizId } = useParams<{ id: string }>();
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [reviews, setReviews] = useState<any[]>([]);
@@ -180,8 +183,7 @@ const QuizReviewsPage: React.FC = () => {
     return (
       <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-          <BarChart3 className="w-5 h-5 mr-2" />
-          Phân bố đánh giá
+          <BarChart3 className="w-5 h-5 mr-2" />{t("admin.stats.ratingDistribution")}
         </h3>
         <div className="space-y-3">
           {[5, 4, 3, 2, 1].map(rating => {
@@ -230,8 +232,7 @@ const QuizReviewsPage: React.FC = () => {
           <button 
             onClick={() => window.history.back()}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Quay lại
+          >{t("common.back")}
           </button>
         </div>
       </div>
@@ -295,7 +296,7 @@ const QuizReviewsPage: React.FC = () => {
                   <p className="text-2xl font-bold text-gray-900">
                     {stats.averageRating.toFixed(1)}
                   </p>
-                  <p className="text-sm text-gray-600">Điểm trung bình</p>
+                  <p className="text-sm text-gray-600">{t("multiplayer.avgScore")}</p>
                   <div className="flex items-center mt-1">
                     {[1, 2, 3, 4, 5].map(star => (
                       <Star
@@ -321,7 +322,7 @@ const QuizReviewsPage: React.FC = () => {
                   <p className="text-2xl font-bold text-gray-900">
                     {stats?.totalReviews || 0}
                   </p>
-                  <p className="text-sm text-gray-600">Tổng đánh giá</p>
+                  <p className="text-sm text-gray-600">{t("admin.stats.totalReviews")}</p>
                   <p className="text-xs text-gray-500 mt-1">
                     {stats?.totalReviews === 0 ? 'Chưa có đánh giá' : 'người đã đánh giá'}
                   </p>

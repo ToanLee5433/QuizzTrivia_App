@@ -5,6 +5,7 @@ import { reviewService } from '../services/reviewService';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
 
+import { useTranslation } from 'react-i18next';
 interface ReviewFormProps {
   quizId: string;
   onReviewSubmitted: () => void;
@@ -22,6 +23,8 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   onClose,
   existingReview
 }) => {
+  const { t } = useTranslation();
+
   const { user } = useSelector((state: RootState) => state.auth);
   const [rating, setRating] = useState(existingReview?.rating || 0);
   const [comment, setComment] = useState(existingReview?.comment || '');
@@ -145,8 +148,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                 type="button"
                 onClick={onClose}
                 className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-              >
-                Hủy
+              >{t("common.cancel")}
               </button>
               <button
                 type="submit"
@@ -156,7 +158,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                 {submitting ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Đang gửi...</span>
+                    <span>{t("admin.quickActions.modal.sending")}</span>
                   </>
                 ) : (
                   <>

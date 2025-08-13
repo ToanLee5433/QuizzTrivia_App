@@ -107,11 +107,11 @@ const QuizPreviewPage: React.FC = () => {
               <div className="flex flex-wrap gap-4 mb-6">
                 <div className="flex items-center space-x-2">
                   <BookOpen className="w-5 h-5" />
-                  <span>{t('quiz.questionsCount', { count: quiz.questions.length })}</span>
+                  <span>{t('quiz.questionsCount', {count: quiz.questions.length})}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Clock className="w-5 h-5" />
-                  <span>{(quiz as any).timeLimit ? t('quiz.timeLimit', { time: (quiz as any).timeLimit / 60 }) : t('quiz.noTimeLimit')}</span>
+                  <span>{(quiz as any).timeLimit ? t('quiz.timeLimit', {time: (quiz as any).timeLimit / 60}) : t('quiz.noTimeLimit')}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Target className="w-5 h-5" />
@@ -140,7 +140,7 @@ const QuizPreviewPage: React.FC = () => {
                     {reviewStats.averageRating.toFixed(1)}
                   </span>
                   <span className="text-blue-200">
-                    ({t('quiz.ratingCount', { count: reviewStats.totalReviews })})
+                    ({t('quiz.ratingCount', {count: reviewStats.totalReviews})})
                   </span>
                 </div>
               )}
@@ -237,8 +237,8 @@ const QuizPreviewPage: React.FC = () => {
                       <div className="flex-1">
                         <p className="text-gray-800 font-medium">{question.text}</p>
                         <div className="mt-2 flex items-center space-x-4 text-sm text-gray-600">
-                          <span>{t('quiz.type', { type: t(`quiz.questionTypes.${question.type}`) })}</span>
-                          <span>{t('quiz.points', { points: question.points })}</span>
+                          <span>{t('quiz.type', {type: t(`quiz.questionTypes.${question.type}`)})}</span>
+                          <span>{t('quiz.points', {points: question.points})}</span>
                         </div>
                       </div>
                     </div>
@@ -247,7 +247,7 @@ const QuizPreviewPage: React.FC = () => {
                 
                 {quiz.questions.length > 3 && (
                   <p className="text-center text-gray-600 py-4">
-                    {t('quiz.moreQuestions', { count: quiz.questions.length - 3 })}
+                    {t('quiz.moreQuestions', {count: quiz.questions.length - 3})}
                   </p>
                 )}
               </div>

@@ -5,11 +5,14 @@ import { toast } from 'react-toastify';
 import { ArrowLeft, Mail } from 'lucide-react';
 import { emailJSService } from '../../../services/emailJSService';
 
+import { useTranslation } from 'react-i18next';
 interface ForgotPasswordProps {
   onBack: () => void;
 }
 
 export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBack }) => {
+  const { t } = useTranslation();
+
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'email' | 'otp' | 'reset'>('email');
@@ -95,8 +98,7 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBack }) => {
         {step === 'email' && (
           <form onSubmit={handleSendOTP} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t("auth.email")}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -105,7 +107,7 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBack }) => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Nhập email của bạn"
+                  placeholder={t("auth.emailPlaceholder")}
                   disabled={loading}
                 />
               </div>
@@ -153,8 +155,7 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBack }) => {
                 type="button"
                 onClick={() => setStep('email')}
                 className="flex-1 py-3 px-4 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                Quay lại
+              >{t("common.back")}
               </button>
               <button
                 type="submit"

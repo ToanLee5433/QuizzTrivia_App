@@ -3,9 +3,12 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { glob } from 'glob';
+import { fileURLToPath } from 'url';
 
-const LOCALES_DIR = './public/locales';
-const SRC_DIR = './src';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const PROJECT_ROOT = path.resolve(__dirname, '../..');
+const LOCALES_DIR = path.join(PROJECT_ROOT, 'public', 'locales');
+const SRC_DIR = path.join(PROJECT_ROOT, 'src');
 
 /**
  * Extract all i18n keys from the codebase
@@ -22,6 +25,11 @@ async function extractKeys() {
   const extractedKeys = new Set();
   // Improved regex to match t() calls with proper string literals
   const keyPattern = /t\(\s*['"`]([^'"`\$\{\}\\]+)['"`]/g;
+  const allowedNamespaces = new Set([
+    'common','nav','multiplayer','landing','quiz','auth','creator','createQuiz','messages',
+    'errors','leaderboard','dashboard','admin','profile','categories','difficulty','favorites',
+    'notifications','offline','gameMode','email','quizList'
+  ]);
 
   for (const file of files) {
     const filePath = path.join(SRC_DIR, file);
@@ -30,15 +38,11 @@ async function extractKeys() {
     let match;
     while ((match = keyPattern.exec(content)) !== null) {
       const key = match[1].trim();
-      // Filter out false positives
-      if (key &&
-          !key.includes('/') && // File paths
-          !key.includes('.') || key.match(/^[a-zA-Z][a-zA-Z0-9._-]*$/)) { // Valid i18n keys
-        // Only allow keys that start with letter and contain valid chars
-        if (key.match(/^[a-zA-Z][a-zA-Z0-9._-]*$/)) {
-          extractedKeys.add(key);
-        }
-      }
+      if (!key || key.includes('/')) continue;
+      if (!/^[a-zA-Z][a-zA-Z0-9._-]*$/.test(key)) continue;
+      const ns = key.split('.')[0];
+      if (!allowedNamespaces.has(ns)) continue;
+      extractedKeys.add(key);
     }
   }
 
@@ -46,7 +50,7 @@ async function extractKeys() {
   
   // Save extracted keys
   const keysArray = Array.from(extractedKeys).sort();
-  await fs.writeJSON('./extracted-keys.json', keysArray, { spaces: 2 });
+  await fs.writeJSON(path.join(__dirname, 'extracted-keys.json'), keysArray, { spaces: 2 });
   
   console.log('📝 Keys saved to extracted-keys.json');
   return keysArray;
@@ -58,9 +62,9 @@ async function extractKeys() {
 async function validateKeys() {
   console.log('🔎 Validating keys against locales...');
   
-  const extractedKeys = await fs.readJSON('./extracted-keys.json');
-  const viTranslations = await fs.readJSON(path.join(LOCALES_DIR, 'vi/common.json'));
-  const enTranslations = await fs.readJSON(path.join(LOCALES_DIR, 'en/common.json'));
+  const extractedKeys = await fs.readJSON(path.join(__dirname, 'extracted-keys.json'));
+  const viTranslations = await fs.readJSON(path.join(LOCALES_DIR, 'vi', 'common.json'));
+  const enTranslations = await fs.readJSON(path.join(LOCALES_DIR, 'en', 'common.json'));
   
   const flattenKeys = (obj, prefix = '') => {
     const keys = [];
@@ -126,7 +130,7 @@ async function autoFixMissingKeys() {
     let current = obj;
     
     for (let i = 0; i < keys.length - 1; i++) {
-      if (!(keys[i] in current)) {
+      if (!(keys[i] in current) || typeof current[keys[i]] !== 'object' || current[keys[i]] === null) {
         current[keys[i]] = {};
       }
       current = current[keys[i]];
@@ -145,8 +149,8 @@ async function autoFixMissingKeys() {
     addMissingKey(enTranslations, key, `[EN_MISSING] ${key}`);
   }
 
-  await fs.writeJSON(path.join(LOCALES_DIR, 'vi/common.json'), viTranslations, { spaces: 2 });
-  await fs.writeJSON(path.join(LOCALES_DIR, 'en/common.json'), enTranslations, { spaces: 2 });
+  await fs.writeJSON(path.join(LOCALES_DIR, 'vi', 'common.json'), viTranslations, { spaces: 2 });
+  await fs.writeJSON(path.join(LOCALES_DIR, 'en', 'common.json'), enTranslations, { spaces: 2 });
 
   console.log(`✅ Added ${missingInVi.length} missing keys to VI`);
   console.log(`✅ Added ${missingInEn.length} missing keys to EN`);

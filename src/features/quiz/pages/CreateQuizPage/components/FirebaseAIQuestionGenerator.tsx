@@ -14,6 +14,7 @@ import { FirebaseAIService, QuestionGenerationOptions } from '../../../services/
 import { Question } from '../types';
 import { Question as GlobalQuestion } from '../../../types';
 
+import { useTranslation } from 'react-i18next';
 // Helper function to convert GlobalQuestion to local Question
 const convertToLocalQuestion = (globalQuestion: GlobalQuestion): Question => {
   return {
@@ -40,6 +41,7 @@ export const FirebaseAIQuestionGenerator: React.FC<FirebaseAIQuestionGeneratorPr
   isOpen,
   onClose
 }) => {
+  const { t } = useTranslation();
   const [step, setStep] = useState<'config' | 'generate' | 'review'>('config');
   const [generating, setGenerating] = useState(false);
   const [generatedQuestions, setGeneratedQuestions] = useState<Question[]>([]);
@@ -234,17 +236,16 @@ export const FirebaseAIQuestionGenerator: React.FC<FirebaseAIQuestionGeneratorPr
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Độ khó
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{t("admin.preview.difficulty")}
                     </label>
                     <select
                       value={options.difficulty}
                       onChange={(e) => setOptions(prev => ({ ...prev, difficulty: e.target.value as any }))}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      <option value="easy">Dễ</option>
-                      <option value="medium">Trung bình</option>
-                      <option value="hard">Khó</option>
+                      <option value="easy">{t("difficulty.easy")}</option>
+                      <option value="medium">{t("difficulty.medium")}</option>
+                      <option value="hard">{t("difficulty.hard")}</option>
                       <option value="mixed">Trộn lẫn</option>
                     </select>
                   </div>
@@ -297,8 +298,7 @@ export const FirebaseAIQuestionGenerator: React.FC<FirebaseAIQuestionGeneratorPr
                 <button
                   onClick={onClose}
                   className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  Hủy
+                >{t("common.cancel")}
                 </button>
                 <button
                   onClick={handleGenerate}

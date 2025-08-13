@@ -26,13 +26,13 @@ const AdminProtectedRoute: React.FC<AdminProtectedRouteProps> = ({ children }) =
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-2.694-.833-3.464 0L3.349 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('errors.unauthorized', 'Unauthorized access')}</h2>
-          <p className="text-gray-600 mb-6">{t('admin.loginAsAdmin', 'You need admin rights to access this page.')}</p>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('errors.unauthorized')}</h2>
+          <p className="text-gray-600 mb-6">{t('admin.loginAsAdmin')}</p>
           <button
             onClick={() => window.history.back()}
             className="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors duration-200"
           >
-            {t('back', 'Back')}
+            {t('back')}
           </button>
         </div>
       </div>

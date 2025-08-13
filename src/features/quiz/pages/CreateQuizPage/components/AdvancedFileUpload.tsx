@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { Question } from '../types';
+import { useTranslation } from 'react-i18next';
 // import { FileProcessor } from '../../../services/fileProcessingService';
 // import { AIService } from '../../../services/aiService';
 
@@ -22,6 +23,8 @@ interface AIConfig {
 }
 
 const AdvancedFileUpload: React.FC<AdvancedFileUploadProps> = ({ onQuestionsImported }) => {
+  const { t } = useTranslation();
+
   const [isOpen, setIsOpen] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [extractedText, setExtractedText] = useState('');
@@ -900,7 +903,7 @@ Thực hành:
             {processing && currentStep !== 'generate' && (
               <div className="mt-4 flex items-center justify-center">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                <span className="ml-2 text-blue-600">Đang xử lý...</span>
+                <span className="ml-2 text-blue-600">{t("processing")}</span>
               </div>
             )}
           </div>

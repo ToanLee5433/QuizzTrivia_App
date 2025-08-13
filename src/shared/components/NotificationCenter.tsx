@@ -75,14 +75,13 @@ const NotificationCenter: React.FC = () => {
         <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Thông báo</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t("notifications.title")}</h3>
             <div className="flex items-center space-x-2">
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
                   className="text-sm text-blue-600 hover:text-blue-800"
-                >
-                  Đánh dấu tất cả đã đọc
+                >{t("notifications.markAllRead")}
                 </button>
               )}
               <button
@@ -99,7 +98,7 @@ const NotificationCenter: React.FC = () => {
             {notifications.length === 0 ? (
               <div className="px-4 py-8 text-center text-gray-500">
                 <div className="text-4xl mb-3">🔔</div>
-                <p>{t('notifications.empty', 'Không có thông báo nào')}</p>
+                <p>{t('notifications.empty')}</p>
               </div>
             ) : (
               notifications.map((notification) => (
@@ -149,8 +148,7 @@ const NotificationCenter: React.FC = () => {
                           <button
                             onClick={() => deleteNotification(notification.id)}
                             className="text-xs text-red-600 hover:text-red-800"
-                          >
-                            Xóa
+                          >{t("action.clear")}
                           </button>
                         </div>
                       </div>

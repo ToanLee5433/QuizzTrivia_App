@@ -8,7 +8,7 @@ type LoadingProps = {
 
 export const Loading: React.FC<LoadingProps> = ({ message, fullScreen = true }) => {
   const { t } = useTranslation();
-  const loadingMessage = message || t('loading', 'Đang tải...');
+  const loadingMessage = message || t('loading');
   if (fullScreen) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">

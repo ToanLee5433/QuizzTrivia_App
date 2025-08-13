@@ -77,7 +77,7 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
               {String.fromCharCode(65 + index)}.
             </span>
             <span 
-              className={`flex-1 font-medium ${answer.text === t('quiz.boolean.true', 'Đúng') ? 'text-green-600' : 'text-red-600'}`}
+              className={`flex-1 font-medium ${answer.text === t('quiz.boolean.true') ? 'text-green-600' : 'text-red-600'}`}
               dangerouslySetInnerHTML={{ __html: answer.text || '' }}
             />
           </div>
@@ -96,7 +96,7 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
           type="text"
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={t('quiz.enterAnswer', 'Nhập câu trả lời của bạn...')}
+          placeholder={t('quiz.enterAnswer')}
           className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg"
         />
       </div>
@@ -222,7 +222,7 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
       case 'checkbox':
         return renderCheckbox();
       default:
-        return <div>{t('quiz.unsupportedType', 'Loại câu hỏi không được hỗ trợ')}</div>;
+        return <div>{t('quiz.unsupportedType')}</div>;
     }
   };
 
@@ -231,14 +231,14 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
       <div>
         <div className="flex items-center justify-between mb-4">
           <span className="text-sm font-medium text-blue-600">
-            {t('quiz.question', 'Câu hỏi')} {questionNumber} / {question.points} {t('common.points', 'điểm')}
+            {t('quiz.question')} {questionNumber} / {question.points} {t('common.points')}
           </span>
           <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-            {question.type === 'multiple' && t('quiz.questionTypes.multiple', 'Trắc nghiệm')}
-            {question.type === 'boolean' && t('quiz.questionTypes.boolean', 'Đúng/Sai')}
-            {question.type === 'short_answer' && t('quiz.questionTypes.short_answer', 'Điền từ')}
-            {question.type === 'image' && t('quiz.questionTypes.image', 'Hình ảnh')}
-            {question.type === 'checkbox' && t('quiz.questionTypes.checkbox', 'Nhiều lựa chọn')}
+            {question.type === 'multiple' && t('quiz.questionTypes.multiple')}
+            {question.type === 'boolean' && t('quiz.questionTypes.boolean')}
+            {question.type === 'short_answer' && t('quiz.questionTypes.short_answer')}
+            {question.type === 'image' && t('quiz.questionTypes.image')}
+            {question.type === 'checkbox' && t('quiz.questionTypes.checkbox')}
           </span>
         </div>
         <h2 

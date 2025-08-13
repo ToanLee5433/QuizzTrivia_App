@@ -227,7 +227,7 @@ const LoadingFallback = () => {
   return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-      <span className="ml-3 text-lg font-medium text-gray-700">{t('common.loading', 'Đang tải...')}</span>
+      <span className="ml-3 text-lg font-medium text-gray-700">{t('common.loading')}</span>
     </div>
   );
 };
@@ -252,9 +252,9 @@ const AppContent: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mb-4"></div>
-          <div className="text-xl font-semibold text-gray-700">{t('common.loadingData', 'Đang tải dữ liệu...')}</div>
-          <div className="text-sm text-gray-500 mt-2">{t('common.pleaseWait', 'Vui lòng đợi một chút')}</div>
-          {isLoading && <div className="text-xs text-gray-400 mt-1">{t('common.checkingAuth', 'Đang kiểm tra xác thực...')}</div>}
+          <div className="text-xl font-semibold text-gray-700">{t('common.loadingData')}</div>
+          <div className="text-sm text-gray-500 mt-2">{t('common.pleaseWait')}</div>
+          {isLoading && <div className="text-xs text-gray-400 mt-1">{t('common.checkingAuth')}</div>}
         </div>
       </div>
     );

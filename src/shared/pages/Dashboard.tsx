@@ -47,7 +47,7 @@ const Dashboard = React.memo(() => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {t('dashboard.welcome', 'Xin chào, {{name}}!', { name: user?.displayName || user?.email?.split('@')[0] || 'User' })} 👋
+              {t('dashboard.welcome', {name: (user?.displayName || user?.email?.split('@')}[0] || 'User'),})} 👋
             </h1>
             <p className="text-gray-600">{user?.displayName || user?.email || 'User'}</p>
           </div>
@@ -62,32 +62,32 @@ const Dashboard = React.memo(() => {
             to="/quizzes"
             emoji="📝"
             bgColor="bg-blue-100"
-            title={t('nav.quizzes', 'Làm Quiz')}
-            description={t('dashboard.takeQuizzes', 'Thử thách kiến thức với các bài quiz đa dạng')}
+            title={t('nav.quizzes')}
+            description={t('dashboard.takeQuizzes')}
           />
           
           <DashboardCard
             to="/favorites"
             emoji="⭐"
             bgColor="bg-yellow-100"
-            title={t('nav.favorites', 'Yêu thích')}
-            description={t('dashboard.favoriteQuizzes', 'Các quiz bạn đã lưu để làm sau')}
+            title={t('nav.favorites')}
+            description={t('dashboard.favoriteQuizzes')}
           />
           
           <DashboardCard
             to="/leaderboard"
             emoji="🏆"
             bgColor="bg-orange-100"
-            title={t('nav.leaderboard', 'Bảng xếp hạng')}
-            description={t('dashboard.viewRanking', 'Xem thứ hạng và thành tích của bạn')}
+            title={t('nav.leaderboard')}
+            description={t('dashboard.viewRanking')}
           />
           
           <DashboardCard
             to="/profile"
             emoji="👤"
             bgColor="bg-gray-100"
-            title={t('nav.profile', 'Hồ sơ cá nhân')}
-            description={t('dashboard.editProfile', 'Xem và chỉnh sửa thông tin cá nhân')}
+            title={t('nav.profile')}
+            description={t('dashboard.editProfile')}
           />
           
           {(user?.role === 'creator' || user?.role === 'admin') && (
@@ -95,8 +95,8 @@ const Dashboard = React.memo(() => {
               to="/creator"
               emoji="✨"
               bgColor="bg-purple-100"
-              title={t('nav.creator', 'Tạo Quiz')}
-              description={t('dashboard.createQuizzes', 'Tạo các bài quiz của riêng bạn')}
+              title={t('nav.creator')}
+              description={t('dashboard.createQuizzes')}
             />
           )}
           
@@ -105,8 +105,8 @@ const Dashboard = React.memo(() => {
               to="/admin"
               emoji="⚙️"
               bgColor="bg-red-100"
-              title={t('nav.admin', 'Quản trị viên')}
-              description={t('dashboard.adminPanel', 'Quản lý người dùng và hệ thống')}
+              title={t('nav.admin')}
+              description={t('dashboard.adminPanel')}
             />
           )}
         </div>

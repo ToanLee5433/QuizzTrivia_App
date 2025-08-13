@@ -30,6 +30,7 @@ import {
   Star
 } from 'lucide-react';
 
+import { useTranslation } from 'react-i18next';
 interface Creator {
   id: string;
   displayName: string;
@@ -60,6 +61,8 @@ interface CreatorStats {
 }
 
 const CreatorManagement: React.FC = () => {
+  const { t } = useTranslation();
+
   const { user } = useSelector((state: RootState) => state.auth);
   const [creators, setCreators] = useState<Creator[]>([]);
   const [loading, setLoading] = useState(true);
@@ -310,7 +313,7 @@ const CreatorManagement: React.FC = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Shield className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Không có quyền truy cập</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t("messages.unauthorized")}</h2>
           <p className="text-gray-600">Bạn cần quyền admin để truy cập trang này</p>
         </div>
       </div>
@@ -377,7 +380,7 @@ const CreatorManagement: React.FC = () => {
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="all">Tất cả trạng thái</option>
-                <option value="active">Hoạt động</option>
+                <option value="active">{t("leaderboard.activity")}</option>
                 <option value="suspended">Tạm khóa</option>
                 <option value="banned">Bị cấm</option>
               </select>
@@ -407,17 +410,13 @@ const CreatorManagement: React.FC = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Creator
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t("nav.creator")}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Trạng thái
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t("admin.preview.status")}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Quiz
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t("admin.editRequests.quiz")}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Lượt chơi
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t("leaderboard.plays")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Đánh giá
@@ -425,8 +424,7 @@ const CreatorManagement: React.FC = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Hoạt động cuối
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Hành động
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t("admin.quizManagement.table.actions")}
                     </th>
                   </tr>
                 </thead>
@@ -571,7 +569,7 @@ const CreatorManagement: React.FC = () => {
                     <div className="text-center p-4 bg-green-50 rounded-lg">
                       <TrendingUp className="w-6 h-6 text-green-600 mx-auto mb-2" />
                       <p className="text-2xl font-bold text-gray-900">{selectedCreator.totalPlays}</p>
-                      <p className="text-sm text-gray-600">Lượt chơi</p>
+                      <p className="text-sm text-gray-600">{t("leaderboard.plays")}</p>
                     </div>
                     <div className="text-center p-4 bg-yellow-50 rounded-lg">
                       <Star className="w-6 h-6 text-yellow-600 mx-auto mb-2" />
@@ -594,7 +592,7 @@ const CreatorManagement: React.FC = () => {
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Chỉnh sửa quiz</span>
+                        <span className="text-sm text-gray-600">{t("admin.quizManagement.tooltips.edit")}</span>
                         <span className={`text-xs px-2 py-1 rounded ${
                           selectedCreator.permissions.canEditOwnQuiz 
                             ? 'bg-green-100 text-green-800' 

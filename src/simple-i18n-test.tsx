@@ -14,7 +14,7 @@ const SimpleI18nTest: React.FC = () => {
     console.log('🔍 VI bundle data:', i18n.getResourceBundle('vi', 'common'));
     
     // Test specific keys
-    console.log('🔍 Test dashboard.welcome:', t('dashboard.welcome', { name: 'TestUser' }));
+    console.log('🔍 Test dashboard.welcome:', t('dashboard.welcome', {name: 'TestUser'}));
     console.log('🔍 Test favorites.title:', t('favorites.title'));
     console.log('🔍 Test quiz.searchPlaceholder:', t('quiz.searchPlaceholder'));
   }, [t, i18n]);
@@ -38,7 +38,7 @@ const SimpleI18nTest: React.FC = () => {
       <hr />
       
       <p><strong>dashboard.welcome:</strong></p>
-      <p>"{t('dashboard.welcome', { name: 'TestUser' })}"</p>
+      <p>"{t('dashboard.welcome', {name: 'TestUser'})}"</p>
       
       <p><strong>favorites.title:</strong></p>
       <p>"{t('favorites.title')}"</p>

@@ -246,7 +246,7 @@ const AdminDashboard: React.FC = () => {
     try {
       await updateDoc(doc(db, 'users', userId), { isActive: !currentStatus });
       await loadData();
-      toast.success(t('admin.userStatusUpdateSuccess', { action: !currentStatus ? t('admin.activated') : t('admin.deactivated') }));
+      toast.success(t('admin.userStatusUpdateSuccess', {action: !currentStatus ? t('admin.activated') : t('admin.deactivated')}));
     } catch (error) {
       console.error('Error updating user status:', error);
       toast.error(t('admin.statusUpdateError'));
@@ -274,10 +274,10 @@ const AdminDashboard: React.FC = () => {
     try {
       await updateDoc(doc(db, 'quizzes', quizId), { status: 'approved' });
       await loadData();
-      toast.success(t('admin.quizApproved', 'Đã phê duyệt quiz thành công!'));
+      toast.success(t('admin.quizApproved'));
     } catch (error) {
       console.error('Error approving quiz:', error);
-      toast.error(t('admin.quizApprovalError', 'Có lỗi xảy ra khi phê duyệt quiz!'));
+      toast.error(t('admin.quizApprovalError'));
     } finally {
       setLoading(false);
     }
@@ -288,10 +288,10 @@ const AdminDashboard: React.FC = () => {
     try {
       await updateDoc(doc(db, 'quizzes', quizId), { status: 'rejected' });
       await loadData();
-      toast.success(t('admin.quizRejected', 'Đã từ chối quiz!'));
+      toast.success(t('admin.quizRejected'));
     } catch (error) {
       console.error('Error rejecting quiz:', error);
-      toast.error(t('admin.quizRejectionError', 'Có lỗi xảy ra khi từ chối quiz!'));
+      toast.error(t('admin.quizRejectionError'));
     } finally {
       setLoading(false);
     }
@@ -302,10 +302,10 @@ const AdminDashboard: React.FC = () => {
     try {
       await updateDoc(doc(db, 'quizzes', quizId), { status: 'pending' });
       await loadData();
-      toast.success(t('admin.quizReopened', 'Quiz reopened for review!'));
+      toast.success(t('admin.quizReopened'));
     } catch (error) {
       console.error('Error reopening quiz:', error);
-      toast.error(t('admin.quizReopenError', 'Error reopening quiz!'));
+      toast.error(t('admin.quizReopenError'));
     } finally {
       setLoading(false);
     }
@@ -316,10 +316,10 @@ const AdminDashboard: React.FC = () => {
     try {
       await deleteDoc(doc(db, 'quizzes', quizId));
       await loadData();
-      toast.success(t('quiz.deleteSuccess', 'Quiz deleted successfully'));
+      toast.success(t('quiz.deleteSuccess'));
     } catch (error) {
       console.error('Error deleting quiz:', error);
-      toast.error(t('quiz.deleteError', 'Error deleting quiz'));
+      toast.error(t('quiz.deleteError'));
     } finally {
       setLoading(false);
     }
@@ -327,7 +327,7 @@ const AdminDashboard: React.FC = () => {
 
   const addCategory = async () => {
     if (!newCategory.name.trim()) {
-      toast.error(t('admin.categories.enterName', 'Please enter category name!'));
+      toast.error(t('admin.categories.enterName'));
       return;
     }
     setLoading(true);
@@ -341,10 +341,10 @@ const AdminDashboard: React.FC = () => {
       setNewCategory({ name: '', description: '' });
       setShowAddCategory(false);
       await loadData();
-      toast.success(t('admin.categories.addSuccess', 'Category added successfully!'));
+      toast.success(t('admin.categories.addSuccess'));
     } catch (error) {
       console.error('Error adding category:', error);
-      toast.error(t('admin.categories.addError', 'Error adding category!'));
+      toast.error(t('admin.categories.addError'));
     } finally {
       setLoading(false);
     }
@@ -355,10 +355,10 @@ const AdminDashboard: React.FC = () => {
     try {
       await deleteDoc(doc(db, 'categories', categoryId));
       await loadData();
-      toast.success(t('admin.categories.deleteSuccess', 'Category deleted successfully!'));
+      toast.success(t('admin.categories.deleteSuccess'));
     } catch (error) {
       console.error('Error deleting category:', error);
-      toast.error(t('admin.categories.deleteError', 'Error deleting category!'));
+      toast.error(t('admin.categories.deleteError'));
     } finally {
       setLoading(false);
     }
@@ -373,8 +373,8 @@ const AdminDashboard: React.FC = () => {
           <div className="flex items-center">
             <span className="text-2xl mr-3">✅</span>
             <div>
-              <h3 className="font-semibold text-green-800">{t('admin.viewingStatsSection', 'Viewing stats section')}</h3>
-              <p className="text-green-700 text-sm">{t('admin.advancedStatsDescription', 'Advanced statistics about system activity')}</p>
+              <h3 className="font-semibold text-green-800">{t('admin.viewingStatsSection')}</h3>
+              <p className="text-green-700 text-sm">{t('admin.advancedStatsDescription')}</p>
             </div>
           </div>
         </div>
@@ -396,24 +396,21 @@ const AdminDashboard: React.FC = () => {
   const renderUsers = () => (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg font-semibold">{t('admin.userManagement', 'Quản lý người dùng')}</h3>
+        <h3 className="text-lg font-semibold">{t('admin.userManagement')}</h3>
       </div>
       
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Người dùng
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t("admin.tabs.users")}
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Email
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t("auth.email")}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Role
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Trạng thái
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t("admin.preview.status")}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Thao tác
@@ -438,7 +435,7 @@ const AdminDashboard: React.FC = () => {
                     className="border border-gray-300 rounded px-2 py-1 text-sm"
                   >
                     <option value="user">User</option>
-                    <option value="admin">Admin</option>
+                    <option value="admin">{t("admin.quizManagement.adminBadge")}</option>
                   </select>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -460,8 +457,7 @@ const AdminDashboard: React.FC = () => {
                     <button
                       onClick={() => setConfirmModal({ open: true, type: 'deleteUser', payload: { userId: user.id }, message: 'Bạn có chắc chắn muốn xóa người dùng này?' })}
                       className="px-3 py-1 bg-red-100 text-red-600 rounded text-xs hover:bg-red-200"
-                    >
-                      Xóa
+                    >{t("action.clear")}
                     </button>
                   )}
                 </td>
@@ -480,15 +476,15 @@ const AdminDashboard: React.FC = () => {
         <div className="flex items-center">
           <span className="text-2xl mr-3">📝</span>
           <div>
-            <h3 className="font-semibold text-yellow-800">{t('admin.quizManagement', 'Quiz Management')}</h3>
-            <p className="text-yellow-700 text-sm">{t('admin.tabs.quizzes', 'Quizzes')}</p>
+            <h3 className="font-semibold text-yellow-800">{t('admin.quizManagement.label')}</h3>
+            <p className="text-yellow-700 text-sm">{t('admin.tabs.quizzes')}</p>
           </div>
         </div>
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold">{t('admin.quizManagement', 'Quiz Management')}</h3>
+          <h3 className="text-lg font-semibold">{t('admin.quizManagement.label')}</h3>
         </div>
         
         <div className="overflow-x-auto">
@@ -496,16 +492,16 @@ const AdminDashboard: React.FC = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('admin.quizManagement.table.title', 'Title')}
+                  {t('admin.quizManagement.table.title')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('quiz.description', 'Description')}
+                  {t('quiz.description')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('status.pending', 'Status')}
+                  {t('status.pending')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('action.action', 'Actions')}
+                  {t('action.action')}
                 </th>
               </tr>
             </thead>
@@ -524,8 +520,8 @@ const AdminDashboard: React.FC = () => {
                       quiz.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                       'bg-red-100 text-red-800'
                     }`}>
-                       {quiz.status === 'approved' ? t('status.approved', 'Approved') :
-                        quiz.status === 'pending' ? t('status.pending', 'Pending') : t('status.rejected', 'Rejected')}
+                       {quiz.status === 'approved' ? t('status.approved') :
+                        quiz.status === 'pending' ? t('status.pending') : t('status.rejected')}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
@@ -535,13 +531,13 @@ const AdminDashboard: React.FC = () => {
                           onClick={() => approveQuiz(quiz.id)}
                           className="px-3 py-1 bg-green-100 text-green-600 rounded text-xs hover:bg-green-200"
                         >
-                          {t('action.approve', 'Approve')}
+                          {t('action.approve')}
                         </button>
                         <button
                           onClick={() => rejectQuiz(quiz.id)}
                           className="px-3 py-1 bg-yellow-100 text-yellow-600 rounded text-xs hover:bg-yellow-200"
                         >
-                          {t('action.reject', 'Reject')}
+                          {t('action.reject')}
                         </button>
                       </>
                     )}
@@ -551,15 +547,15 @@ const AdminDashboard: React.FC = () => {
                         onClick={() => reopenQuiz(quiz.id)}
                         className="px-3 py-1 bg-blue-100 text-blue-600 rounded text-xs hover:bg-blue-200"
                       >
-                         {t('admin.quizManagement.tooltips.reopen', 'Reopen for review')}
+                         {t('admin.quizManagement.tooltips.reopen')}
                       </button>
                     )}
                     
                     <button
-                       onClick={() => setConfirmModal({ open: true, type: 'deleteQuiz', payload: { quizId: quiz.id }, message: t('quiz.confirmDelete', 'Are you sure you want to delete this quiz?') })}
+                       onClick={() => setConfirmModal({ open: true, type: 'deleteQuiz', payload: { quizId: quiz.id }, message: t('quiz.confirmDelete') })}
                       className="px-3 py-1 bg-red-100 text-red-600 rounded text-xs hover:bg-red-200"
                     >
-                      {t('delete', 'Delete')}
+                      {t('delete')}
                     </button>
                   </td>
                 </tr>
@@ -576,12 +572,12 @@ const AdminDashboard: React.FC = () => {
       {/* Add Category Button */}
       <div className="bg-white p-6 rounded-lg shadow">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">{t('admin.categoryManagement', 'Category Management')}</h3>
+          <h3 className="text-lg font-semibold">{t('admin.categoryManagement')}</h3>
           <button
             onClick={() => setShowAddCategory(!showAddCategory)}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
-            {t('categories.add', 'Add category')}
+            {t('categories.add')}
           </button>
         </div>
 
@@ -591,14 +587,14 @@ const AdminDashboard: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input
                 type="text"
-                placeholder={t('categories.name', 'Category name')}
+                placeholder={t('categories.name')}
                 value={newCategory.name}
                 onChange={(e) => setNewCategory(prev => ({ ...prev, name: e.target.value }))}
                 className="border border-gray-300 rounded px-3 py-2"
               />
               <input
                 type="text"
-                placeholder={t('categories.description', 'Description')}
+                placeholder={t('categories.description')}
                 value={newCategory.description}
                 onChange={(e) => setNewCategory(prev => ({ ...prev, description: e.target.value }))}
                 className="border border-gray-300 rounded px-3 py-2"
@@ -609,7 +605,7 @@ const AdminDashboard: React.FC = () => {
                 onClick={addCategory}
                 className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
               >
-                {t('save', 'Save')}
+                {t('save')}
               </button>
               <button
                 onClick={() => {
@@ -618,7 +614,7 @@ const AdminDashboard: React.FC = () => {
                 }}
                 className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
               >
-                {t('cancel', 'Cancel')}
+                {t('cancel')}
               </button>
             </div>
           </div>
@@ -632,16 +628,16 @@ const AdminDashboard: React.FC = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('categories.name', 'Category name')}
+                  {t('categories.name')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('categories.description', 'Description')}
+                  {t('categories.description')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('categories.quizCount', 'Quiz count')}
+                  {t('categories.quizCount')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('action.action', 'Actions')}
+                  {t('action.action')}
                 </th>
               </tr>
             </thead>
@@ -659,10 +655,10 @@ const AdminDashboard: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
-                       onClick={() => setConfirmModal({ open: true, type: 'deleteCategory', payload: { categoryId: category.id }, message: t('categories.confirmDelete', 'Are you sure you want to delete this category?') })}
+                       onClick={() => setConfirmModal({ open: true, type: 'deleteCategory', payload: { categoryId: category.id }, message: t('categories.confirmDelete') })}
                       className="px-3 py-1 bg-red-100 text-red-600 rounded text-xs hover:bg-red-200"
                     >
-                      {t('delete', 'Delete')}
+                      {t('delete')}
                     </button>
                   </td>
                 </tr>
@@ -726,7 +722,7 @@ const AdminDashboard: React.FC = () => {
                 title="Force chuyển về tab Tổng quan"
               >
                 <span>📊</span>
-                <span>Tổng quan</span>
+                <span>{t("admin.tabs.overview")}</span>
               </button>
               <button
                 onClick={loadData}
@@ -737,7 +733,7 @@ const AdminDashboard: React.FC = () => {
                 <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                <span>Làm mới</span>
+                <span>{t("refresh")}</span>
               </button>
               {lastUpdate && (
                 <div className="text-xs text-gray-500">
@@ -745,13 +741,7 @@ const AdminDashboard: React.FC = () => {
                 </div>
               )}
               <div className="text-sm text-gray-600">
-                {t('admin.greeting', 'Xin chào, {{name}}', { name: user?.displayName || user?.email || 'Admin' })}
-              </div>
-              <button
-                onClick={handleLogout}
-                className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors duration-200"
-              >
-                {t('auth.logout', 'Đăng xuất')}
+                {t('admin.greeting')}
               </button>
             </div>
           </div>
@@ -768,10 +758,10 @@ const AdminDashboard: React.FC = () => {
           
           <nav className="flex space-x-8">
             {[
-              { id: 'dashboard', label: t('admin.tabs.overview', 'Tổng quan'), icon: '📊' },
-              { id: 'users', label: t('admin.tabs.users', 'Người dùng'), icon: '👥' },
-              { id: 'quizzes', label: t('admin.tabs.quizzes', 'Quiz'), icon: '📝' },
-              { id: 'categories', label: t('admin.tabs.categories', 'Danh mục'), icon: '📂' }
+              { id: 'dashboard', label: t('admin.tabs.overview'), icon: '📊' },
+              { id: 'users', label: t('admin.tabs.users'), icon: '👥' },
+              { id: 'quizzes', label: t('admin.tabs.quizzes'), icon: '📝' },
+              { id: 'categories', label: t('admin.tabs.categories'), icon: '📂' }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -800,21 +790,17 @@ const AdminDashboard: React.FC = () => {
         <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-blue-900">
-              {activeTab === 'dashboard' && `📊 ${t('admin.tabs.overviewStats', 'Tổng quan & Thống kê')}`}
-              {activeTab === 'users' && `👥 ${t('admin.tabs.userManagement', 'Quản lý Người dùng')}`}
-              {activeTab === 'quizzes' && `📝 ${t('admin.tabs.quizManagement', 'Quản lý Quiz')}`}
-              {activeTab === 'categories' && `📂 ${t('admin.tabs.categoryManagement', 'Quản lý Danh mục')}`}
+              {activeTab === 'dashboard' && `📊 ${t('admin.tabs.overviewStats')}`}
+              {activeTab === 'users' && `👥 ${t('admin.tabs.userManagement')}`}
+              {activeTab === 'quizzes' && `📝 ${t('admin.tabs.quizManagement')}`}
+              {activeTab === 'categories' && `📂 ${t('admin.tabs.categoryManagement')}`}
             </h2>
             <div className="flex items-center gap-3">
               <span className="text-sm text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
-                {t('admin.currentTab', 'Tab hiện tại: {{tab}}', { tab: activeTab })}
-              </span>
-              {activeTab !== 'dashboard' && (
-                <button
-                  onClick={() => setActiveTab('dashboard')}
+                {t('admin.currentTab')}
                   className="text-sm bg-blue-600 text-white px-3 py-1 rounded-full hover:bg-blue-700"
                 >
-                  {t('admin.backToOverview', 'Về Tổng quan')}
+                  {t('admin.backToOverview')}
                 </button>
               )}
             </div>
@@ -840,7 +826,7 @@ const AdminDashboard: React.FC = () => {
       <Modal
         isOpen={confirmModal.open}
         onClose={() => setConfirmModal({ open: false, type: null })}
-        title={t('action.confirm', 'Confirm')}
+        title={t('action.confirm')}
       >
         <div className="mb-4">{confirmModal.message}</div>
         <div className="flex justify-end space-x-2">
@@ -849,7 +835,7 @@ const AdminDashboard: React.FC = () => {
             className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
             disabled={loading}
           >
-            {t('cancel', 'Cancel')}
+            {t('cancel')}
           </button>
           <button
             onClick={async () => {
@@ -862,7 +848,7 @@ const AdminDashboard: React.FC = () => {
             className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
             disabled={loading}
           >
-            {t('action.confirm', 'Confirm')}
+            {t('action.confirm')}
           </button>
         </div>
       </Modal>

@@ -3,6 +3,7 @@ import { verifyOTP, generateAndSendOTP } from '../services/otpService';
 import { toast } from 'react-toastify';
 import { Mail, RefreshCw, CheckCircle, Timer } from 'lucide-react';
 
+import { useTranslation } from 'react-i18next';
 interface OTPVerificationProps {
   email: string;
   onVerificationSuccess: () => void;
@@ -14,6 +15,8 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
   onVerificationSuccess,
   onCancel
 }) => {
+  const { t } = useTranslation();
+
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
@@ -135,7 +138,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
         <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <Mail className="w-8 h-8 text-blue-600" />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Xác thực email</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">{t("auth.emailVerification")}</h2>
         <p className="text-gray-600">
           Chúng tôi đã gửi mã xác thực 6 số đến
         </p>
@@ -194,8 +197,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
         >
           {loading ? (
             <>
-              <RefreshCw className="w-4 h-4 animate-spin" />
-              Đang xác thực...
+              <RefreshCw className="w-4 h-4 animate-spin" />{t("profile.authenticating")}
             </>
           ) : (
             <>
@@ -208,8 +210,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
         <button
           onClick={onCancel}
           className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium"
-        >
-          Quay lại
+        >{t("common.back")}
         </button>
       </div>
 

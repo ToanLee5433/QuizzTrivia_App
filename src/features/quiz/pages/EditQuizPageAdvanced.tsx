@@ -14,6 +14,7 @@ import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
 
+import { useTranslation } from 'react-i18next';
 // Import categories and difficulties from CreateQuizPage
 const categories = [
   { value: 'general', label: 'Tổng hợp' },
@@ -35,6 +36,8 @@ const difficulties = [
 ];
 
 const EditQuizPageAdvanced: React.FC = () => {
+  const { t } = useTranslation();
+
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
@@ -306,7 +309,7 @@ const EditQuizPageAdvanced: React.FC = () => {
                   <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto">
                     <BookOpen className="w-8 h-8 text-white" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900">Thông tin cơ bản</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">{t("createQuiz.info.basicInfo")}</h2>
                   <p className="text-gray-600">Chỉnh sửa thông tin quiz của bạn</p>
                 </div>
 
@@ -315,12 +318,11 @@ const EditQuizPageAdvanced: React.FC = () => {
                   {/* Title */}
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                      <FileText className="w-4 h-4" />
-                      Tiêu đề quiz *
+                      <FileText className="w-4 h-4" />{t("createQuiz.info.titleLabel")}
                     </label>
                     <input
                       className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-lg"
-                      placeholder="Nhập tiêu đề thu hút cho quiz của bạn..."
+                      placeholder={t("createQuiz.info.titlePlaceholder")}
                       value={quizInfo.title}
                       onChange={(e) => setQuizInfo({ ...quizInfo, title: e.target.value })}
                     />
@@ -345,15 +347,14 @@ const EditQuizPageAdvanced: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                        <Tag className="w-4 h-4" />
-                        Danh mục *
+                        <Tag className="w-4 h-4" />{t("createQuiz.info.categoryLabel")}
                       </label>
                       <select
                         className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         value={quizInfo.category}
                         onChange={(e) => setQuizInfo({ ...quizInfo, category: e.target.value })}
                       >
-                        <option value="">Chọn danh mục</option>
+                        <option value="">{t("createQuiz.info.categoryPlaceholder")}</option>
                         {categories.map(c => (
                           <option key={c.value} value={c.value}>{c.label}</option>
                         ))}
@@ -362,8 +363,7 @@ const EditQuizPageAdvanced: React.FC = () => {
 
                     <div className="space-y-2">
                       <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                        <Star className="w-4 h-4" />
-                        Độ khó *
+                        <Star className="w-4 h-4" />{t("createQuiz.info.difficultyLabel")}
                       </label>
                       <select
                         className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
@@ -396,8 +396,7 @@ const EditQuizPageAdvanced: React.FC = () => {
 
                     <div className="space-y-2">
                       <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                        <Target className="w-4 h-4" />
-                        Trạng thái
+                        <Target className="w-4 h-4" />{t("admin.preview.status")}
                       </label>
                       <select
                         className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"

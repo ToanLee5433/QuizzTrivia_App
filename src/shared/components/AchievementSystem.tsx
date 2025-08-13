@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../lib/store';
 
+import { useTranslation } from 'react-i18next';
 interface Achievement {
   id: string;
   title: string;
@@ -80,6 +81,8 @@ const AchievementCard: React.FC<{ achievement: Achievement; onClaim: () => void 
   achievement, 
   onClaim 
 }) => {
+  const { t } = useTranslation();
+
   // Remove unused state since we use the modal from parent component
 
   const getRarityStyle = (rarity: Achievement['rarity']) => {
@@ -171,7 +174,7 @@ const AchievementCard: React.FC<{ achievement: Achievement; onClaim: () => void 
         {/* Unlock Date */}
         {achievement.unlocked && achievement.unlockedAt && (
           <div className="text-xs text-gray-500 mt-2">
-            Mở khóa: {achievement.unlockedAt.toLocaleDateString('vi-VN')}
+            {t('achievement.unlockedAt', {date: achievement.unlockedAt.toLocaleDateString('vi-VN')},})}
           </div>
         )}
       </div>
@@ -185,6 +188,7 @@ const AchievementCard: React.FC<{ achievement: Achievement; onClaim: () => void 
 };
 
 const AchievementSystem: React.FC = () => {
+  const { t } = useTranslation();
   const user = useSelector((state: RootState) => state.auth.user);
   const userResults = useSelector((state: RootState) => state.quiz.userResults);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
@@ -284,7 +288,7 @@ const AchievementSystem: React.FC = () => {
               <div className="flex items-center space-x-3">
                 <div className="text-2xl">{achievement.icon}</div>
                 <div>
-                  <h4 className="font-bold text-yellow-600">Achievement Unlocked!</h4>
+                  <h4 className="font-bold text-yellow-600">{t('achievement.unlocked')}</h4>
                   <p className="text-sm">{achievement.title}</p>
                 </div>
               </div>
@@ -333,8 +337,7 @@ const AchievementSystem: React.FC = () => {
                 <button
                   onClick={() => setShowModal(null)}
                   className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-                >
-                  Đóng
+                >{t('close')}
                 </button>
                 {showModal.unlocked && (
                   <button
@@ -345,7 +348,7 @@ const AchievementSystem: React.FC = () => {
                     }}
                     className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                   >
-                    Chia sẻ
+                    {t('share')}
                   </button>
                 )}
               </div>

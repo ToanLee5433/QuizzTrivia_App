@@ -57,11 +57,11 @@ const MultiplayerChat: React.FC<MultiplayerChatProps> = ({
       <div className="flex items-center gap-2 p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
         <MessageSquare className="w-5 h-5 text-blue-600" />
         <h3 className="font-medium text-gray-900">
-          {t('multiplayer.chat.title', 'Chat')}
+          {t('multiplayer.chat.title')}
         </h3>
         <div className="ml-auto">
           <span className="text-xs text-gray-500">
-            {messages.length} {t('common.messages', 'tin nhắn')}
+            {messages.length} {t('common.messages')}
           </span>
         </div>
       </div>
@@ -70,7 +70,7 @@ const MultiplayerChat: React.FC<MultiplayerChatProps> = ({
       <div className="flex-1 overflow-y-auto p-3 space-y-2 max-h-64">
         {messages.length === 0 ? (
           <div className="text-center text-gray-500 text-sm py-8">
-            {t('multiplayer.chat.noMessages', 'Chưa có tin nhắn nào')}
+            {t('multiplayer.chat.noMessages')}
           </div>
         ) : (
           messages.map((message) => (
@@ -129,8 +129,8 @@ const MultiplayerChat: React.FC<MultiplayerChatProps> = ({
             onChange={(e) => setInputMessage(e.target.value)}
             placeholder={
               disabled
-                ? t('multiplayer.chat.disabled', 'Chat đã tắt')
-                : t('multiplayer.chat.placeholder', 'Nhập tin nhắn...')
+                ? t('multiplayer.chat.disabled')
+                : t('multiplayer.chat.placeholder')
             }
             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm disabled:bg-gray-100 disabled:text-gray-500"
             disabled={disabled}

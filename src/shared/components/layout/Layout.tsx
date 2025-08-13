@@ -60,19 +60,19 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <h1 className="text-xl font-bold text-blue-600">Quiz App</h1>
             <div className="flex items-center space-x-4">
               <nav className="flex space-x-4">
-                <Link to="/dashboard" className="text-gray-700 hover:text-blue-600">{t('nav.dashboard', 'Dashboard')}</Link>
-                <Link to="/quizzes" className="text-gray-700 hover:text-blue-600">{t('nav.quizzes', 'Quiz')}</Link>
-                <Link to="/favorites" className="text-gray-700 hover:text-yellow-500">{t('nav.favorites', 'Favorites')}</Link>
-                <Link to="/leaderboard" className="text-gray-700 hover:text-green-600">{t('nav.leaderboard', 'Leaderboard')}</Link>
+                <Link to="/dashboard" className="text-gray-700 hover:text-blue-600">{t('nav.dashboard')}</Link>
+                <Link to="/quizzes" className="text-gray-700 hover:text-blue-600">{t('nav.quizzes')}</Link>
+                <Link to="/favorites" className="text-gray-700 hover:text-yellow-500">{t('nav.favorites')}</Link>
+                <Link to="/leaderboard" className="text-gray-700 hover:text-green-600">{t('nav.leaderboard')}</Link>
                 {(user?.role === 'creator' || user?.role === 'admin') ? (
-                  <Link to="/creator" className="text-gray-700 hover:text-blue-600">{t('nav.creator', 'Creator')}</Link>
+                  <Link to="/creator" className="text-gray-700 hover:text-blue-600">{t('nav.creator')}</Link>
                 ) : null}
                 {user?.role === 'admin' ? (
-                  <Link to="/admin" className="text-gray-700 hover:text-blue-600">{t('nav.admin', 'Admin')}</Link>
+                  <Link to="/admin" className="text-gray-700 hover:text-blue-600">{t('nav.admin')}</Link>
                 ) : null}
-                <Link to="/profile" className="text-gray-700 hover:text-blue-600">{t('nav.profile', 'Profile')}</Link>
+                <Link to="/profile" className="text-gray-700 hover:text-blue-600">{t('nav.profile')}</Link>
                 <button onClick={handleLogout} className="text-red-600 hover:text-red-800">
-                  {t('auth.logout', 'Logout')}
+                  {t('auth.logout')}
                 </button>
               </nav>
               <LanguageSwitcher variant="header" />

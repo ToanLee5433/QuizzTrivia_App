@@ -144,10 +144,11 @@ async function generateReport() {
   const viKeys = flattenKeys(viTranslations);
   const enKeys = flattenKeys(enTranslations);
   
-  const autoTranslatedVI = viKeys.filter(item => item.value.startsWith('[AUTO_TRANSLATE_VI]'));
-  const autoTranslatedEN = enKeys.filter(item => item.value.startsWith('[AUTO_TRANSLATE_EN]'));
-  const missingVI = viKeys.filter(item => item.value.startsWith('[VI_MISSING]'));
-  const missingEN = enKeys.filter(item => item.value.startsWith('[EN_MISSING]'));
+  const isStr = (v) => typeof v === 'string';
+  const autoTranslatedVI = viKeys.filter(item => isStr(item.value) && item.value.startsWith('[AUTO_TRANSLATE_VI]'));
+  const autoTranslatedEN = enKeys.filter(item => isStr(item.value) && item.value.startsWith('[AUTO_TRANSLATE_EN]'));
+  const missingVI = viKeys.filter(item => isStr(item.value) && item.value.startsWith('[VI_MISSING]'));
+  const missingEN = enKeys.filter(item => isStr(item.value) && item.value.startsWith('[EN_MISSING]'));
 
   const report = {
     timestamp: new Date().toISOString(),

@@ -60,8 +60,8 @@ const GameModeSelector: React.FC<GameModeSelectorProps> = ({
         <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-4 sm:p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2">{t('multiplayer.title', 'Chơi cùng bạn bè')}</h1>
-              <p className="text-purple-100 text-sm sm:text-base">{t('multiplayer.subtitle', 'Tham gia phòng và thi đấu với người khác')}</p>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2">{t('multiplayer.title')}</h1>
+              <p className="text-purple-100 text-sm sm:text-base">{t('multiplayer.subtitle')}</p>
             </div>
             <button
               onClick={onClose}
@@ -90,7 +90,7 @@ const GameModeSelector: React.FC<GameModeSelectorProps> = ({
                     <User className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                   </div>
                   <div className="text-right">
-                    <div className="text-xs sm:text-sm text-gray-500">{t('common.recommended', 'Khuyến nghị')}</div>
+                    <div className="text-xs sm:text-sm text-gray-500">{t('common.recommended')}</div>
                     <div className="flex items-center gap-1">
                       {[...Array(5)].map((_, i) => (
                         <Star key={i} className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500 fill-current" />
@@ -99,27 +99,27 @@ const GameModeSelector: React.FC<GameModeSelectorProps> = ({
                   </div>
                 </div>
                 
-                <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">{t('gameMode.singlePlayer', 'Chơi một mình')}</h3>
-                <p className="text-gray-600 mb-3 sm:mb-4 text-sm sm:text-base">{t('gameMode.singlePlayerDesc', 'Luyện tập theo tốc độ riêng và nâng cao kỹ năng')}</p>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">{t('gameMode.singlePlayer')}</h3>
+                <p className="text-gray-600 mb-3 sm:mb-4 text-sm sm:text-base">{t('gameMode.singlePlayerDesc')}</p>
                 
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
                     <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span>{t('gameMode.noPressure', 'Không áp lực thời gian')}</span>
+                    <span>{t('gameMode.noPressure')}</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
                     <Trophy className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span>{t('gameMode.trackProgress', 'Theo dõi tiến độ')}</span>
+                    <span>{t('gameMode.trackProgress')}</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
                     <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span>{t('gameMode.customizable', 'Tùy chỉnh cài đặt')}</span>
+                    <span>{t('gameMode.customizable')}</span>
                   </div>
                 </div>
                 
                 <div className="mt-4 sm:mt-6">
                   <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-lg transition-colors text-sm sm:text-base">
-                    {t('gameMode.startSolo', 'Bắt đầu chơi')}
+                    {t('gameMode.startSolo')}
                   </button>
                 </div>
               </div>
@@ -128,8 +128,8 @@ const GameModeSelector: React.FC<GameModeSelectorProps> = ({
             {/* Multiplayer Mode */}
             <div className="space-y-3 sm:space-y-4">
               <div className="text-center mb-4 sm:mb-6">
-                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-1 sm:mb-2">{t('gameMode.multiplayer', 'Chơi nhiều người')}</h3>
-                <p className="text-gray-600 text-sm sm:text-base">{t('gameMode.multiplayerDesc', 'Thách thức bạn bè và thi đấu thời gian thực')}</p>
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-1 sm:mb-2">{t('gameMode.multiplayer')}</h3>
+                <p className="text-gray-600 text-sm sm:text-base">{t('gameMode.multiplayerDesc')}</p>
               </div>
 
               {/* Create Room */}
@@ -145,23 +145,23 @@ const GameModeSelector: React.FC<GameModeSelectorProps> = ({
                       </svg>
                     </div>
                     <div>
-                      <h4 className="text-base sm:text-lg font-bold text-gray-800">{t('gameMode.createRoom', 'Tạo phòng')}</h4>
-                      <p className="text-xs sm:text-sm text-gray-600">{t('gameMode.createRoomDesc', 'Bắt đầu game mới và mời bạn bè')}</p>
+                      <h4 className="text-base sm:text-lg font-bold text-gray-800">{t('gameMode.createRoom')}</h4>
+                      <p className="text-xs sm:text-sm text-gray-600">{t('gameMode.createRoomDesc')}</p>
                     </div>
                   </div>
                   
                   <div className="space-y-1 sm:space-y-2 mb-3 sm:mb-4">
                     <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
                       <Crown className="w-3 h-3 sm:w-4 sm:h-4" />
-                      <span>{t('gameMode.becomeHost', 'Trở thành chủ phòng')}</span>
+                      <span>{t('gameMode.becomeHost')}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
                       <Users className="w-3 h-3 sm:w-4 sm:h-4" />
-                      <span>{t('gameMode.invitePlayers', 'Mời tối đa 10 người chơi')}</span>
+                      <span>{t('gameMode.invitePlayers')}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
                       <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
-                      <span>{t('gameMode.customizeSettings', 'Tùy chỉnh cài đặt game')}</span>
+                      <span>{t('gameMode.customizeSettings')}</span>
                     </div>
                   </div>
                   
@@ -173,7 +173,7 @@ const GameModeSelector: React.FC<GameModeSelectorProps> = ({
                     }`}
                     disabled={connectionStatus !== 'connected'}
                   >
-                    {connectionStatus === 'connected' ? t('gameMode.createRoom', 'Tạo phòng') : t('common.connecting', 'Đang kết nối...')}
+                    {connectionStatus === 'connected' ? t('gameMode.createRoom') : t('common.connecting')}
                   </button>
                 </div>
               </div>

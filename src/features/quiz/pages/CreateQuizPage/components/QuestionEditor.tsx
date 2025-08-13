@@ -3,6 +3,7 @@ import Button from '../../../../../shared/components/ui/Button';
 import { Question, Answer } from '../types';
 import { generateId } from '../utils';
 
+import { useTranslation } from 'react-i18next';
 interface QuestionEditorProps {
   question: Question;
   onChange: (q: Question) => void;
@@ -10,6 +11,8 @@ interface QuestionEditorProps {
 }
 
 const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onDelete }) => {
+  const { t } = useTranslation();
+
   
   // Xử lý thay đổi loại câu hỏi
   const handleTypeChange = (newType: Question['type']) => {
@@ -164,9 +167,9 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
           max={100}
           value={question.points}
           onChange={e => onChange({ ...question, points: parseInt(e.target.value) || 1 })}
-          placeholder="Điểm"
+          placeholder={t("profile.sort.score")}
         />
-        <Button variant="outline" onClick={onDelete} className="text-red-600 border-red-300">Xóa</Button>
+        <Button variant="outline" onClick={onDelete} className="text-red-600 border-red-300">{t("action.clear")}</Button>
       </div>
 
       {/* Nội dung theo từng dạng */}
@@ -192,7 +195,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
                   checked={a.isCorrect}
                   onChange={() => handleSetCorrect(idx)}
                 />
-                <span className="text-sm">Đúng</span>
+                <span className="text-sm">{t("common.correct")}</span>
               </label>
               {question.answers.length > 2 && (
                 <Button 

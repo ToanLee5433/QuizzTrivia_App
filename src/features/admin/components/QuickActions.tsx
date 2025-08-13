@@ -30,7 +30,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
   // 1. Tạo thông báo hệ thống
   const createSystemNotification = async () => {
     if (!notificationData.message.trim()) {
-      toast.error(t('admin.quickActions.toasts.enterMessage', 'Please enter notification content!'));
+      toast.error(t('admin.quickActions.toasts.enterMessage'));
       return;
     }
 
@@ -55,10 +55,10 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
       setShowBanner(true);
       setTimeout(() => setShowBanner(false), 5000);
       
-      toast.success(t('admin.quickActions.toasts.createSuccess', 'Notification created successfully!'));
+      toast.success(t('admin.quickActions.toasts.createSuccess'));
     } catch (error) {
       console.error('Error creating notification:', error);
-      toast.error(t('admin.quickActions.toasts.createError', 'Error creating notification!'));
+      toast.error(t('admin.quickActions.toasts.createError'));
     } finally {
       setLoading(false);
     }
@@ -92,9 +92,9 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
       link.download = `quiz-app-backup-${new Date().toISOString().split('T')[0]}.json`;
       link.click();
       
-      toast.success(t('admin.quickActions.toasts.backupSuccess', 'Data backup successful!'));
+      toast.success(t('admin.quickActions.toasts.backupSuccess'));
     } catch (error) {
-      toast.error(t('admin.quickActions.toasts.backupError', 'Error during data backup!'));
+      toast.error(t('admin.quickActions.toasts.backupError'));
     } finally {
       setLoading(false);
     }
@@ -102,7 +102,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
 
   // 3. Xóa thông báo hệ thống
   const deleteNotifications = async () => {
-    if (!confirm(t('admin.quickActions.toasts.confirmDeleteAll', 'Are you sure you want to disable all visible notifications?'))) return;
+    if (!confirm(t('admin.quickActions.toasts.confirmDeleteAll'))) return;
     
     setLoading(true);
     try {
@@ -113,11 +113,11 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
       );
       
       await Promise.all(deletePromises);
-      toast.success(t('admin.quickActions.toasts.deleteSuccess', 'All notifications disabled!'));
+      toast.success(t('admin.quickActions.toasts.deleteSuccess'));
       onRefreshData();
     } catch (error) {
       console.error('Error deleting notifications:', error);
-      toast.error(t('admin.quickActions.toasts.deleteError', 'Error disabling notifications!'));
+      toast.error(t('admin.quickActions.toasts.deleteError'));
     } finally {
       setLoading(false);
     }
@@ -125,7 +125,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
 
   // 4. Dọn dẹp dữ liệu đã xóa
   const cleanupDeletedData = async () => {
-    if (!confirm(t('admin.quickActions.toasts.confirmCleanup', 'Are you sure you want to cleanup deleted data (quizzes, users)?'))) return;
+    if (!confirm(t('admin.quickActions.toasts.confirmCleanup'))) return;
     setLoading(true);
     try {
       // Xóa quiz đã bị đánh dấu deleted=true
@@ -139,10 +139,10 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
       const userDeletePromises = deletedUsers.map(u => updateDoc(doc(db, 'users', u.id), { isPurged: true }));
 
       await Promise.all([...quizDeletePromises, ...userDeletePromises]);
-      toast.success(t('admin.quickActions.toasts.cleanupSuccess', 'Deleted data cleaned up!'));
+      toast.success(t('admin.quickActions.toasts.cleanupSuccess'));
       onRefreshData();
     } catch (error) {
-      toast.error(t('admin.quickActions.toasts.cleanupError', 'Error during cleanup!'));
+      toast.error(t('admin.quickActions.toasts.cleanupError'));
     } finally {
       setLoading(false);
     }
@@ -152,29 +152,29 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
     // Updated actions as requested
     {
       icon: '📢',
-      title: t('admin.quickActions.items.notify.title', 'Send notification'),
-      description: t('admin.quickActions.items.notify.desc', 'Send notification to all users'),
+      title: t('admin.quickActions.items.notify.title'),
+      description: t('admin.quickActions.items.notify.desc'),
       action: openNotificationModal,
       color: 'blue'
     },
     {
       icon: '❌',
-      title: t('admin.quickActions.items.deleteNotifications.title', 'Clear notifications'),
-      description: t('admin.quickActions.items.deleteNotifications.desc', 'Disable all active notifications'),
+      title: t('admin.quickActions.items.deleteNotifications.title'),
+      description: t('admin.quickActions.items.deleteNotifications.desc'),
       action: deleteNotifications,
       color: 'red'
     },
     {
       icon: '🗂️',
-      title: t('admin.quickActions.items.backup.title', 'Backup data'),
-      description: t('admin.quickActions.items.backup.desc', 'Export all system data'),
+      title: t('admin.quickActions.items.backup.title'),
+      description: t('admin.quickActions.items.backup.desc'),
       action: backupData,
       color: 'green'
     },
     {
       icon: '🗑️',
-      title: t('admin.quickActions.items.cleanup.title', 'Cleanup deleted data'),
-      description: t('admin.quickActions.items.cleanup.desc', 'Mark deleted quizzes and users as purged'),
+      title: t('admin.quickActions.items.cleanup.title'),
+      description: t('admin.quickActions.items.cleanup.desc'),
       action: cleanupDeletedData,
       color: 'orange'
     }
@@ -205,7 +205,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
       )}
       <h3 className="text-lg font-semibold mb-4 flex items-center">
         <span className="text-2xl mr-2">⚡</span>
-        {t('admin.quickActions.title', 'Quick actions')}
+        {t('admin.quickActions.title')}
       </h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -228,22 +228,22 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
 
       {/* Thống kê nhanh hiển thị */}
       <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-        <h4 className="font-medium mb-2">📊 {t('admin.quickActions.systemStatus', 'System status')}</h4>
+        <h4 className="font-medium mb-2">📊 {t('admin.quickActions.systemStatus')}</h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
-            <div className="text-gray-600">{t('admin.quickActions.stats.users', 'Users')}</div>
+            <div className="text-gray-600">{t('admin.quickActions.stats.users')}</div>
             <div className="font-bold text-blue-600">{stats.totalUsers}</div>
           </div>
           <div>
-            <div className="text-gray-600">{t('admin.quickActions.stats.totalQuizzes', 'Total Quizzes')}</div>
+            <div className="text-gray-600">{t('admin.quickActions.stats.totalQuizzes')}</div>
             <div className="font-bold text-yellow-600">{stats.totalQuizzes}</div>
           </div>
           <div>
-            <div className="text-gray-600">{t('admin.quickActions.stats.completions', 'Completions')}</div>
+            <div className="text-gray-600">{t('admin.quickActions.stats.completions')}</div>
             <div className="font-bold text-green-600">{stats.completedQuizzes}</div>
           </div>
           <div>
-            <div className="text-gray-600">{t('admin.quickActions.stats.creators', 'Creators')}</div>
+            <div className="text-gray-600">{t('admin.quickActions.stats.creators')}</div>
             <div className="font-bold text-purple-600">{stats.totalCreators}</div>
           </div>
         </div>
@@ -253,18 +253,18 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
       {showNotificationModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <h2 className="text-xl font-semibold mb-4">{t('admin.quickActions.modal.title', 'Send system notification')}</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('admin.quickActions.modal.title')}</h2>
             
             <div className="space-y-4">
               {/* Nội dung thông báo */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('admin.quickActions.modal.contentLabel', 'Notification content')}
+                  {t('admin.quickActions.modal.contentLabel')}
                 </label>
                 <textarea
                   value={notificationData.message}
                   onChange={(e) => setNotificationData(prev => ({ ...prev, message: e.target.value }))}
-                  placeholder={t('admin.quickActions.modal.contentPlaceholder', 'Enter notification content...')}
+                  placeholder={t('admin.quickActions.modal.contentPlaceholder')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={4}
                 />
@@ -273,33 +273,33 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
               {/* Loại thông báo */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('admin.quickActions.modal.typeLabel', 'Notification type')}
+                  {t('admin.quickActions.modal.typeLabel')}
                 </label>
                 <select
                   value={notificationData.type}
                   onChange={(e) => setNotificationData(prev => ({ ...prev, type: e.target.value as any }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="info">{t('admin.quickActions.modal.type.info', 'Info (Blue)')}</option>
-                  <option value="warning">{t('admin.quickActions.modal.type.warning', 'Warning (Yellow)')}</option>
-                  <option value="success">{t('admin.quickActions.modal.type.success', 'Success (Green)')}</option>
-                  <option value="error">{t('admin.quickActions.modal.type.error', 'Error (Red)')}</option>
+                  <option value="info">{t('admin.quickActions.modal.type.info')}</option>
+                  <option value="warning">{t('admin.quickActions.modal.type.warning')}</option>
+                  <option value="success">{t('admin.quickActions.modal.type.success')}</option>
+                  <option value="error">{t('admin.quickActions.modal.type.error')}</option>
                 </select>
               </div>
 
               {/* Đối tượng nhận thông báo */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('admin.quickActions.modal.targetLabel', 'Target audience')}
+                  {t('admin.quickActions.modal.targetLabel')}
                 </label>
                 <select
                   value={notificationData.targetRole}
                   onChange={(e) => setNotificationData(prev => ({ ...prev, targetRole: e.target.value as any }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="all">{t('admin.quickActions.modal.target.all', 'All users')}</option>
-                  <option value="user">{t('admin.quickActions.modal.target.user', 'Users only')}</option>
-                  <option value="creator">{t('admin.quickActions.modal.target.creator', 'Creators only')}</option>
+                  <option value="all">{t('admin.quickActions.modal.target.all')}</option>
+                  <option value="user">{t('admin.quickActions.modal.target.user')}</option>
+                  <option value="creator">{t('admin.quickActions.modal.target.creator')}</option>
                 </select>
               </div>
 
@@ -310,14 +310,14 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
                   className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
                   disabled={loading}
                 >
-                  {t('cancel', 'Cancel')}
+                  {t('cancel')}
                 </button>
                 <button
                   onClick={createSystemNotification}
                   disabled={loading || !notificationData.message.trim()}
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? t('admin.quickActions.modal.sending', 'Sending...') : t('admin.quickActions.modal.send', 'Send notification')}
+                  {loading ? t('admin.quickActions.modal.sending') : t('admin.quickActions.modal.send')}
                 </button>
               </div>
             </div>

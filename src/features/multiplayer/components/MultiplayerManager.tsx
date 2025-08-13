@@ -333,7 +333,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
               />
               {readyCountdown !== null && (
                 <div className="m-4 p-3 bg-blue-50 border border-blue-200 rounded text-blue-700 inline-block">
-                  {t('common.start', 'Bắt đầu')}: {readyCountdown}s
+                  {t('common.start')}: {readyCountdown}s
                 </div>
               )}
             </div>

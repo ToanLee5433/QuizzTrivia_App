@@ -60,7 +60,7 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-xl font-bold text-gray-900">
-            {t('multiplayer.createRoom', 'Tạo phòng mới')}
+            {t('multiplayer.createRoom')}
           </h2>
           <button
             onClick={onClose}
@@ -75,13 +75,13 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
           {/* Room Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('multiplayer.roomName', 'Tên phòng')}
+              {t('multiplayer.roomName')}
             </label>
             <input
               type="text"
               value={roomName}
               onChange={(e) => setRoomName(e.target.value)}
-              placeholder={t('multiplayer.enterRoomName', 'Nhập tên phòng...')}
+              placeholder={t('multiplayer.enterRoomName')}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
@@ -91,7 +91,7 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <Users className="w-4 h-4 inline mr-2" />
-              {t('multiplayer.maxPlayers', 'Số người tối đa')}
+              {t('multiplayer.maxPlayers')}
             </label>
             <select
               value={maxPlayers}
@@ -110,7 +110,7 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <Clock className="w-4 h-4 inline mr-2" />
-              {t('multiplayer.timeLimit', 'Thời gian mỗi câu')}
+              {t('multiplayer.timeLimit')}
             </label>
             <select
               value={timeLimit}
@@ -129,7 +129,7 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
           <div className="space-y-4">
             <h3 className="text-sm font-medium text-gray-700 flex items-center">
               <Settings className="w-4 h-4 mr-2" />
-              {t('multiplayer.roomSettings', 'Cài đặt phòng')}
+              {t('multiplayer.roomSettings')}
             </h3>
 
             {/* Show Leaderboard */}
@@ -142,7 +142,7 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
               <label htmlFor="showLeaderboard" className="ml-2 text-sm text-gray-700">
-                {t('multiplayer.showLeaderboard', 'Hiển thị bảng xếp hạng')}
+                {t('multiplayer.showLeaderboard')}
               </label>
             </div>
 
@@ -157,7 +157,7 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
               />
               <label htmlFor="isPrivate" className="ml-2 text-sm text-gray-700 flex items-center">
                 <Lock className="w-4 h-4 mr-1" />
-                {t('multiplayer.private', 'Phòng riêng tư')}
+                {t('multiplayer.private')}
               </label>
             </div>
 
@@ -165,13 +165,13 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
             {isPrivate && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('multiplayer.password', 'Mật khẩu')}
+                  {t('multiplayer.password')}
                 </label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder={t('multiplayer.enterPassword', 'Nhập mật khẩu...')}
+                  placeholder={t('multiplayer.enterPassword')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required={isPrivate}
                 />
@@ -183,7 +183,7 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
           {selectedQuiz && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <h4 className="font-medium text-blue-900 mb-2">
-                {t('quiz.selectedQuiz', 'Quiz đã chọn')}
+                {t('quiz.selectedQuiz')}
               </h4>
               <div className="text-sm text-blue-800">
                 <div className="font-medium">{selectedQuiz.title}</div>
@@ -201,13 +201,13 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
               onClick={onClose}
               className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
             >
-              {t('common.cancel', 'Hủy')}
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               className="flex-1 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors font-medium"
             >
-              {t('multiplayer.createRoom', 'Tạo phòng')}
+              {t('multiplayer.createRoom')}
             </button>
           </div>
         </form>

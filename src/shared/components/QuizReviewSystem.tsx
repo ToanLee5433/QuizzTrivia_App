@@ -174,7 +174,7 @@ const QuizReviewSystem: React.FC<QuizReviewSystemProps> = ({
       {showSubmitForm && user && !hasUserReviewed && (
         <div className="mb-8 p-6 bg-blue-50 rounded-xl border border-blue-200">
           <h4 className="text-lg font-semibold text-gray-900 mb-4">
-            {t('quiz.reviews.reviewQuiz', { quizTitle })}
+            {t('quiz.reviews.reviewQuiz', {quizTitle})}
           </h4>
           
           <div className="mb-4">

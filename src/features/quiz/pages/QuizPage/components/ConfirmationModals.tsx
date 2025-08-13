@@ -1,6 +1,7 @@
 import React from 'react';
 import { Question } from '../../../types';
 
+import { useTranslation } from 'react-i18next';
 interface ConfirmationModalsProps {
   modalControls: {
     showExitModal: boolean;
@@ -23,6 +24,8 @@ const ConfirmationModals: React.FC<ConfirmationModalsProps> = ({
   unansweredQuestions,
   onGoToQuestion,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <>
       {/* Exit Confirmation Modal */}
@@ -67,8 +70,7 @@ const ConfirmationModals: React.FC<ConfirmationModalsProps> = ({
               <button
                 onClick={() => modalControls.setShowSubmitModal(false)}
                 className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
-              >
-                Hủy
+              >{t("common.cancel")}
               </button>
               <button
                 onClick={onConfirmSubmit}

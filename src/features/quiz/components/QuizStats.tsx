@@ -1,11 +1,14 @@
 import React from 'react';
 import { Quiz } from '../types';
 
+import { useTranslation } from 'react-i18next';
 interface QuizStatsProps {
   quizzes: Quiz[];
 }
 
 const QuizStats: React.FC<QuizStatsProps> = ({ quizzes }) => {
+  const { t } = useTranslation();
+
   // Calculate statistics
   const totalQuizzes = quizzes.length;
   const completedQuizzes = quizzes.filter(q => q.isCompleted).length;
@@ -38,7 +41,7 @@ const QuizStats: React.FC<QuizStatsProps> = ({ quizzes }) => {
       <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-blue-100 text-sm font-medium">Tổng Quiz</p>
+            <p className="text-blue-100 text-sm font-medium">{t("admin.quizManagement.cards.totalQuizzes")}</p>
             <p className="text-3xl font-bold">{totalQuizzes}</p>
           </div>
           <div className="p-3 bg-white/20 rounded-lg">
@@ -56,7 +59,7 @@ const QuizStats: React.FC<QuizStatsProps> = ({ quizzes }) => {
       <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-green-100 text-sm font-medium">Đã hoàn thành</p>
+            <p className="text-green-100 text-sm font-medium">{t("admin.quickActions.stats.completions")}</p>
             <p className="text-3xl font-bold">{completedQuizzes}</p>
           </div>
           <div className="p-3 bg-white/20 rounded-lg">
@@ -83,7 +86,7 @@ const QuizStats: React.FC<QuizStatsProps> = ({ quizzes }) => {
       <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-purple-100 text-sm font-medium">Lượt chơi</p>
+            <p className="text-purple-100 text-sm font-medium">{t("leaderboard.plays")}</p>
             <p className="text-3xl font-bold">{totalPlayers.toLocaleString()}</p>
           </div>
           <div className="p-3 bg-white/20 rounded-lg">
@@ -103,7 +106,7 @@ const QuizStats: React.FC<QuizStatsProps> = ({ quizzes }) => {
       <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-orange-100 text-sm font-medium">Điểm TB</p>
+            <p className="text-orange-100 text-sm font-medium">{t("leaderboard.avgScore")}</p>
             <p className="text-3xl font-bold">{Math.round(averageScore)}%</p>
           </div>
           <div className="p-3 bg-white/20 rounded-lg">
@@ -124,7 +127,7 @@ const QuizStats: React.FC<QuizStatsProps> = ({ quizzes }) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-4 h-4 bg-green-500 rounded"></div>
-              <span className="text-sm text-gray-600">Dễ</span>
+              <span className="text-sm text-gray-600">{t("difficulty.easy")}</span>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium">{difficultyCount.easy}</span>
@@ -139,7 +142,7 @@ const QuizStats: React.FC<QuizStatsProps> = ({ quizzes }) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-4 h-4 bg-yellow-500 rounded"></div>
-              <span className="text-sm text-gray-600">Trung bình</span>
+              <span className="text-sm text-gray-600">{t("difficulty.medium")}</span>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium">{difficultyCount.medium}</span>
@@ -154,7 +157,7 @@ const QuizStats: React.FC<QuizStatsProps> = ({ quizzes }) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-4 h-4 bg-red-500 rounded"></div>
-              <span className="text-sm text-gray-600">Khó</span>
+              <span className="text-sm text-gray-600">{t("difficulty.hard")}</span>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium">{difficultyCount.hard}</span>

@@ -136,7 +136,14 @@ src/
 ### Internationalization
 - Thêm ngôn ngữ mới trong `public/locales/`
 - Sử dụng `useTranslation()` hook
-- Chạy `npm run extract` để quét keys mới
+- Scripts hữu ích:
+  - `npm run i18n:normalize` - Chuẩn hóa locales, xóa nhóm duplicate
+  - `npm run i18n:compare` - So sánh VI↔EN, báo key thiếu/khác
+  - `npm run i18n:reverse` - Codemod reverse-lookup thay literal bằng `t('key')`
+  - `npm run i18n:extract` - Quét key `t()` trong mã nguồn
+  - `npm run i18n:validate` - Đối chiếu key với locales
+  - `npm run i18n:fix` - Sửa nhanh (normalize + fix + update-components + translate)
+  - `npm run i18n:audit` - Báo cáo tổng hợp
 
 ### AI Integration
 - Cấu hình OpenAI API key

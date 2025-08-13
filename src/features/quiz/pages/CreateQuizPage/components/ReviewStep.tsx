@@ -1,17 +1,20 @@
 import React from 'react';
 import { QuizFormData } from '../types';
 
+import { useTranslation } from 'react-i18next';
 interface ReviewStepProps {
   quiz: QuizFormData;
 }
 
 const ReviewStep: React.FC<ReviewStepProps> = ({ quiz }) => {
+  const { t } = useTranslation();
+
   const totalPoints = quiz.questions.reduce((sum, q) => sum + q.points, 0);
 
   return (
     <div className="space-y-6">
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-bold text-blue-800 mb-2">Thông tin Quiz</h3>
+        <h3 className="font-bold text-blue-800 mb-2">{t("createQuiz.steps.info")}</h3>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div><strong>Tiêu đề:</strong> {quiz.title}</div>
           <div><strong>Danh mục:</strong> {quiz.category}</div>

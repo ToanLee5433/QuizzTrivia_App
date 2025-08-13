@@ -1,9 +1,29 @@
 {
-  "timestamp": "2025-08-12T18:02:41.368Z",
-  "total": 221,
-  "withI18n": 110,
-  "withoutI18n": 111,
+  "timestamp": "2025-08-13T09:59:21.678Z",
+  "total": 229,
+  "withI18n": 126,
+  "withoutI18n": 103,
   "components": [
+    {
+      "file": "test-i18n.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "simple-i18n-test.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
     {
       "file": "main.tsx",
       "hasI18n": true,
@@ -15,6 +35,16 @@
       }
     },
     {
+      "file": "I18nTest.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
       "file": "App.tsx",
       "hasI18n": true,
       "hasHardcodedText": true,
@@ -22,6 +52,16 @@
         "useTranslation": true,
         "Trans": true,
         "i18next": true
+      }
+    },
+    {
+      "file": "components\\I18nDebugger.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
       }
     },
     {
@@ -59,9 +99,9 @@
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -126,12 +166,12 @@
     },
     {
       "file": "shared\\components\\QuickReviewSection.tsx",
-      "hasI18n": false,
+      "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -239,9 +279,9 @@
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -306,22 +346,22 @@
     },
     {
       "file": "shared\\components\\layout\\Unauthorized.tsx",
-      "hasI18n": false,
+      "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
       "file": "shared\\components\\layout\\NotFound.tsx",
-      "hasI18n": false,
+      "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -345,6 +385,116 @@
       }
     },
     {
+      "file": "features\\quiz\\components\\ReviewListNew.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\components\\ReviewList.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\components\\ReviewFormNew.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\components\\ReviewForm.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\quiz\\components\\QuizStats.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\quiz\\components\\QuizFilters.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\quiz\\components\\QuizCard.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\components\\QuizBulkImport.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\components\\QuestionEditor.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\components\\ModernGeminiAIGenerator_new.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\components\\GeminiAIQuestionGenerator.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
       "file": "features\\quiz\\pages\\ResultPage.tsx",
       "hasI18n": true,
       "hasHardcodedText": true,
@@ -359,9 +509,9 @@
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -369,9 +519,9 @@
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -439,9 +589,9 @@
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -449,9 +599,9 @@
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -465,7 +615,17 @@
       }
     },
     {
-      "file": "features\\quiz\\components\\ReviewListNew.tsx",
+      "file": "features\\auth\\pages\\Profile.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\auth\\pages\\LoginPage.tsx",
       "hasI18n": false,
       "hasHardcodedText": false,
       "imports": {
@@ -475,19 +635,19 @@
       }
     },
     {
-      "file": "features\\quiz\\components\\ReviewList.tsx",
+      "file": "features\\auth\\pages\\AuthPageNew.tsx",
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
-      "file": "features\\quiz\\components\\ReviewFormNew.tsx",
+      "file": "features\\auth\\components\\RoleSelection.tsx",
       "hasI18n": false,
-      "hasHardcodedText": false,
+      "hasHardcodedText": true,
       "imports": {
         "useTranslation": false,
         "Trans": false,
@@ -495,7 +655,17 @@
       }
     },
     {
-      "file": "features\\quiz\\components\\ReviewForm.tsx",
+      "file": "features\\auth\\components\\ProtectedRoute.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\auth\\components\\ProfileDebugPanel.tsx",
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
@@ -505,69 +675,29 @@
       }
     },
     {
-      "file": "features\\quiz\\components\\QuizStats.tsx",
+      "file": "features\\auth\\components\\OTPVerification.tsx",
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
-      "file": "features\\quiz\\components\\QuizFilters.tsx",
+      "file": "features\\auth\\components\\ForgotPassword.tsx",
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
-      "file": "features\\quiz\\components\\QuizCard.tsx",
+      "file": "features\\auth\\components\\AutoLogoutOnBan.tsx",
       "hasI18n": true,
       "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\quiz\\components\\QuizBulkImport.tsx",
-      "hasI18n": false,
-      "hasHardcodedText": false,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\quiz\\components\\QuestionEditor.tsx",
-      "hasI18n": true,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\quiz\\components\\ModernGeminiAIGenerator_new.tsx",
-      "hasI18n": false,
-      "hasHardcodedText": false,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\quiz\\components\\GeminiAIQuestionGenerator.tsx",
-      "hasI18n": false,
-      "hasHardcodedText": false,
       "imports": {
         "useTranslation": false,
         "Trans": false,
@@ -587,7 +717,7 @@
     {
       "file": "features\\multiplayer\\pages\\MultiplayerMain.tsx",
       "hasI18n": false,
-      "hasHardcodedText": false,
+      "hasHardcodedText": true,
       "imports": {
         "useTranslation": false,
         "Trans": false,
@@ -597,7 +727,7 @@
     {
       "file": "features\\multiplayer\\pages\\CreateMultiplayerRoom.tsx",
       "hasI18n": false,
-      "hasHardcodedText": false,
+      "hasHardcodedText": true,
       "imports": {
         "useTranslation": false,
         "Trans": false,
@@ -657,7 +787,7 @@
     {
       "file": "features\\multiplayer\\components\\MultiplayerLobby.tsx",
       "hasI18n": false,
-      "hasHardcodedText": false,
+      "hasHardcodedText": true,
       "imports": {
         "useTranslation": false,
         "Trans": false,
@@ -667,7 +797,7 @@
     {
       "file": "features\\multiplayer\\components\\MultiplayerGameSimple.tsx",
       "hasI18n": false,
-      "hasHardcodedText": false,
+      "hasHardcodedText": true,
       "imports": {
         "useTranslation": false,
         "Trans": false,
@@ -725,96 +855,6 @@
       }
     },
     {
-      "file": "features\\auth\\pages\\Profile.tsx",
-      "hasI18n": true,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": true,
-        "Trans": true,
-        "i18next": true
-      }
-    },
-    {
-      "file": "features\\auth\\pages\\LoginPage.tsx",
-      "hasI18n": false,
-      "hasHardcodedText": false,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\auth\\pages\\AuthPageNew.tsx",
-      "hasI18n": true,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": true,
-        "Trans": true,
-        "i18next": true
-      }
-    },
-    {
-      "file": "features\\auth\\components\\RoleSelection.tsx",
-      "hasI18n": false,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\auth\\components\\ProtectedRoute.tsx",
-      "hasI18n": false,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\auth\\components\\ProfileDebugPanel.tsx",
-      "hasI18n": true,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\auth\\components\\OTPVerification.tsx",
-      "hasI18n": true,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\auth\\components\\ForgotPassword.tsx",
-      "hasI18n": true,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\auth\\components\\AutoLogoutOnBan.tsx",
-      "hasI18n": true,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
       "file": "features\\admin\\pages\\StatsDashboard.tsx",
       "hasI18n": false,
       "hasHardcodedText": true,
@@ -839,9 +879,9 @@
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -859,9 +899,9 @@
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -869,9 +909,9 @@
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -929,29 +969,29 @@
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
       "file": "features\\admin\\components\\QuizPreview.tsx",
-      "hasI18n": false,
+      "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
       "file": "features\\admin\\components\\QuickActions_Simple.tsx",
-      "hasI18n": false,
+      "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -959,29 +999,29 @@
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
       "file": "features\\admin\\components\\BulkActions.tsx",
-      "hasI18n": false,
+      "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
       "file": "features\\admin\\components\\AdminUtilities.tsx",
-      "hasI18n": false,
+      "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -1049,9 +1089,9 @@
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -1066,12 +1106,12 @@
     },
     {
       "file": "features\\admin\\components\\AdminProtectedRoute.tsx",
-      "hasI18n": false,
+      "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -1086,12 +1126,12 @@
     },
     {
       "file": "features\\admin\\components\\AdminLayout.tsx",
-      "hasI18n": false,
+      "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -1102,6 +1142,16 @@
         "useTranslation": false,
         "Trans": false,
         "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\CreateQuizPage\\index.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -1122,16 +1172,6 @@
         "useTranslation": false,
         "Trans": false,
         "i18next": false
-      }
-    },
-    {
-      "file": "features\\quiz\\pages\\CreateQuizPage\\index.tsx",
-      "hasI18n": true,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": true,
-        "Trans": true,
-        "i18next": true
       }
     },
     {
@@ -1225,56 +1265,6 @@
       }
     },
     {
-      "file": "features\\quiz\\pages\\QuizPage\\components\\Timer.tsx",
-      "hasI18n": false,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\quiz\\pages\\QuizPage\\components\\QuickNavigation.tsx",
-      "hasI18n": true,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\quiz\\pages\\QuizPage\\components\\QuestionRenderer.tsx",
-      "hasI18n": true,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": true,
-        "Trans": true,
-        "i18next": true
-      }
-    },
-    {
-      "file": "features\\quiz\\pages\\QuizPage\\components\\ProgressIndicator.tsx",
-      "hasI18n": false,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\quiz\\pages\\QuizPage\\components\\ConfirmationModals.tsx",
-      "hasI18n": false,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
       "file": "features\\quiz\\pages\\CreateQuizPage\\components\\SortableItem.tsx",
       "hasI18n": true,
       "hasHardcodedText": true,
@@ -1286,12 +1276,12 @@
     },
     {
       "file": "features\\quiz\\pages\\CreateQuizPage\\components\\ReviewStep.tsx",
-      "hasI18n": false,
+      "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -1339,9 +1329,9 @@
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -1349,9 +1339,9 @@
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -1359,9 +1349,9 @@
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
       }
     },
     {
@@ -1379,15 +1369,75 @@
       "hasI18n": true,
       "hasHardcodedText": true,
       "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizPage\\components\\Timer.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
         "useTranslation": false,
         "Trans": false,
         "i18next": false
       }
     },
     {
+      "file": "features\\quiz\\pages\\QuizPage\\components\\QuickNavigation.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizPage\\components\\QuestionRenderer.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizPage\\components\\ProgressIndicator.tsx",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizPage\\components\\ConfirmationModals.tsx",
+      "hasI18n": true,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": true,
+        "Trans": true,
+        "i18next": true
+      }
+    },
+    {
       "file": "vite-env.d.ts",
       "hasI18n": false,
       "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "test-console.ts",
+      "hasI18n": false,
+      "hasHardcodedText": true,
       "imports": {
         "useTranslation": false,
         "Trans": false,
@@ -1405,26 +1455,6 @@
       }
     },
     {
-      "file": "utils\\initializeCategories.ts",
-      "hasI18n": false,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "utils\\createTestResults.ts",
-      "hasI18n": false,
-      "hasHardcodedText": true,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
       "file": "shared\\types.ts",
       "hasI18n": false,
       "hasHardcodedText": true,
@@ -1438,6 +1468,26 @@
       "file": "shared\\index.ts",
       "hasI18n": false,
       "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "utils\\initializeCategories.ts",
+      "hasI18n": false,
+      "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "utils\\createTestResults.ts",
+      "hasI18n": false,
+      "hasHardcodedText": true,
       "imports": {
         "useTranslation": false,
         "Trans": false,
@@ -1485,6 +1535,26 @@
       }
     },
     {
+      "file": "locales\\resources.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "firebase\\config.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
       "file": "lib\\store.ts",
       "hasI18n": true,
       "hasHardcodedText": false,
@@ -1496,16 +1566,6 @@
     },
     {
       "file": "lib\\index.ts",
-      "hasI18n": false,
-      "hasHardcodedText": false,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "firebase\\config.ts",
       "hasI18n": false,
       "hasHardcodedText": false,
       "imports": {
@@ -1612,6 +1672,16 @@
         "useTranslation": false,
         "Trans": true,
         "i18next": true
+      }
+    },
+    {
+      "file": "lib\\i18n\\index-static.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
       }
     },
     {
@@ -1965,16 +2035,6 @@
       }
     },
     {
-      "file": "features\\multiplayer\\pages\\index.ts",
-      "hasI18n": false,
-      "hasHardcodedText": false,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
       "file": "features\\multiplayer\\services\\index.ts",
       "hasI18n": false,
       "hasHardcodedText": false,
@@ -1998,6 +2058,16 @@
       "file": "features\\multiplayer\\services\\enhancedMultiplayerService.ts",
       "hasI18n": true,
       "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\multiplayer\\pages\\index.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
       "imports": {
         "useTranslation": false,
         "Trans": false,
@@ -2065,26 +2135,6 @@
       }
     },
     {
-      "file": "features\\quiz\\pages\\QuizPage\\utils.ts",
-      "hasI18n": false,
-      "hasHardcodedText": false,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
-      "file": "features\\quiz\\pages\\QuizPage\\types.ts",
-      "hasI18n": false,
-      "hasHardcodedText": false,
-      "imports": {
-        "useTranslation": false,
-        "Trans": false,
-        "i18next": false
-      }
-    },
-    {
       "file": "features\\quiz\\pages\\CreateQuizPage\\utils.ts",
       "hasI18n": true,
       "hasHardcodedText": true,
@@ -2108,6 +2158,26 @@
       "file": "features\\quiz\\pages\\CreateQuizPage\\constants.ts",
       "hasI18n": false,
       "hasHardcodedText": true,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizPage\\utils.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "features\\quiz\\pages\\QuizPage\\types.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
       "imports": {
         "useTranslation": false,
         "Trans": false,
@@ -2196,6 +2266,16 @@
     },
     {
       "file": "features\\quiz\\pages\\QuizPage\\hooks\\index.ts",
+      "hasI18n": false,
+      "hasHardcodedText": false,
+      "imports": {
+        "useTranslation": false,
+        "Trans": false,
+        "i18next": false
+      }
+    },
+    {
+      "file": "simple-test.js",
       "hasI18n": false,
       "hasHardcodedText": false,
       "imports": {

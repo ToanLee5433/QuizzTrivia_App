@@ -77,29 +77,29 @@ const GameResults: React.FC<GameResultsProps> = ({
         <div className="flex items-center justify-center gap-3">
           <Trophy className="w-8 h-8 text-yellow-500" />
           <h1 className="text-3xl font-bold text-gray-900">
-            {t('multiplayer.game.gameOver', 'Game kết thúc')}
+            {t('multiplayer.game.gameOver')}
           </h1>
         </div>
         
         {currentPlayer && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 inline-block">
             <div className="text-lg font-semibold text-blue-900">
-              {t('multiplayer.yourResult', 'Kết quả của bạn')}
+              {t('multiplayer.yourResult')}
             </div>
             <div className="flex items-center justify-center gap-6 mt-2 text-blue-800">
               <div className="text-center">
                 <div className="text-2xl font-bold">{currentPlayer.score}</div>
-                <div className="text-sm">{t('common.points', 'điểm')}</div>
+                <div className="text-sm">{t('common.points')}</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold">#{currentPlayer.rank}</div>
-                <div className="text-sm">{t('common.rank', 'hạng')}</div>
+                <div className="text-sm">{t('common.rank')}</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold">
                   {Math.round((currentPlayer.correctAnswers / currentPlayer.totalAnswers) * 100)}%
                 </div>
-                <div className="text-sm">{t('common.accuracy', 'chính xác')}</div>
+                <div className="text-sm">{t('common.accuracy')}</div>
               </div>
             </div>
           </div>
@@ -111,7 +111,7 @@ const GameResults: React.FC<GameResultsProps> = ({
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4">
           <h2 className="text-xl font-bold flex items-center gap-2">
             <Trophy className="w-6 h-6" />
-            {t('multiplayer.game.finalResults', 'Kết quả cuối cùng')}
+            {t('multiplayer.game.finalResults')}
           </h2>
         </div>
         
@@ -134,13 +134,13 @@ const GameResults: React.FC<GameResultsProps> = ({
                   {player.username}
                   {player.id === currentUserId && (
                     <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                      {t('common.you', 'Bạn')}
+                      {t('common.you')}
                     </span>
                   )}
                 </div>
                 <div className="text-sm text-gray-600">
-                  {player.correctAnswers}/{player.totalAnswers} {t('common.correct', 'đúng')} • 
-                  {Math.round(player.averageTime)}s {t('common.avgTime', 'TB')}
+                  {player.correctAnswers}/{player.totalAnswers} {t('common.correct')} • 
+                  {Math.round(player.averageTime)}s {t('common.avgTime')}
                 </div>
               </div>
 
@@ -150,7 +150,7 @@ const GameResults: React.FC<GameResultsProps> = ({
                   {player.score}
                 </div>
                 <div className="text-xs text-gray-500">
-                  {t('common.points', 'điểm')}
+                  {t('common.points')}
                 </div>
               </div>
 
@@ -160,7 +160,7 @@ const GameResults: React.FC<GameResultsProps> = ({
                   {Math.round((player.correctAnswers / player.totalAnswers) * 100)}%
                 </div>
                 <div className="text-xs text-gray-500">
-                  {t('common.accuracy', 'chính xác')}
+                  {t('common.accuracy')}
                 </div>
               </div>
             </div>
@@ -176,7 +176,7 @@ const GameResults: React.FC<GameResultsProps> = ({
             {gameStats.totalQuestions}
           </div>
           <div className="text-sm text-gray-600">
-            {t('multiplayer.totalQuestions', 'Tổng câu hỏi')}
+            {t('multiplayer.totalQuestions')}
           </div>
         </div>
 
@@ -186,7 +186,7 @@ const GameResults: React.FC<GameResultsProps> = ({
             {Math.round(gameStats.totalTime / 60)}m
           </div>
           <div className="text-sm text-gray-600">
-            {t('multiplayer.totalTime', 'Tổng thời gian')}
+            {t('multiplayer.totalTime')}
           </div>
         </div>
 
@@ -196,7 +196,7 @@ const GameResults: React.FC<GameResultsProps> = ({
             {Math.round(gameStats.averageScore)}
           </div>
           <div className="text-sm text-gray-600">
-            {t('multiplayer.avgScore', 'Điểm TB')}
+            {t('multiplayer.avgScore')}
           </div>
         </div>
       </div>
@@ -208,7 +208,7 @@ const GameResults: React.FC<GameResultsProps> = ({
             onClick={onPlayAgain}
             className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
           >
-            {t('multiplayer.playAgain', 'Chơi lại')}
+            {t('multiplayer.playAgain')}
           </button>
         )}
         
@@ -217,7 +217,7 @@ const GameResults: React.FC<GameResultsProps> = ({
             onClick={onBackToLobby}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
           >
-            {t('multiplayer.backToLobby', 'Về phòng chờ')}
+            {t('multiplayer.backToLobby')}
           </button>
         )}
         
@@ -226,7 +226,7 @@ const GameResults: React.FC<GameResultsProps> = ({
             onClick={onLeaveRoom}
             className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
           >
-            {t('multiplayer.leaveRoom', 'Rời phòng')}
+            {t('multiplayer.leaveRoom')}
           </button>
         )}
       </div>
