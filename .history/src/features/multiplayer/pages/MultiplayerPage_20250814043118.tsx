@@ -72,7 +72,7 @@ const MultiplayerPage: React.FC = () => {
         currentUserId={user.uid}
         currentUserName={user.displayName || user.email || 'User'}
         onBackToQuizSelection={() => navigate('/quizzes')}
-        onQuizComplete={() => {
+        onQuizComplete={(results) => {
           // Don't auto-redirect - let players see final results
           // navigate('/leaderboard')
         }}

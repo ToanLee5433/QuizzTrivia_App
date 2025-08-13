@@ -25,7 +25,7 @@ service cloud.firestore {
       allow create: if request.auth != null 
         && request.resource.data.hostId == request.auth.uid;
       
-      // Only host updates room game state (phase, indices, timers, settings, gameData)
+      // Only host updates room game state (phase, indices, timers, settings)
       allow update: if request.auth != null && resource.data.hostId == request.auth.uid;
       allow delete: if request.auth != null 
         && resource.data.hostId == request.auth.uid;

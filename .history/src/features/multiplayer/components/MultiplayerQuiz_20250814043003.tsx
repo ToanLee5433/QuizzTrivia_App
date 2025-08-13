@@ -154,9 +154,8 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
           }
         }
         
-        // Clear countdown when game actually starts OR countdown reaches 0
-        if ((data.status === 'playing' && data.gameData?.phase === 'question') || 
-            (data.status === 'starting' && gameStartCountdown === 0)) {
+        // Clear countdown when game actually starts
+        if (data.status === 'playing' && data.gameData?.phase === 'question') {
           setGameStartCountdown(null);
         }
         
@@ -334,6 +333,9 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
     explanation: 'Question loading...'
   };
 
+  // Check if we have real quiz data
+  const hasRealQuizData = processedQuestions.length > 0;
+
   // Countdown timer (optimized - minimal dependencies)
   useEffect(() => {
     if (locked || showResults || timeLeft <= 0) return;
@@ -467,13 +469,6 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-100 p-2 sm:p-4 lg:p-6">
       <div className="max-w-4xl mx-auto">
-        
-        {/* Debug Info for development */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="bg-yellow-100 border border-yellow-300 rounded p-2 mb-4 text-xs">
-            Status: {currentRoomStatus} | Phase: {currentGamePhase} | Countdown: {gameStartCountdown} | Questions: {processedQuestions.length}
-          </div>
-        )}
         
         {/* Game Start Countdown Phase */}
         {currentRoomStatus === 'starting' && gameStartCountdown !== null && gameStartCountdown >= 0 && (
@@ -793,10 +788,8 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
           </div>
         )}
 
-        {/* Regular Game UI - show when ready to play */}
-        {((currentRoomStatus === 'playing') || (gameStartCountdown === 0)) && 
-         currentGamePhase !== 'finished' && 
-         processedQuestions.length > 0 && (
+        {/* Regular Game UI - only show during question/waiting phases */}
+        {(!currentRoomStatus || currentRoomStatus === 'playing') && currentGamePhase !== 'finished' && gameStartCountdown === null && (
           <>
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 mb-4 sm:mb-6">

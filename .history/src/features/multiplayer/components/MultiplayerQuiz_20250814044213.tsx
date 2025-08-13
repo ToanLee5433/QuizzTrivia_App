@@ -468,13 +468,6 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-100 p-2 sm:p-4 lg:p-6">
       <div className="max-w-4xl mx-auto">
         
-        {/* Debug Info for development */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="bg-yellow-100 border border-yellow-300 rounded p-2 mb-4 text-xs">
-            Status: {currentRoomStatus} | Phase: {currentGamePhase} | Countdown: {gameStartCountdown} | Questions: {processedQuestions.length}
-          </div>
-        )}
-        
         {/* Game Start Countdown Phase */}
         {currentRoomStatus === 'starting' && gameStartCountdown !== null && gameStartCountdown >= 0 && (
           <div className="bg-white rounded-2xl shadow-xl p-8 text-center mb-6">
@@ -793,10 +786,10 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
           </div>
         )}
 
-        {/* Regular Game UI - show when ready to play */}
-        {((currentRoomStatus === 'playing') || (gameStartCountdown === 0)) && 
-         currentGamePhase !== 'finished' && 
-         processedQuestions.length > 0 && (
+        {/* Regular Game UI - show when game is actually playing or has gameData */}
+        {((currentRoomStatus === 'playing' && realtimeGameData) || 
+          (gameStartCountdown === 0 && processedQuestions.length > 0)) && 
+         currentGamePhase !== 'finished' && gameStartCountdown !== null && gameStartCountdown !== undefined && gameStartCountdown <= 0 && (
           <>
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 mb-4 sm:mb-6">

@@ -468,13 +468,6 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-100 p-2 sm:p-4 lg:p-6">
       <div className="max-w-4xl mx-auto">
         
-        {/* Debug Info for development */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="bg-yellow-100 border border-yellow-300 rounded p-2 mb-4 text-xs">
-            Status: {currentRoomStatus} | Phase: {currentGamePhase} | Countdown: {gameStartCountdown} | Questions: {processedQuestions.length}
-          </div>
-        )}
-        
         {/* Game Start Countdown Phase */}
         {currentRoomStatus === 'starting' && gameStartCountdown !== null && gameStartCountdown >= 0 && (
           <div className="bg-white rounded-2xl shadow-xl p-8 text-center mb-6">

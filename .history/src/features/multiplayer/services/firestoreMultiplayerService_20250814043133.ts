@@ -11,7 +11,11 @@ import {
   where, 
   orderBy, 
   limit, 
-  onSnapshot, 
+  onSnap  connect(userId: string, username: string): void {
+    this.userId = userId;
+    this.username = username;
+    this.emit('connected', { userId, username });
+  }
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
@@ -29,8 +33,6 @@ export interface Room {
   status: 'waiting' | 'starting' | 'playing' | 'finished';
   quizId?: string;
   quiz?: any;
-  gameStartAt?: any;
-  gameStartDelay?: number;
   settings: {
     timeLimit: number;
     timePerQuestion?: number;
@@ -47,6 +49,7 @@ export interface Player {
   username: string;
   isReady: boolean;
   isHost: boolean;
+  isOnline: boolean;
   score: number;
   answers: PlayerAnswer[];
   joinedAt: Date;
@@ -73,13 +76,15 @@ export interface ChatMessage {
 export interface GameData {
   currentQuestionIndex: number;
   questions: any[];
+  phase: 'waiting' | 'starting' | 'playing' | 'question' | 'results' | 'finished';
   timePerQuestion?: number;
-  phase?: 'question' | 'results' | 'finished';
-  questionStartAt?: any;
-  questionEndAt?: any;
-  nextQuestionAt?: any;
+  questionEndAt?: Date;
+  questionResults?: any;
+  nextQuestionAt?: Date;
+  showingResults?: boolean;
   startTime?: Date;
   endTime?: Date;
+  lastUpdated?: Date;
   results?: {
     [playerId: string]: {
       score: number;
@@ -95,6 +100,8 @@ export interface MultiplayerServiceInterface {
   // Connection
   connect(userId: string, username: string): Promise<void>;
   disconnect(): Promise<void>;
+  resumeRoom(roomId: string): Promise<{ room: Room } | null>;
+  setPresence(roomId: string, isOnline: boolean): Promise<void>;
   
   // Room Management
   createRoom(roomConfig: Partial<Room>, selectedQuiz?: any): Promise<{ room: Room; player: Player }>;
@@ -104,6 +111,7 @@ export interface MultiplayerServiceInterface {
   // Game Control
   startGame(roomId: string): Promise<void>;
   submitAnswer(roomId: string, questionId: string, answer: number, timeSpent: number): Promise<void>;
+  advanceToNextQuestion(roomId: string): Promise<void>;
   
   // Communication
   sendChatMessage(roomId: string, message: string): Promise<void>;
@@ -162,18 +170,94 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
     this.unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
     this.unsubscribeFunctions = [];
     
-    // Leave current room if any
-    if (this.currentRoomId) {
-      await this.leaveRoom(this.currentRoomId);
-    }
+    // Do NOT remove player from room on disconnect; just mark offline
+    try {
+      if (this.currentRoomId && this.userId) {
+        const playerDoc = doc(db, 'multiplayer_rooms', this.currentRoomId, 'players', this.userId);
+        await updateDoc(playerDoc, { isOnline: false });
+      }
+    } catch (_) {}
     
     console.log('🔌 Disconnected from Firestore Multiplayer Service');
     this.emit('disconnected');
   }
 
+  async resumeRoom(roomId: string): Promise<{ room: Room } | null> {
+    try {
+      const roomRef = doc(db, 'multiplayer_rooms', roomId);
+      const roomSnap = await getDoc(roomRef);
+      if (!roomSnap.exists()) return null;
+
+      // Ensure the player doc exists
+      if (!this.userId) return null;
+      const playerRef = doc(db, 'multiplayer_rooms', roomId, 'players', this.userId);
+      const playerSnap = await getDoc(playerRef);
+      if (!playerSnap.exists()) return null;
+
+      // Mark presence online
+      await updateDoc(playerRef, { isOnline: true });
+
+      this.currentRoomId = roomId;
+      this.listenToRoom(roomId);
+      this.listenToPlayers(roomId);
+      this.listenToMessages(roomId);
+
+      const data = roomSnap.data();
+      const room: Room = {
+        id: roomSnap.id,
+        code: data.code,
+        name: data.name,
+        hostId: data.hostId,
+        players: [],
+        maxPlayers: data.maxPlayers,
+        isPrivate: data.isPrivate,
+        password: data.password,
+        status: data.status,
+        quizId: data.quizId,
+        quiz: data.quiz,
+        settings: data.settings,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        startedAt: data.startedAt?.toDate(),
+        finishedAt: data.finishedAt?.toDate(),
+      };
+
+      this.emit('room:updated', room);
+      if (data.status === 'playing' && data.gameData) {
+        this.emit('game:start', data.gameData);
+      }
+
+      return { room };
+    } catch (e) {
+      console.error('Failed to resume room:', e);
+      return null;
+    }
+  }
+
+  async setPresence(roomId: string, isOnline: boolean): Promise<void> {
+    try {
+      if (!this.userId) return;
+      const playerDoc = doc(db, 'multiplayer_rooms', roomId, 'players', this.userId);
+      await updateDoc(playerDoc, { isOnline });
+    } catch (_) {}
+  }
+
   // Room Management
   async createRoom(roomConfig: Partial<Room>, selectedQuiz?: any): Promise<{ room: Room; player: Player }> {
     try {
+      console.log('🏗️ Creating room with config:', {
+        roomConfig,
+        selectedQuiz,
+        hasSelectedQuiz: !!selectedQuiz,
+        quizId: selectedQuiz?.id,
+        questionsCount: selectedQuiz?.questions?.length || 0,
+        selectedQuizKeys: selectedQuiz ? Object.keys(selectedQuiz) : 'No quiz'
+      });
+      
+      // Check if user is connected
+      if (!this.userId || !this.username) {
+        throw new Error('User not connected. Please ensure you are logged in.');
+      }
+
       // Generate unique room code
       const code = this.generateRoomCode();
       
@@ -186,6 +270,7 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
         username: this.username,
         isReady: false,
         isHost: true,
+        isOnline: true,
         score: 0,
         answers: [],
         joinedAt: new Date()
@@ -208,12 +293,20 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
           questions: selectedQuiz.questions || []
         } : null,
         settings: {
-          timeLimit: roomConfig.settings?.timeLimit || 30,
+          timeLimit: roomConfig.settings?.timeLimit || roomConfig.settings?.timePerQuestion || 30,
+          timePerQuestion: roomConfig.settings?.timePerQuestion || roomConfig.settings?.timeLimit || 30,
           showLeaderboard: roomConfig.settings?.showLeaderboard ?? true,
           allowLateJoin: roomConfig.settings?.allowLateJoin ?? true
         },
         createdAt: serverTimestamp()
       };
+
+      console.log('🏗️ Creating room with quiz data:', {
+        quizTitle: selectedQuiz?.title,
+        questionsInSelectedQuiz: selectedQuiz?.questions?.length || 0,
+        questionsInRoomData: roomData.quiz?.questions?.length || 0,
+        roomDataQuizKeys: roomData.quiz ? Object.keys(roomData.quiz) : 'No quiz'
+      });
 
       await setDoc(roomDoc, roomData);
 
@@ -229,6 +322,14 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
       this.listenToPlayers(roomDoc.id);
       this.listenToMessages(roomDoc.id);
 
+      // Push URL with room identifiers for persistence across reloads
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('roomId', roomDoc.id);
+        url.searchParams.set('code', code);
+        window.history.replaceState({}, '', url.toString());
+      } catch (_) {}
+
       const room: Room = {
         id: roomDoc.id,
         code,
@@ -241,7 +342,12 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
         status: 'waiting',
         quizId: selectedQuiz?.id || undefined,
         quiz: roomData.quiz || undefined,
-        settings: roomData.settings,
+        settings: {
+          timeLimit: roomData.settings.timeLimit,
+          timePerQuestion: roomData.settings.timePerQuestion,
+          showLeaderboard: roomData.settings.showLeaderboard,
+          allowLateJoin: roomData.settings.allowLateJoin
+        },
         createdAt: new Date()
       };
 
@@ -261,29 +367,36 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
       const q = query(collection(db, 'multiplayer_rooms'), where('code', '==', roomCode), limit(1));
       const snapshot = await getDocs(q);
       
-      if (snapshot.empty) throw new Error('room_not_found');
+      if (snapshot.empty) throw new Error('Không tìm thấy phòng với mã này');
       
       const roomDoc = snapshot.docs[0];
       const roomData = roomDoc.data();
       
       // Check if room requires password
       if (roomData.isPrivate && !password) {
-        throw new Error('room_requires_password');
+        throw new Error('Phòng này yêu cầu mật khẩu');
       }
       
       if (roomData.isPrivate && roomData.password !== password) {
-        throw new Error('wrong_password');
+        throw new Error('Mật khẩu không đúng');
+      }
+      
+      // Check if player already exists in room
+      const existingPlayerDoc = doc(db, 'multiplayer_rooms', roomDoc.id, 'players', this.userId);
+      const existingPlayerSnap = await getDoc(existingPlayerDoc);
+      if (existingPlayerSnap.exists()) {
+        throw new Error('Bạn đã tham gia phòng này rồi');
       }
       
       // Check room capacity
       const playersSnapshot = await getDocs(collection(db, 'multiplayer_rooms', roomDoc.id, 'players'));
       if (playersSnapshot.size >= roomData.maxPlayers) {
-        throw new Error('room_full');
+        throw new Error('Phòng đã đầy');
       }
       
       // Check if game is in progress
       if (roomData.status === 'playing' && !roomData.settings.allowLateJoin) {
-        throw new Error('game_in_progress');
+        throw new Error('Trò chơi đang diễn ra và không cho phép tham gia muộn');
       }
       
       // Create player
@@ -292,6 +405,7 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
         username: this.username,
         isReady: false,
         isHost: false,
+        isOnline: true,
         score: 0,
         answers: [],
         joinedAt: new Date()
@@ -310,7 +424,9 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
       this.listenToMessages(roomDoc.id);
       
       // Send system message
-      await this.sendSystemMessage(roomDoc.id, `${this.username} joined the room`);
+      await this.sendSystemMessage(roomDoc.id, `${this.username} đã tham gia phòng`);
+      
+      console.log('✅ Player added to room successfully');
       
       const room: Room = {
         id: roomDoc.id,
@@ -329,6 +445,12 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
       };
       
       console.log('🚪 Joined room:', room);
+      // Push URL with roomId for persistence across reloads
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('roomId', roomDoc.id);
+        window.history.replaceState({}, '', url.toString());
+      } catch (_) {}
       this.emit('room:joined', room);
       
       return { room, player };
@@ -357,6 +479,14 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
       
       console.log('👋 Left room:', roomId);
       this.emit('room:left', roomId);
+
+      // Clean URL params after leaving
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('roomId');
+        url.searchParams.delete('code');
+        window.history.replaceState({}, '', url.toString());
+      } catch (_) {}
     } catch (error) {
       console.error('Error leaving room:', error);
       throw error;
@@ -366,17 +496,23 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
   // Game Control
   async startGame(roomId: string): Promise<void> {
     try {
+      const roomRef = doc(db, 'multiplayer_rooms', roomId);
+      const roomSnap = await getDoc(roomRef);
+      
+      if (!roomSnap.exists()) {
+        throw new Error('Room not found');
+      }
+
       console.log('🚀 Starting 5-second game countdown...');
       
-      // First, set room status to 'starting' with countdown timer
-      const roomRef = doc(db, 'multiplayer_rooms', roomId);
+      // Set room to "starting" phase with 5-second countdown
       await updateDoc(roomRef, {
         status: 'starting',
         gameStartAt: serverTimestamp(),
         gameStartDelay: 5000 // 5 seconds delay
       });
-      
-      // After 5 seconds, actually start the game
+
+      // Wait 5 seconds then actually start the game
       setTimeout(() => {
         this.actuallyStartGame(roomId).catch(console.error);
       }, 5000);
@@ -389,12 +525,6 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
 
   private async actuallyStartGame(roomId: string): Promise<void> {
     try {
-      console.log('🔍 Loading quiz data:', {
-        roomId,
-        hasUserId: !!this.userId,
-        timestamp: new Date().toISOString()
-      });
-      
       const roomRef = doc(db, 'multiplayer_rooms', roomId);
       const roomSnap = await getDoc(roomRef);
       
@@ -403,95 +533,104 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
       }
       
       const roomData = roomSnap.data();
-      let questions = [];
       
-      if (roomData.quiz && roomData.quiz.questions && roomData.quiz.questions.length > 0) {
-        console.log('✅ Using embedded quiz questions:', questions.length);
+      // Prepare questions: prefer embedded quiz data, else fetch from Firestore by quizId, else fallback
+      let questions = [] as any[];
+      
+      console.log('🔍 Loading quiz data:', {
+        hasEmbeddedQuiz: !!(roomData.quiz && Array.isArray(roomData.quiz.questions)),
+        embeddedQuestionsCount: roomData.quiz?.questions?.length || 0,
+        quizId: roomData.quizId,
+        quizIdType: typeof roomData.quizId
+      });
+      
+      if (roomData.quiz && Array.isArray(roomData.quiz.questions) && roomData.quiz.questions.length > 0) {
         questions = roomData.quiz.questions;
+        console.log('✅ Using embedded quiz questions:', questions.length);
       } else if (roomData.quizId) {
         try {
           console.log('📡 Fetching quiz from Firestore with ID:', roomData.quizId);
-          
-          const quizRef = doc(db, 'quizzes', roomData.quizId);
+          const quizRef = doc(db, 'quizzes', String(roomData.quizId));
           const quizSnap = await getDoc(quizRef);
           
           if (quizSnap.exists()) {
+            const quizData = quizSnap.data();
             console.log('📡 Quiz data received:', {
-              id: quizSnap.id,
-              hasData: !!quizSnap.data(),
-              hasQuestions: !!quizSnap.data()?.questions
+              hasQuestions: Array.isArray(quizData.questions),
+              questionsCount: quizData.questions?.length || 0,
+              quizDataKeys: Object.keys(quizData)
             });
             
-            const quizData = quizSnap.data();
-            if (quizData?.questions && Array.isArray(quizData.questions)) {
+            if (Array.isArray(quizData.questions) && quizData.questions.length > 0) {
               questions = quizData.questions;
               console.log('✅ Loaded quiz questions from Firestore:', questions.length, questions.slice(0, 2));
             } else {
               console.warn('⚠️ Quiz found but no valid questions array');
             }
           } else {
-            console.warn('⚠️ Quiz document not found in Firestore');
+            console.warn('⚠️ Quiz not found in Firestore for ID:', roomData.quizId);
           }
         } catch (e) {
           console.error('❌ Failed to load quiz by quizId:', e);
         }
       }
       
-      // Fallback to mock questions if no real questions available
       if (!questions || questions.length === 0) {
-        console.warn('⚠️ No quiz questions found, using fallback mock questions');
-        questions = [
-          {
-            id: 'mock-q1',
-            text: 'What is 2 + 2?',
-            answers: [
-              { text: '3', isCorrect: false },
-              { text: '4', isCorrect: true },
-              { text: '5', isCorrect: false },
-              { text: '6', isCorrect: false }
-            ]
-          },
-          {
-            id: 'mock-q2',
-            text: 'What is the capital of Vietnam?',
-            answers: [
-              { text: 'Ho Chi Minh City', isCorrect: false },
-              { text: 'Hanoi', isCorrect: true },
-              { text: 'Da Nang', isCorrect: false },
-              { text: 'Hue', isCorrect: false }
-            ]
-          }
-        ];
+        throw new Error('No quiz questions available. Please select a valid quiz before starting the game.');
       }
       
-      const timePerQuestion = roomData.settings?.timePerQuestion || 30;
-      
-      const gameData = {
+      console.log('🔍 Final questions before storing to gameData:', {
+        questionsCount: questions.length,
+        questionsStructure: questions.map((q, idx) => ({
+          index: idx,
+          id: q.id,
+          title: q.title,
+          optionsCount: q.options?.length,
+          hasOptions: Array.isArray(q.options),
+          keys: Object.keys(q)
+        })),
+        fullQuestions: JSON.stringify(questions, null, 2)
+      });
+
+      // Create game data with proper structure for client consumption
+      const timePerQuestion = roomData.settings?.timePerQuestion || roomData.settings?.timeLimit || 30;
+      const gameData: GameData = {
         currentQuestionIndex: 0,
         questions,
-        timePerQuestion,
         phase: 'question',
-        questionStartAt: serverTimestamp(),
-        questionEndAt: new Date(Date.now() + (timePerQuestion * 1000))
+        timePerQuestion,
+        questionEndAt: new Date(Date.now() + timePerQuestion * 1000),
+        startTime: new Date(),
+        results: {},
       };
       
-      // Update room with game data and playing status
+      // Update room status with game data immediately after countdown
       await updateDoc(roomRef, {
         status: 'playing',
         startedAt: serverTimestamp(),
         gameData,
-        // Clear countdown fields
-        gameStartAt: null,
-        gameStartDelay: null
+        // Ensure timePerQuestion is available for clients
+        'settings.timePerQuestion': timePerQuestion
       });
       
-      const emitData = {
-        ...gameData,
-        roomId,
-        questionsCount: questions.length
+      console.log('🎮 Game started:', { roomId, questionsCount: questions.length, timePerQuestion });
+      
+      // Emit game start event with complete data needed by clients
+      const emitData = { 
+        ...gameData, 
+        timePerQuestion, 
+        total: questions.length, 
+        index: gameData.currentQuestionIndex + 1,
+        currentQuestion: questions[0] // Include first question
       };
       
-      console.log('🎮 Game actually started with data:', emitData);
+      console.log('🎮 Emitting game:start with data:', {
+        emitData,
+        emitDataKeys: Object.keys(emitData),
+        questionsLength: emitData.questions?.length || 'No questions',
+        firstQuestion: emitData.questions?.[0] || 'No first question'
+      });
+      
       this.emit('game:start', emitData);
     } catch (error) {
       console.error('Error starting game:', error);
@@ -579,46 +718,73 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
         const roomRef = doc(db, 'multiplayer_rooms', roomId);
         await updateDoc(roomRef, {
           'gameData.phase': 'results',
-          'gameData.nextQuestionAt': new Date(Date.now() + 3000) // 3 seconds to show results
+          'gameData.nextQuestionAt': new Date(Date.now() + 3000), // 3 seconds from now
+          'gameData.showingResults': true
         });
         
-        // After 3 seconds, advance to next question or finish game
-        setTimeout(async () => {
-          try {
-            const roomSnap = await getDoc(roomRef);
-            if (!roomSnap.exists()) return;
-            
-            const roomData = roomSnap.data();
-            const currentIndex = roomData.gameData?.currentQuestionIndex || 0;
-            const totalQuestions = roomData.gameData?.questions?.length || 0;
-            
-            if (currentIndex + 1 >= totalQuestions) {
-              // Game finished
-              await updateDoc(roomRef, {
-                status: 'finished',
-                finishedAt: serverTimestamp(),
-                'gameData.phase': 'finished'
-              });
-            } else {
-              // Next question
-              const nextIndex = currentIndex + 1;
-              const timePerQuestion = roomData.settings?.timePerQuestion || 30;
-              
-              await updateDoc(roomRef, {
-                'gameData.currentQuestionIndex': nextIndex,
-                'gameData.phase': 'question',
-                'gameData.questionStartAt': serverTimestamp(),
-                'gameData.questionEndAt': new Date(Date.now() + (timePerQuestion * 1000)),
-                'gameData.nextQuestionAt': null
-              });
-            }
-          } catch (error) {
-            console.error('Error advancing question:', error);
-          }
+        // Wait 3 seconds then advance
+        setTimeout(() => {
+          this.advanceToNextQuestion(roomId).catch(console.error);
         }, 3000);
       }
     } catch (error) {
-      console.error('Error checking players answers:', error);
+      console.error('Error checking for question advancement:', error);
+    }
+  }
+
+  async advanceToNextQuestion(roomId: string): Promise<void> {
+    try {
+      const roomRef = doc(db, 'multiplayer_rooms', roomId);
+      const roomSnap = await getDoc(roomRef);
+      if (!roomSnap.exists()) return;
+      
+      const data = roomSnap.data();
+      const questions = data.gameData?.questions || [];
+      const currentIndex = data.gameData?.currentQuestionIndex || 0;
+      const nextIndex = currentIndex + 1;
+      const timePerQuestion = data.settings?.timePerQuestion || data.gameData?.timePerQuestion || 30;
+      
+      if (nextIndex >= questions.length) {
+        // Finish game
+        console.log('🏁 Game finished - no more questions');
+        await updateDoc(roomRef, {
+          status: 'finished',
+          finishedAt: serverTimestamp(),
+          'gameData.phase': 'finished',
+          'gameData.endTime': new Date(),
+          'gameData.showingResults': false,
+          'gameData.nextQuestionAt': null,
+        });
+        this.emit('game:finish', data.gameData?.results || {});
+        return;
+      }
+      
+      // Advance to next question
+      console.log(`➡️ Advancing to question ${nextIndex + 1}/${questions.length}`);
+      await updateDoc(roomRef, {
+        'gameData.currentQuestionIndex': nextIndex,
+        'gameData.phase': 'question',
+        'gameData.questionEndAt': new Date(Date.now() + timePerQuestion * 1000),
+        'gameData.showingResults': false,
+        'gameData.nextQuestionAt': null,
+        'gameData.lastUpdated': new Date()
+      });
+      
+      const nextQuestion = questions[nextIndex];
+      
+      // Emit next question event with complete data
+      this.emit('game:next-question', {
+        currentQuestionIndex: nextIndex,
+        questions,
+        timePerQuestion,
+        total: questions.length,
+        index: nextIndex + 1,
+        currentQuestion: nextQuestion
+      });
+      
+    } catch (error) {
+      console.error('Error advancing to next question:', error);
+      throw error;
     }
   }
 
@@ -730,7 +896,27 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
         
         // Emit game events
         if (roomData.gameData) {
-          this.emit('game:data_updated', roomData.gameData);
+          // Always emit complete game data for clients
+          const completeGameData = {
+            ...roomData.gameData,
+            timePerQuestion: roomData.settings?.timePerQuestion || 30,
+            total: roomData.gameData.questions?.length || 0,
+            index: (roomData.gameData.currentQuestionIndex || 0) + 1,
+            currentQuestion: roomData.gameData.questions?.[roomData.gameData.currentQuestionIndex || 0]
+          };
+          this.emit('game:data_updated', completeGameData);
+        }
+
+        // Ensure all clients enter game when status switches to playing
+        if (roomData.status === 'playing' && roomData.gameData) {
+          const gameStartData = {
+            ...roomData.gameData,
+            timePerQuestion: roomData.settings?.timePerQuestion || 30,
+            total: roomData.gameData.questions?.length || 0,
+            index: (roomData.gameData.currentQuestionIndex || 0) + 1,
+            currentQuestion: roomData.gameData.questions?.[roomData.gameData.currentQuestionIndex || 0]
+          };
+          this.emit('game:start', gameStartData);
         }
       }
     });
@@ -747,11 +933,18 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
       snapshot.forEach((doc) => {
         const data = doc.data();
         players.push({
-          ...data,
+          id: doc.id,
+          username: data.username,
+          isReady: data.isReady || false,
+          isHost: data.isHost || false,
+          isOnline: data.isOnline || true,
+          score: data.score || 0,
+          answers: data.answers || [],
           joinedAt: data.joinedAt?.toDate() || new Date()
         } as Player);
       });
       
+      console.log('👥 Players updated:', players);
       this.emit('players:updated', players);
     });
     
@@ -776,6 +969,7 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
         });
       });
       
+      console.log('💬 Messages updated:', messages.length, 'messages');
       this.emit('messages:updated', messages);
     });
     

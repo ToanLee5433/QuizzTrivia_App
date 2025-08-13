@@ -29,11 +29,8 @@ export interface Room {
   status: 'waiting' | 'starting' | 'playing' | 'finished';
   quizId?: string;
   quiz?: any;
-  gameStartAt?: any;
-  gameStartDelay?: number;
   settings: {
     timeLimit: number;
-    timePerQuestion?: number;
     showLeaderboard: boolean;
     allowLateJoin: boolean;
   };
@@ -73,11 +70,6 @@ export interface ChatMessage {
 export interface GameData {
   currentQuestionIndex: number;
   questions: any[];
-  timePerQuestion?: number;
-  phase?: 'question' | 'results' | 'finished';
-  questionStartAt?: any;
-  questionEndAt?: any;
-  nextQuestionAt?: any;
   startTime?: Date;
   endTime?: Date;
   results?: {
@@ -366,35 +358,6 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
   // Game Control
   async startGame(roomId: string): Promise<void> {
     try {
-      console.log('🚀 Starting 5-second game countdown...');
-      
-      // First, set room status to 'starting' with countdown timer
-      const roomRef = doc(db, 'multiplayer_rooms', roomId);
-      await updateDoc(roomRef, {
-        status: 'starting',
-        gameStartAt: serverTimestamp(),
-        gameStartDelay: 5000 // 5 seconds delay
-      });
-      
-      // After 5 seconds, actually start the game
-      setTimeout(() => {
-        this.actuallyStartGame(roomId).catch(console.error);
-      }, 5000);
-      
-    } catch (error) {
-      console.error('Error starting game:', error);
-      throw error;
-    }
-  }
-
-  private async actuallyStartGame(roomId: string): Promise<void> {
-    try {
-      console.log('🔍 Loading quiz data:', {
-        roomId,
-        hasUserId: !!this.userId,
-        timestamp: new Date().toISOString()
-      });
-      
       const roomRef = doc(db, 'multiplayer_rooms', roomId);
       const roomSnap = await getDoc(roomRef);
       
@@ -403,96 +366,37 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
       }
       
       const roomData = roomSnap.data();
+      
+      // Prepare questions
       let questions = [];
-      
       if (roomData.quiz && roomData.quiz.questions && roomData.quiz.questions.length > 0) {
-        console.log('✅ Using embedded quiz questions:', questions.length);
         questions = roomData.quiz.questions;
-      } else if (roomData.quizId) {
-        try {
-          console.log('📡 Fetching quiz from Firestore with ID:', roomData.quizId);
-          
-          const quizRef = doc(db, 'quizzes', roomData.quizId);
-          const quizSnap = await getDoc(quizRef);
-          
-          if (quizSnap.exists()) {
-            console.log('📡 Quiz data received:', {
-              id: quizSnap.id,
-              hasData: !!quizSnap.data(),
-              hasQuestions: !!quizSnap.data()?.questions
-            });
-            
-            const quizData = quizSnap.data();
-            if (quizData?.questions && Array.isArray(quizData.questions)) {
-              questions = quizData.questions;
-              console.log('✅ Loaded quiz questions from Firestore:', questions.length, questions.slice(0, 2));
-            } else {
-              console.warn('⚠️ Quiz found but no valid questions array');
-            }
-          } else {
-            console.warn('⚠️ Quiz document not found in Firestore');
-          }
-        } catch (e) {
-          console.error('❌ Failed to load quiz by quizId:', e);
-        }
-      }
-      
-      // Fallback to mock questions if no real questions available
-      if (!questions || questions.length === 0) {
-        console.warn('⚠️ No quiz questions found, using fallback mock questions');
+        console.log('Using real quiz questions:', questions.length);
+      } else {
+        // Fallback to mock questions
         questions = [
-          {
-            id: 'mock-q1',
-            text: 'What is 2 + 2?',
-            answers: [
-              { text: '3', isCorrect: false },
-              { text: '4', isCorrect: true },
-              { text: '5', isCorrect: false },
-              { text: '6', isCorrect: false }
-            ]
-          },
-          {
-            id: 'mock-q2',
-            text: 'What is the capital of Vietnam?',
-            answers: [
-              { text: 'Ho Chi Minh City', isCorrect: false },
-              { text: 'Hanoi', isCorrect: true },
-              { text: 'Da Nang', isCorrect: false },
-              { text: 'Hue', isCorrect: false }
-            ]
-          }
+          { id: 'q1', title: 'What is 2+2?', options: ['3', '4', '5', '6'], correct: 1 },
+          { id: 'q2', title: 'Capital of Vietnam?', options: ['Ho Chi Minh', 'Hanoi', 'Da Nang', 'Hue'], correct: 1 },
+          { id: 'q3', title: 'JavaScript is a...?', options: ['Language', 'Framework', 'Library', 'Database'], correct: 0 }
         ];
+        console.log('Using mock questions');
       }
       
-      const timePerQuestion = roomData.settings?.timePerQuestion || 30;
-      
-      const gameData = {
+      const gameData: GameData = {
         currentQuestionIndex: 0,
         questions,
-        timePerQuestion,
-        phase: 'question',
-        questionStartAt: serverTimestamp(),
-        questionEndAt: new Date(Date.now() + (timePerQuestion * 1000))
+        startTime: new Date()
       };
       
-      // Update room with game data and playing status
+      // Update room status
       await updateDoc(roomRef, {
         status: 'playing',
         startedAt: serverTimestamp(),
-        gameData,
-        // Clear countdown fields
-        gameStartAt: null,
-        gameStartDelay: null
+        gameData
       });
       
-      const emitData = {
-        ...gameData,
-        roomId,
-        questionsCount: questions.length
-      };
-      
-      console.log('🎮 Game actually started with data:', emitData);
-      this.emit('game:start', emitData);
+      console.log('🎮 Game started:', roomId);
+      this.emit('game:start', gameData);
     } catch (error) {
       console.error('Error starting game:', error);
       throw error;
@@ -551,74 +455,9 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
       });
       
       this.emit('answer:submitted', { questionId, answer, timeSpent, isCorrect, points });
-      
-      // Check if all players have submitted and auto-advance
-      this.checkAndAdvanceQuestion(roomId, questionId);
-      
     } catch (error) {
       console.error('Error submitting answer:', error);
       throw error;
-    }
-  }
-
-  private async checkAndAdvanceQuestion(roomId: string, questionId: string): Promise<void> {
-    try {
-      // Get all players
-      const playersSnapshot = await getDocs(collection(db, 'multiplayer_rooms', roomId, 'players'));
-      const players = playersSnapshot.docs.map(doc => doc.data());
-      
-      // Check if all players have answered this question
-      const allAnswered = players.every(player => 
-        player.answers?.some((answer: any) => answer.questionId === questionId)
-      );
-      
-      if (allAnswered && players.length > 0) {
-        console.log('🚀 All players answered, updating room status and advancing...');
-        
-        // Update room with advancement countdown immediately for real-time sync
-        const roomRef = doc(db, 'multiplayer_rooms', roomId);
-        await updateDoc(roomRef, {
-          'gameData.phase': 'results',
-          'gameData.nextQuestionAt': new Date(Date.now() + 3000) // 3 seconds to show results
-        });
-        
-        // After 3 seconds, advance to next question or finish game
-        setTimeout(async () => {
-          try {
-            const roomSnap = await getDoc(roomRef);
-            if (!roomSnap.exists()) return;
-            
-            const roomData = roomSnap.data();
-            const currentIndex = roomData.gameData?.currentQuestionIndex || 0;
-            const totalQuestions = roomData.gameData?.questions?.length || 0;
-            
-            if (currentIndex + 1 >= totalQuestions) {
-              // Game finished
-              await updateDoc(roomRef, {
-                status: 'finished',
-                finishedAt: serverTimestamp(),
-                'gameData.phase': 'finished'
-              });
-            } else {
-              // Next question
-              const nextIndex = currentIndex + 1;
-              const timePerQuestion = roomData.settings?.timePerQuestion || 30;
-              
-              await updateDoc(roomRef, {
-                'gameData.currentQuestionIndex': nextIndex,
-                'gameData.phase': 'question',
-                'gameData.questionStartAt': serverTimestamp(),
-                'gameData.questionEndAt': new Date(Date.now() + (timePerQuestion * 1000)),
-                'gameData.nextQuestionAt': null
-              });
-            }
-          } catch (error) {
-            console.error('Error advancing question:', error);
-          }
-        }, 3000);
-      }
-    } catch (error) {
-      console.error('Error checking players answers:', error);
     }
   }
 

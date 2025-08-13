@@ -29,11 +29,8 @@ export interface Room {
   status: 'waiting' | 'starting' | 'playing' | 'finished';
   quizId?: string;
   quiz?: any;
-  gameStartAt?: any;
-  gameStartDelay?: number;
   settings: {
     timeLimit: number;
-    timePerQuestion?: number;
     showLeaderboard: boolean;
     allowLateJoin: boolean;
   };
@@ -551,74 +548,9 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
       });
       
       this.emit('answer:submitted', { questionId, answer, timeSpent, isCorrect, points });
-      
-      // Check if all players have submitted and auto-advance
-      this.checkAndAdvanceQuestion(roomId, questionId);
-      
     } catch (error) {
       console.error('Error submitting answer:', error);
       throw error;
-    }
-  }
-
-  private async checkAndAdvanceQuestion(roomId: string, questionId: string): Promise<void> {
-    try {
-      // Get all players
-      const playersSnapshot = await getDocs(collection(db, 'multiplayer_rooms', roomId, 'players'));
-      const players = playersSnapshot.docs.map(doc => doc.data());
-      
-      // Check if all players have answered this question
-      const allAnswered = players.every(player => 
-        player.answers?.some((answer: any) => answer.questionId === questionId)
-      );
-      
-      if (allAnswered && players.length > 0) {
-        console.log('🚀 All players answered, updating room status and advancing...');
-        
-        // Update room with advancement countdown immediately for real-time sync
-        const roomRef = doc(db, 'multiplayer_rooms', roomId);
-        await updateDoc(roomRef, {
-          'gameData.phase': 'results',
-          'gameData.nextQuestionAt': new Date(Date.now() + 3000) // 3 seconds to show results
-        });
-        
-        // After 3 seconds, advance to next question or finish game
-        setTimeout(async () => {
-          try {
-            const roomSnap = await getDoc(roomRef);
-            if (!roomSnap.exists()) return;
-            
-            const roomData = roomSnap.data();
-            const currentIndex = roomData.gameData?.currentQuestionIndex || 0;
-            const totalQuestions = roomData.gameData?.questions?.length || 0;
-            
-            if (currentIndex + 1 >= totalQuestions) {
-              // Game finished
-              await updateDoc(roomRef, {
-                status: 'finished',
-                finishedAt: serverTimestamp(),
-                'gameData.phase': 'finished'
-              });
-            } else {
-              // Next question
-              const nextIndex = currentIndex + 1;
-              const timePerQuestion = roomData.settings?.timePerQuestion || 30;
-              
-              await updateDoc(roomRef, {
-                'gameData.currentQuestionIndex': nextIndex,
-                'gameData.phase': 'question',
-                'gameData.questionStartAt': serverTimestamp(),
-                'gameData.questionEndAt': new Date(Date.now() + (timePerQuestion * 1000)),
-                'gameData.nextQuestionAt': null
-              });
-            }
-          } catch (error) {
-            console.error('Error advancing question:', error);
-          }
-        }, 3000);
-      }
-    } catch (error) {
-      console.error('Error checking players answers:', error);
     }
   }
 

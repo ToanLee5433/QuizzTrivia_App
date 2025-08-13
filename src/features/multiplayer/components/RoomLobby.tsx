@@ -57,16 +57,16 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
   const currentPlayer = players.find(p => p.id === currentUserId);
   const isHost = roomData?.hostId === currentUserId;
 
-  // Auto-start countdown when all players are ready (host only)
+  // Show countdown for everyone when all players are ready; only host triggers start
   useEffect(() => {
-    if (isHost && allReady && players.length >= 2) {
+    if (allReady && players.length >= 2) {
       setReadyCountdown(5);
       const interval = setInterval(() => {
         setReadyCountdown(prev => {
           if (prev === null || prev <= 1) {
             clearInterval(interval);
             // Start the game when countdown reaches 0
-            if (multiplayerService && roomData?.id) {
+            if (isHost && multiplayerService && roomData?.id) {
               multiplayerService.startGame(roomData.id);
             }
             return null;

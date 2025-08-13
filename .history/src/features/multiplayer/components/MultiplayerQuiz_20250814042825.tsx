@@ -154,9 +154,8 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
           }
         }
         
-        // Clear countdown when game actually starts OR countdown reaches 0
-        if ((data.status === 'playing' && data.gameData?.phase === 'question') || 
-            (data.status === 'starting' && gameStartCountdown === 0)) {
+        // Clear countdown when game actually starts
+        if (data.status === 'playing' && data.gameData?.phase === 'question') {
           setGameStartCountdown(null);
         }
         
@@ -279,15 +278,22 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
   useEffect(() => {
     const saveFinalResults = async () => {
       if (currentGamePhase === 'finished' && currentUser?.uid && currentRoomData?.id) {
-        // TODO: Implement API call to save results to user profile
-        // const myAnswers = playerAnswers[currentUser.uid] || [];
-        // const myScore = playerScores[currentUser.uid] || 0;
-        // const correctAnswers = myAnswers.filter(a => a.isCorrect).length;
+        const myAnswers = playerAnswers[currentUser.uid] || [];
+        const myScore = playerScores[currentUser.uid] || 0;
+        const correctAnswers = myAnswers.filter(a => a.isCorrect).length;
+        
+        try {
+          // Save to user's profile/history
+          // TODO: Implement API call to save results to user profile
+          
+        } catch (error) {
+          console.error('Error saving final results:', error);
+        }
       }
     };
     
     saveFinalResults();
-  }, [currentGamePhase, currentUser?.uid, currentRoomData?.id]);
+  }, [currentGamePhase, currentUser?.uid, currentRoomData?.id, playerAnswers, playerScores]);
 
   // Convert quiz format from Firestore to multiplayer format (using index-based answers)
   const processedQuestions = useMemo((): ProcessedQuestion[] => {
@@ -334,6 +340,27 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
     explanation: 'Question loading...'
   };
 
+  // Check if we have real quiz data
+  const hasRealQuizData = processedQuestions.length > 0;
+  
+  if (!hasRealQuizData) {
+    console.error('❌ NO REAL QUIZ DATA AVAILABLE - Quiz not loaded properly!');
+  }
+
+  // Debug logging (environment-aware)
+  const isDevMode = import.meta.env?.DEV || import.meta.env?.NODE_ENV === 'development';
+  
+  if (isDevMode) {
+    console.log('🎮 MultiplayerQuiz Debug:', {
+      currentQuestionIndex,
+      questionsCount: processedQuestions.length,
+      question: finalQuestion,
+      hasRealData: hasRealQuizData,
+      timePerQuestion,
+      timeLeft
+    });
+  }
+
   // Countdown timer (optimized - minimal dependencies)
   useEffect(() => {
     if (locked || showResults || timeLeft <= 0) return;
@@ -376,6 +403,10 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
   const handleSelect = (answerIndex: number) => {
     if (locked) return;
     setSelectedIndex(answerIndex);
+    
+    if (isDevMode) {
+      console.log('✅ Answer selected (index):', answerIndex);
+    }
   };
   
   const handleSubmit = async (answerIndex?: number) => {
@@ -397,6 +428,16 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
       const timeSpent = timePerQuestion - timeLeft;
       const isCorrect = indexToSubmit === finalQuestion.correct;
       const points = isCorrect ? Math.max(10, Math.floor(100 - (timeSpent * 2))) : 0; // 10-100 points based on speed
+      
+      if (isDevMode) {
+        console.log('📝 Submitting answer:', { 
+          questionId: finalQuestion.id, 
+          selectedIndex: indexToSubmit, 
+          timeSpent,
+          isCorrect,
+          points
+        });
+      }
       
       // Update client-side scores immediately for fast UI response
       setPlayerScores(prev => ({
@@ -468,15 +509,8 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-100 p-2 sm:p-4 lg:p-6">
       <div className="max-w-4xl mx-auto">
         
-        {/* Debug Info for development */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="bg-yellow-100 border border-yellow-300 rounded p-2 mb-4 text-xs">
-            Status: {currentRoomStatus} | Phase: {currentGamePhase} | Countdown: {gameStartCountdown} | Questions: {processedQuestions.length}
-          </div>
-        )}
-        
         {/* Game Start Countdown Phase */}
-        {currentRoomStatus === 'starting' && gameStartCountdown !== null && gameStartCountdown >= 0 && (
+        {currentRoomStatus === 'starting' && gameStartCountdown !== null && gameStartCountdown > 0 && (
           <div className="bg-white rounded-2xl shadow-xl p-8 text-center mb-6">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Game Starting Soon!</h2>
             <div className="text-6xl font-bold text-purple-600 mb-4">{gameStartCountdown}</div>
@@ -793,10 +827,8 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
           </div>
         )}
 
-        {/* Regular Game UI - show when ready to play */}
-        {((currentRoomStatus === 'playing') || (gameStartCountdown === 0)) && 
-         currentGamePhase !== 'finished' && 
-         processedQuestions.length > 0 && (
+        {/* Regular Game UI - only show during question/waiting phases */}
+        {(!currentRoomStatus || currentRoomStatus === 'playing') && currentGamePhase !== 'finished' && gameStartCountdown === null && (
           <>
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 mb-4 sm:mb-6">
@@ -815,7 +847,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
               {locked && (
                 <div className="flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-xl font-medium text-sm">
                   <CheckCircle size={16} />
-                  <span>Submitted!</span>
+                  <span>Answer Submitted!</span>
                 </div>
               )}
               
@@ -854,7 +886,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
             <div className="bg-orange-100 border-l-4 border-orange-500 p-4 rounded-r-lg mb-4">
               <div className="flex items-center gap-2 text-orange-700">
                 <AlertCircle size={18} />
-                <span className="font-medium">Time is running out!</span>
+                <span className="font-medium">Hurry up! Only {timeLeft} seconds left!</span>
               </div>
             </div>
           )}
@@ -863,7 +895,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
             <div className="bg-blue-100 border-l-4 border-blue-500 p-4 rounded-r-lg mb-4">
               <div className="flex items-center gap-2 text-blue-700">
                 <Clock size={18} />
-                <span className="font-medium">Waiting for other players...</span>
+                <span className="font-medium">Waiting for other players to finish...</span>
               </div>
             </div>
           )}
@@ -871,6 +903,19 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
 
         {/* Question */}
         <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8">
+          {/* Debug info */}
+          {isDevMode && (
+            <div className="mb-4 p-3 bg-yellow-100 border border-yellow-300 rounded text-sm">
+              <strong>🐛 Question Debug:</strong><br/>
+              Question ID: {finalQuestion?.id || 'None'}<br/>
+              Question Title: {finalQuestion?.title || 'None'}<br/>
+              Options Count: {finalQuestion?.options?.length || 0}<br/>
+              Question Index: {currentQuestionIndex}/{processedQuestions.length}<br/>
+              <strong>Data Source:</strong> {currentGameData?.questions?.length ? 'GameData (Firestore)' : 'No Data'}<br/>
+              <strong>Real Questions Available:</strong> {processedQuestions.length}
+            </div>
+          )}
+          
           <div className="text-center mb-6 sm:mb-8">
             <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-4">
               {finalQuestion.title || 'No question available'}
@@ -932,20 +977,20 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
             </div>
           )}
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="text-sm text-gray-500 text-center sm:text-left">
-                {locked ? 'Answer submitted' : 
-                 selectedIndex !== null ? 'Answer selected' : 
-                 'Choose your answer'}
-              </div>
-              
-              {locked && (
-                <div className="flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-xl font-medium">
-                  <CheckCircle size={16} />
-                  <span>Submitted!</span>
-                </div>
-              )}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="text-sm text-gray-500 text-center sm:text-left">
+              {locked ? 'Answer submitted! Waiting for results...' : 
+               selectedIndex !== null ? 'Answer selected - Click Submit when ready' : 
+               'Choose your answer first'}
             </div>
+            
+            {locked && (
+              <div className="flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-xl font-medium">
+                <CheckCircle size={16} />
+                <span>Submitted!</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Question Results Modal */}
