@@ -265,7 +265,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
       roomId,
       roomData
     }));
-    // toast.success(t('multiplayer.success.joinedRoom')); // Removed - too many notifications
+    toast.success(t('multiplayer.success.joinedRoom'));
   };
 
   const handleLeaveRoom = () => {

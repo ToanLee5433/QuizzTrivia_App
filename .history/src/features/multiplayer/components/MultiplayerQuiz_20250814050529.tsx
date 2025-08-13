@@ -57,20 +57,6 @@ interface RoomData {
     questions: Question[];
   };
   players?: any[];
-  questionAnswers?: {
-    [questionIndex: number]: {
-      [playerId: string]: {
-        questionId?: string;
-        selectedAnswer: number;
-        answer?: string;
-        timeToAnswer: number;
-        timeSpent?: number;
-        pointsEarned: number;
-        isCorrect: boolean;
-        timestamp: number;
-      };
-    };
-  };
 }
 
 interface ProcessedQuestion {
@@ -102,7 +88,6 @@ interface MultiplayerQuizProps {
 const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
   gameData,
   roomData,
-  currentUserName,
   multiplayerService
 }) => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -118,8 +103,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
   // Client-side game state for fast performance
   const [playerScores, setPlayerScores] = useState<{[playerId: string]: number}>({});
   const [playerAnswers, setPlayerAnswers] = useState<{[playerId: string]: any[]}>({});
-  const [currentQuestionAnswers, setCurrentQuestionAnswers] = useState<{[playerId: string]: any}>({});
-
+  const [currentQuestionAnswers, setCurrentQuestionAnswers] = useState<{[playerId: string]: {answer: number, timeSpent: number, isCorrect: boolean, points: number}}>({});
   const [waitingForOthers, setWaitingForOthers] = useState<boolean>(false);
   
   const timerRef = useRef<number | null>(null);
@@ -250,38 +234,6 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
       }
     };
   }, [roomData?.id]);
-
-  // Sync all players' scores and answers from server data
-  useEffect(() => {
-    if (!currentRoomData?.questionAnswers) return;
-
-    const serverPlayerScores: {[playerId: string]: number} = {};
-    const serverPlayerAnswers: {[playerId: string]: any[]} = {};
-
-    // Calculate scores and answers from server data for ALL players
-    Object.values(currentRoomData.questionAnswers).forEach(questionData => {
-      Object.entries(questionData).forEach(([playerId, answerData]: [string, any]) => {
-        // Calculate scores
-        serverPlayerScores[playerId] = (serverPlayerScores[playerId] || 0) + (answerData.pointsEarned || 0);
-        
-        // Track answer history
-        if (!serverPlayerAnswers[playerId]) {
-          serverPlayerAnswers[playerId] = [];
-        }
-        serverPlayerAnswers[playerId].push({
-          questionId: answerData.questionId,
-          selectedAnswer: answerData.selectedAnswer,
-          isCorrect: answerData.isCorrect,
-          timeSpent: answerData.timeToAnswer || answerData.timeSpent,
-          points: answerData.pointsEarned || 0
-        });
-      });
-    });
-    
-    // Update state with server data for all players
-    setPlayerScores(serverPlayerScores);
-    setPlayerAnswers(serverPlayerAnswers);
-  }, [currentRoomData?.questionAnswers]);
 
   // Game start countdown effect
   useEffect(() => {
@@ -523,6 +475,13 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-100 p-2 sm:p-4 lg:p-6">
       <div className="max-w-4xl mx-auto">
         
+        {/* Debug Info for development */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="bg-yellow-100 border border-yellow-300 rounded p-2 mb-4 text-xs">
+            Status: {currentRoomStatus} | Phase: {currentGamePhase} | Countdown: {gameStartCountdown} | Questions: {processedQuestions.length}
+          </div>
+        )}
+        
         {/* Game Start Countdown Phase */}
         {currentRoomStatus === 'starting' && gameStartCountdown !== null && gameStartCountdown >= 0 && (
           <div className="bg-white rounded-2xl shadow-xl p-8 text-center mb-6">
@@ -558,23 +517,21 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
             {/* Live Leaderboard */}
             <div className="mb-4">
               <h4 className="font-semibold text-gray-700 mb-3 text-center">Current Standings</h4>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {(currentRoomData?.players || [])
-                  .map((player: any) => ({
-                    ...player,
-                    score: playerScores[player.id] || 0
-                  }))
-                  .sort((a, b) => b.score - a.score)
-                  .map((player, index) => {
-                    const isCurrentUser = player.id === currentUser?.uid;
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {Object.entries(playerScores)
+                  .sort(([,a], [,b]) => b - a)
+                  .slice(0, 5) // Show top 5
+                  .map(([playerId, score], index) => {
+                    const player = currentRoomData?.players?.find((p: any) => p.id === playerId);
+                    const isCurrentUser = playerId === currentUser?.uid;
                     const position = index + 1;
                     const trophy = position === 1 ? '👑' : position === 2 ? '🥈' : position === 3 ? '🥉' : '🏅';
-                    const currentAnswer = currentQuestionAnswers[player.id];
-                    const correctAnswersCount = playerAnswers[player.id]?.filter(a => a.isCorrect).length || 0;
+                    const currentAnswer = currentQuestionAnswers[playerId];
+                    const correctAnswersCount = playerAnswers[playerId]?.filter(a => a.isCorrect).length || 0;
                     
                     return (
                       <div 
-                        key={player.id} 
+                        key={playerId} 
                         className={`flex items-center justify-between p-3 rounded-lg ${
                           isCurrentUser ? 'bg-blue-100 border border-blue-300' : 'bg-gray-50'
                         }`}
@@ -583,14 +540,11 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
                           <span className="text-lg">{trophy}</span>
                           <div>
                             <div className={`font-medium text-sm ${isCurrentUser ? 'text-blue-700' : 'text-gray-800'}`}>
-                              #{position} {isCurrentUser 
-                                ? (currentUserName || player?.username || player?.name || 'You')
-                                : (player?.username || player?.name || player?.displayName || `Player ${position}`)
-                              }
+                              #{position} {player?.username || player?.name || 'Player'}
                               {isCurrentUser && <span className="ml-1 text-xs">(You)</span>}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {correctAnswersCount} đúng • {player.score} điểm
+                              {correctAnswersCount} đúng • {score} điểm
                               {currentAnswer && (
                                 <span className={`ml-2 ${currentAnswer.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
                                   {currentAnswer.isCorrect ? '✓' : '✗'} +{currentAnswer.points}
@@ -600,7 +554,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
                           </div>
                         </div>
                         <div className={`text-right ${isCurrentUser ? 'text-blue-700' : 'text-gray-700'}`}>
-                          <div className="font-bold text-sm">{player.score}</div>
+                          <div className="font-bold text-sm">{score}</div>
                           <div className="text-xs text-gray-500">pts</div>
                         </div>
                       </div>
@@ -611,11 +565,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
             
             {nextQuestionCountdown !== null && (
               <div className="mt-4 text-center">
-                {nextQuestionCountdown > 0 ? (
-                  <p className="text-gray-600">Câu hỏi tiếp theo trong: <span className="font-bold text-blue-600">{nextQuestionCountdown}s</span></p>
-                ) : (
-                  <p className="text-gray-600">Đang chờ người chơi khác...</p>
-                )}
+                <p className="text-gray-600">Next question in: <span className="font-bold text-blue-600">{nextQuestionCountdown}s</span></p>
               </div>
             )}
           </div>
@@ -1037,10 +987,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
                     <div className="flex items-center justify-center gap-2 text-blue-700">
                       <Clock size={20} />
                       <span className="font-semibold">
-                        {nextQuestionCountdown > 0 
-                          ? `Câu hỏi tiếp theo trong ${nextQuestionCountdown} giây...`
-                          : "Đang chờ người chơi khác..."
-                        }
+                        Next question in {nextQuestionCountdown} seconds...
                       </span>
                     </div>
                   </div>

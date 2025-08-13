@@ -253,8 +253,13 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
 
   // Sync all players' scores and answers from server data
   useEffect(() => {
-    if (!currentRoomData?.questionAnswers) return;
+    if (!currentRoomData?.questionAnswers) {
+      console.log('🐛 No questionAnswers data:', currentRoomData);
+      return;
+    }
 
+    console.log('🔄 Syncing scores from server:', currentRoomData.questionAnswers);
+    
     const serverPlayerScores: {[playerId: string]: number} = {};
     const serverPlayerAnswers: {[playerId: string]: any[]} = {};
 
@@ -277,6 +282,8 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
         });
       });
     });
+
+    console.log('📊 Calculated scores for all players:', serverPlayerScores);
     
     // Update state with server data for all players
     setPlayerScores(serverPlayerScores);

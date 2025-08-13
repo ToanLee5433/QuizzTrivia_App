@@ -3,8 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import { 
   Users, 
-  Wifi,
-  WifiOff,
+  Wifi,  const handleNextQuestion = useCallback((gameData: any) => {
+    // console.log('🔄 Next question data:', gameData);
+    setState(prev => ({ 
+      ...prev, 
+      gameData
+    }));
+    // toast.info(`Question ${gameData.index}/${gameData.total}`); // Removed - too many notifications
+  }, []);ff,
   AlertCircle
 } from 'lucide-react';
 
@@ -143,9 +149,9 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
     if (readyCountdown <= 0) {
       // Start game when countdown reaches 0 (any player can trigger)
       if (multiplayerService && state.roomId) {
-        console.log('🎮 Starting game from countdown...');
+        // console.log('🎮 Starting game from countdown...');
         multiplayerService.startGame(state.roomId).then(() => {
-          console.log('✅ Game started successfully');
+          // console.log('✅ Game started successfully');
         }).catch((error) => {
           console.error('❌ Failed to start game:', error);
           toast.error('Failed to start game');
@@ -163,12 +169,12 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
   }, [readyCountdown, multiplayerService, state.roomId]);
 
   const handleGameStart = useCallback((gameData: any) => {
-    console.log('🎮 Game Start Event Received:', {
-      gameData,
-      gameDataKeys: gameData ? Object.keys(gameData) : 'No gameData',
-      hasQuestions: gameData?.questions ? gameData.questions.length : 'No questions',
-      firstQuestion: gameData?.questions?.[0] || 'No first question'
-    });
+    // console.log('🎮 Game Start Event Received:', {
+    //   gameData,
+    //   gameDataKeys: gameData ? Object.keys(gameData) : 'No gameData',
+    //   hasQuestions: gameData?.questions ? gameData.questions.length : 'No questions',
+    //   firstQuestion: gameData?.questions?.[0] || 'No first question'
+    // });
     
     setState(prev => ({ 
       ...prev, 
@@ -179,7 +185,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
   }, [t]);
 
   const handleNextQuestion = useCallback((gameData: any) => {
-    // console.log('🔄 Next question data:', gameData); // Removed debug
+    console.log('🔄 Next question data:', gameData);
     setState(prev => ({ 
       ...prev, 
       gameData
@@ -255,7 +261,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
       roomId,
       roomData
     }));
-    // toast.success(t('multiplayer.success.roomCreated')); // Removed - too many notifications
+    toast.success(t('multiplayer.success.roomCreated'));
   };
 
   const handleRoomJoined = (roomId: string, roomData: any) => {
@@ -265,7 +271,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
       roomId,
       roomData
     }));
-    // toast.success(t('multiplayer.success.joinedRoom')); // Removed - too many notifications
+    toast.success(t('multiplayer.success.joinedRoom'));
   };
 
   const handleLeaveRoom = () => {

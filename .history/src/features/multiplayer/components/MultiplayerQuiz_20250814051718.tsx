@@ -102,7 +102,6 @@ interface MultiplayerQuizProps {
 const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
   gameData,
   roomData,
-  currentUserName,
   multiplayerService
 }) => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -277,7 +276,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
         });
       });
     });
-    
+
     // Update state with server data for all players
     setPlayerScores(serverPlayerScores);
     setPlayerAnswers(serverPlayerAnswers);
@@ -559,22 +558,20 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
             <div className="mb-4">
               <h4 className="font-semibold text-gray-700 mb-3 text-center">Current Standings</h4>
               <div className="space-y-2 max-h-60 overflow-y-auto">
-                {(currentRoomData?.players || [])
-                  .map((player: any) => ({
-                    ...player,
-                    score: playerScores[player.id] || 0
-                  }))
-                  .sort((a, b) => b.score - a.score)
-                  .map((player, index) => {
-                    const isCurrentUser = player.id === currentUser?.uid;
+                {Object.entries(playerScores)
+                  .sort(([,a], [,b]) => b - a)
+                  // .slice(0, 5) // Show all players instead of top 5 only
+                  .map(([playerId, score], index) => {
+                    const player = currentRoomData?.players?.find((p: any) => p.id === playerId);
+                    const isCurrentUser = playerId === currentUser?.uid;
                     const position = index + 1;
                     const trophy = position === 1 ? '👑' : position === 2 ? '🥈' : position === 3 ? '🥉' : '🏅';
-                    const currentAnswer = currentQuestionAnswers[player.id];
-                    const correctAnswersCount = playerAnswers[player.id]?.filter(a => a.isCorrect).length || 0;
+                    const currentAnswer = currentQuestionAnswers[playerId];
+                    const correctAnswersCount = playerAnswers[playerId]?.filter(a => a.isCorrect).length || 0;
                     
                     return (
                       <div 
-                        key={player.id} 
+                        key={playerId} 
                         className={`flex items-center justify-between p-3 rounded-lg ${
                           isCurrentUser ? 'bg-blue-100 border border-blue-300' : 'bg-gray-50'
                         }`}
@@ -583,14 +580,11 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
                           <span className="text-lg">{trophy}</span>
                           <div>
                             <div className={`font-medium text-sm ${isCurrentUser ? 'text-blue-700' : 'text-gray-800'}`}>
-                              #{position} {isCurrentUser 
-                                ? (currentUserName || player?.username || player?.name || 'You')
-                                : (player?.username || player?.name || player?.displayName || `Player ${position}`)
-                              }
+                              #{position} {player?.username || player?.name || 'Player'}
                               {isCurrentUser && <span className="ml-1 text-xs">(You)</span>}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {correctAnswersCount} đúng • {player.score} điểm
+                              {correctAnswersCount} đúng • {score} điểm
                               {currentAnswer && (
                                 <span className={`ml-2 ${currentAnswer.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
                                   {currentAnswer.isCorrect ? '✓' : '✗'} +{currentAnswer.points}
@@ -600,7 +594,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
                           </div>
                         </div>
                         <div className={`text-right ${isCurrentUser ? 'text-blue-700' : 'text-gray-700'}`}>
-                          <div className="font-bold text-sm">{player.score}</div>
+                          <div className="font-bold text-sm">{score}</div>
                           <div className="text-xs text-gray-500">pts</div>
                         </div>
                       </div>

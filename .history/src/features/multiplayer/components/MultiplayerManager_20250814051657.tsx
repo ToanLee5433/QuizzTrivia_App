@@ -179,12 +179,12 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
   }, [t]);
 
   const handleNextQuestion = useCallback((gameData: any) => {
-    // console.log('🔄 Next question data:', gameData); // Removed debug
+    console.log('🔄 Next question data:', gameData);
     setState(prev => ({ 
       ...prev, 
       gameData
     }));
-    // toast.info(`Question ${gameData.index}/${gameData.total}`); // Removed - too many notifications
+    toast.info(`Question ${gameData.index}/${gameData.total}`);
   }, []);
 
   const handleGameFinish = useCallback((results: any) => {
@@ -255,7 +255,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
       roomId,
       roomData
     }));
-    // toast.success(t('multiplayer.success.roomCreated')); // Removed - too many notifications
+    toast.success(t('multiplayer.success.roomCreated'));
   };
 
   const handleRoomJoined = (roomId: string, roomData: any) => {
@@ -265,7 +265,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
       roomId,
       roomData
     }));
-    // toast.success(t('multiplayer.success.joinedRoom')); // Removed - too many notifications
+    toast.success(t('multiplayer.success.joinedRoom'));
   };
 
   const handleLeaveRoom = () => {
