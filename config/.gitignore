@@ -1,0 +1,3 @@
+# Configuration files in root (redirected to config/)
+/postcss.config.js
+/tailwind.config.js
