@@ -1,13 +1,3 @@
 node_modules
 dist
 .history
-
-# Root level config copies (originals are in config/ folder)
-/.env.*
-/firebase.json
-/.firebaserc
-/firestore.*
-/tsconfig.json
-/tsconfig.node.json
-/postcss.config.js
-/tailwind.config.js
