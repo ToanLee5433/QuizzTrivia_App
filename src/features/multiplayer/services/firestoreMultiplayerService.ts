@@ -732,15 +732,6 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
         if (roomData.gameData) {
           this.emit('game:data_updated', roomData.gameData);
         }
-
-        // Ensure game starts exactly when countdown ends (no host requirement)
-        if (roomData.status === 'starting' && roomData.gameStartAt && roomData.gameStartDelay) {
-          const baseSeconds = typeof roomData.gameStartAt.seconds === 'number' ? roomData.gameStartAt.seconds : Math.floor(Date.now() / 1000);
-          const startAtMs = baseSeconds * 1000 + Number(roomData.gameStartDelay);
-          if (Date.now() >= startAtMs) {
-            this.actuallyStartGame(roomId).catch(() => {});
-          }
-        }
       }
     });
     

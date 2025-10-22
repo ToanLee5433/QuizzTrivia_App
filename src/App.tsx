@@ -7,10 +7,10 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from './lib/firebase/config';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { loginSuccess, logout, authCheckComplete } from './features/auth/store';
+import I18nProvider from './shared/components/I18nProvider';
 
 // Stage 1: Basic Landing & Authentication
 import { LandingPage } from './shared/pages/LandingPage';
-import Home from './shared/pages/Home';
 
 // Stage 2: Authentication Pages
 import AuthPageNew from './features/auth/pages/AuthPageNew';
@@ -30,8 +30,16 @@ const LeaderboardPage = React.lazy(() => import('./features/quiz/pages/Leaderboa
 
 // Stage 3: Creator Features (REMOVED - Creator role eliminated)
 const CreateQuizPage = React.lazy(() => import('./features/quiz/pages/CreateQuizPage'));
+
+// Offline Management
+// const OfflineSettingsPage = React.lazy(() => import('./pages/OfflineSettingsPage'));
+// import { OfflineStatusIndicator } from './components/OfflineStatusIndicator';
 const EditQuizPageAdvanced = React.lazy(() => import('./features/quiz/pages/EditQuizPageAdvanced'));
 const Creator = React.lazy(() => import('./shared/pages/Creator'));
+
+// Stage 4: New Features - Offline & Multiplayer
+// const OfflineQuizManager = React.lazy(() => import('./features/offline/components/OfflineQuizManager'));
+const MultiplayerPage = React.lazy(() => import('./features/multiplayer/pages/MultiplayerPage'));
 const MyQuizzesPage = React.lazy(() => import('./features/quiz/pages/MyQuizzesPage'));
 
 // Stage 4: Admin Features - All lazy loaded for better performance
@@ -41,12 +49,11 @@ const AdminUserManagement = React.lazy(() => import('./features/admin/pages/Admi
 const StatsDashboard = React.lazy(() => import('./features/admin/pages/StatsDashboard'));
 const CategoryManagement = React.lazy(() => import('./features/admin/pages/CategoryManagement'));
 const AdminStats = React.lazy(() => import('./features/admin/components/AdminStats'));
-const MultiplayerPage = React.lazy(() => import('./features/multiplayer/pages/MultiplayerPage'));
 const AdminUtilities = React.lazy(() => import('./features/admin/components/AdminUtilities'));
 
 // Stage 5: Advanced Components
 import { Layout } from './shared/components/layout/Layout';
-import { NotFound } from './shared/pages/NotFound';
+import { NotFound } from './shared/components/layout/NotFound';
 import ErrorBoundary from './shared/components/ErrorBoundary';
 import RoleSelection from './features/auth/components/RoleSelection';
 import ProtectedRoute from './features/auth/components/ProtectedRoute';
@@ -227,7 +234,7 @@ const LoadingFallback = () => {
   return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-      <span className="ml-3 text-lg font-medium text-gray-700">{t('common.loading')}</span>
+      <span className="ml-3 text-lg font-medium text-gray-700">{t('loading', 'Đang tải...')}</span>
     </div>
   );
 };
@@ -252,9 +259,9 @@ const AppContent: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mb-4"></div>
-          <div className="text-xl font-semibold text-gray-700">{t('common.loadingData')}</div>
-          <div className="text-sm text-gray-500 mt-2">{t('common.pleaseWait')}</div>
-          {isLoading && <div className="text-xs text-gray-400 mt-1">{t('common.checkingAuth')}</div>}
+          <div className="text-xl font-semibold text-gray-700">{t('loadingData', 'Đang tải dữ liệu...')}</div>
+          <div className="text-sm text-gray-500 mt-2">{t('pleaseWait', 'Vui lòng đợi một chút')}</div>
+          {isLoading && <div className="text-xs text-gray-400 mt-1">{t('checkingAuth', 'Đang kiểm tra xác thực...')}</div>}
         </div>
       </div>
     );
@@ -282,10 +289,10 @@ const AppContent: React.FC = () => {
 
   return (
     <div>
+      {/* <OfflineStatusIndicator /> */}
       <Routes>
-        {/* Stage 1: Landing & Home Routes */}
+        {/* Stage 1: Landing Routes */}
         <Route path="/landing" element={<LandingPage />} />
-        <Route path="/home" element={<Home />} />
         
         {/* Stage 2: Authentication Routes */}
         <Route path="/login" element={!isAuthenticated ? <AuthPageNew /> : <Navigate to="/dashboard" replace />} />
@@ -306,6 +313,14 @@ const AppContent: React.FC = () => {
             </Suspense>
           </ProtectedRoute>
         } />
+        
+        {/* <Route path="/offline" element={
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingFallback />}>
+              <OfflineSettingsPage />
+            </Suspense>
+          </ProtectedRoute>
+        } /> */}
         
         <Route path="/quizzes" element={
           <ProtectedRoute>
@@ -475,6 +490,32 @@ const AppContent: React.FC = () => {
           </ProtectedRoute>
         } />
         
+        {/* Stage 4: New Features - Offline & Multiplayer */}
+        <Route path="/offline" element={
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingFallback />}>
+              {/* <OfflineQuizManager /> */}
+              <div>Offline feature coming soon</div>
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/multiplayer" element={
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingFallback />}>
+              <MultiplayerPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/multiplayer/*" element={
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingFallback />}>
+              <MultiplayerPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        
         {/* Stage 5: Utility & Error Routes */}
         <Route path="/role-selection" element={
           <ProtectedRoute>
@@ -508,39 +549,33 @@ const AppContent: React.FC = () => {
           </ProtectedRoute>
         } />
         
-        {/* Multiplayer */}
-        <Route path="/multiplayer" element={
-          <ProtectedRoute>
-            <Suspense fallback={<LoadingFallback />}>
-              <MultiplayerPage />
-            </Suspense>
-          </ProtectedRoute>
-        } />
-        
         {/* Default route - role-based redirect */}
         <Route path="/" element={<RoleBasedRedirect />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </div>
   );
-}
+};
 
 function App() {
   return (
     <Router>
       <Provider store={store}>
-        <AuthProvider>
-          <ErrorBoundary>
-            <div className="app-container">
-              <NotificationBanner />
-              <Layout>
-                <AutoLogoutOnBan />
-                <AppContent />
-                <ToastContainer position="top-right" autoClose={3000} hideProgressBar newestOnTop closeOnClick pauseOnFocusLoss draggable pauseOnHover aria-label="notification" />
-              </Layout>
-            </div>
-          </ErrorBoundary>
-        </AuthProvider>
+        <I18nProvider>
+          <AuthProvider>
+            <ErrorBoundary>
+              <div className="app-container">
+                <NotificationBanner />
+                {/* <OfflineStatusIndicator /> */}
+                <Layout>
+                  <AutoLogoutOnBan />
+                  <AppContent />
+                  <ToastContainer position="top-right" autoClose={3000} hideProgressBar newestOnTop closeOnClick pauseOnFocusLoss draggable pauseOnHover aria-label="notification" />
+                </Layout>
+              </div>
+            </ErrorBoundary>
+          </AuthProvider>
+        </I18nProvider>
       </Provider>
     </Router>
   );

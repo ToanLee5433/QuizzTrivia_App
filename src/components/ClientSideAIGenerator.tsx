@@ -54,6 +54,25 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Validate file extension
+    const fileName = file.name.toLowerCase();
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.pdf', '.doc', '.docx', '.txt'];
+    const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
+    
+    if (!hasValidExtension) {
+      toast.error(`File không hợp lệ! Chỉ chấp nhận: ${allowedExtensions.join(', ')}`);
+      event.target.value = ''; // Clear input
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      toast.error('File quá lớn! Kích thước tối đa: 10MB');
+      event.target.value = ''; // Clear input
+      return;
+    }
+
     setIsProcessingFile(true);
     try {
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;

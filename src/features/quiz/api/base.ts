@@ -10,7 +10,7 @@ import {
   where,
   orderBy,
 } from 'firebase/firestore';
-import { db } from '../../../firebase/config';
+import { db } from '../../../lib/firebase/config';
 import { Quiz, QuizResult } from '../types';
 import { toast } from 'react-toastify';
 

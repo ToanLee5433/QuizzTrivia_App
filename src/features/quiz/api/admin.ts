@@ -11,7 +11,7 @@ import {
   startAfter,
   DocumentSnapshot,
 } from 'firebase/firestore';
-import { db } from '../../../firebase/config';
+import { db } from '../../../lib/firebase/config';
 import { Quiz, QuizFilters } from '../types';
 import { QUIZZES_COLLECTION } from './base';
 import { applyQuizFilters } from './shared';

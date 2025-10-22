@@ -229,8 +229,10 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                       )}
                     </div>
                     <div className="flex items-center gap-2 mt-1">
-                      <div className="w-2 h-2 rounded-full bg-green-400" />
-                      <span className="text-sm text-gray-600">Hoạt động</span>
+                      <div className={`w-2 h-2 rounded-full ${player.isOnline ? 'bg-green-400' : 'bg-gray-400'}`} />
+                      <span className="text-sm text-gray-600">
+                        {player.isOnline ? t('common.online') : t('common.offline')}
+                      </span>
                     </div>
                   </div>
                 </div>

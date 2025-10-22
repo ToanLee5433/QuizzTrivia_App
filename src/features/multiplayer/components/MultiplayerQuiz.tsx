@@ -118,6 +118,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
   // Client-side game state for fast performance
   const [playerScores, setPlayerScores] = useState<{[playerId: string]: number}>({});
   const [playerAnswers, setPlayerAnswers] = useState<{[playerId: string]: any[]}>({});
+  const [currentQuestionAnswers, setCurrentQuestionAnswers] = useState<{[playerId: string]: any}>({});
 
   const [waitingForOthers, setWaitingForOthers] = useState<boolean>(false);
   
@@ -128,11 +129,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
 
   // Use real-time data consistently
   const currentGameData = realtimeGameData || gameData;
-  const currentRoomData = useMemo(() => {
-    const merged: any = { ...(roomData || {}), ...(realtimeRoomData || {}) };
-    merged.players = (roomData as any)?.players || (realtimeRoomData as any)?.players || [];
-    return merged;
-  }, [roomData, realtimeRoomData]);
+  const currentRoomData = realtimeRoomData || roomData;
   
   const timePerQuestion = currentGameData?.timePerQuestion ?? currentRoomData?.settings?.timePerQuestion ?? 30;
   const [timeLeft, setTimeLeft] = useState<number>(timePerQuestion);
@@ -143,15 +140,6 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
   // Get current game phase
   const gamePhase = currentGameData?.phase || 'question';
   const roomStatus = currentRoomData?.status || 'waiting';
-
-  // Helper to normalize Firestore Timestamp or JS Date to Date
-  const toDate = (value: any): Date | null => {
-    if (!value) return null;
-    if (value instanceof Date) return value;
-    if (typeof value?.seconds === 'number') return new Date(value.seconds * 1000);
-    const parsed = new Date(value);
-    return isNaN(parsed.getTime()) ? null : parsed;
-  };
 
   // Real-time Firestore listener
   useEffect(() => {
@@ -188,16 +176,15 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
           setGameStartCountdown(null);
         }
         
-        // Handle question timing (supports Timestamp or Date)
+        // Handle question timing
         if (data.gameData?.questionEndAt && data.gameData?.phase === 'question') {
-          const endTime = toDate(data.gameData.questionEndAt);
-          if (endTime) {
-            const now = new Date();
-            const secondsLeft = Math.max(0, Math.ceil((endTime.getTime() - now.getTime()) / 1000));
-            if (secondsLeft > 0) {
-              setQuestionTimeLeft(secondsLeft);
-              setTimeLeft(secondsLeft);
-            }
+          const endTime = new Date(data.gameData.questionEndAt.seconds * 1000);
+          const now = new Date();
+          const secondsLeft = Math.max(0, Math.ceil((endTime.getTime() - now.getTime()) / 1000));
+          
+          if (secondsLeft > 0) {
+            setQuestionTimeLeft(secondsLeft);
+            setTimeLeft(secondsLeft);
           }
         }
         
@@ -208,12 +195,12 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
           
           // Reset UI state for new question
           setSelectedIndex(null);
-    setLocked(false);
-    setShowResults(false);
-    setQuestionResults(null);
+          setLocked(false);
+          setShowResults(false);
+          setQuestionResults(null);
           setTimeLeft(timePerQuestion);
           setWaitingForOthers(false);
-          // Clear any per-question cached answers (no longer used)
+          setCurrentQuestionAnswers({});
           
           // Clear existing timers
           if (timerRef.current) {
@@ -228,21 +215,20 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
         
         // Handle results phase
         if (data.gameData?.phase === 'results' && data.gameData?.nextQuestionAt) {
-          const nextTime = toDate(data.gameData.nextQuestionAt);
-          if (nextTime) {
-            const now = new Date();
-            const secondsLeft = Math.max(0, Math.ceil((nextTime.getTime() - now.getTime()) / 1000));
-            if (secondsLeft >= 0) {
-              setShowResults(true);
-              setNextQuestionCountdown(secondsLeft);
-            }
+          const nextTime = new Date(data.gameData.nextQuestionAt.seconds * 1000);
+          const now = new Date();
+          const secondsLeft = Math.max(0, Math.ceil((nextTime.getTime() - now.getTime()) / 1000));
+          
+          if (secondsLeft > 0) {
+            setShowResults(true);
+            setNextQuestionCountdown(secondsLeft);
           }
         }
         
         // Handle game finished
         if (data.gameData?.phase === 'finished') {
           setShowResults(true);
-    setNextQuestionCountdown(null);
+          setNextQuestionCountdown(null);
         }
       }
     });
@@ -267,48 +253,35 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
 
   // Sync all players' scores and answers from server data
   useEffect(() => {
-    // Prefer new structure: answers stored on each player document
-    if (Array.isArray(currentRoomData?.players)) {
-      const scores: {[playerId: string]: number} = {};
-      const answersMap: {[playerId: string]: any[]} = {};
-      currentRoomData.players.forEach((p: any) => {
-        const ans = Array.isArray(p.answers) ? p.answers : [];
-        answersMap[p.id] = ans.map((a: any) => ({
-          questionId: a.questionId,
-          selectedAnswer: a.selectedAnswer,
-          isCorrect: !!a.isCorrect,
-          timeSpent: a.timeSpent,
-          points: a.points || 0
-        }));
-        scores[p.id] = ans.reduce((sum: number, a: any) => sum + (Number(a.points) || 0), 0);
-      });
-      setPlayerScores(scores);
-      setPlayerAnswers(answersMap);
-      return;
-    }
+    if (!currentRoomData?.questionAnswers) return;
 
-    // Backward compatibility: derive from room.questionAnswers map
-    if (currentRoomData && (currentRoomData as any).questionAnswers) {
-      const serverPlayerScores: {[playerId: string]: number} = {};
-      const serverPlayerAnswers: {[playerId: string]: any[]} = {};
-      const qaMap = (currentRoomData as any).questionAnswers as Record<string, any>;
-      Object.values(qaMap).forEach((questionData: any) => {
-        Object.entries(questionData as Record<string, any>).forEach(([playerId, answerData]) => {
-          serverPlayerScores[playerId] = (serverPlayerScores[playerId] || 0) + (answerData.pointsEarned || 0);
-          if (!serverPlayerAnswers[playerId]) serverPlayerAnswers[playerId] = [];
-          serverPlayerAnswers[playerId].push({
-            questionId: answerData.questionId,
-            selectedAnswer: answerData.selectedAnswer,
-            isCorrect: answerData.isCorrect,
-            timeSpent: answerData.timeToAnswer || answerData.timeSpent,
-            points: answerData.pointsEarned || 0
-          });
+    const serverPlayerScores: {[playerId: string]: number} = {};
+    const serverPlayerAnswers: {[playerId: string]: any[]} = {};
+
+    // Calculate scores and answers from server data for ALL players
+    Object.values(currentRoomData.questionAnswers).forEach(questionData => {
+      Object.entries(questionData).forEach(([playerId, answerData]: [string, any]) => {
+        // Calculate scores
+        serverPlayerScores[playerId] = (serverPlayerScores[playerId] || 0) + (answerData.pointsEarned || 0);
+        
+        // Track answer history
+        if (!serverPlayerAnswers[playerId]) {
+          serverPlayerAnswers[playerId] = [];
+        }
+        serverPlayerAnswers[playerId].push({
+          questionId: answerData.questionId,
+          selectedAnswer: answerData.selectedAnswer,
+          isCorrect: answerData.isCorrect,
+          timeSpent: answerData.timeToAnswer || answerData.timeSpent,
+          points: answerData.pointsEarned || 0
         });
       });
-      setPlayerScores(serverPlayerScores);
-      setPlayerAnswers(serverPlayerAnswers);
-    }
-  }, [currentRoomData?.players, currentRoomData?.questionAnswers]);
+    });
+    
+    // Update state with server data for all players
+    setPlayerScores(serverPlayerScores);
+    setPlayerAnswers(serverPlayerAnswers);
+  }, [currentRoomData?.questionAnswers]);
 
   // Game start countdown effect
   useEffect(() => {
@@ -349,13 +322,6 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
   // Get current game phase from room data
   const currentGamePhase = realtimeGameData?.phase || gamePhase;
   const currentRoomStatus = realtimeRoomData?.status || roomStatus;
-
-  // Enter game view immediately when status switches to playing
-  useEffect(() => {
-    if (currentRoomStatus === 'playing' && currentGamePhase === 'question') {
-      setGameStartCountdown(null);
-    }
-  }, [currentRoomStatus, currentGamePhase]);
 
   // Save final results to server when game finishes
   useEffect(() => {
@@ -491,7 +457,16 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
         [currentUser.uid]: (prev[currentUser.uid] || 0) + points
       }));
       
-      // No longer caching per-question answers separately; we rely on server data
+      // Store current question answer for real-time leaderboard during results
+      setCurrentQuestionAnswers(prev => ({
+        ...prev,
+        [currentUser.uid]: {
+          answer: indexToSubmit ?? -1,
+          timeSpent,
+          isCorrect,
+          points
+        }
+      }));
       
       // Update player's answer history
       setPlayerAnswers(prev => ({
@@ -580,62 +555,22 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
               </div>
             </div>
 
-            {/* Per-question results: show all players' answers for this question */}
-            <div className="mb-6">
-              <h4 className="font-semibold text-gray-700 mb-3 text-center">Kết quả câu hỏi của tất cả người chơi</h4>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {(currentRoomData?.players || []).map((player: any) => {
-                  const answersForPlayer = Array.isArray(player.answers) ? player.answers : [];
-                  const ans = answersForPlayer.find((a: any) => a?.questionId === finalQuestion.id);
-                  const isCurrentUser = player.id === currentUser?.uid;
-                  const isCorrect = !!ans?.isCorrect;
-                  const points = Number(ans?.points) || 0;
-                  const selectedIdx = typeof ans?.selectedAnswer === 'number' ? ans.selectedAnswer : null;
-                  const optionLabels = ['A', 'B', 'C', 'D', 'E', 'F'];
-                  const selectionLabel = selectedIdx !== null ? optionLabels[selectedIdx] ?? String(selectedIdx + 1) : '-';
-                  return (
-                    <div key={player.id} className={`flex items-center justify-between p-3 rounded-lg ${isCurrentUser ? 'bg-blue-50' : 'bg-gray-50'}`}>
-                      <div className="flex items-center gap-3">
-                        <span className={`text-lg ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>{isCorrect ? '✓' : '✗'}</span>
-                        <div className={`font-medium text-sm ${isCurrentUser ? 'text-blue-700' : 'text-gray-800'}`}>
-                          {player?.username || player?.name || 'Player'}{isCurrentUser && ' (You)'}
-                        </div>
-                        <div className="text-xs text-gray-500">Chọn: {selectionLabel}</div>
-                      </div>
-                      <div className={`text-sm font-semibold ${isCorrect ? 'text-green-700' : 'text-gray-700'}`}>+{points} điểm</div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
             {/* Live Leaderboard */}
             <div className="mb-4">
               <h4 className="font-semibold text-gray-700 mb-3 text-center">Current Standings</h4>
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {(currentRoomData?.players || [])
-                  .map((player: any) => {
-                    const answersForPlayer = Array.isArray(player.answers) ? player.answers : [];
-                    const computedScore = answersForPlayer.reduce((sum: number, a: any) => sum + (Number(a.points) || 0), 0);
-                    return {
-                      ...player,
-                      score: typeof playerScores[player.id] === 'number' ? playerScores[player.id] : computedScore
-                    };
-                  })
-                  .sort((a: any, b: any) => b.score - a.score)
-                  .map((player: any, index: number) => {
+                  .map((player: any) => ({
+                    ...player,
+                    score: playerScores[player.id] || 0
+                  }))
+                  .sort((a, b) => b.score - a.score)
+                  .map((player, index) => {
                     const isCurrentUser = player.id === currentUser?.uid;
                     const position = index + 1;
                     const trophy = position === 1 ? '👑' : position === 2 ? '🥈' : position === 3 ? '🥉' : '🏅';
-                    const answersForPlayer = playerAnswers[player.id] || (Array.isArray(player.answers) ? player.answers.map((a: any) => ({
-                      questionId: a.questionId,
-                      selectedAnswer: a.selectedAnswer,
-                      isCorrect: !!a.isCorrect,
-                      timeSpent: a.timeSpent,
-                      points: a.points || 0
-                    })) : []);
-                    const currentAnswer = answersForPlayer.find((a: any) => a.questionId === finalQuestion.id);
-                    const correctAnswersCount = answersForPlayer.filter((a: any) => a.isCorrect).length || 0;
+                    const currentAnswer = currentQuestionAnswers[player.id];
+                    const correctAnswersCount = playerAnswers[player.id]?.filter(a => a.isCorrect).length || 0;
                     
                     return (
                       <div 
@@ -1014,56 +949,56 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
           
           {/* Show options if available */}
           {finalQuestion.options && finalQuestion.options.length > 0 ? (
-          <div className="grid gap-3 sm:gap-4 mb-6 sm:mb-8">
+            <div className="grid gap-3 sm:gap-4 mb-6 sm:mb-8">
               {finalQuestion.options.map((option: string, idx: number) => {
                 const isSelected = selectedIndex === idx;
-              const optionLabels = ['A', 'B', 'C', 'D'];
-              
-              return (
-                <button
+                const optionLabels = ['A', 'B', 'C', 'D'];
+                
+                return (
+                  <button
                     key={idx}
                     onClick={() => handleSelect(idx)}
-                  className={`group relative px-4 sm:px-6 py-3 sm:py-4 rounded-2xl text-left transition-all duration-200 transform hover:scale-105 ${
-                    isSelected 
-                      ? 'border-2 border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg' 
-                      : 'border-2 border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
-                  } ${locked ? 'opacity-60 cursor-not-allowed transform-none' : ''}`}
-                  disabled={locked}
-                >
-                  <div className="flex items-center gap-3 sm:gap-4">
-                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-bold text-xs sm:text-sm ${
+                    className={`group relative px-4 sm:px-6 py-3 sm:py-4 rounded-2xl text-left transition-all duration-200 transform hover:scale-105 ${
                       isSelected 
-                        ? 'bg-blue-500 text-white' 
-                        : 'bg-gray-100 text-gray-600 group-hover:bg-gray-200'
-                    }`}>
-                      {optionLabels[idx] || idx + 1}
-                    </div>
+                        ? 'border-2 border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg' 
+                        : 'border-2 border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
+                    } ${locked ? 'opacity-60 cursor-not-allowed transform-none' : ''}`}
+                    disabled={locked}
+                  >
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-bold text-xs sm:text-sm ${
+                        isSelected 
+                          ? 'bg-blue-500 text-white' 
+                          : 'bg-gray-100 text-gray-600 group-hover:bg-gray-200'
+                      }`}>
+                        {optionLabels[idx] || idx + 1}
+                      </div>
                       <span className="font-medium text-gray-800 text-sm sm:text-base">{option}</span>
                     </div>
-                </button>
-              );
-            })}
-          </div>
+                  </button>
+                );
+              })}
+            </div>
           ) : (
             <div className="bg-red-100 p-4 rounded-lg">
               <p className="text-red-700">❌ No options available for this question</p>
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="text-sm text-gray-500 text-center sm:text-left">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="text-sm text-gray-500 text-center sm:text-left">
                 {locked ? 'Answer submitted' : 
                  selectedIndex !== null ? 'Answer selected' : 
                  'Choose your answer'}
-            </div>
-            
+              </div>
+              
               {locked && (
                 <div className="flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-xl font-medium">
                   <CheckCircle size={16} />
                   <span>Submitted!</span>
                 </div>
               )}
-          </div>
+            </div>
         </div>
 
         {/* Question Results Modal */}

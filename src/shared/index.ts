@@ -9,6 +9,5 @@ export * from './components/ErrorBoundary';
 export * from './components/Header';
 export * from './components/Sidebar';
 export * from './pages/Dashboard';
-export * from './pages/Home';
 export * from './pages/LandingPage';
 export * from './types';

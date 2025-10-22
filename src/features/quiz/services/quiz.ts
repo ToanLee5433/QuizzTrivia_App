@@ -1,5 +1,5 @@
 import { collection, getDocs, doc, getDoc, query, where, limit } from 'firebase/firestore';
-import { db } from '../../../firebase/config';
+import { db } from '../../../lib/firebase/config';
 import { Quiz } from '../types';
 import { QUIZZES_COLLECTION } from '../constants';
 

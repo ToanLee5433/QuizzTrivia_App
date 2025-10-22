@@ -1,5 +1,5 @@
 // Temporary test data creator - delete after testing
-import { db } from '../firebase/config';
+import { db } from '../lib/firebase/config';
 import { collection, addDoc } from 'firebase/firestore';
 
 export const createTestQuizResults = async (userId: string) => {

@@ -6,7 +6,7 @@ import {
   orderBy,
   limit,
 } from 'firebase/firestore';
-import { db } from '../../../firebase/config';
+import { db } from '../../../lib/firebase/config';
 import { Quiz, QuizResult, QuizFilters } from '../types';
 import { QUIZZES_COLLECTION, QUIZ_RESULTS_COLLECTION } from './base';
 
