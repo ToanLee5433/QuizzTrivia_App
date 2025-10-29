@@ -9,7 +9,9 @@ export const defaultQuiz: QuizFormData = {
   imageUrl: '',
   questions: [],
   tags: [],
-  allowRetake: false,
+  allowRetake: true, // Mặc định cho phép làm lại
+  isPublic: true, // Mặc định là Public
+  resources: [], // 🆕 Learning Materials
 };
 
 export const categories = [
@@ -29,6 +31,7 @@ export const difficulties = [
 
 export const steps = [
   'Thông tin Quiz',
+  'Tài liệu học tập', // 🆕 Resources step (moved to step 2)
   'Câu hỏi',
   'Xem lại & Xuất bản',
 ];

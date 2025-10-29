@@ -16,7 +16,7 @@ interface QuizCardProps {
   onStartQuiz?: (quiz: Quiz) => void;
 }
 
-const QuizCard: React.FC<QuizCardProps> = ({ quiz, viewMode = 'grid', onStartQuiz }) => {
+  const QuizCard: React.FC<QuizCardProps> = ({ quiz, viewMode = 'grid', onStartQuiz }) => {
   // **THÊM MỚI**: Helper functions
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -33,6 +33,10 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, viewMode = 'grid', onStartQui
     const remainingMinutes = minutes % 60;
     return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
   };
+
+  // 🆕 Check if quiz has resources
+  const hasResources = (quiz as any).resources && (quiz as any).resources.length > 0;
+  const resourceCount = hasResources ? (quiz as any).resources.length : 0;
 
   // Helper component for rating display
   const RatingDisplay = ({ rating, reviewCount, size = 'sm' }: { rating: number; reviewCount: number; size?: 'sm' | 'md' }) => {
@@ -146,13 +150,19 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, viewMode = 'grid', onStartQui
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between mb-2">
               <h3 className="text-lg font-semibold text-gray-900 truncate pr-4">{quiz.title}</h3>
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-2">
                 <span className={`px-2 py-1 rounded text-xs font-medium ${getDifficultyColor(quiz.difficulty)}`}>
                   {quiz.difficulty.charAt(0).toUpperCase() + quiz.difficulty.slice(1)}
                 </span>
                 {quiz.isCompleted && (
                   <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded font-medium">
                     ✓ Hoàn thành
+                  </span>
+                )}
+                {/* 🆕 Resource Badge */}
+                {hasResources && (
+                  <span className="px-2 py-1 bg-emerald-100 text-emerald-700 border border-emerald-300 text-xs rounded-full font-bold flex items-center gap-1">
+                    📚 {resourceCount} tài liệu
                   </span>
                 )}
               </div>
@@ -381,6 +391,21 @@ const QuizCard: React.FC<QuizCardProps> = ({ quiz, viewMode = 'grid', onStartQui
                 +{quiz.tags.length - 3} more
               </span>
             )}
+          </div>
+        )}
+
+        {/* 🆕 Learning Resources Badge */}
+        {hasResources && (
+          <div className="mb-4 p-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-xl">
+            <div className="flex items-center gap-2 text-emerald-800">
+              <span className="text-lg">📚</span>
+              <span className="font-bold text-sm">
+                Có {resourceCount} tài liệu học tập
+              </span>
+            </div>
+            <p className="text-xs text-emerald-600 mt-1">
+              💡 Xem tài liệu để hiểu sâu hơn trước khi làm bài!
+            </p>
           </div>
         )}
 

@@ -6,21 +6,45 @@ import { store } from './lib/store'
 import './lib/i18n' // Import i18n configuration
 import './index.css'
 
-// Suppress ReactQuill findDOMNode warnings in development
-if (import.meta.env.DEV) {
-  const originalWarn = console.warn;
-  console.warn = (...args) => {
-    if (
-      args[0] && 
-      typeof args[0] === 'string' && 
-      args[0].includes('findDOMNode is deprecated')
-    ) {
-      // Suppress ReactQuill findDOMNode warnings
-      return;
-    }
-    originalWarn.apply(console, args);
-  };
-}
+// =====================================================
+// SUPPRESS REACTQUILL FINDDOMNODE WARNING
+// =====================================================
+// ReactQuill uses deprecated findDOMNode internally
+// This is a known issue that will be fixed in future versions
+// We suppress the warning to avoid console clutter
+// Issue: https://github.com/zenoamaro/react-quill/issues/122
+// =====================================================
+
+const originalError = console.error;
+const originalWarn = console.warn;
+
+console.error = (...args) => {
+  if (
+    typeof args[0] === 'string' && 
+    (
+      args[0].includes('findDOMNode') ||
+      args[0].includes('Warning: findDOMNode is deprecated')
+    )
+  ) {
+    // Suppress ReactQuill findDOMNode error
+    return;
+  }
+  originalError.apply(console, args);
+};
+
+console.warn = (...args) => {
+  if (
+    typeof args[0] === 'string' && 
+    (
+      args[0].includes('findDOMNode') ||
+      args[0].includes('Warning: findDOMNode is deprecated')
+    )
+  ) {
+    // Suppress ReactQuill findDOMNode warning
+    return;
+  }
+  originalWarn.apply(console, args);
+};
 
 // Force new build - v2.0
 console.log('Quiz App - Build v2.0 - Fixed Redux');

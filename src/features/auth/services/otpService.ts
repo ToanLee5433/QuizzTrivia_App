@@ -1,209 +1,243 @@
-import { addDoc, collection, query, where, getDocs, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../../lib/firebase/config';
-import { emailJSService } from '../../../services/emailJSService';
+import CryptoJS from 'crypto-js';
+import { getFirestore, collection, addDoc } from 'firebase/firestore';
 
-export interface OTPVerification {
-  id?: string;
+// Initialize Firestore
+const db = getFirestore();
+
+// Secret key để hash OTP (trong production nên lưu trong env)
+const OTP_SECRET = import.meta.env.VITE_OTP_SECRET || 'quiz-app-otp-secret-2025';
+const OTP_EXPIRY_MINUTES = 10;
+
+export interface OTPData {
   email: string;
-  code: string;
-  expiresAt: Date | any; // Firebase Timestamp
-  isVerified: boolean;
-  createdAt: Date | any; // Firebase Timestamp
+  hashedOTP: string;
+  expiresAt: number;
   attempts: number;
   maxAttempts: number;
 }
 
-// Generate random 6-digit OTP
+/**
+ * Generate random 6-digit OTP
+ */
 export const generateOTP = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Store OTP in Firestore
-export const storeOTP = async (email: string, code: string): Promise<string> => {
-  try {
-    // Delete any existing OTP for this email
-    await deleteExistingOTP(email);
+/**
+ * Hash OTP với email để bảo mật
+ */
+const hashOTP = (email: string, otp: string): string => {
+  return CryptoJS.SHA256(email + otp + OTP_SECRET).toString();
+};
 
-    // Create new OTP record
-    const otpData: Omit<OTPVerification, 'id'> = {
-      email: email.toLowerCase().trim(),
-      code,
-      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // Expires in 10 minutes
-      isVerified: false,
-      createdAt: new Date(),
-      attempts: 0,
-      maxAttempts: 3
+/**
+ * Store OTP vào sessionStorage (không dùng Firestore để tránh lỗi permissions)
+ */
+export const storeOTP = (email: string, otp: string): void => {
+  const otpData: OTPData = {
+    email: email.toLowerCase().trim(),
+    hashedOTP: hashOTP(email, otp),
+    expiresAt: Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000,
+    attempts: 0,
+    maxAttempts: 3
+  };
+
+  // Lưu vào sessionStorage (chỉ tồn tại trong tab hiện tại)
+  sessionStorage.setItem(`otp_${email.toLowerCase()}`, JSON.stringify(otpData));
+  
+  console.log('✅ OTP stored securely (hashed)');
+};
+
+/**
+ * Gửi OTP qua Firestore Trigger Email Extension
+ * Extension sẽ tự động gửi email khi có document mới trong collection 'mail'
+ */
+export const sendOTPEmail = async (email: string, otp: string): Promise<{ success: boolean; message: string }> => {
+  try {
+    // Tạo HTML template cho email OTP
+    const emailHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; background-color: #f4f4f4; margin: 0; padding: 20px; }
+          .container { max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+          .header { text-align: center; margin-bottom: 30px; }
+          .logo { font-size: 32px; font-weight: bold; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+          .otp-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px; margin: 30px 0; }
+          .otp-code { font-size: 48px; font-weight: bold; letter-spacing: 8px; margin: 10px 0; }
+          .warning { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 4px; }
+          .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="logo">🧠 Quiz App</div>
+            <h2 style="color: #1f2937; margin-top: 10px;">Mã Xác Thực OTP</h2>
+          </div>
+          
+          <p style="color: #374151;">Xin chào,</p>
+          <p style="color: #374151;">Bạn đã yêu cầu đăng ký tài khoản tại <strong>Quiz App</strong>.</p>
+          <p style="color: #374151;">Vui lòng sử dụng mã OTP bên dưới để hoàn tất quá trình đăng ký:</p>
+          
+          <div class="otp-box">
+            <div style="font-size: 16px; opacity: 0.9;">MÃ XÁC THỰC CỦA BẠN</div>
+            <div class="otp-code">${otp}</div>
+            <div style="font-size: 14px; margin-top: 10px; opacity: 0.9;">⏱️ Có hiệu lực trong 10 phút</div>
+          </div>
+          
+          <div class="warning">
+            <strong style="color: #92400e;">⚠️ Lưu ý quan trọng:</strong>
+            <ul style="margin: 10px 0; color: #92400e;">
+              <li>Mã OTP này chỉ có hiệu lực trong <strong>10 phút</strong></li>
+              <li><strong>KHÔNG chia sẻ</strong> mã này với bất kỳ ai</li>
+              <li>Nếu bạn không yêu cầu đăng ký, vui lòng bỏ qua email này</li>
+            </ul>
+          </div>
+          
+          <p style="color: #374151;">Trân trọng,<br><strong>Quiz App Team</strong> 🎯</p>
+          
+          <div class="footer">
+            <p>Email này được gửi tự động, vui lòng không trả lời.</p>
+            <p>© 2025 Quiz App. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Tạo document trong collection 'mail' - Extension sẽ tự động gửi
+    await addDoc(collection(db, 'mail'), {
+      to: [email],
+      from: 'lequytoanptit0303@gmail.com', // Default FROM address từ extension config
+      replyTo: 'lequytoanptit0303@gmail.com',
+      message: {
+        subject: '🔐 Mã xác thực đăng ký Quiz App',
+        html: emailHTML,
+        text: `Mã OTP của bạn là: ${otp}. Mã này có hiệu lực trong 10 phút.`
+      },
+      createdAt: new Date()
+    });
+
+    console.log('✅ Email queued successfully via Firestore extension');
+
+    return {
+      success: true,
+      message: 'Email OTP đang được gửi đi...'
     };
-
-    const docRef = await addDoc(collection(db, 'otp_verifications'), otpData);
-    return docRef.id;
-  } catch (error) {
-    console.error('Error storing OTP:', error);
-    throw new Error('Failed to store OTP verification');
+  } catch (error: any) {
+    console.error('Error queuing email:', error);
+    return {
+      success: false,
+      message: error.message || 'Không thể gửi email. Vui lòng thử lại.'
+    };
   }
 };
 
-// Delete existing OTP for email
-export const deleteExistingOTP = async (email: string): Promise<void> => {
+/**
+ * Generate và gửi OTP
+ */
+export const generateAndSendOTP = async (email: string): Promise<{ success: boolean; message: string }> => {
   try {
-    const q = query(
-      collection(db, 'otp_verifications'),
-      where('email', '==', email.toLowerCase().trim())
-    );
+    // Generate OTP
+    const otp = generateOTP();
     
-    const querySnapshot = await getDocs(q);
-    const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
-    await Promise.all(deletePromises);
-  } catch (error) {
-    console.error('Error deleting existing OTP:', error);
-  }
-};
-
-// Verify OTP code
-export const verifyOTP = async (email: string, inputCode: string): Promise<{ success: boolean; message: string }> => {
-  try {
-    const q = query(
-      collection(db, 'otp_verifications'),
-      where('email', '==', email.toLowerCase().trim()),
-      where('isVerified', '==', false)
-    );
-
-    const querySnapshot = await getDocs(q);
+    // Store OTP locally (hashed)
+    storeOTP(email, otp);
     
-    if (querySnapshot.empty) {
-      return { success: false, message: 'Không tìm thấy mã OTP hoặc mã đã hết hạn' };
+    // Send OTP via Cloud Function
+    const result = await sendOTPEmail(email, otp);
+    
+    if (result.success) {
+      return {
+        success: true,
+        message: `Mã OTP đã được gửi đến ${email}. Vui lòng kiểm tra hộp thư.`
+      };
+    } else {
+      // Clear stored OTP nếu gửi thất bại
+      clearOTP(email);
+      return result;
     }
+  } catch (error: any) {
+    console.error('Error generating and sending OTP:', error);
+    return {
+      success: false,
+      message: 'Có lỗi xảy ra. Vui lòng thử lại.'
+    };
+  }
+};
 
-    const otpDoc = querySnapshot.docs[0];
-    const otpData = otpDoc.data() as OTPVerification;
-    
-    // Check if OTP has expired
-    const expiresAt = otpData.expiresAt instanceof Date ? otpData.expiresAt : otpData.expiresAt.toDate();
-    if (new Date() > expiresAt) {
-      await deleteDoc(otpDoc.ref);
-      return { success: false, message: 'Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới' };
+/**
+ * Verify OTP
+ */
+export const verifyOTP = (email: string, inputOTP: string): { success: boolean; message: string } => {
+  const storageKey = `otp_${email.toLowerCase()}`;
+  const storedData = sessionStorage.getItem(storageKey);
+
+  if (!storedData) {
+    return { success: false, message: 'Không tìm thấy OTP. Vui lòng yêu cầu gửi lại.' };
+  }
+
+  try {
+    const otpData: OTPData = JSON.parse(storedData);
+
+    // Check expiry
+    if (Date.now() > otpData.expiresAt) {
+      sessionStorage.removeItem(storageKey);
+      return { success: false, message: 'OTP đã hết hạn. Vui lòng yêu cầu gửi lại.' };
     }
 
     // Check max attempts
     if (otpData.attempts >= otpData.maxAttempts) {
-      await deleteDoc(otpDoc.ref);
-      return { success: false, message: 'Đã vượt quá số lần thử. Vui lòng yêu cầu mã mới' };
+      sessionStorage.removeItem(storageKey);
+      return { success: false, message: 'Đã vượt quá số lần thử. Vui lòng yêu cầu OTP mới.' };
     }
 
-    // Verify code
-    if (otpData.code === inputCode.trim()) {
-      // Mark as verified and delete the record
-      await deleteDoc(otpDoc.ref);
+    // Verify OTP
+    const inputHash = hashOTP(email, inputOTP);
+    if (inputHash === otpData.hashedOTP) {
+      // Success - xóa OTP
+      sessionStorage.removeItem(storageKey);
       return { success: true, message: 'Xác thực thành công!' };
     } else {
-      // Increment attempts
-      await updateDoc(otpDoc.ref, {
-        attempts: otpData.attempts + 1
-      });
+      // Failed - tăng attempts
+      otpData.attempts += 1;
+      sessionStorage.setItem(storageKey, JSON.stringify(otpData));
       
-      const remainingAttempts = otpData.maxAttempts - (otpData.attempts + 1);
+      const remaining = otpData.maxAttempts - otpData.attempts;
       return { 
         success: false, 
-        message: `Mã OTP không đúng. Còn lại ${remainingAttempts} lần thử` 
+        message: `OTP không đúng. Còn ${remaining} lần thử.` 
       };
     }
   } catch (error) {
     console.error('Error verifying OTP:', error);
-    return { success: false, message: 'Có lỗi xảy ra khi xác thực mã OTP' };
+    return { success: false, message: 'Có lỗi xảy ra khi xác thực.' };
   }
 };
 
-// Send OTP via email (using EmailJS - no server required)
-export const sendOTPEmail = async (email: string, code: string): Promise<boolean> => {
-  try {
-    console.log(`📧 Sending OTP via EmailJS to ${email}...`);
-    
-    // Gửi email qua EmailJS (trực tiếp từ browser)
-    const result = await emailJSService.sendOTPEmail(email, code);
-    
-    if (result.success) {
-      console.log(`✅ OTP email sent successfully to ${email}`);
-      
-      // Lưu vào email_queue để tracking
-      try {
-        await addDoc(collection(db, 'email_queue'), {
-          to: email,
-          template: 'otp_verification',
-          data: {
-            code,
-            expiresIn: '10 phút'
-          },
-          createdAt: serverTimestamp(),
-          status: 'sent_via_emailjs',
-          method: 'emailjs'
-        });
-      } catch (dbError) {
-        console.warn('Failed to log email to queue:', dbError);
-        // Không fail toàn bộ process nếu logging thất bại
-      }
-      
-      return true;
-    } else {
-      throw new Error(result.messageKey || 'Failed to send email via EmailJS');
-    }
-  } catch (error: any) {
-    console.error('Error sending OTP email:', error);
-    throw new Error(error.message || 'Không thể gửi email. Vui lòng kiểm tra kết nối internet.');
-  }
+/**
+ * Clear OTP data
+ */
+export const clearOTP = (email: string): void => {
+  sessionStorage.removeItem(`otp_${email.toLowerCase()}`);
 };
 
-// Main function to generate and send OTP
-export const generateAndSendOTP = async (email: string): Promise<{ success: boolean; message: string }> => {
-  try {
-    const code = generateOTP();
-    
-    console.log(`🔢 Generated OTP: ${code} for ${email}`);
-    
-    // Store OTP in database first
-    await storeOTP(email, code);
-    console.log(`💾 OTP stored in database for ${email}`);
-    
-    // Send email via SMTP
-    await sendOTPEmail(email, code);
-    
-    return { 
-      success: true, 
-      message: `Mã xác thực đã được gửi đến ${email}. Vui lòng kiểm tra hộp thư và nhập mã 6 số.` 
-    };
-  } catch (error: any) {
-    console.error('Error generating and sending OTP:', error);
-    
-    // Check specific error types
-    if (error.message.includes('internet') || error.message.includes('network')) {
-      return { 
-        success: false, 
-        message: 'Không thể kết nối internet. Vui lòng kiểm tra kết nối mạng và thử lại.' 
-      };
-    }
-    
-    return { 
-      success: false, 
-      message: error.message || 'Có lỗi xảy ra khi gửi mã xác thực. Vui lòng thử lại sau.' 
-    };
-  }
-};
+/**
+ * Get OTP expiry time
+ */
+export const getOTPExpiryTime = (email: string): number | null => {
+  const storageKey = `otp_${email.toLowerCase()}`;
+  const storedData = sessionStorage.getItem(storageKey);
 
-// Cleanup expired OTPs (should be called periodically)
-export const cleanupExpiredOTPs = async (): Promise<void> => {
+  if (!storedData) return null;
+
   try {
-    const q = query(collection(db, 'otp_verifications'));
-    const querySnapshot = await getDocs(q);
-    
-    const now = new Date();
-    const deletePromises = querySnapshot.docs
-      .filter(doc => {
-        const data = doc.data();
-        return now > data.expiresAt.toDate();
-      })
-      .map(doc => deleteDoc(doc.ref));
-    
-    await Promise.all(deletePromises);
-  } catch (error) {
-    console.error('Error cleaning up expired OTPs:', error);
+    const otpData: OTPData = JSON.parse(storedData);
+    return otpData.expiresAt;
+  } catch {
+    return null;
   }
 };

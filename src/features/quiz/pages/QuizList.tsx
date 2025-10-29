@@ -83,6 +83,7 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid'); // grid, list
   const [showCompleted, setShowCompleted] = useState(true);
   const [showStats, setShowStats] = useState(false);
+  const [resourceFilter, setResourceFilter] = useState<'all' | 'with-resources' | 'no-resources'>('all'); // 🆕 Filter for resources
 
   const handleQuizStart = (quiz: Quiz) => {
     navigate(`/quiz/${quiz.id}`);
@@ -92,13 +93,21 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
   const difficulties = Array.from(new Set(quizzes.map(q => q.difficulty)));
   
   // Chỉ hiển thị quiz đã được duyệt
-  let filtered = quizzes.filter(q =>
-    q.status === 'approved' &&
-    (category === 'all' || q.category === category) &&
-    (difficulty === 'all' || q.difficulty === difficulty) &&
-    (showCompleted || !q.isCompleted) &&
-    q.title.toLowerCase().includes(search.toLowerCase())
-  );
+  let filtered = quizzes.filter(q => {
+    const hasResources = (q as any).resources && (q as any).resources.length > 0;
+    
+    return (
+      q.status === 'approved' &&
+      (category === 'all' || q.category === category) &&
+      (difficulty === 'all' || q.difficulty === difficulty) &&
+      (showCompleted || !q.isCompleted) &&
+      q.title.toLowerCase().includes(search.toLowerCase()) &&
+      // 🆕 Resource filter
+      (resourceFilter === 'all' || 
+       (resourceFilter === 'with-resources' && hasResources) ||
+       (resourceFilter === 'no-resources' && !hasResources))
+    );
+  });
 
   // Sorting logic
   filtered = filtered.sort((a, b) => {
@@ -199,6 +208,42 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
 
         {/* Enhanced Filter Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+          {/* 🆕 Resource Filter Tabs */}
+          <div className="flex items-center gap-2 mb-6 p-1 bg-gray-100 rounded-lg w-fit">
+            <button
+              onClick={() => setResourceFilter('all')}
+              className={`px-6 py-2.5 rounded-lg font-semibold transition-all ${
+                resourceFilter === 'all'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              📚 Tất cả Quiz ({quizzes.filter(q => q.status === 'approved').length})
+            </button>
+            <button
+              onClick={() => setResourceFilter('with-resources')}
+              className={`px-6 py-2.5 rounded-lg font-semibold transition-all flex items-center gap-2 ${
+                resourceFilter === 'with-resources'
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <span className="text-lg">📖</span>
+              Có tài liệu học tập ({quizzes.filter(q => q.status === 'approved' && (q as any).resources && (q as any).resources.length > 0).length})
+            </button>
+            <button
+              onClick={() => setResourceFilter('no-resources')}
+              className={`px-6 py-2.5 rounded-lg font-semibold transition-all flex items-center gap-2 ${
+                resourceFilter === 'no-resources'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <span className="text-lg">⚡</span>
+              Làm trực tiếp ({quizzes.filter(q => q.status === 'approved' && (!(q as any).resources || (q as any).resources.length === 0)).length})
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             {/* Enhanced Search */}
             <div className="lg:col-span-2 relative">

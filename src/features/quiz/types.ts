@@ -45,8 +45,24 @@ export interface Quiz {
   isPublished: boolean;
   tags: string[];
   imageUrl?: string;
+  
+  // **LEARNING RESOURCES**: Tài liệu học tập
+  resources?: Array<{
+    id: string;
+    type: 'video' | 'pdf' | 'image' | 'link' | 'slides';
+    title: string;
+    description?: string;
+    url: string;
+    required: boolean;
+    thumbnailUrl?: string;
+    whyWatch?: string;
+    estimatedTime?: number;
+    order?: number;
+  }>;
+  
   // **THÊM MỚI**: Dashboard và stats properties
   isPublic?: boolean;
+  allowRetake?: boolean;
   attempts?: number;
   isCompleted?: boolean;
   score?: number;

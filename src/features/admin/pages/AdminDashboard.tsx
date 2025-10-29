@@ -37,6 +37,7 @@ interface Quiz {
   status: 'pending' | 'approved' | 'rejected' | 'draft' | 'published';
   createdAt: any;
   category: string;
+  learningResources?: any[]; // Tài liệu học tập
 }
 
 interface Category {
@@ -490,8 +491,20 @@ const AdminDashboard: React.FC = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {quizzes.map((quiz) => (
                 <tr key={quiz.id}>
-                  <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
-                    {quiz.title}
+                  <td className="px-6 py-4 font-medium text-gray-900">
+                    <div>
+                      <div className="font-medium">{quiz.title}</div>
+                      {quiz.learningResources && quiz.learningResources.length > 0 && (
+                        <div className="flex items-center gap-1.5 mt-1 text-xs text-emerald-600">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-emerald-50 rounded">
+                            📚 {quiz.learningResources.length} tài liệu
+                          </span>
+                          {quiz.learningResources.some((r: any) => r.required) && (
+                            <span className="text-red-600">⚠️</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
                     {quiz.description}

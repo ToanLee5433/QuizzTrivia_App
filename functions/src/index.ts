@@ -12,62 +12,66 @@ const corsHandler = cors({ origin: true });
 
 // Initialize Vertex AI
 const vertex_ai = new VertexAI({
-  project: 'quiz-app-85db6',
+  project: 'datn-quizapp',
   location: 'us-central1'
 });
 
 const model = 'gemini-pro';
 
-// Cấu hình SMTP transporter
+// Configure email transporter (sử dụng Gmail SMTP)
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
+    user: functions.config().email?.user || process.env.EMAIL_USER,
+    pass: functions.config().email?.password || process.env.EMAIL_PASSWORD
   }
 });
 
-// Template email OTP
-const getOTPEmailTemplate = (code: string, expiresIn: string) => {
+// OTP Email Template
+const getOTPEmailHTML = (otp: string): string => {
   return `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="utf-8">
-      <title>Mã xác thực Quiz App</title>
       <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f4f4f4; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        body { font-family: Arial, sans-serif; line-height: 1.6; background-color: #f4f4f4; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .header { text-align: center; margin-bottom: 30px; }
-        .logo { font-size: 24px; font-weight: bold; color: #2563eb; margin-bottom: 10px; }
-        .otp-code { background: #f8fafc; border: 2px dashed #2563eb; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px; }
-        .code { font-size: 32px; font-weight: bold; color: #2563eb; letter-spacing: 5px; }
-        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 14px; }
+        .logo { font-size: 32px; font-weight: bold; color: #2563eb; }
+        .otp-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px; margin: 30px 0; }
+        .otp-code { font-size: 48px; font-weight: bold; letter-spacing: 8px; margin: 10px 0; }
+        .warning { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; }
+        .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
       </style>
     </head>
     <body>
       <div class="container">
         <div class="header">
           <div class="logo">🧠 Quiz App</div>
-          <h2>Xác thực email đăng ký</h2>
+          <h2>Mã Xác Thực OTP</h2>
         </div>
         
-        <p>Xin chào!</p>
-        <p>Bạn đã yêu cầu đăng ký tài khoản tại Quiz App. Vui lòng sử dụng mã xác thực bên dưới để hoàn tất quá trình đăng ký:</p>
+        <p>Xin chào,</p>
+        <p>Bạn đã yêu cầu đăng ký tài khoản tại <strong>Quiz App</strong>.</p>
+        <p>Vui lòng sử dụng mã OTP bên dưới để hoàn tất quá trình đăng ký:</p>
         
-        <div class="otp-code">
-          <div class="code">${code}</div>
-          <p style="margin: 10px 0 0 0; color: #6b7280;">Mã này có hiệu lực trong ${expiresIn}</p>
+        <div class="otp-box">
+          <div>MÃ XÁC THỰC CỦA BẠN</div>
+          <div class="otp-code">${otp}</div>
+          <div style="font-size: 14px; margin-top: 10px;">Có hiệu lực trong 10 phút</div>
         </div>
         
-        <p><strong>Lưu ý quan trọng:</strong></p>
-        <ul>
-          <li>Mã xác thực này chỉ có hiệu lực trong ${expiresIn}</li>
-          <li>Không chia sẻ mã này với bất kỳ ai khác</li>
-          <li>Nếu bạn không yêu cầu đăng ký, vui lòng bỏ qua email này</li>
-        </ul>
+        <div class="warning">
+          <strong>⚠️ Lưu ý quan trọng:</strong>
+          <ul style="margin: 10px 0;">
+            <li>Mã OTP này chỉ có hiệu lực trong <strong>10 phút</strong></li>
+            <li><strong>KHÔNG chia sẻ</strong> mã này với bất kỳ ai</li>
+            <li>Nếu bạn không yêu cầu đăng ký, vui lòng bỏ qua email này</li>
+          </ul>
+        </div>
         
-        <p>Cảm ơn bạn đã tham gia Quiz App!</p>
+        <p>Trân trọng,<br><strong>Quiz App Team</strong></p>
         
         <div class="footer">
           <p>Email này được gửi tự động, vui lòng không trả lời.</p>
@@ -278,76 +282,77 @@ export const generateQuestionsHTTP = functions.https.onRequest((req, res) => {
   });
 });
 
-// Cloud Function để xử lý queue email OTP
-export const processEmailQueue = functions.firestore
-  .document('email_queue/{docId}')
-  .onCreate(async (snap, context) => {
-    const emailData = snap.data();
-    
-    try {
-      let htmlContent = '';
-      
-      // Tạo nội dung email dựa trên template
-      switch (emailData.template) {
-        case 'otp_verification':
-          htmlContent = getOTPEmailTemplate(
-            emailData.data.code,
-            emailData.data.expiresIn || '10 phút'
-          );
-          break;
-        default:
-          throw new Error('Unknown email template');
-      }
+/**
+ * Cloud Function để gửi OTP qua email
+ * Callable function - Không cần auth vì đây là bước trước khi đăng ký
+ */
+export const sendOTP = functions.https.onCall(async (data, context) => {
+  const { email, otp } = data;
 
-      // Gửi email
-      await transporter.sendMail({
-        from: `"Quiz App" <${process.env.EMAIL_USER}>`,
-        to: emailData.to,
-        subject: emailData.subject || 'Mã xác thực đăng ký Quiz App',
-        html: htmlContent
-      });
+  // Validate input
+  if (!email || !otp) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Email và OTP là bắt buộc'
+    );
+  }
 
-      // Cập nhật status thành công
-      await snap.ref.update({
-        status: 'sent',
-        sentAt: admin.firestore.FieldValue.serverTimestamp()
-      });
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Email không hợp lệ'
+    );
+  }
 
-      console.log(`Email sent successfully to ${emailData.to}`);
+  // Validate OTP format (6 digits)
+  if (!/^\d{6}$/.test(otp)) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'OTP phải là 6 chữ số'
+    );
+  }
 
-    } catch (error) {
-      console.error('Error sending email:', error);
-      
-      // Cập nhật status thất bại
-      await snap.ref.update({
-        status: 'failed',
-        error: error instanceof Error ? error.message : 'Unknown error',
-        failedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
-    }
-  });
+  try {
+    console.log(`📧 Sending OTP to ${email}`);
 
-// Cloud Function để cleanup email queue cũ (chạy hàng ngày)
-export const cleanupEmailQueue = functions.pubsub
-  .schedule('every 24 hours')
-  .timeZone('Asia/Ho_Chi_Minh')
-  .onRun(async (context) => {
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 7); // Xóa email cũ hơn 7 ngày
-
-    const query = admin.firestore()
-      .collection('email_queue')
-      .where('createdAt', '<', cutoff);
-
-    const snapshot = await query.get();
-    
-    const batch = admin.firestore().batch();
-    snapshot.docs.forEach(doc => {
-      batch.delete(doc.ref);
+    // Send email
+    await transporter.sendMail({
+      from: `"Quiz App" <${functions.config().email?.user || process.env.EMAIL_USER}>`,
+      to: email,
+      subject: '🔐 Mã xác thực đăng ký Quiz App',
+      html: getOTPEmailHTML(otp)
     });
 
-    await batch.commit();
-    console.log(`Cleaned up ${snapshot.size} old email queue entries`);
+    console.log(`✅ OTP sent successfully to ${email}`);
+
+    // Log to Firestore for tracking (optional)
+    await admin.firestore().collection('otp_logs').add({
+      email: email.toLowerCase(),
+      sentAt: admin.firestore.FieldValue.serverTimestamp(),
+      status: 'sent'
+    });
+
+    return {
+      success: true,
+      message: 'OTP đã được gửi đến email của bạn'
+    };
+
+  } catch (error) {
+    console.error('Error sending OTP:', error);
     
-    return null;
-  });
+    // Log error
+    await admin.firestore().collection('otp_logs').add({
+      email: email.toLowerCase(),
+      sentAt: admin.firestore.FieldValue.serverTimestamp(),
+      status: 'failed',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+
+    throw new functions.https.HttpsError(
+      'internal',
+      'Không thể gửi email. Vui lòng thử lại sau.'
+    );
+  }
+});

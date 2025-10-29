@@ -1,14 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuizData, useQuizSession, useQuizTimer, useQuizNavigation } from './hooks';
 import Timer from './components/Timer';
 import ProgressIndicator from './components/ProgressIndicator';
 import QuestionRenderer from './components/QuestionRenderer';
 import QuickNavigation from './components/QuickNavigation';
 import ConfirmationModals from './components/ConfirmationModals';
+import LearningResourcesView from './components/LearningResourcesView';
 // import { useNavigate } from 'react-router-dom';
 
 const QuizPage: React.FC = () => {
   const { quiz, loading, error } = useQuizData();
+  const [showResources, setShowResources] = useState(true);
+  const [hasViewedResources, setHasViewedResources] = useState(false);
 
   // Remove the useEffect that was manually updating timer
   // Timer is now handled by useQuizTimer hook properly
@@ -33,6 +36,25 @@ const QuizPage: React.FC = () => {
           <p className="text-gray-600">{error || 'Quiz không tồn tại'}</p>
         </div>
       </div>
+    );
+  }
+
+  // Check if quiz has learning resources
+  const hasResources = quiz.resources && quiz.resources.length > 0;
+
+  // Show resources view first if available and not viewed yet
+  if (hasResources && showResources && !hasViewedResources) {
+    return (
+      <LearningResourcesView
+        resources={quiz.resources || []}
+        onComplete={() => {
+          setHasViewedResources(true);
+          setShowResources(false);
+        }}
+        onSkip={() => {
+          setShowResources(false);
+        }}
+      />
     );
   }
 

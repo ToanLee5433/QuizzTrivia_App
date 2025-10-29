@@ -25,6 +25,8 @@ import {
   Edit3,
   RotateCcw
 } from 'lucide-react';
+import ImageUploader from '../../../components/ImageUploader';
+import { ImageUploadResult } from '../../../services/imageUploadService';
 
 const Profile: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -121,12 +123,6 @@ const Profile: React.FC = () => {
           linkWillBe: `/results/${result.id}` // This is what Profile will link to
         });
       });
-    } else {
-      console.warn('⚠️ No user results found! This could mean:');
-      console.warn('   1. User has not completed any quizzes');
-      console.warn('   2. Database query is failing');
-      console.warn('   3. User ID mismatch');
-      console.warn('   4. Firestore permissions issue');
     }
     
     // Calculate comprehensive stats with more accurate scoring
@@ -668,13 +664,65 @@ const Profile: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('profile.avatarUrl')}</label>
-                  <input
-                    type="url"
-                    value={avatarUrl}
-                    onChange={(e) => setAvatarUrl(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Avatar</label>
+                  
+                  {/* Current Avatar Preview */}
+                  {avatarUrl && (
+                    <div className="mb-4 flex items-center gap-4">
+                      <img 
+                        src={avatarUrl} 
+                        alt="Current Avatar" 
+                        className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                      />
+                      <div className="text-sm text-gray-600">
+                        <p className="font-medium">Avatar hiện tại</p>
+                        <button
+                          onClick={() => setAvatarUrl('')}
+                          className="text-red-600 hover:text-red-700 text-xs mt-1"
+                        >
+                          Xóa avatar
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Image Uploader Component */}
+                  <ImageUploader
+                    onUploadSuccess={(result: ImageUploadResult) => {
+                      if (result.originalUrl) {
+                        setAvatarUrl(result.originalUrl);
+                        toast.success('Upload avatar thành công! Nhấn "Cập nhật thông tin" để lưu.');
+                      }
+                    }}
+                    onUploadError={(error) => {
+                      toast.error('Lỗi upload avatar: ' + error);
+                    }}
+                    options={{
+                      folder: 'avatars',
+                      maxSizeKB: 2048,
+                      allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
+                      generateThumbnails: true
+                    }}
+                    previewUrl={avatarUrl}
+                    label=""
+                    showThumbnails={true}
+                    compressBeforeUpload={true}
+                    className="mb-4"
                   />
+
+                  {/* Fallback: Nhập URL thủ công */}
+                  <details className="mt-2">
+                    <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
+                      Hoặc nhập URL avatar thủ công
+                    </summary>
+                    <input
+                      type="url"
+                      value={avatarUrl}
+                      onChange={(e) => setAvatarUrl(e.target.value)}
+                      className="w-full mt-2 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="https://example.com/avatar.jpg"
+                    />
+                  </details>
                 </div>
                 <button
                   onClick={handleProfileUpdate}

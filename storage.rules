@@ -1,0 +1,176 @@
+rules_version = '2';
+
+// Firebase Storage Security Rules
+// Cấu trúc thư mục rõ ràng theo chức năng
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return request.auth.token.role == 'admin';
+    }
+    
+    function isValidImageType() {
+      return request.resource.contentType.matches('image/(jpeg|png|webp|gif|tiff)');
+    }
+    
+    function isValidPDFType() {
+      return request.resource.contentType == 'application/pdf';
+    }
+    
+    function isValidVideoType() {
+      return request.resource.contentType.matches('video/(mp4|webm|ogg|quicktime|x-msvideo)');
+    }
+    
+    function isValidAudioType() {
+      return request.resource.contentType.matches('audio/(mpeg|mp3|wav|ogg|m4a)');
+    }
+    
+    function isValidSize(maxSizeKB) {
+      return request.resource.size < maxSizeKB * 1024;
+    }
+    
+    // ========================================
+    // 1. USER AVATARS - Ảnh đại diện người dùng
+    // ========================================
+    match /user-avatars/{userId}/{fileName} {
+      allow read: if true; // Public readable
+      
+      allow create: if isAuthenticated()
+        && isValidImageType()
+        && isValidSize(2048) // Max 2MB
+        && userId == request.auth.uid; // Chỉ upload vào folder của mình
+      
+      allow update, delete: if isAuthenticated()
+        && userId == request.auth.uid;
+    }
+    
+    // ========================================
+    // 2. QUIZ COVERS - Ảnh bìa quiz
+    // ========================================
+    match /quiz-covers/{quizId}/{fileName} {
+      allow read: if true; // Public readable
+      
+      allow create: if isAuthenticated()
+        && isValidImageType()
+        && isValidSize(3072); // Max 3MB
+      
+      allow update, delete: if isAuthenticated();
+    }
+    
+    // ========================================
+    // 3. LEARNING RESOURCES - Tài liệu học tập
+    // ========================================
+    
+    // 3.1. Videos
+    match /learning-resources/videos/{quizId}/{fileName} {
+      allow read: if true; // Public readable
+      
+      allow create: if isAuthenticated()
+        && isValidVideoType()
+        && isValidSize(51200); // Max 50MB
+      
+      allow update, delete: if isAuthenticated();
+    }
+    
+    // 3.2. PDFs
+    match /learning-resources/pdfs/{quizId}/{fileName} {
+      allow read: if true; // Public readable
+      
+      allow create: if isAuthenticated()
+        && isValidPDFType()
+        && isValidSize(10240); // Max 10MB
+      
+      allow update, delete: if isAuthenticated();
+    }
+    
+    // 3.3. Audios
+    match /learning-resources/audios/{quizId}/{fileName} {
+      allow read: if true; // Public readable
+      
+      allow create: if isAuthenticated()
+        && isValidAudioType()
+        && isValidSize(10240); // Max 10MB
+      
+      allow update, delete: if isAuthenticated();
+    }
+    
+    // 3.4. Images/Slides
+    match /learning-resources/images/{quizId}/{fileName} {
+      allow read: if true; // Public readable
+      
+      allow create: if isAuthenticated()
+        && isValidImageType()
+        && isValidSize(5120); // Max 5MB
+      
+      allow update, delete: if isAuthenticated();
+    }
+    
+    // ========================================
+    // 4. QUESTION IMAGES - Ảnh trong câu hỏi
+    // ========================================
+    match /question-images/{quizId}/{questionId}/{fileName} {
+      allow read: if true; // Public readable
+      
+      allow create: if isAuthenticated()
+        && isValidImageType()
+        && isValidSize(2048); // Max 2MB
+      
+      allow update, delete: if isAuthenticated();
+    }
+    
+    // ========================================
+    // 5. THUMBNAILS - Ảnh thu nhỏ (auto-generated)
+    // ========================================
+    match /thumbnails/{allPaths=**} {
+      allow read: if true; // Public readable
+      allow write: if false; // Chỉ Extension tự động tạo
+    }
+    
+    // ========================================
+    // 6. TEMP UPLOADS - Upload tạm thời
+    // ========================================
+    match /temp-uploads/{userId}/{fileName} {
+      allow read: if true;
+      
+      allow create: if isAuthenticated()
+        && userId == request.auth.uid
+        && isValidSize(10240); // Max 10MB
+      
+      allow delete: if isAuthenticated()
+        && userId == request.auth.uid;
+    }
+    
+    // ========================================
+    // LEGACY SUPPORT - Giữ lại để không break
+    // ========================================
+    match /images/{folder}/{fileName} {
+      allow read: if true;
+      
+      allow create: if isAuthenticated()
+        && isValidImageType()
+        && isValidSize(10240);
+      
+      allow update, delete: if isAuthenticated();
+    }
+    
+    // ========================================
+    // DEFAULT - Chặn tất cả các path khác
+    // ========================================
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

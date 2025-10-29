@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { verifyOTP, generateAndSendOTP } from '../services/otpService';
+import { verifyOTP, generateAndSendOTP, getOTPExpiryTime } from '../services/otpService';
 import { toast } from 'react-toastify';
-import { Mail, RefreshCw, CheckCircle, Timer } from 'lucide-react';
-
+import { Mail, RefreshCw, CheckCircle, Timer, ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+
 interface OTPVerificationProps {
   email: string;
   onVerificationSuccess: () => void;
@@ -16,7 +16,6 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
   onCancel
 }) => {
   const { t } = useTranslation();
-
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
@@ -35,6 +34,19 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
       setCanResend(true);
     }
   }, [timer, canResend]);
+
+  // Calculate remaining time from expiry
+  useEffect(() => {
+    const expiryTime = getOTPExpiryTime(email);
+    if (expiryTime) {
+      const remaining = Math.floor((expiryTime - Date.now()) / 1000);
+      if (remaining > 0) {
+        setTimer(remaining);
+      } else {
+        setCanResend(true);
+      }
+    }
+  }, [email]);
 
   // Handle OTP input
   const handleOTPChange = (index: number, value: string) => {
@@ -83,7 +95,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
 
     setLoading(true);
     try {
-      const result = await verifyOTP(email, otpCode);
+      const result = verifyOTP(email, otpCode);
       
       if (result.success) {
         toast.success(result.message);
@@ -108,7 +120,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
       const result = await generateAndSendOTP(email);
       
       if (result.success) {
-        toast.success(result.message);
+        toast.success('Mã OTP mới đã được gửi!');
         setTimer(60);
         setCanResend(false);
         setOtp(['', '', '', '', '', '']);
@@ -132,92 +144,100 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
   }, [otp]);
 
   return (
-    <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Mail className="w-8 h-8 text-blue-600" />
-        </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">{t("auth.emailVerification")}</h2>
-        <p className="text-gray-600">
-          Chúng tôi đã gửi mã xác thực 6 số đến
-        </p>
-        <p className="font-semibold text-blue-600">{email}</p>
-      </div>
-
-      {/* OTP Input */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Nhập mã xác thực
-        </label>
-        <div className="flex gap-3 justify-center" onPaste={handlePaste}>
-          {otp.map((digit, index) => (
-            <input
-              key={index}
-              ref={el => inputRefs.current[index] = el}
-              type="text"
-              inputMode="numeric"
-              pattern="\d*"
-              maxLength={1}
-              value={digit}
-              onChange={e => handleOTPChange(index, e.target.value)}
-              onKeyDown={e => handleKeyDown(index, e)}
-              className="w-12 h-12 text-center text-xl font-bold border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-              disabled={loading}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Timer */}
-      <div className="text-center mb-6">
-        {!canResend ? (
-          <div className="flex items-center justify-center gap-2 text-gray-600">
-            <Timer className="w-4 h-4" />
-            <span>Gửi lại mã sau {timer}s</span>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Mail className="w-8 h-8 text-blue-600" />
           </div>
-        ) : (
-          <button
-            onClick={handleResendOTP}
-            disabled={resendLoading}
-            className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium mx-auto disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${resendLoading ? 'animate-spin' : ''}`} />
-            Gửi lại mã xác thực
-          </button>
-        )}
-      </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            {t("auth.emailVerification")}
+          </h2>
+          <p className="text-gray-600">
+            Chúng tôi đã gửi mã xác thực 6 số đến
+          </p>
+          <p className="font-semibold text-blue-600 mt-1">{email}</p>
+        </div>
 
-      {/* Actions */}
-      <div className="space-y-3">
-        <button
-          onClick={handleVerifyOTP}
-          disabled={loading || otp.join('').length !== 6}
-          className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 font-medium"
-        >
-          {loading ? (
-            <>
-              <RefreshCw className="w-4 h-4 animate-spin" />{t("profile.authenticating")}
-            </>
+        {/* OTP Input */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Nhập mã xác thực
+          </label>
+          <div className="flex gap-3 justify-center" onPaste={handlePaste}>
+            {otp.map((digit, index) => (
+              <input
+                key={index}
+                ref={el => inputRefs.current[index] = el}
+                type="text"
+                inputMode="numeric"
+                pattern="\d*"
+                maxLength={1}
+                value={digit}
+                onChange={e => handleOTPChange(index, e.target.value)}
+                onKeyDown={e => handleKeyDown(index, e)}
+                className="w-12 h-12 text-center text-xl font-bold border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                disabled={loading}
+                autoFocus={index === 0}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Timer */}
+        <div className="text-center mb-6">
+          {!canResend ? (
+            <div className="flex items-center justify-center gap-2 text-gray-600">
+              <Timer className="w-4 h-4" />
+              <span>Gửi lại mã sau {timer}s</span>
+            </div>
           ) : (
-            <>
-              <CheckCircle className="w-4 h-4" />
-              Xác thực
-            </>
+            <button
+              onClick={handleResendOTP}
+              disabled={resendLoading}
+              className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium mx-auto disabled:opacity-50 transition-colors"
+            >
+              <RefreshCw className={`w-4 h-4 ${resendLoading ? 'animate-spin' : ''}`} />
+              {resendLoading ? 'Đang gửi...' : 'Gửi lại mã xác thực'}
+            </button>
           )}
-        </button>
+        </div>
 
-        <button
-          onClick={onCancel}
-          className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium"
-        >{t("common.back")}
-        </button>
-      </div>
+        {/* Actions */}
+        <div className="space-y-3">
+          <button
+            onClick={handleVerifyOTP}
+            disabled={loading || otp.join('').length !== 6}
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 font-medium"
+          >
+            {loading ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                {t("profile.authenticating")}
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-4 h-4" />
+                Xác thực
+              </>
+            )}
+          </button>
 
-      {/* Help text */}
-      <div className="mt-6 text-center text-sm text-gray-500">
-        <p>Không nhận được mã?</p>
-        <p>Kiểm tra thư mục spam hoặc nhấn "Gửi lại mã xác thực"</p>
+          <button
+            onClick={onCancel}
+            className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center justify-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {t("common.back")}
+          </button>
+        </div>
+
+        {/* Help text */}
+        <div className="mt-6 text-center text-sm text-gray-500">
+          <p>Không nhận được mã?</p>
+          <p>Kiểm tra thư mục spam hoặc nhấn "Gửi lại mã xác thực"</p>
+        </div>
       </div>
     </div>
   );

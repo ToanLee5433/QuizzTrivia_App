@@ -19,6 +19,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   height = 300,
   className = ''
 }) => {
+  // Note: findDOMNode warning is suppressed globally in main.tsx
+  // ReactQuill uses findDOMNode internally, which is deprecated
+  // This will be fixed in future versions of react-quill
+
   // Memoize the change handler to prevent unnecessary re-renders
   const handleChange = useCallback((content: string) => {
     onChange(content);

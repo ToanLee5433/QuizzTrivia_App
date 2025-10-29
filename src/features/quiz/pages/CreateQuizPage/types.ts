@@ -1,3 +1,5 @@
+import { LearningResource } from '../../types/learning';
+
 // Kiểu dữ liệu cho câu hỏi
 export interface Answer {
   id: string;
@@ -29,6 +31,10 @@ export interface QuizFormData {
   tags?: string[];
   isPublic?: boolean;
   allowRetake?: boolean;
+  
+  // 🆕 Learning Materials
+  resources?: LearningResource[];
+  learningResources?: LearningResource[]; // Alias for backward compatibility
 }
 
 export interface SortableItemProps {

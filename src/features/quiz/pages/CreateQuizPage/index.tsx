@@ -12,6 +12,7 @@ import { defaultQuiz, steps } from './constants';
 import { generateId } from './utils';
 import QuizInfoStep from './components/QuizInfoStep';
 import QuestionsStep from './components/QuestionsStep';
+import ResourcesStep from './components/ResourcesStep'; // 🆕
 import ReviewStep from './components/ReviewStep';
 
 const CreateQuizPage: React.FC = () => {
@@ -99,9 +100,11 @@ const CreateQuizPage: React.FC = () => {
   // Validate từng step
   const validateStep = (stepIndex: number): boolean => {
     switch (stepIndex) {
-      case 0:
+      case 0: // Info step
         return !!(quiz.title && quiz.description && quiz.category && quiz.difficulty);
-      case 1:
+      case 1: // Resources step - BẮT BUỘC có ít nhất 1 tài liệu
+        return !!(quiz.resources && quiz.resources.length > 0);
+      case 2: // Questions step
         return quiz.questions.length > 0 && quiz.questions.every(q => {
           // Kiểm tra text câu hỏi
           if (!q.text) return false;
@@ -118,7 +121,7 @@ const CreateQuizPage: React.FC = () => {
               return false;
           }
         });
-      case 2:
+      case 3: // Review step
         return true;
       default:
         return false;
@@ -139,15 +142,79 @@ const CreateQuizPage: React.FC = () => {
 
     setSubmitting(true);
     try {
-      await addDoc(collection(db, 'quizzes'), {
-        ...quiz,
+      // Deep clean function để loại bỏ tất cả undefined values
+      const cleanValue = (value: any): any => {
+        if (value === undefined || value === null) {
+          return null;
+        }
+        if (Array.isArray(value)) {
+          return value.map(cleanValue);
+        }
+        if (typeof value === 'object' && value !== null) {
+          const cleaned: any = {};
+          Object.keys(value).forEach(key => {
+            const cleanedVal = cleanValue(value[key]);
+            if (cleanedVal !== undefined) {
+              cleaned[key] = cleanedVal;
+            }
+          });
+          return cleaned;
+        }
+        return value;
+      };
+
+      // Clean up undefined values - Firestore doesn't accept undefined
+      const cleanQuizData = cleanValue({
+        title: quiz.title || '',
+        description: quiz.description || '',
+        category: quiz.category || 'general',
+        difficulty: quiz.difficulty || 'easy',
+        duration: quiz.duration || 15,
+        questions: (quiz.questions || []).map(q => ({
+          id: q.id || '',
+          text: q.text || '',
+          type: q.type || 'multiple',
+          answers: (q.answers || []).map(a => ({
+            id: a.id || '',
+            text: a.text || '',
+            isCorrect: a.isCorrect !== undefined ? a.isCorrect : false
+          })),
+          explanation: q.explanation || '',
+          points: q.points !== undefined ? q.points : 1,
+          imageUrl: q.imageUrl || null,
+          correctAnswer: q.correctAnswer || null,
+          acceptedAnswers: q.acceptedAnswers || []
+        })),
+        resources: (quiz.resources || []).map(r => ({
+          id: r.id || '',
+          type: r.type || 'video',
+          title: r.title || '',
+          description: r.description || '',
+          url: r.url || '',
+          required: r.required !== undefined ? r.required : false,
+          threshold: r.threshold || {},
+          learningOutcomes: r.learningOutcomes || [],
+          order: r.order !== undefined ? r.order : 0,
+          thumbnailUrl: r.thumbnailUrl || null,
+          whyWatch: r.whyWatch || null,
+          estimatedTime: r.estimatedTime || null,
+          createdAt: r.createdAt || new Date(),
+          updatedAt: r.updatedAt || new Date()
+        })),
         createdBy: currentUser.uid,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         isPublished: true,
-        tags: [],
-        status: 'pending', // Đặt trạng thái chờ duyệt
+        tags: quiz.tags || [],
+        imageUrl: quiz.imageUrl || null,
+        isPublic: quiz.isPublic !== undefined ? quiz.isPublic : false,
+        allowRetake: quiz.allowRetake !== undefined ? quiz.allowRetake : true,
+        status: 'pending'
       });
+
+      console.log('🔍 Clean quiz data:', cleanQuizData);
+
+      await addDoc(collection(db, 'quizzes'), cleanQuizData);
 
       toast.success(t('createQuiz.createSuccess'));
       setQuiz(defaultQuiz);
@@ -191,7 +258,7 @@ const CreateQuizPage: React.FC = () => {
                 <span className={`ml-2 text-sm ${
                   idx <= step ? 'text-blue-600 font-medium' : 'text-gray-500'
                 }`}>
-                  {t(`createQuiz.steps.${idx === 0 ? 'info' : idx === 1 ? 'questions' : 'review'}`)}
+                  {steps[idx]}
                 </span>
                 {idx < steps.length - 1 && (
                   <div className={`w-16 h-0.5 mx-4 ${
@@ -208,6 +275,12 @@ const CreateQuizPage: React.FC = () => {
           {/* Step content */}
           {step === 0 && <QuizInfoStep quiz={quiz} setQuiz={setQuiz} />}
           {step === 1 && (
+            <ResourcesStep
+              resources={quiz.resources || []}
+              onResourcesChange={(resources) => setQuiz(prev => ({ ...prev, resources }))}
+            />
+          )}
+          {step === 2 && (
             <QuestionsStep
               quiz={quiz}
               setQuiz={setQuiz}
@@ -217,7 +290,7 @@ const CreateQuizPage: React.FC = () => {
               moveQuestion={moveQuestion}
             />
           )}
-          {step === 2 && <ReviewStep quiz={quiz} />}
+          {step === 3 && <ReviewStep quiz={quiz} />}
 
           {/* Navigation */}
           <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">

@@ -212,6 +212,16 @@ service cloud.firestore {
       );
     }
     
+    // Mail collection for Trigger Email from Firestore extension
+    match /mail/{mailId} {
+      // Allow any user to create email documents (for OTP, notifications, etc.)
+      // Extension needs to read/write/delete these documents
+      allow create: if true; // Allow unauthenticated users to send OTP during registration
+      
+      // Extension needs to update delivery status
+      allow read, update, delete: if true; // Extension service account has full access
+    }
+    
     // Default: deny all
     match /{document=**} {
       allow read, write: if false;

@@ -29,7 +29,13 @@ import {
   BarChart3,
   RotateCcw,
   Edit3,
-  AlertCircle
+  AlertCircle,
+  FileText,
+  Video,
+  Image as ImageIcon,
+  Music,
+  Link as LinkIcon,
+  Presentation
 } from 'lucide-react';
 
 interface Quiz {
@@ -45,6 +51,7 @@ interface Quiz {
   isPublic: boolean;
   isPublished?: boolean;
   editRequests?: EditRequest[];
+  learningResources?: any[]; // Tài liệu học tập
 }
 
 interface EditRequest {
@@ -464,6 +471,32 @@ const AdminQuizManagement: React.FC = () => {
     }
   };
 
+  // Helper để lấy icon theo loại tài liệu
+  const getResourceIcon = (type: string) => {
+    switch (type) {
+      case 'video': return <Video className="w-4 h-4" />;
+      case 'pdf': return <FileText className="w-4 h-4" />;
+      case 'image': return <ImageIcon className="w-4 h-4" />;
+      case 'audio': return <Music className="w-4 h-4" />;
+      case 'link': return <LinkIcon className="w-4 h-4" />;
+      case 'slides': return <Presentation className="w-4 h-4" />;
+      default: return <FileText className="w-4 h-4" />;
+    }
+  };
+
+  // Helper để lấy màu badge theo loại tài liệu
+  const getResourceBadgeColor = (type: string) => {
+    switch (type) {
+      case 'video': return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'pdf': return 'bg-red-100 text-red-700 border-red-200';
+      case 'image': return 'bg-purple-100 text-purple-700 border-purple-200';
+      case 'audio': return 'bg-green-100 text-green-700 border-green-200';
+      case 'link': return 'bg-indigo-100 text-indigo-700 border-indigo-200';
+      case 'slides': return 'bg-orange-100 text-orange-700 border-orange-200';
+      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+  };
+
   if (!user || user.role !== 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -744,7 +777,7 @@ const AdminQuizManagement: React.FC = () => {
                     
                     <p className="text-gray-600 mb-4 line-clamp-2">{quiz.description}</p>
                     
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-3">
                       <div>
                         <span className="font-medium">{t('admin.quizManagement.table.category')}:</span> {quiz.category}
                       </div>
@@ -755,6 +788,23 @@ const AdminQuizManagement: React.FC = () => {
                         <span className="font-medium">{t('admin.quizManagement.table.createdAt')}:</span> {quiz.createdAt.toLocaleDateString()}
                       </div>
                     </div>
+
+                    {/* Hiển thị số lượng tài liệu học tập */}
+                    {quiz.learningResources && quiz.learningResources.length > 0 && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg">
+                          <FileText className="w-4 h-4 text-emerald-600" />
+                          <span className="text-xs font-medium text-emerald-700">
+                            {quiz.learningResources.length} tài liệu học tập
+                          </span>
+                        </div>
+                        {quiz.learningResources.some((r: any) => r.required) && (
+                          <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full font-medium">
+                            ⚠️ Có tài liệu bắt buộc
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   
                   {/* Actions - 6 chức năng: View, Edit, Approve, Reject, Reopen, Delete */}
@@ -950,6 +1000,66 @@ const AdminQuizManagement: React.FC = () => {
                     <span className="font-semibold">{t('admin.preview.status')}:</span> {getStatusBadge(previewQuiz.status || 'pending')}
                   </div>
                 </div>
+
+                {/* Tài liệu học tập trong Preview */}
+                {previewQuiz.learningResources && previewQuiz.learningResources.length > 0 && (
+                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-lg p-4">
+                    <h3 className="font-semibold mb-3 flex items-center gap-2 text-emerald-800">
+                      <FileText className="w-5 h-5" />
+                      📚 Tài liệu học tập ({previewQuiz.learningResources.length})
+                    </h3>
+                    <div className="space-y-2">
+                      {previewQuiz.learningResources.map((resource: any, idx: number) => (
+                        <div 
+                          key={resource.id || idx} 
+                          className="bg-white rounded-lg p-3 border border-emerald-100"
+                        >
+                          <div className="flex items-start gap-3">
+                            {/* Icon & Type Badge */}
+                            <div className={`flex items-center justify-center w-10 h-10 rounded-lg border ${getResourceBadgeColor(resource.type)}`}>
+                              {getResourceIcon(resource.type)}
+                            </div>
+                            
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2">
+                                <h4 className="font-semibold text-gray-900 text-sm">{resource.title}</h4>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium border flex-shrink-0 ${getResourceBadgeColor(resource.type)}`}>
+                                  {resource.type.toUpperCase()}
+                                </span>
+                              </div>
+                              
+                              {resource.description && (
+                                <p className="text-xs text-gray-600 mt-1 line-clamp-2">{resource.description}</p>
+                              )}
+                              
+                              <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
+                                {resource.required && (
+                                  <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded-full font-medium">
+                                    ⚠️ Bắt buộc
+                                  </span>
+                                )}
+                                {resource.estimatedTime && (
+                                  <span>⏱️ {resource.estimatedTime} phút</span>
+                                )}
+                                {resource.url && (
+                                  <a 
+                                    href={resource.url} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:text-blue-800 hover:underline truncate max-w-xs"
+                                  >
+                                    🔗 Xem tài liệu
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {previewQuiz.questions.length > 0 && (
                   <div>

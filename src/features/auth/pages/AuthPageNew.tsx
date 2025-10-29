@@ -12,9 +12,9 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, Mail, Lock, User as UserIcon, Chrome } from 'lucide-react';
-import { generateAndSendOTP } from '../services/otpService';
-import OTPVerification from '../components/OTPVerification';
 import { ForgotPassword } from '../components/ForgotPassword';
+import OTPVerification from '../components/OTPVerification';
+import { generateAndSendOTP } from '../services/otpService';
 
 interface FormData {
   email: string;
@@ -31,9 +31,13 @@ const AuthPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [showOTPVerification, setShowOTPVerification] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [pendingUserData, setPendingUserData] = useState<{email: string; password: string; displayName: string} | null>(null);
+  const [showOTPVerification, setShowOTPVerification] = useState(false);
+  const [pendingUserData, setPendingUserData] = useState<{
+    email: string;
+    password: string;
+    displayName: string;
+  } | null>(null);
   const [formData, setFormData] = useState<FormData>({
     email: '',
     password: '',
@@ -105,38 +109,52 @@ const AuthPage: React.FC = () => {
         role: 'user',
         createdAt: new Date(),
         isActive: true,
-        emailVerified: user.emailVerified,
+        emailVerified: true, // OTP đã verify rồi
         needsRoleSelection: true,
         ...additionalData
       });
     }
   };
 
-  // Complete registration only AFTER OTP success
+  // Complete registration sau khi OTP verify thành công
   const completeRegistrationAfterOTP = async () => {
-    if (!pendingUserData) return;
+    if (!pendingUserData) {
+      toast.error('Không tìm thấy thông tin đăng ký');
+      return;
+    }
+
     setLoading(true);
     try {
-      const cred = await createUserWithEmailAndPassword(
+      // Tạo Firebase account
+      const userCredential = await createUserWithEmailAndPassword(
         auth,
         pendingUserData.email,
         pendingUserData.password
       );
 
-      await createUserDocument(cred.user, {
+      // Tạo user document
+      await createUserDocument(userCredential.user, {
         displayName: pendingUserData.displayName,
-        emailVerified: true,
         verificationMethod: 'otp'
       });
 
       toast.success(t('auth.registerSuccess'));
-
-      setFormData({ email: '', password: '', confirmPassword: '', displayName: '', acceptTerms: false });
+      
+      // Reset states
+      setFormData({ 
+        email: '', 
+        password: '', 
+        confirmPassword: '', 
+        displayName: '', 
+        acceptTerms: false 
+      });
       setPendingUserData(null);
       setShowOTPVerification(false);
+      
+      // Navigate to role selection
       navigate('/role-selection');
     } catch (error: any) {
-      console.error('Final registration error:', error);
+      console.error('Registration error:', error);
       switch (error.code) {
         case 'auth/email-already-in-use':
           toast.error(t('auth.errors.emailAlreadyInUse'));
@@ -160,21 +178,26 @@ const AuthPage: React.FC = () => {
 
     setLoading(true);
     try {
-      const otpResult = await generateAndSendOTP(formData.email.trim());
-      if (otpResult.success) {
+      // Gửi OTP trước
+      const result = await generateAndSendOTP(formData.email.trim().toLowerCase());
+      
+      if (result.success) {
+        // Lưu data tạm
         setPendingUserData({
-          email: formData.email.trim(),
+          email: formData.email.trim().toLowerCase(),
           password: formData.password,
           displayName: formData.displayName.trim()
         });
+        
+        // Hiện màn hình nhập OTP
         setShowOTPVerification(true);
-        toast.success(otpResult.message);
+        toast.success(result.message);
       } else {
-        toast.error(otpResult.message);
+        toast.error(result.message);
       }
     } catch (error: any) {
       console.error('Registration error:', error);
-      toast.error(t('auth.errors.otpSendError'));
+      toast.error('Có lỗi xảy ra. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -254,8 +277,12 @@ const AuthPage: React.FC = () => {
 
   const handleShowForgotPassword = () => setShowForgotPassword(true);
   const handleCloseForgotPassword = () => setShowForgotPassword(false);
-  const handleCloseOTP = () => setShowOTPVerification(false);
+  const handleCloseOTP = () => {
+    setShowOTPVerification(false);
+    setPendingUserData(null);
+  };
 
+  // Show OTP verification screen
   if (showOTPVerification && pendingUserData) {
     return (
       <OTPVerification

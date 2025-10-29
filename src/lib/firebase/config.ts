@@ -2,6 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 // import { getDatabase, Database } from "firebase/database"; // Disabled - not configured
 import { getAnalytics } from "firebase/analytics";
 // import { toast } from "react-toastify";
@@ -9,13 +10,13 @@ import { getAnalytics } from "firebase/analytics";
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyB6bUM5UFLNcwPYDFPkdW2i6uy-QH7ldsA",
-  authDomain: "quiz-app-85db6.firebaseapp.com",
-  projectId: "quiz-app-85db6",
-  storageBucket: "quiz-app-85db6.firebasestorage.app",
-  messagingSenderId: "609646993082",
-  appId: "1:609646993082:web:202a0d6d0ab5e0c6ac2c83",
-  measurementId: "G-M7B6P9R97Y"
+  apiKey: "AIzaSyDtBzTHNPQ5PxKhVb-si89kgr5T_3ppwj8",
+  authDomain: "datn-quizapp.firebaseapp.com",
+  projectId: "datn-quizapp",
+  storageBucket: "datn-quizapp.firebasestorage.app",
+  messagingSenderId: "741975099365",
+  appId: "1:741975099365:web:75a1d1eb4b6d89f0f7110c",
+  measurementId: "G-6Y1VQMBGJ0"
 };
 
 import { getApps, getApp } from "firebase/app";
@@ -30,6 +31,7 @@ setPersistence(auth, browserLocalPersistence)
   });
 
 export const db = getFirestore(app);
+export const storage = getStorage(app);
 
 // Optional analytics
 let analytics: any = null;

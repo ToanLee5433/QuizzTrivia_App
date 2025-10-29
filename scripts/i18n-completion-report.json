@@ -1,0 +1,18 @@
+{
+  "timestamp": "2025-10-29T21:09:43.816Z",
+  "totalKeys": 2173,
+  "languages": {
+    "vi": {
+      "file": "public/locales/vi/common.json",
+      "keys": 1689
+    },
+    "en": {
+      "file": "public/locales/en/common.json",
+      "keys": 1689
+    }
+  },
+  "hardcodedStringsFound": 1698,
+  "coverage": {
+    "percentage": "127.97%"
+  }
+}

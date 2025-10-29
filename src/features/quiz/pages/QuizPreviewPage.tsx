@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Clock, Star, Play, Eye, BookOpen, Target } from 'lucide-react';
+import { Clock, Star, Play, Eye, BookOpen, Target, FileText, Video, Image as ImageIcon, Music, Link as LinkIcon, Presentation, ExternalLink } from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 import { Quiz } from '../types';
@@ -103,6 +103,32 @@ const QuizPreviewPage: React.FC = () => {
       case 'medium': return 'Trung bình';
       case 'hard': return 'Khó';
       default: return difficulty;
+    }
+  };
+
+  // Helper để lấy icon theo loại tài liệu
+  const getResourceIcon = (type: string) => {
+    switch (type) {
+      case 'video': return <Video className="w-5 h-5" />;
+      case 'pdf': return <FileText className="w-5 h-5" />;
+      case 'image': return <ImageIcon className="w-5 h-5" />;
+      case 'audio': return <Music className="w-5 h-5" />;
+      case 'link': return <LinkIcon className="w-5 h-5" />;
+      case 'slides': return <Presentation className="w-5 h-5" />;
+      default: return <FileText className="w-5 h-5" />;
+    }
+  };
+
+  // Helper để lấy màu badge theo loại tài liệu
+  const getResourceBadgeColor = (type: string) => {
+    switch (type) {
+      case 'video': return 'bg-blue-100 text-blue-700 border-blue-300';
+      case 'pdf': return 'bg-red-100 text-red-700 border-red-300';
+      case 'image': return 'bg-purple-100 text-purple-700 border-purple-300';
+      case 'audio': return 'bg-green-100 text-green-700 border-green-300';
+      case 'link': return 'bg-indigo-100 text-indigo-700 border-indigo-300';
+      case 'slides': return 'bg-orange-100 text-orange-700 border-orange-300';
+      default: return 'bg-gray-100 text-gray-700 border-gray-300';
     }
   };
 
@@ -226,6 +252,89 @@ const QuizPreviewPage: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {/* Learning Resources Section - NEW */}
+            {(quiz as any).learningResources && (quiz as any).learningResources.length > 0 && (
+              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl shadow-sm p-6 border-2 border-emerald-200">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold text-emerald-900 flex items-center gap-2">
+                    <BookOpen className="w-6 h-6 text-emerald-600" />
+                    📚 Tài liệu học tập
+                  </h2>
+                  <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm font-semibold">
+                    {(quiz as any).learningResources.length} tài liệu
+                  </span>
+                </div>
+
+                <p className="text-emerald-700 text-sm mb-4">
+                  💡 Xem tài liệu này trước khi làm bài để đạt kết quả tốt nhất!
+                </p>
+
+                <div className="space-y-3">
+                  {(quiz as any).learningResources.map((resource: any, idx: number) => (
+                    <div 
+                      key={resource.id || idx} 
+                      className="bg-white rounded-lg p-4 border-2 border-emerald-100 hover:border-emerald-300 hover:shadow-md transition-all"
+                    >
+                      <div className="flex items-start gap-4">
+                        {/* Icon */}
+                        <div className={`flex items-center justify-center w-12 h-12 rounded-xl border-2 flex-shrink-0 ${getResourceBadgeColor(resource.type)}`}>
+                          {getResourceIcon(resource.type)}
+                        </div>
+                        
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <h4 className="font-bold text-gray-900 text-base leading-tight">{resource.title}</h4>
+                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold border-2 flex-shrink-0 ${getResourceBadgeColor(resource.type)}`}>
+                              {resource.type.toUpperCase()}
+                            </span>
+                          </div>
+                          
+                          {resource.description && (
+                            <p className="text-sm text-gray-600 mb-3 line-clamp-2">{resource.description}</p>
+                          )}
+                          
+                          <div className="flex flex-wrap items-center gap-3 text-sm">
+                            {resource.required && (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-red-100 text-red-700 rounded-full font-bold border border-red-300">
+                                <span className="text-base">⚠️</span> BẮT BUỘC
+                              </span>
+                            )}
+                            {resource.estimatedTime && (
+                              <span className="inline-flex items-center gap-1 text-gray-600">
+                                <Clock className="w-4 h-4" />
+                                <span className="font-medium">{resource.estimatedTime} phút</span>
+                              </span>
+                            )}
+                            {resource.url && (
+                              <a 
+                                href={resource.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm hover:shadow"
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                                Xem tài liệu
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {(quiz as any).learningResources.some((r: any) => r.required) && (
+                  <div className="mt-4 p-3 bg-amber-50 border-2 border-amber-300 rounded-lg">
+                    <p className="text-sm text-amber-800 font-medium flex items-center gap-2">
+                      <span className="text-lg">⚠️</span>
+                      <span>Lưu ý: Quiz này có tài liệu <strong>BẮT BUỘC</strong> phải xem trước khi làm bài!</span>
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Questions Preview */}
             <div className="bg-white rounded-xl shadow-sm p-6">
