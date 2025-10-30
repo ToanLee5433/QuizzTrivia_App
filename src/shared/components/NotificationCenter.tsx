@@ -56,7 +56,7 @@ const NotificationCenter: React.FC = () => {
   if (!user) return null;
 
   return (
-    <div className="relative">
+    <div className="relative z-[100]">
       {/* Notification Bell */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -72,7 +72,7 @@ const NotificationCenter: React.FC = () => {
 
       {/* Notification Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-[200]">
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">{t("notifications.title")}</h3>

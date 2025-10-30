@@ -461,16 +461,16 @@ const MyQuizzesPage: React.FC = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredQuizzes.map((quiz) => (
-                    <tr key={quiz.id} className="hover:bg-gray-50">
+                    <tr key={quiz.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-semibold text-gray-900">
                             {quiz.title}
                           </div>
                           {/* Render rich-text description safely (support HTML without showing tags) */}
                           <SafeHTML
                             content={quiz.description}
-                            className="text-sm text-gray-500 max-w-xs line-clamp-1"
+                            className="text-sm text-gray-600 max-w-xs line-clamp-1"
                             as="div"
                           />
                           <div className="text-xs text-gray-400 mt-1">
@@ -480,7 +480,7 @@ const MyQuizzesPage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="space-y-1">
-                          <div className="text-sm text-gray-900">{getCategoryLabel(quiz.category)}</div>
+                          <div className="text-sm text-gray-900 font-medium">{getCategoryLabel(quiz.category)}</div>
                           {getDifficultyBadge(quiz.difficulty)}
                         </div>
                       </td>
@@ -490,7 +490,7 @@ const MyQuizzesPage: React.FC = () => {
                           {quiz.editRequests && quiz.editRequests.length > 0 && (
                             <div className="text-xs text-gray-500">
                               {quiz.editRequests.filter(req => req.status === 'pending').length > 0 && (
-                                <span className="text-yellow-600">{t("quiz.status.hasEditRequests")}</span>
+                                <span className="px-2 py-0.5 rounded-full bg-yellow-50 text-yellow-700 border border-yellow-200">{t("quiz.status.hasEditRequests")}</span>
                               )}
                             </div>
                           )}

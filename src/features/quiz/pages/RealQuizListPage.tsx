@@ -43,7 +43,7 @@ const RealQuizListPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-5xl mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
           <Link
@@ -54,20 +54,22 @@ const RealQuizListPage: React.FC = () => {
             {t('back')}
           </Link>
           
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <div className="flex items-center justify-between">
+          <div className="relative overflow-hidden rounded-2xl p-6 shadow-sm bg-gradient-to-r from-indigo-50 via-blue-50 to-sky-50 border border-gray-100">
+            <div className="absolute inset-0 pointer-events-none opacity-40" style={{backgroundImage:'radial-gradient(circle at 20% 20%, rgba(59,130,246,0.15), transparent 35%), radial-gradient(circle at 80% 0%, rgba(99,102,241,0.15), transparent 35%)'}} />
+            <div className="relative flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900 mb-1">
                   📚 {t('quizList.title')}
                 </h1>
-                <p className="text-gray-600">
-                  {quizzes.length} {t('quizList.results.quizzes')}
-                </p>
+                <div className="flex items-center gap-3 text-gray-600">
+                  <span className="px-2.5 py-1 rounded-full bg-white/70 border border-gray-200 text-sm">
+                    {quizzes.length} {t('quizList.results.quizzes')}
+                  </span>
+                </div>
               </div>
-              
               <button
                 onClick={loadRealQuizzes}
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="inline-flex items-center px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow hover:from-blue-700 hover:to-indigo-700 transition-colors"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />{t('refresh')}
               </button>
@@ -88,27 +90,25 @@ const RealQuizListPage: React.FC = () => {
         ) : (
           <div className="space-y-4">
             {quizzes.map((quiz) => (
-              <div key={quiz.id} className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-                <div className="flex items-start justify-between">
+              <div key={quiz.id} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-blue-200 transition-all">
+                <div className="flex items-start justify-between gap-6">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2 tracking-tight">
                       {quiz.title || t('quiz.noTitle')}
                     </h3>
                     
-                    <SafeHTML
-                      content={quiz.description || String(t('quiz.noDescription'))}
-                      className="text-gray-600 mb-3"
-                      as="div"
-                    />
+                    <SafeHTML content={quiz.description || String(t('quiz.noDescription'))} className="text-gray-600 mb-4 line-clamp-2" as="div" />
                     
-                    <div className="flex items-center space-x-4 text-sm text-gray-500">
-                      <span>ID: <code className="bg-gray-100 px-2 py-1 rounded">{quiz.id}</code></span>
-                      {quiz.category && <span>{t('quiz.category')}: {quiz.category}</span>}
+                    <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
+                      <span className="flex items-center gap-1">ID: <code className="bg-gray-100 px-2 py-0.5 rounded">{quiz.id}</code></span>
+                      {quiz.category && (
+                        <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">{t('quiz.category')}: {quiz.category}</span>
+                      )}
                       {quiz.status && (
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          quiz.status === 'approved' ? 'bg-green-100 text-green-800' :
-                          quiz.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${
+                          quiz.status === 'approved' ? 'bg-green-50 text-green-700 border-green-200' :
+                          quiz.status === 'pending' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                          'bg-red-50 text-red-700 border-red-200'
                         }`}>
                           {quiz.status === 'approved' ? t('admin.quizManagement.filter.approved') :
                            quiz.status === 'pending' ? t('admin.quizManagement.filter.pending') : t('status.rejected')}
@@ -120,7 +120,7 @@ const RealQuizListPage: React.FC = () => {
                   <div className="flex items-center space-x-3">
                     <Link
                        to={`/quiz/${quiz.id}/preview`}
-                      className="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                      className="inline-flex items-center px-3 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 text-sm shadow"
                     >
                       <Eye className="w-4 h-4 mr-2" />
                        {t('quiz.preview')}
@@ -128,7 +128,7 @@ const RealQuizListPage: React.FC = () => {
                     
                     <Link
                       to={`/quiz/${quiz.id}/reviews`}
-                      className="inline-flex items-center px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+                      className="inline-flex items-center px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 text-sm shadow"
                     >
                       <MessageSquare className="w-4 h-4 mr-2" />
                        {t('quiz.reviewsTitle')}

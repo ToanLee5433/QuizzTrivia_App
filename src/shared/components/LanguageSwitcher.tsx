@@ -66,7 +66,7 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ variant = 'light' }
   };
 
   return (
-    <div className="relative group">
+    <div className="relative group z-[100]">
       <button className={getButtonStyles()}>
         <Globe className={`w-4 h-4 ${getIconColor()}`} />
         <span className={`${getTextColor()} text-sm font-medium hidden sm:inline`}>
@@ -80,7 +80,7 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ variant = 'light' }
         </svg>
       </button>
       
-      <div className="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[160px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+      <div className="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-xl border border-gray-200 py-1 min-w-[160px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[200]">
         <div className="px-3 py-2 border-b border-gray-200">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{t('common.selectLanguage')}</p>
         </div>
