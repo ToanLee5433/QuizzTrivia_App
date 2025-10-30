@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, RefreshCw, Eye, MessageSquare } from 'lucide-react';
 
 import { useTranslation } from 'react-i18next';
+import SafeHTML from '../../../shared/components/ui/SafeHTML';
 const RealQuizListPage: React.FC = () => {
   const { t } = useTranslation();
 
@@ -94,9 +95,11 @@ const RealQuizListPage: React.FC = () => {
                       {quiz.title || t('quiz.noTitle')}
                     </h3>
                     
-                    <p className="text-gray-600 mb-3">
-                      {quiz.description || t('quiz.noDescription')}
-                    </p>
+                    <SafeHTML
+                      content={quiz.description || String(t('quiz.noDescription'))}
+                      className="text-gray-600 mb-3"
+                      as="div"
+                    />
                     
                     <div className="flex items-center space-x-4 text-sm text-gray-500">
                       <span>ID: <code className="bg-gray-100 px-2 py-1 rounded">{quiz.id}</code></span>

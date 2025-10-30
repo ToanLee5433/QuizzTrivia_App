@@ -20,6 +20,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import SafeHTML from '../../../shared/components/ui/SafeHTML';
 
 interface Quiz {
   id: string;
@@ -466,9 +467,12 @@ const MyQuizzesPage: React.FC = () => {
                           <div className="text-sm font-medium text-gray-900">
                             {quiz.title}
                           </div>
-                          <div className="text-sm text-gray-500 truncate max-w-xs">
-                            {quiz.description}
-                          </div>
+                          {/* Render rich-text description safely (support HTML without showing tags) */}
+                          <SafeHTML
+                            content={quiz.description}
+                            className="text-sm text-gray-500 max-w-xs line-clamp-1"
+                            as="div"
+                          />
                           <div className="text-xs text-gray-400 mt-1">
                             {quiz.questions?.length || 0} {t('quiz.questions')}
                           </div>
