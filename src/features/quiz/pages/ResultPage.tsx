@@ -8,6 +8,8 @@ import { getQuizResults, getQuizResultById, getQuizById } from '../services/quiz
 import { toast } from 'react-toastify';
 import QuickReviewSection from '../../../shared/components/QuickReviewSection';
 import { quizStatsService } from '../../../services/quizStatsService';
+import SafeHTML from '../../../shared/components/ui/SafeHTML';
+
 
 interface ResultState {
   score: number;
@@ -477,7 +479,7 @@ export const ResultPage: React.FC = () => {
                     {question.explanation && (
                       <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                         <span className="font-medium text-blue-800">Explanation: </span>
-                        <span className="text-blue-700">{question.explanation}</span>
+                        <SafeHTML content={question.explanation} className="text-blue-700" />
                       </div>
                     )}
                   </div>

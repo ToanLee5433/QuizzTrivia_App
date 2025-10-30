@@ -4,6 +4,7 @@ import { geminiAI } from '../services/geminiAI';
 import { FileProcessor } from '../services/fileProcessor';
 import { AI_CONFIG } from '../config/constants';
 import { Sparkles, Wand2, CheckCircle, XCircle, RefreshCw, Upload, File, Image, FileText } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Question {
   text: string;
@@ -18,6 +19,7 @@ interface AIGeneratorProps {
 }
 
 const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerated }) => {
+  const { t } = useTranslation();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
@@ -37,14 +39,14 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
       const result = await geminiAI.testConnection();
       if (result.success) {
         setConnectionStatus('connected');
-        toast.success('✅ Kết nối AI thành công!');
+        toast.success(t('aiGenerator.connectionSuccess'));
       } else {
         setConnectionStatus('failed');
-        toast.error('❌ Không thể kết nối đến AI: ' + result.message);
+        toast.error(t('aiGenerator.connectionFailed', { message: result.message }));
       }
     } catch (error) {
       setConnectionStatus('failed');
-      toast.error('❌ Lỗi kết nối AI');
+      toast.error(t('aiGenerator.connectionError'));
     } finally {
       setIsTesting(false);
     }
@@ -60,7 +62,7 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
     const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
     
     if (!hasValidExtension) {
-      toast.error(`File không hợp lệ! Chỉ chấp nhận: ${allowedExtensions.join(', ')}`);
+      toast.error(t('aiGenerator.invalidFile', { extensions: allowedExtensions.join(', ') }));
       event.target.value = ''; // Clear input
       return;
     }
@@ -68,7 +70,7 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
     // Validate file size (max 10MB)
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
-      toast.error('File quá lớn! Kích thước tối đa: 10MB');
+      toast.error(t('aiGenerator.fileTooLarge'));
       event.target.value = ''; // Clear input
       return;
     }
@@ -77,7 +79,7 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
     try {
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
       if (!apiKey) {
-        toast.error('API key không được cấu hình');
+        toast.error(t('aiGenerator.apiKeyNotConfigured'));
         return;
       }
 
@@ -92,13 +94,13 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
           topic: result.content?.substring(0, 100) + '...' || prev.topic,
           useFileContent: true 
         }));
-        toast.success(`Đã xử lý file ${file.name} thành công!`);
+        toast.success(t('aiGenerator.fileProcessedSuccess', { fileName: file.name }));
       } else {
-        toast.error(result.error || 'Không thể xử lý file này');
+        toast.error(result.error || t('aiGenerator.fileProcessFailed'));
       }
     } catch (error) {
       console.error('File processing error:', error);
-      toast.error('Lỗi khi xử lý file');
+      toast.error(t('aiGenerator.fileProcessingError'));
     } finally {
       setIsProcessingFile(false);
     }
@@ -112,11 +114,11 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
 
   const generateQuestions = async () => {
     const topicToUse = formData.useFileContent && fileContent 
-      ? `Dựa trên nội dung file đã tải lên: ${fileContent}. Tạo câu hỏi về: ${formData.topic}`
+      ? `${t('aiGenerator.basedOnFile')}: ${fileContent}. ${t('aiGenerator.createQuestionsAbout')}: ${formData.topic}`
       : formData.topic;
 
     if (!topicToUse.trim()) {
-      toast.error('Vui lòng nhập chủ đề hoặc tải lên file!');
+      toast.error(t('aiGenerator.pleaseEnterTopicOrFile'));
       return;
     }
 
@@ -147,8 +149,8 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
         toast.error('❌ ' + result.error);
       }
     } catch (error) {
-      console.error('Generate questions error:', error);
-      toast.error('❌ Có lỗi xảy ra khi tạo câu hỏi');
+      console.error('Generation error:', error);
+      toast.error(t('aiGenerator.questionGenerationError'));
     } finally {
       setIsGenerating(false);
     }
@@ -179,8 +181,8 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
             <Wand2 className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-gray-900">🤖 AI Generator (Client-side)</h3>
-            <p className="text-sm text-gray-600">Tạo câu hỏi tự động bằng Google Gemini AI</p>
+            <h3 className="text-lg font-bold text-gray-900">🤖 {t('aiGenerator.title')}</h3>
+            <p className="text-sm text-gray-600">{t('aiGenerator.subtitle')}</p>
           </div>
         </div>
         
@@ -196,7 +198,7 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
             ) : (
               <Sparkles className="w-3 h-3" />
             )}
-            Test kết nối
+            {t('aiGenerator.testConnection')}
           </button>
         </div>
       </div>
@@ -205,13 +207,13 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
         {/* Topic Input */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            📚 Chủ đề
+            📚 {t('aiGenerator.topic')}
           </label>
           <input
             type="text"
             value={formData.topic}
             onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
-            placeholder="VD: JavaScript, Lịch sử Việt Nam, Toán học..."
+            placeholder={t('aiGenerator.topicPlaceholder')}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
           />
         </div>
@@ -223,14 +225,14 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
             <div className="mt-4">
               <label htmlFor="file-upload" className="cursor-pointer">
                 <span className="mt-2 block text-sm font-medium text-gray-900">
-                  📎 Tải lên file để AI phân tích
+                  📎 {t('aiGenerator.uploadFile')}
                 </span>
                 <span className="mt-1 block text-xs text-gray-500">
-                  Hỗ trợ: Ảnh (JPG, PNG), PDF, Word (DOC, DOCX), Text (TXT)
+                  {t('aiGenerator.supportedFormats')}
                 </span>
                 <span className="mt-2 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                   <Upload className="w-4 h-4 mr-2" />
-                  Chọn file
+                  {t('aiGenerator.chooseFile')}
                 </span>
               </label>
               <input
@@ -261,7 +263,7 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
                   <div>
                     <p className="text-sm font-medium text-green-800">{uploadedFile.name}</p>
                     <p className="text-xs text-green-600">
-                      {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB - Đã xử lý thành công
+                      {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB - {t('aiGenerator.processedSuccess')}
                     </p>
                   </div>
                 </div>
@@ -280,7 +282,7 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
             <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="flex items-center space-x-2">
                 <RefreshCw className="w-5 h-5 text-blue-600 animate-spin" />
-                <span className="text-sm text-blue-700">Đang xử lý file...</span>
+                <span className="text-sm text-blue-700">{t('aiGenerator.processingFile')}</span>
               </div>
             </div>
           )}
@@ -290,34 +292,34 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
           {/* Difficulty Select */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              🎯 Độ khó
+              🎯 {t('aiGenerator.difficulty')}
             </label>
             <select
               value={formData.difficulty}
               onChange={(e) => setFormData({ ...formData, difficulty: e.target.value as any })}
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
             >
-              <option value="easy">🟢 Dễ</option>
-              <option value="medium">🟡 Trung bình</option>
-              <option value="hard">🔴 Khó</option>
+              <option value="easy">🟢 {t('aiGenerator.difficultyEasy')}</option>
+              <option value="medium">🟡 {t('aiGenerator.difficultyMedium')}</option>
+              <option value="hard">🔴 {t('aiGenerator.difficultyHard')}</option>
             </select>
           </div>
 
           {/* Number of Questions */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              🔢 Số câu hỏi
+              🔢 {t('aiGenerator.numQuestions')}
             </label>
             <select
               value={formData.numQuestions}
               onChange={(e) => setFormData({ ...formData, numQuestions: parseInt(e.target.value) })}
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
             >
-              <option value={3}>3 câu</option>
-              <option value={5}>5 câu</option>
-              <option value={10}>10 câu</option>
-              <option value={15}>15 câu</option>
-              <option value={20}>20 câu</option>
+              <option value={3}>3 {t('aiGenerator.questions')}</option>
+              <option value={5}>5 {t('aiGenerator.questions')}</option>
+              <option value={10}>10 {t('aiGenerator.questions')}</option>
+              <option value={15}>15 {t('aiGenerator.questions')}</option>
+              <option value={20}>20 {t('aiGenerator.questions')}</option>
             </select>
           </div>
         </div>

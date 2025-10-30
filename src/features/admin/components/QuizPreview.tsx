@@ -2,6 +2,8 @@ import React from 'react';
 import { Quiz, Question } from '../../quiz/types';
 import RichTextViewer from '../../../shared/components/ui/RichTextViewer';
 import { useTranslation } from 'react-i18next';
+import SafeHTML from '../../../shared/components/ui/SafeHTML';
+
 
 interface QuizPreviewProps {
   quiz: Quiz | null;
@@ -145,7 +147,7 @@ const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, isOpen, onClose }) => {
                   {question.explanation && (
                     <span className="text-gray-600">
                       <span className="font-medium">{t('quiz.explanation')}: </span>
-                      <span className="text-gray-700">{question.explanation}</span>
+                      <SafeHTML content={question.explanation} className="text-gray-700" />
                     </span>
                   )}
                 </div>

@@ -17,22 +17,22 @@ import { RootState } from '../../../lib/store';
 import { useTranslation } from 'react-i18next';
 // Import categories and difficulties from CreateQuizPage
 const categories = [
-  { value: 'general', label: 'Tổng hợp' },
-  { value: 'science', label: 'Khoa học' },
-  { value: 'history', label: 'Lịch sử' },
-  { value: 'geography', label: 'Địa lý' },
-  { value: 'literature', label: 'Văn học' },
-  { value: 'math', label: 'Toán học' },
-  { value: 'technology', label: 'Công nghệ' },
-  { value: 'sports', label: 'Thể thao' },
-  { value: 'entertainment', label: 'Giải trí' },
-  { value: 'food', label: 'Ẩm thực' }
+  { value: 'general', label: '' },
+  { value: 'science', label: '' },
+  { value: 'history', label: '' },
+  { value: 'geography', label: '' },
+  { value: 'literature', label: '' },
+  { value: 'math', label: '' },
+  { value: 'technology', label: '' },
+  { value: 'sports', label: '' },
+  { value: 'entertainment', label: '' },
+  { value: 'food', label: '' }
 ];
 
 const difficulties = [
-  { value: 'easy', label: 'Dễ', color: 'bg-green-100 text-green-800' },
-  { value: 'medium', label: 'Trung bình', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 'hard', label: 'Khó', color: 'bg-red-100 text-red-800' }
+  { value: 'easy', label: '', color: 'bg-green-100 text-green-800' },
+  { value: 'medium', label: '', color: 'bg-yellow-100 text-yellow-800' },
+  { value: 'hard', label: '', color: 'bg-red-100 text-red-800' }
 ];
 
 const EditQuizPageAdvanced: React.FC = () => {
@@ -86,12 +86,12 @@ const EditQuizPageAdvanced: React.FC = () => {
         });
         setQuestions(quizData.questions || []);
       } else {
-        toast.error('Quiz not found');
+        toast.error(t('editQuiz.notFound'));
         navigate('/admin/stats-test');
       }
     } catch (error) {
       console.error('Error loading quiz:', error);
-      toast.error('Failed to load quiz');
+      toast.error(t('editQuiz.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -101,12 +101,12 @@ const EditQuizPageAdvanced: React.FC = () => {
     if (!id || !quiz) return;
 
     if (!quizInfo.title.trim()) {
-      toast.error('Quiz title is required');
+      toast.error(t('editQuiz.titleRequired'));
       return;
     }
 
     if (questions.length === 0) {
-      toast.error('Quiz must have at least one question');
+      toast.error(t('editQuiz.questionRequired'));
       return;
     }
 
@@ -133,8 +133,8 @@ const EditQuizPageAdvanced: React.FC = () => {
         await addDoc(collection(db, 'notifications'), {
           userId: 'admin', // Or get actual admin IDs
           type: 'quiz_resubmitted',
-          title: 'Quiz đã được sửa và nộp lại',
-          message: `Quiz "${updatedQuiz.title}" đã được creator sửa xong và nộp lại để admin duyệt.`,
+          title: t('editQuiz.notifications.resubmitted'),
+          message: t('editQuiz.notifications.resubmittedMessage', { title: updatedQuiz.title }),
           quizId: id,
           createdBy: user?.uid,
           createdByName: user?.displayName || user?.email,
@@ -142,16 +142,16 @@ const EditQuizPageAdvanced: React.FC = () => {
           read: false
         });
         
-        toast.success('✅ Quiz đã được cập nhật và nộp lại để admin duyệt!');
+        toast.success(t('editQuiz.resubmitSuccess'));
       } else {
-        toast.success('✅ Quiz updated successfully!');
+        toast.success(t('editQuiz.updateSuccess'));
       }
 
       await updateQuiz(id, updatedQuiz);
       navigate('/admin/stats-test');
     } catch (error) {
       console.error('Error updating quiz:', error);
-      toast.error('Failed to update quiz');
+      toast.error(t('editQuiz.updateFailed'));
     } finally {
       setSaving(false);
     }
@@ -177,7 +177,7 @@ const EditQuizPageAdvanced: React.FC = () => {
   };
 
   const deleteQuestion = (questionId: string) => {
-    if (window.confirm('Are you sure you want to delete this question?')) {
+    if (window.confirm(t('editQuiz.confirmDeleteQuestion'))) {
       setQuestions(questions.filter(q => q.id !== questionId));
       if (editingQuestionId === questionId) {
         setEditingQuestionId(null);
@@ -206,7 +206,7 @@ const EditQuizPageAdvanced: React.FC = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto" />
-          <p className="mt-4 text-gray-600">Loading quiz...</p>
+          <p className="mt-4 text-gray-600">{t('editQuiz.loading')}</p>
         </div>
       </div>
     );
@@ -217,13 +217,13 @@ const EditQuizPageAdvanced: React.FC = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Quiz Not Found</h2>
-          <p className="text-gray-600 mb-6">The quiz you're looking for doesn't exist.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('editQuiz.notFoundTitle')}</h2>
+          <p className="text-gray-600 mb-6">{t('editQuiz.notFoundDesc')}</p>
           <button
             onClick={() => navigate('/admin/stats-test')}
             className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
           >
-            Back to Admin
+            {t('editQuiz.backToAdmin')}
           </button>
         </div>
       </div>
@@ -231,9 +231,9 @@ const EditQuizPageAdvanced: React.FC = () => {
   }
 
   const tabs = [
-    { id: 'info', label: 'Quiz Info', icon: BookOpen },
-    { id: 'questions', label: 'Questions', icon: MessageSquare, count: questions.length },
-    { id: 'settings', label: 'Settings', icon: Target }
+    { id: 'info', label: t('editQuiz.tabs.info'), icon: BookOpen },
+    { id: 'questions', label: t('editQuiz.tabs.questions'), icon: MessageSquare, count: questions.length },
+    { id: 'settings', label: t('editQuiz.tabs.settings'), icon: Target }
   ];
 
   return (
@@ -250,9 +250,9 @@ const EditQuizPageAdvanced: React.FC = () => {
             </button>
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Edit Quiz
+                {t('editQuiz.title')}
               </h1>
-              <p className="text-gray-600 text-lg">Modify quiz content and settings</p>
+              <p className="text-gray-600 text-lg">{t('editQuiz.subtitle')}</p>
             </div>
           </div>
           <button
@@ -265,7 +265,7 @@ const EditQuizPageAdvanced: React.FC = () => {
             ) : (
               <Save className="w-6 h-6" />
             )}
-            {saving ? 'Saving...' : 'Save Changes'}
+            {saving ? t('editQuiz.buttons.saving') : t('editQuiz.buttons.save')}
           </button>
         </div>
 

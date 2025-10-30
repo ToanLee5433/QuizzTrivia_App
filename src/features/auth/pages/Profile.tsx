@@ -96,34 +96,7 @@ const Profile: React.FC = () => {
       setQuizTitles({});
     }
     
-    // Debug: Log actual result data to see what we're working with
-    console.log('🔍 Profile Debug - User Results:', userResults);
-    console.log('🔍 Profile Debug - User Results Length:', userResults.length);
-    if (userResults.length > 0) {
-      console.log('🔍 Sample result data:', {
-        sampleResult: userResults[0],
-        scoreField: userResults[0]?.score,
-        correctAnswers: userResults[0]?.correctAnswers,
-        totalQuestions: userResults[0]?.totalQuestions,
-        allFields: Object.keys(userResults[0])
-      });
-      
-      // Debug each result individually
-      userResults.forEach((result, index) => {
-        console.log(`🔍 Result ${index + 1}:`, {
-          id: result.id,
-          score: result.score,
-          correctAnswers: result.correctAnswers,
-          totalQuestions: result.totalQuestions,
-          timeSpent: result.timeSpent,
-          answersLength: result.answers?.length,
-          completedAt: result.completedAt,
-          quizId: result.quizId,
-          resultId: result.id, // This should be the Firestore document ID
-          linkWillBe: `/results/${result.id}` // This is what Profile will link to
-        });
-      });
-    }
+    if (userResults.length > 0) {}
     
     // Calculate comprehensive stats with more accurate scoring
     const totalQuizzes = userResults.length;

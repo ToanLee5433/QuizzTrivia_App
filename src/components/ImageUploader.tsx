@@ -7,6 +7,7 @@ import React, { useState, useRef } from 'react';
 import { Upload, X, CheckCircle, Loader } from 'lucide-react';
 import { uploadImage, compressImage, instantUploadImage, UploadProgress, ImageUploadOptions, ImageUploadResult } from '../services/imageUploadService';
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 
 interface ImageUploaderProps {
   onUploadSuccess: (result: ImageUploadResult) => void;
@@ -33,6 +34,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   instantUpload = false, // Mặc định false
   ultraFast = false // ⚡ Mode cực nhanh
 }) => {
+  const { t } = useTranslation();
   const [preview, setPreview] = useState<string | undefined>(previewUrl);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState<UploadProgress | null>(null);
@@ -80,7 +82,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     setThumbnails({});
 
     try {
-      toast.info('⚡ Đang upload siêu nhanh (1-3s)...', { autoClose: 1000 });
+      toast.info(t('imageUploader.uploading'), { autoClose: 1000 });
 
       // 🚀 Upload ngay - KHÔNG compress, KHÔNG đợi
       const result = await instantUploadImage(
@@ -92,11 +94,11 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       );
 
       if (result.success) {
-        toast.success('✅ Upload nhanh như chớp! ', { autoClose: 2000 });
+        toast.success(t('imageUploader.uploadFast'), { autoClose: 2000 });
         
         if (result.thumbnailUrls && Object.keys(result.thumbnailUrls).length > 0) {
           setThumbnails(result.thumbnailUrls);
-          toast.info('🖼️ Thumbnails đã sẵn sàng', { autoClose: 1500 });
+          toast.info(t('imageUploader.thumbnailsReady'), { autoClose: 1500 });
         }
         
         onUploadSuccess(result);
@@ -108,7 +110,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       }
     } catch (error: any) {
       console.error('Instant upload error:', error);
-      toast.error('Có lỗi xảy ra');
+      toast.error(t('imageUploader.uploadError'));
       if (onUploadError) {
         onUploadError(error.message);
       }
@@ -120,7 +122,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   const handleUpload = async () => {
     if (!selectedFile) {
-      toast.error('Vui lòng chọn ảnh trước');
+      toast.error(t('imageUploader.selectImageFirst'));
       return;
     }
 
@@ -133,7 +135,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
       // Compress image if enabled
       if (compressBeforeUpload && selectedFile.type !== 'image/gif') {
-        toast.info('Đang nén ảnh...', { autoClose: 1000 });
+        toast.info(t('imageUploader.compressing'), { autoClose: 1000 });
         fileToUpload = await compressImage(selectedFile, 1920, 1080, 0.85, true); // WebP
         toast.success(`Đã nén: ${Math.round(selectedFile.size / 1024)}KB → ${Math.round(fileToUpload.size / 1024)}KB`, { autoClose: 1500 });
       }
@@ -148,11 +150,11 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       );
 
       if (result.success) {
-        toast.success('Upload ảnh thành công! ✨');
+        toast.success(t('imageUploader.uploadSuccess'));
         
         if (result.thumbnailUrls && Object.keys(result.thumbnailUrls).length > 0) {
           setThumbnails(result.thumbnailUrls);
-          toast.info('Thumbnails đã được tạo tự động', { autoClose: 2000 });
+          toast.info(t('imageUploader.thumbnailsGenerated'), { autoClose: 2000 });
         }
         
         onUploadSuccess(result);
@@ -164,7 +166,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       }
     } catch (error: any) {
       console.error('Upload error:', error);
-      toast.error('Có lỗi xảy ra khi upload');
+      toast.error(t('imageUploader.uploadErrorDetailed'));
       if (onUploadError) {
         onUploadError(error.message);
       }

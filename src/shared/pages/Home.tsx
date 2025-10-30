@@ -120,16 +120,16 @@ const Home: React.FC = () => {
             </div>
             <div>
               <h1 className="text-3xl lg:text-5xl font-bold mb-2 drop-shadow-lg">
-                Chào mừng trở lại, {user?.displayName?.split(' ')[0] || 'Quiz Master'}!
+                {t('home.hero.welcome', { name: user?.displayName?.split(' ')[0] || 'Quiz Master' })}
               </h1>
               <p className="text-blue-100 text-lg lg:text-xl">
-                Sẵn sàng thử thách kiến thức của bạn chưa?
+                {t('home.hero.subtitle')}
               </p>
             </div>
           </div>
           
           <p className="text-xl lg:text-2xl text-blue-100 mb-8 leading-relaxed">
-            Khám phá hàng nghìn quiz thú vị, thử thách bản thân và leo lên bảng xếp hạng! 🚀
+            {t('home.hero.description')}
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 lg:gap-6">
@@ -156,7 +156,7 @@ const Home: React.FC = () => {
               <p className="text-3xl font-bold text-gray-900">
                 {statsLoading ? '...' : stats.totalQuizzes}
               </p>
-              <p className="text-xs text-green-600 font-medium mt-1">📈 Dữ liệu thực tế</p>
+              <p className="text-xs text-green-600 font-medium mt-1">{t('home.stats.realData')}</p>
             </div>
             <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,7 +173,7 @@ const Home: React.FC = () => {
               <p className="text-3xl font-bold text-gray-900">
                 {statsLoading ? '...' : stats.totalUsers}
               </p>
-              <p className="text-xs text-green-600 font-medium mt-1">👥 Đã đăng ký</p>
+              <p className="text-xs text-green-600 font-medium mt-1">{t('home.stats.registered')}</p>
             </div>
             <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -190,7 +190,7 @@ const Home: React.FC = () => {
               <p className="text-3xl font-bold text-gray-900">
                 {statsLoading ? '...' : stats.completedQuizzes}
               </p>
-              <p className="text-xs text-purple-600 font-medium mt-1">✅ Chờ cập nhật</p>
+              <p className="text-xs text-purple-600 font-medium mt-1">{t('home.stats.pending')}</p>
             </div>
             <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -207,7 +207,7 @@ const Home: React.FC = () => {
               <p className="text-3xl font-bold text-gray-900">
                 {statsLoading ? '...' : stats.totalCreators}
               </p>
-              <p className="text-xs text-yellow-600 font-medium mt-1">✨ Creator + Admin</p>
+              <p className="text-xs text-yellow-600 font-medium mt-1">{t('home.stats.creatorsAndAdmins')}</p>
             </div>
             <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -227,15 +227,15 @@ const Home: React.FC = () => {
                 <span className="text-2xl">🔥</span>
               </div>
               <div>
-                <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">Quiz Trending</h2>
-                <p className="text-gray-600">Những quiz được yêu thích nhất</p>
+                <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">{t('home.trending.title')}</h2>
+                <p className="text-gray-600">{t('home.trending.subtitle')}</p>
               </div>
             </div>
             <Link 
               to="/quizzes" 
               className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-2xl font-semibold hover:from-orange-600 hover:to-red-600 transition-all duration-300 flex items-center shadow-lg hover:shadow-xl transform hover:scale-105"
             >
-              <span>Xem tất cả</span>
+              <span>{t('home.trending.viewAll')}</span>
               <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
@@ -255,11 +255,11 @@ const Home: React.FC = () => {
               <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <span className="text-4xl">📝</span>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Chưa có quiz trending</h3>
-              <p className="text-gray-600 mb-6">Hãy bắt đầu tạo quiz đầu tiên của bạn!</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">{t('home.trending.noQuizzes')}</h3>
+              <p className="text-gray-600 mb-6">{t('home.trending.createFirst')}</p>
               <Link to="/creator">
                 <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-2xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-300">
-                  Tạo Quiz ngay
+                  {t('home.trending.createNow')}
                 </Button>
               </Link>
             </div>
@@ -274,8 +274,8 @@ const Home: React.FC = () => {
             <span className="text-2xl">⚡</span>
           </div>
           <div>
-            <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">Hành động nhanh</h2>
-            <p className="text-gray-600">Những thao tác thường dùng để bắt đầu</p>
+            <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">{t('home.quickActions.title')}</h2>
+            <p className="text-gray-600">{t('home.quickActions.subtitle')}</p>
           </div>
         </div>
         
@@ -290,9 +290,9 @@ const Home: React.FC = () => {
               </svg>
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-3">{t("creator.createNewQuiz")}</h3>
-            <p className="text-gray-600 leading-relaxed">Thiết kế và chia sẻ quiz của riêng bạn với mọi người</p>
+            <p className="text-gray-600 leading-relaxed">{t('home.quickActions.createDescription')}</p>
             <div className="mt-4 text-blue-600 font-semibold group-hover:translate-x-1 transition-transform duration-300 flex items-center">
-              Bắt đầu tạo <span className="ml-2">→</span>
+              {t('home.quickActions.startCreating')} <span className="ml-2">→</span>
             </div>
           </Link>
           
@@ -305,10 +305,10 @@ const Home: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-3">Quiz ngẫu nhiên</h3>
-            <p className="text-gray-600 leading-relaxed">Nhảy vào một quiz bất kỳ và thử thách kiến thức của bạn</p>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">{t('home.quickActions.randomQuiz')}</h3>
+            <p className="text-gray-600 leading-relaxed">{t('home.quickActions.randomDescription')}</p>
             <div className="mt-4 text-green-600 font-semibold group-hover:translate-x-1 transition-transform duration-300 flex items-center">
-              Chơi ngay <span className="ml-2">→</span>
+              {t('home.quickActions.playNow')} <span className="ml-2">→</span>
             </div>
           </Link>
           
@@ -321,9 +321,10 @@ const Home: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-3">Xem tiến độ</h3>
-            <p className="text-gray-600 leading-relaxed">Kiểm tra thành tích và lịch sử làm quiz của bạn</p>
-            <div className="mt-4 text-purple-600 font-semibold group-hover:translate-x-1 transition-transform duration-300 flex items-center">{t("viewDetails")} <span className="ml-2">→</span>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">{t('home.quickActions.viewProgress')}</h3>
+            <p className="text-gray-600 leading-relaxed">{t('home.quickActions.progressDescription')}</p>
+            <div className="mt-4 text-purple-600 font-semibold group-hover:translate-x-1 transition-transform duration-300 flex items-center">
+              {t("viewDetails")} <span className="ml-2">→</span>
             </div>
           </Link>
         </div>
@@ -336,8 +337,8 @@ const Home: React.FC = () => {
             <span className="text-2xl">🏆</span>
           </div>
           <div>
-            <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">Quiz phổ biến</h2>
-            <p className="text-gray-600">Những quiz được yêu thích nhất tuần này</p>
+            <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">{t('home.popular.title')}</h2>
+            <p className="text-gray-600">{t('home.popular.subtitle')}</p>
           </div>
         </div>
         <PopularQuizzesRanking />

@@ -172,7 +172,7 @@ const CreatorManagement: React.FC = () => {
       }
     } catch (error) {
       console.error('Error loading creators:', error);
-      toast.error('Không thể tải danh sách creator');
+      toast.error(t('creatorManagement.loadError'));
       setCreators([]);
     } finally {
       setLoading(false);
@@ -245,25 +245,25 @@ const CreatorManagement: React.FC = () => {
           : creator
       ));
 
-      toast.success(`Đã cập nhật trạng thái thành công`);
+      toast.success(t('creatorManagement.updateSuccess'));
     } catch (error) {
       console.error('Error updating status:', error);
-      toast.error('Có lỗi khi cập nhật trạng thái');
+      toast.error(t('creatorManagement.updateError'));
     }
   };
 
   const handleDeleteCreator = async (creatorId: string) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa creator này? Hành động này không thể hoàn tác.')) {
+    if (!confirm(t('creatorManagement.confirmDelete'))) {
       return;
     }
 
     try {
       await deleteDoc(doc(db, 'users', creatorId));
       setCreators(creators.filter(creator => creator.id !== creatorId));
-      toast.success('Đã xóa creator thành công');
+      toast.success(t('creatorManagement.deleteSuccess'));
     } catch (error) {
       console.error('Error deleting creator:', error);
-      toast.error('Có lỗi khi xóa creator');
+      toast.error(t('creatorManagement.deleteError'));
     }
   };
 
@@ -334,25 +334,25 @@ const CreatorManagement: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {renderStatsCard(
               <Users className="w-6 h-6 text-white" />,
-              'Tổng Creator',
+              t('creatorManagement.stats.total'),
               stats.totalCreators,
               'bg-blue-500'
             )}
             {renderStatsCard(
               <UserCheck className="w-6 h-6 text-white" />,
-              'Đang hoạt động',
+              t('creatorManagement.stats.active'),
               stats.activeCreators,
               'bg-green-500'
             )}
             {renderStatsCard(
               <UserMinus className="w-6 h-6 text-white" />,
-              'Tạm khóa',
+              t('creatorManagement.stats.suspended'),
               stats.suspendedCreators,
               'bg-yellow-500'
             )}
             {renderStatsCard(
               <UserX className="w-6 h-6 text-white" />,
-              'Bị cấm',
+              t('creatorManagement.stats.banned'),
               stats.bannedCreators,
               'bg-red-500'
             )}
@@ -367,7 +367,7 @@ const CreatorManagement: React.FC = () => {
                 <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Tìm kiếm creator..."
+                  placeholder={t('creatorManagement.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -382,12 +382,12 @@ const CreatorManagement: React.FC = () => {
                 <option value="all">Tất cả trạng thái</option>
                 <option value="active">{t("leaderboard.activity")}</option>
                 <option value="suspended">Tạm khóa</option>
-                <option value="banned">Bị cấm</option>
+                <option value="banned">{t('creatorManagement.status.banned')}</option>
               </select>
             </div>
 
             <div className="text-sm text-gray-600">
-              Hiển thị {filteredCreators.length} trong tổng {creators.length} creator
+              {t('creatorManagement.showing', { filtered: filteredCreators.length, total: creators.length })}
             </div>
           </div>
         </div>
@@ -397,7 +397,7 @@ const CreatorManagement: React.FC = () => {
           {loading ? (
             <div className="p-8 text-center">
               <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Đang tải danh sách creator...</p>
+              <p className="mt-4 text-gray-600">{t('creatorManagement.loading')}</p>
             </div>
           ) : filteredCreators.length === 0 ? (
             <div className="p-8 text-center">

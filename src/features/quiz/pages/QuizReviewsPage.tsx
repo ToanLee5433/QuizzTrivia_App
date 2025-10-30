@@ -7,10 +7,17 @@ import { Quiz } from '../types';
 import { getQuizById } from '../api';
 import { Star, Users, TrendingUp, MessageSquare, BarChart3, RefreshCw } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { doc, updateDoc, arrayUnion, arrayRemove, getDoc } from 'firebase/firestore';
+import { db } from '../../../firebase/config';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../lib/store';
 
 import { useTranslation } from 'react-i18next';
+import SafeHTML from '../../../shared/components/ui/SafeHTML';
+
 const QuizReviewsPage: React.FC = () => {
   const { t } = useTranslation();
+  const currentUser = useSelector((state: RootState) => state.auth.user);
 
   const { id: quizId } = useParams<{ id: string }>();
   const [quiz, setQuiz] = useState<Quiz | null>(null);
@@ -88,7 +95,7 @@ const QuizReviewsPage: React.FC = () => {
         }
       } catch (quizError) {
         console.error('❌ Failed to load quiz:', quizError);
-        toast.error('Không tìm thấy quiz này');
+        toast.error(t('quizReviews.errors.notFound'));
         setLoading(false);
         return;
       }
@@ -138,13 +145,13 @@ const QuizReviewsPage: React.FC = () => {
           averageRating: 0,
           ratingDistribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
         });
-        toast.error('Không thể tải đánh giá');
+        toast.error(t('quizReviews.errors.loadFailed'));
       }
 
       console.log('🎉 Page loading completed successfully');
     } catch (error) {
       console.error('❌ Critical error in loadQuizAndReviews:', error);
-      toast.error('Có lỗi khi tải trang đánh giá');
+      toast.error(t('quizReviews.errors.pageLoadFailed'));
     } finally {
       // ALWAYS set loading to false
       setLoading(false);
@@ -168,13 +175,93 @@ const QuizReviewsPage: React.FC = () => {
   };
 
   const handleHelpfulClick = async (reviewId: string) => {
-    // TODO: Implement helpful functionality
-    console.log('Helpful clicked for review:', reviewId);
+    if (!currentUser?.uid) {
+      toast.error('Please login to mark reviews as helpful');
+      return;
+    }
+
+    try {
+      const reviewRef = doc(db, 'quiz_reviews', reviewId);
+      const reviewDoc = await getDoc(reviewRef);
+      
+      if (!reviewDoc.exists()) {
+        toast.error('Review not found');
+        return;
+      }
+
+      const reviewData = reviewDoc.data();
+      const helpfulBy = reviewData.helpfulBy || [];
+      
+      // Toggle helpful status
+      if (helpfulBy.includes(currentUser.uid)) {
+        // Remove from helpful
+        await updateDoc(reviewRef, {
+          helpful: (reviewData.helpful || 1) - 1,
+          helpfulBy: arrayRemove(currentUser.uid)
+        });
+        toast.success('Removed from helpful');
+      } else {
+        // Add to helpful
+        await updateDoc(reviewRef, {
+          helpful: (reviewData.helpful || 0) + 1,
+          helpfulBy: arrayUnion(currentUser.uid)
+        });
+        toast.success('Marked as helpful');
+      }
+
+      // Reload reviews to show updated count
+      setTimeout(() => loadQuizAndReviews(), 500);
+    } catch (error) {
+      console.error('Error marking review as helpful:', error);
+      toast.error('Failed to update helpful status');
+    }
   };
 
   const handleReportClick = async (reviewId: string) => {
-    // TODO: Implement report functionality  
-    console.log('Report clicked for review:', reviewId);
+    if (!currentUser?.uid) {
+      toast.error('Please login to report reviews');
+      return;
+    }
+
+    const reason = prompt('Please provide a reason for reporting this review:');
+    if (!reason || reason.trim() === '') {
+      return;
+    }
+
+    try {
+      const reviewRef = doc(db, 'quiz_reviews', reviewId);
+      const reviewDoc = await getDoc(reviewRef);
+      
+      if (!reviewDoc.exists()) {
+        toast.error('Review not found');
+        return;
+      }
+
+      const reviewData = reviewDoc.data();
+      const reportedBy = reviewData.reportedBy || [];
+      
+      // Check if user already reported
+      if (reportedBy.includes(currentUser.uid)) {
+        toast.warning('You have already reported this review');
+        return;
+      }
+
+      // Add report
+      await updateDoc(reviewRef, {
+        reports: (reviewData.reports || 0) + 1,
+        reportedBy: arrayUnion(currentUser.uid),
+        reportReasons: arrayUnion({
+          userId: currentUser.uid,
+          reason: reason.trim(),
+          reportedAt: new Date().toISOString()
+        })
+      });
+
+      toast.success('Review reported successfully. Admins will review it.');
+    } catch (error) {
+      console.error('Error reporting review:', error);
+      toast.error('Failed to report review');
+    }
   };
 
   const renderRatingDistribution = () => {
@@ -216,7 +303,7 @@ const QuizReviewsPage: React.FC = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Đang tải thông tin quiz...</p>
+          <p className="mt-4 text-gray-600">{t('quizReviews.loading')}</p>
         </div>
       </div>
     );
@@ -227,8 +314,8 @@ const QuizReviewsPage: React.FC = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">😔</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Quiz không tồn tại</h2>
-          <p className="text-gray-600 mb-4">Không thể tìm thấy quiz này</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('quizReviews.empty.notFound')}</h2>
+          <p className="text-gray-600 mb-4">{t('quizReviews.empty.notFoundDesc')}</p>
           <button 
             onClick={() => window.history.back()}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -247,7 +334,7 @@ const QuizReviewsPage: React.FC = () => {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{quiz.title}</h1>
-              <p className="text-gray-600 mb-4">{quiz.description}</p>
+              <SafeHTML content={quiz.description} className="text-gray-600 mb-4" />
               <div className="flex items-center space-x-6 text-sm text-gray-500">
                 <span className="flex items-center space-x-1">
                   <Users className="w-4 h-4" />
@@ -259,7 +346,7 @@ const QuizReviewsPage: React.FC = () => {
                 </span>
                 <span className="flex items-center space-x-1">
                   <MessageSquare className="w-4 h-4" />
-                  <span>{quiz.questions.length} câu hỏi</span>
+                  <span>{quiz.questions.length} {t('quizReviews.questions')}</span>
                 </span>
               </div>
             </div>
@@ -270,7 +357,7 @@ const QuizReviewsPage: React.FC = () => {
                 }}
                 disabled={loading}
                 className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium disabled:opacity-50"
-                title="Làm mới đánh giá"
+                title={t('quizReviews.refreshReviews')}
               >
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               </button>
@@ -278,7 +365,7 @@ const QuizReviewsPage: React.FC = () => {
                 onClick={() => setShowReviewForm(true)}
                 className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
               >
-                Viết đánh giá
+                {t('quizReviews.writeReview')}
               </button>
             </div>
           </div>
@@ -324,7 +411,7 @@ const QuizReviewsPage: React.FC = () => {
                   </p>
                   <p className="text-sm text-gray-600">{t("admin.stats.totalReviews")}</p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {stats?.totalReviews === 0 ? 'Chưa có đánh giá' : 'người đã đánh giá'}
+                    {stats?.totalReviews === 0 ? t('quizReviews.noReviewsYet') : t('quizReviews.peopleReviewed')}
                   </p>
                 </div>
               </div>
@@ -339,7 +426,7 @@ const QuizReviewsPage: React.FC = () => {
                   <p className="text-2xl font-bold text-gray-900">
                     {stats.totalReviews > 0 ? Math.round((stats.ratingDistribution[5] + stats.ratingDistribution[4]) / stats.totalReviews * 100) : 0}%
                   </p>
-                  <p className="text-sm text-gray-600">Đánh giá tích cực</p>
+                  <p className="text-sm text-gray-600">{t('quizReviews.positiveReviews')}</p>
                 </div>
               </div>
             </div>
@@ -358,13 +445,13 @@ const QuizReviewsPage: React.FC = () => {
               <div className="p-6 border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-gray-900">
-                    Đánh giá từ người dùng ({reviews.length})
+                    {t('quizReviews.userReviews', { count: reviews.length })}
                   </h3>
                   <button
                     onClick={() => setShowReviewForm(true)}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                   >
-                    Viết đánh giá
+                    {t('quizReviews.writeReview')}
                   </button>
                 </div>
               </div>
@@ -374,18 +461,17 @@ const QuizReviewsPage: React.FC = () => {
                   <div className="text-center py-12">
                     <div className="text-6xl mb-4">💭</div>
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                      Chưa có đánh giá nào
+                      {t('quizReviews.empty.noReviews')}
                     </h3>
                     <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                      Hãy trở thành người đầu tiên đánh giá quiz này! 
-                      Chia sẻ trải nghiệm của bạn để giúp những người khác.
+                      {t('quizReviews.empty.noReviewsDesc')}
                     </p>
                     <button
                       onClick={() => setShowReviewForm(true)}
                       className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                     >
                       <MessageSquare className="w-5 h-5 mr-2" />
-                      Viết đánh giá đầu tiên
+                      {t('quizReviews.empty.writeFirstReview')}
                     </button>
                     
                     {/* Decorative Elements */}

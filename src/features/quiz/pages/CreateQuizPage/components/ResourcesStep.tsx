@@ -20,6 +20,7 @@ import { uploadImage } from '../../../../../services/imageUploadService';
 import { storage } from '../../../../../lib/firebase/config';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 
 interface ResourcesStepProps {
   resources: LearningResource[];
@@ -27,6 +28,7 @@ interface ResourcesStepProps {
 }
 
 const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesChange }) => {
+  const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -65,9 +67,9 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
   };
 
   const handleDeleteResource = (id: string) => {
-    if (confirm('Bạn có chắc muốn xóa tài liệu này?')) {
+    if (confirm(t('resources.confirmDelete'))) {
       onResourcesChange(resources.filter(r => r.id !== id));
-      toast.success('Đã xóa tài liệu');
+      toast.success(t('resources.success.deleted'));
     }
   };
 
@@ -86,7 +88,7 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
 
       if (file.size > maxSizes[type]) {
         const sizeMB = (maxSizes[type] / (1024 * 1024)).toFixed(0);
-        toast.error(`File quá lớn! Tối đa ${sizeMB}MB cho ${type}`);
+        toast.error(t('resources.errors.fileTooLarge', { size: sizeMB, type }));
         setUploading(false);
         return;
       }
@@ -102,7 +104,7 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
       };
 
       if (validTypes[type] && !validTypes[type].includes(file.type) && type !== 'link') {
-        toast.error(`❌ Định dạng file không hợp lệ cho ${type}!`);
+        toast.error(t('resources.errors.invalidFormat', { type }));
         setUploading(false);
         return;
       }
@@ -121,9 +123,9 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
             url: result.originalUrl,
             thumbnailUrl: result.thumbnailUrls?.medium
           }));
-          toast.success('✅ Upload ảnh thành công!');
+          toast.success(t('resources.success.imageUploaded'));
         } else {
-          toast.error(result.error || 'Upload thất bại');
+          toast.error(result.error || t('resources.errors.uploadFailed'));
         }
       } else {
         // For video, pdf, audio - upload to Firebase Storage directly
@@ -177,11 +179,14 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
           url: downloadURL
         }));
         
-        toast.success(`✅ Upload ${type} thành công!`);
+        const successKey = type === 'video' ? 'resources.success.videoUploaded' :
+                          type === 'pdf' ? 'resources.success.pdfUploaded' :
+                          'resources.success.audioUploaded';
+        toast.success(t(successKey));
       }
     } catch (error: any) {
       console.error('Upload error:', error);
-      toast.error('Lỗi upload: ' + error.message);
+      toast.error(t('resources.errors.uploadError', { error: error.message }));
     } finally {
       setUploading(false);
     }
@@ -190,11 +195,11 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
   const handleSaveResource = () => {
     // Validation
     if (!formData.title?.trim()) {
-      toast.error('Vui lòng nhập tiêu đề');
+      toast.error(t('resources.errors.titleRequired'));
       return;
     }
     if (!formData.url?.trim()) {
-      toast.error('Vui lòng nhập URL hoặc upload file');
+      toast.error(t('resources.errors.urlRequired'));
       return;
     }
 
@@ -218,11 +223,11 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
     if (editingId) {
       // Update existing
       onResourcesChange(resources.map(r => r.id === editingId ? newResource : r));
-      toast.success('Đã cập nhật tài liệu');
+      toast.success(t('resources.success.updated'));
     } else {
       // Add new
       onResourcesChange([...resources, newResource]);
-      toast.success('Đã thêm tài liệu');
+      toast.success(t('resources.success.added'));
     }
 
     setShowForm(false);
@@ -241,12 +246,12 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
 
   const getTypeLabel = (type: ResourceType) => {
     const labels: Record<ResourceType, string> = {
-      video: 'Video',
-      pdf: 'PDF',
-      image: 'Ảnh/Slide',
-      audio: 'Audio',
-      link: 'Link (YouTube/Web)',
-      slides: 'Slides'
+      video: t('resources.types.video'),
+      pdf: t('resources.types.pdf'),
+      image: t('resources.types.image'),
+      audio: t('resources.types.audio'),
+      link: t('resources.types.link'),
+      slides: t('resources.types.slides')
     };
     return labels[type];
   };
@@ -257,10 +262,10 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">
-            📚 Tài liệu học tập <span className="text-red-500">*</span>
+            📚 {t('resources.title')} <span className="text-red-500">*</span>
           </h3>
           <p className="text-sm text-gray-600 mt-1">
-            Thêm ít nhất 1 tài liệu (video, PDF, ảnh, hoặc link) để học viên xem trước khi làm bài
+            {t('resources.subtitle')}
           </p>
         </div>
         <button
@@ -268,7 +273,7 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           <Plus className="w-4 h-4" />
-          Thêm tài liệu
+          {t('resources.addResource')}
         </button>
       </div>
 
@@ -276,16 +281,16 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
       {resources.length === 0 ? (
         <div className="text-center py-12 bg-red-50 rounded-lg border-2 border-dashed border-red-300">
           <Upload className="w-12 h-12 mx-auto text-red-400 mb-3" />
-          <p className="text-red-600 font-semibold mb-2">⚠️ Bắt buộc có ít nhất 1 tài liệu</p>
+          <p className="text-red-600 font-semibold mb-2">{t('resources.emptyState.warning')}</p>
           <p className="text-sm text-gray-600 mb-4">
-            Tài liệu giúp học viên chuẩn bị tốt hơn trước khi làm bài.<br/>
-            Bạn không thể tiếp tục nếu chưa thêm tài liệu.
+            {t('resources.emptyState.description')}<br/>
+            {t('resources.emptyState.cannotContinue')}
           </p>
           <button
             onClick={handleAddResource}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
           >
-            + Thêm tài liệu đầu tiên
+            + {t('resources.firstResource')}
           </button>
         </div>
       ) : (
@@ -316,12 +321,12 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
                         </h4>
                         {resource.required && (
                           <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-medium rounded">
-                            Bắt buộc
+                            {t('resources.required')}
                           </span>
                         )}
                         {!resource.required && (
                           <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded">
-                            Khuyến nghị
+                            {t('resources.recommended')}
                           </span>
                         )}
                       </div>
@@ -353,14 +358,14 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
                       <button
                         onClick={() => handleEditResource(resource)}
                         className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                        title="Sửa"
+                        title={t('resources.editButton')}
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteResource(resource.id)}
                         className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                        title="Xóa"
+                        title={t('resources.deleteButton')}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -380,7 +385,7 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b">
               <h3 className="text-xl font-bold text-gray-900">
-                {editingId ? 'Sửa tài liệu' : 'Thêm tài liệu mới'}
+                {editingId ? t('resources.editResource') : t('resources.newResource')}
               </h3>
               <button
                 onClick={() => setShowForm(false)}
@@ -395,7 +400,7 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
               {/* Resource Type */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Loại tài liệu *
+                  {t('resources.form.typeLabel')}
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                   {(['video', 'pdf', 'image', 'audio', 'link'] as ResourceType[]).map(type => (
@@ -423,13 +428,13 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
               {/* Title */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tiêu đề *
+                  {t('resources.form.titleLabel')}
                 </label>
                 <input
                   type="text"
                   value={formData.title || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="VD: Giới thiệu về React Hooks"
+                  placeholder={t('resources.form.titlePlaceholder')}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -437,12 +442,12 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
               {/* Description */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Mô tả
+                  {t('resources.form.descriptionLabel')}
                 </label>
                 <textarea
                   value={formData.description || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Mô tả ngắn gọn nội dung tài liệu..."
+                  placeholder={t('resources.form.descriptionPlaceholder')}
                   rows={2}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
@@ -451,11 +456,11 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
               {/* URL or Upload - CHIA LUỒNG RÕ RÀNG */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {formData.type === 'link' ? 'URL (YouTube/Web) *' : 
-                   formData.type === 'video' ? 'Upload Video hoặc nhập URL *' :
-                   formData.type === 'pdf' ? 'Upload PDF hoặc nhập URL *' :
-                   formData.type === 'audio' ? 'Upload Audio hoặc nhập URL *' :
-                   'Upload Ảnh hoặc nhập URL *'}
+                  {formData.type === 'link' ? t('resources.form.urlLabel.link') : 
+                   formData.type === 'video' ? t('resources.form.urlLabel.video') :
+                   formData.type === 'pdf' ? t('resources.form.urlLabel.pdf') :
+                   formData.type === 'audio' ? t('resources.form.urlLabel.audio') :
+                   t('resources.form.urlLabel.image')}
                 </label>
                 
                 {formData.type === 'link' ? (
@@ -465,11 +470,11 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
                       type="url"
                       value={formData.url || ''}
                       onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))}
-                      placeholder="https://youtube.com/watch?v=... hoặc https://..."
+                      placeholder={t('resources.form.urlPlaceholder.link')}
                       className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                     <p className="text-xs text-gray-500 mt-2">
-                      💡 Hỗ trợ: YouTube, Google Drive, hoặc bất kỳ URL nào
+                      {t('resources.form.linkHint')}
                     </p>
                   </div>
                 ) : formData.type === 'video' ? (
@@ -484,7 +489,7 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
                           if (file) {
                             // Validate file type
                             if (!file.type.startsWith('video/')) {
-                              toast.error('❌ Chỉ chấp nhận file video! (MP4, WebM, MOV, AVI)');
+                              toast.error(t('resources.errors.videoOnly'));
                               e.target.value = '';
                               return;
                             }
@@ -495,15 +500,15 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
                         className="w-full text-sm"
                       />
                       <p className="text-xs text-blue-600 mt-2 font-medium">
-                        ✅ Chấp nhận: MP4, WebM, MOV, AVI (tối đa 50MB)
+                        {t('resources.form.acceptedFormats.video')}
                       </p>
                     </div>
-                    <div className="text-center text-sm text-gray-500">hoặc</div>
+                    <div className="text-center text-sm text-gray-500">{t('resources.form.orDivider')}</div>
                     <input
                       type="url"
                       value={formData.url || ''}
                       onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))}
-                      placeholder="https://example.com/video.mp4"
+                      placeholder={t('resources.form.urlPlaceholder.video')}
                       disabled={uploading}
                       className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     />
@@ -520,7 +525,7 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
                           if (file) {
                             // Validate file type
                             if (file.type !== 'application/pdf' && !file.name.endsWith('.pdf')) {
-                              toast.error('❌ Chỉ chấp nhận file PDF!');
+                              toast.error(t('resources.errors.pdfOnly'));
                               e.target.value = '';
                               return;
                             }
@@ -531,15 +536,15 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
                         className="w-full text-sm"
                       />
                       <p className="text-xs text-red-600 mt-2 font-medium">
-                        ✅ Chấp nhận: PDF (tối đa 10MB)
+                        {t('resources.form.acceptedFormats.pdf')}
                       </p>
                     </div>
-                    <div className="text-center text-sm text-gray-500">hoặc</div>
+                    <div className="text-center text-sm text-gray-500">{t('resources.form.orDivider')}</div>
                     <input
                       type="url"
                       value={formData.url || ''}
                       onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))}
-                      placeholder="https://example.com/document.pdf"
+                      placeholder={t('resources.form.urlPlaceholder.pdf')}
                       disabled={uploading}
                       className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     />
@@ -556,7 +561,7 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
                           if (file) {
                             // Validate file type
                             if (!file.type.startsWith('audio/')) {
-                              toast.error('❌ Chỉ chấp nhận file audio! (MP3, WAV, OGG, M4A)');
+                              toast.error(t('resources.errors.audioOnly'));
                               e.target.value = '';
                               return;
                             }
@@ -567,15 +572,15 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
                         className="w-full text-sm"
                       />
                       <p className="text-xs text-green-600 mt-2 font-medium">
-                        ✅ Chấp nhận: MP3, WAV, OGG, M4A (tối đa 10MB)
+                        {t('resources.form.acceptedFormats.audio')}
                       </p>
                     </div>
-                    <div className="text-center text-sm text-gray-500">hoặc</div>
+                    <div className="text-center text-sm text-gray-500">{t('resources.form.orDivider')}</div>
                     <input
                       type="url"
                       value={formData.url || ''}
                       onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))}
-                      placeholder="https://example.com/audio.mp3"
+                      placeholder={t('resources.form.urlPlaceholder.audio')}
                       disabled={uploading}
                       className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     />
@@ -592,7 +597,7 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
                           if (file) {
                             // Validate file type
                             if (!file.type.startsWith('image/')) {
-                              toast.error('❌ Chỉ chấp nhận file ảnh! (JPG, PNG, WebP, GIF)');
+                              toast.error(t('resources.errors.imageOnly'));
                               e.target.value = '';
                               return;
                             }
@@ -603,15 +608,15 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
                         className="w-full text-sm"
                       />
                       <p className="text-xs text-purple-600 mt-2 font-medium">
-                        ✅ Chấp nhận: JPG, PNG, WebP, GIF (tối đa 5MB)
+                        {t('resources.form.acceptedFormats.image')}
                       </p>
                     </div>
-                    <div className="text-center text-sm text-gray-500">hoặc</div>
+                    <div className="text-center text-sm text-gray-500">{t('resources.form.orDivider')}</div>
                     <input
                       type="url"
                       value={formData.url || ''}
                       onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))}
-                      placeholder="https://example.com/image.jpg"
+                      placeholder={t('resources.form.urlPlaceholder.image')}
                       disabled={uploading}
                       className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     />
@@ -622,14 +627,14 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
                   <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <div className="flex items-center gap-2">
                       <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
-                      <span className="text-sm text-blue-600 font-medium">Đang upload...</span>
+                      <span className="text-sm text-blue-600 font-medium">{t('resources.form.uploading')}</span>
                     </div>
                   </div>
                 )}
                 
                 {formData.url && !uploading && (
                   <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <p className="text-sm text-green-700 font-medium">✅ URL đã sẵn sàng</p>
+                    <p className="text-sm text-green-700 font-medium">{t('resources.form.urlReady')}</p>
                     <p className="text-xs text-green-600 truncate">{formData.url}</p>
                   </div>
                 )}
@@ -645,9 +650,9 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
                   className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                 />
                 <label htmlFor="required" className="flex-1 text-sm text-gray-700">
-                  <span className="font-medium">Bắt buộc xem</span>
+                  <span className="font-medium">{t('resources.form.requiredLabel')}</span>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Học viên phải xem tài liệu này trước khi làm bài
+                    {t('resources.form.requiredDescription')}
                   </p>
                 </label>
               </div>
@@ -655,13 +660,13 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
               {/* Why Watch */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  💡 Vì sao nên xem? (gợi ý cho học viên)
+                  {t('resources.form.whyWatchLabel')}
                 </label>
                 <input
                   type="text"
                   value={formData.whyWatch || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, whyWatch: e.target.value }))}
-                  placeholder="VD: Video này giúp bạn hiểu useState và useEffect"
+                  placeholder={t('resources.form.whyWatchPlaceholder')}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -669,13 +674,13 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
               {/* Estimated Time */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  ⏱️ Thời gian ước tính (phút)
+                  {t('resources.form.estimatedTimeLabel')}
                 </label>
                 <input
                   type="number"
                   value={formData.estimatedTime || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, estimatedTime: parseInt(e.target.value) || undefined }))}
-                  placeholder="10"
+                  placeholder={t('resources.form.estimatedTimePlaceholder')}
                   min="1"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
@@ -688,14 +693,14 @@ const ResourcesStep: React.FC<ResourcesStepProps> = ({ resources, onResourcesCha
                 onClick={() => setShowForm(false)}
                 className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors"
               >
-                Hủy
+                {t('resources.cancelButton')}
               </button>
               <button
                 onClick={handleSaveResource}
                 disabled={uploading}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
-                {uploading ? 'Đang upload...' : editingId ? 'Cập nhật' : 'Thêm'}
+                {uploading ? t('resources.form.uploading') : editingId ? t('resources.updateButton') : t('resources.saveButton')}
               </button>
             </div>
           </div>

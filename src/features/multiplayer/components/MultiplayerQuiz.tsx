@@ -1,10 +1,13 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { MultiplayerServiceInterface } from '../services/enhancedMultiplayerService';
 import { Clock, Users, CheckCircle, AlertCircle } from 'lucide-react';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../../firebase/config';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
+import { toast } from 'react-toastify';
+import SafeHTML from '../../../shared/components/ui/SafeHTML';
+
 
 // Type definitions
 interface Answer {
@@ -54,6 +57,8 @@ interface RoomData {
     timePerQuestion?: number;
   };
   quiz?: {
+    id?: string;
+    title?: string;
     questions: Question[];
   };
   players?: any[];
@@ -324,19 +329,6 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
   const currentRoomStatus = realtimeRoomData?.status || roomStatus;
 
   // Save final results to server when game finishes
-  useEffect(() => {
-    const saveFinalResults = async () => {
-      if (currentGamePhase === 'finished' && currentUser?.uid && currentRoomData?.id) {
-        // TODO: Implement API call to save results to user profile
-        // const myAnswers = playerAnswers[currentUser.uid] || [];
-        // const myScore = playerScores[currentUser.uid] || 0;
-        // const correctAnswers = myAnswers.filter(a => a.isCorrect).length;
-      }
-    };
-    
-    saveFinalResults();
-  }, [currentGamePhase, currentUser?.uid, currentRoomData?.id]);
-
   // Convert quiz format from Firestore to multiplayer format (using index-based answers)
   const processedQuestions = useMemo((): ProcessedQuestion[] => {
     const rawQuestions = currentGameData?.questions || [];
@@ -344,30 +336,70 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
     return rawQuestions.map((q: Question): ProcessedQuestion => {
       let options: string[] = [];
       let correctIndex = 0;
-      
+
       if (q.answers && Array.isArray(q.answers)) {
-        // Firestore format: answers array with isCorrect flags
         options = q.answers.map(a => a.text);
         correctIndex = q.answers.findIndex(a => a.isCorrect);
-        // Normalize -1 to 0 if no correct answer found
-        if (correctIndex === -1) correctIndex = 0;
       } else if (q.options && Array.isArray(q.options)) {
-        // Multiplayer format: options array with separate correct index
         options = q.options;
-        correctIndex = 0; // Default to first option if no correct specified
+        correctIndex = 0;
       }
-      
+
       return {
-        id: q.id,
-        title: q.text || q.title || 'No question text',
+        id: q.id || `q${rawQuestions.indexOf(q)}`,
+        title: q.text || q.title || '',
         options,
         correct: correctIndex,
-        type: q.type,
-        points: q.points,
-        explanation: `Correct answer: ${options[correctIndex] || 'N/A'}`
+        type: q.type || 'multiple',
+        points: q.points || 10,
+        explanation: ''
       };
     });
   }, [currentGameData?.questions]);
+
+  useEffect(() => {
+    const saveFinalResults = async () => {
+      if (currentGamePhase === 'finished' && currentUser?.uid && currentRoomData?.id) {
+        try {
+          const myAnswers = playerAnswers[currentUser.uid] || [];
+          const myScore = playerScores[currentUser.uid] || 0;
+          const correctAnswers = myAnswers.filter(a => a.isCorrect).length;
+          const totalQuestions = processedQuestions.length;
+          const percentage = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
+
+          // Save to quiz_results collection
+          await addDoc(collection(db, 'quiz_results'), {
+            userId: currentUser.uid,
+            quizId: currentRoomData.quiz?.id || currentRoomData.id,
+            quizTitle: currentRoomData.quiz?.title || 'Multiplayer Quiz',
+            mode: 'multiplayer',
+            roomId: currentRoomData.id,
+            score: myScore,
+            correctAnswers,
+            totalQuestions,
+            percentage: Math.round(percentage * 10) / 10,
+            timeSpent: myAnswers.reduce((sum, a) => sum + (a.timeSpent || 0), 0),
+            completedAt: serverTimestamp(),
+            answers: myAnswers.map((a, index) => ({
+              questionId: processedQuestions[index]?.id || `q${index}`,
+              questionText: processedQuestions[index]?.title || '',
+              selectedAnswer: a.selectedAnswer,
+              isCorrect: a.isCorrect,
+              timeSpent: a.timeSpent || 0,
+              points: a.points || 0
+            }))
+          });
+
+          console.log('✅ Multiplayer results saved successfully');
+        } catch (error) {
+          console.error('❌ Failed to save multiplayer results:', error);
+          toast.error('Failed to save your results');
+        }
+      }
+    };
+    
+    saveFinalResults();
+  }, [currentGamePhase, currentUser?.uid, currentRoomData?.id, currentRoomData?.quiz, playerAnswers, playerScores, processedQuestions]);
 
   // Get current question
   const currentQuestionIndex = currentGameData?.currentQuestionIndex || 0;
@@ -550,7 +582,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
                   Correct Answer: <span className="font-semibold">{finalQuestion.options?.[questionResults.correctAnswer] || 'N/A'}</span>
                 </div>
                 {questionResults.explanation && (
-                  <p className="text-xs text-gray-500 mt-2">{questionResults.explanation}</p>
+                  <SafeHTML content={questionResults.explanation} className="text-xs text-gray-500 mt-2" />
                 )}
               </div>
             </div>
@@ -1028,9 +1060,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
                   +{questionResults.points} points
                 </div>
                 
-                <p className="text-gray-600 mb-4">
-                  {questionResults.explanation}
-                </p>
+                <SafeHTML content={questionResults.explanation} className="text-gray-600 mb-4" />
                 
                 {nextQuestionCountdown !== null && (
                   <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">

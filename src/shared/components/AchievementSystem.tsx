@@ -3,6 +3,8 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../lib/store';
 
 import { useTranslation } from 'react-i18next';
+import SafeHTML from 'ui/SafeHTML';
+
 interface Achievement {
   id: string;
   title: string;
@@ -144,9 +146,7 @@ const AchievementCard: React.FC<{ achievement: Achievement; onClaim: () => void 
         >
           {achievement.title}
         </h3>
-        <p className="text-sm text-gray-600 mb-2">
-          {achievement.description}
-        </p>
+        <SafeHTML content={achievement.description} className="text-sm text-gray-600 mb-2" />
 
         {/* Progress Bar */}
         {!achievement.unlocked && achievement.progress > 0 && (
@@ -332,7 +332,7 @@ const AchievementSystem: React.FC = () => {
             <div className="text-center">
               <div className="text-6xl mb-4">{showModal.icon}</div>
               <h3 className="text-xl font-bold mb-2">{showModal.title}</h3>
-              <p className="text-gray-600 mb-4">{showModal.description}</p>
+              <SafeHTML content={showModal.description} className="text-gray-600 mb-4" />
               <div className="flex justify-center space-x-4">
                 <button
                   onClick={() => setShowModal(null)}

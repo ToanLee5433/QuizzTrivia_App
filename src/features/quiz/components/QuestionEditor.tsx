@@ -4,6 +4,8 @@ import {
   Plus, Trash2, Edit3, Check, X, ArrowUp, ArrowDown, 
   Lightbulb, Target, Type, List
 } from 'lucide-react';
+import SafeHTML from '../../../shared/components/ui/SafeHTML';
+
 
 interface QuestionEditorProps {
   question: Question;
@@ -354,7 +356,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                   <Lightbulb className="w-4 h-4" />
                   Explanation
                 </h5>
-                <p className="text-blue-700">{question.explanation}</p>
+                <SafeHTML content={question.explanation} className="text-blue-700" />
               </div>
             )}
           </div>

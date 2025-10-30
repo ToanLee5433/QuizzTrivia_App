@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Quiz } from '../../../types';
 import { ResultState } from '../types';
 import Button from '../../../../../shared/components/ui/Button';
+import SafeHTML from '../../../../../shared/components/ui/SafeHTML';
+
 
 interface AnswerReviewProps {
   quiz: Quiz;
@@ -186,7 +188,7 @@ export const AnswerReview: React.FC<AnswerReviewProps> = ({ quiz, result }) => {
                 {question.explanation && (
                   <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <span className="font-medium text-blue-800">Explanation: </span>
-                    <span className="text-blue-700">{question.explanation}</span>
+                    <SafeHTML content={question.explanation} className="text-blue-700" />
                   </div>
                 )}
               </div>

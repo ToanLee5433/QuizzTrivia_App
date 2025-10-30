@@ -18,6 +18,8 @@ import { aiQuestionService, AIConfig, AIProvider } from '../../../services/aiQue
 import { Question } from '../types';
 
 import { useTranslation } from 'react-i18next';
+import SafeHTML from '../../../../../shared/components/ui/SafeHTML';
+
 interface ModernAIQuestionGeneratorProps {
   content: string;
   onQuestionsGenerated: (questions: Question[]) => void;
@@ -185,7 +187,7 @@ export const ModernAIQuestionGenerator: React.FC<ModernAIQuestionGeneratorProps>
                             )}
                           </div>
                         </div>
-                        <p className="text-gray-600 text-sm">{provider.description}</p>
+                        <SafeHTML content={provider.description} className="text-gray-600 text-sm" />
                         <div className="mt-3 flex flex-wrap gap-2">
                           {provider.models.slice(0, 2).map((model: string) => (
                             <span key={model} className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">

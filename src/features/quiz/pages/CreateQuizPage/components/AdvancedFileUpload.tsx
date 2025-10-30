@@ -57,30 +57,30 @@ const AdvancedFileUpload: React.FC<AdvancedFileUploadProps> = ({ onQuestionsImpo
       const isSupported = Object.values(supportedTypes).flat().some(ext => fileName.endsWith(ext));
       
       if (!isSupported) {
-        toast.error('Định dạng file không được hỗ trợ');
+        toast.error(t('fileUpload.unsupportedFormat'));
         setProcessing(false);
         return;
       }
 
       // Show processing feedback
-      toast.info(`Đang xử lý file: ${file.name}...`);
+      toast.info(t('fileUpload.processing', { filename: file.name }));
 
       // Extract text from file
       const result = await extractTextFromFile(file);
       
       if (!result.success) {
-        toast.error(result.error || 'Không thể đọc file');
+        toast.error(result.error || t('fileUpload.cannotReadFile'));
         setProcessing(false);
         return;
       }
 
       setExtractedText(result.extractedText);
-      toast.success(`Đã trích xuất ${result.extractedText.length} ký tự từ file!`);
+      toast.success(t('fileUpload.extractedSuccess', { count: result.extractedText.length }));
       setCurrentStep('preview'); // Only move to preview step after successful extraction
       
     } catch (error) {
       console.error('Error processing file:', error);
-      toast.error('Có lỗi xảy ra khi xử lý file');
+      toast.error(t('fileUpload.processingError'));
       
       // Provide fallback content based on file type
       const fileName = file.name.toLowerCase();
@@ -123,7 +123,7 @@ Bạn có thể chỉnh sửa nội dung này và sử dụng AI để tạo câ
       
       setExtractedText(fallbackText);
       setCurrentStep('preview');
-      toast.warning('Đã tạo nội dung mẫu để bạn có thể test AI');
+      toast.warning(t('fileUpload.sampleContentCreated'));
       
     } finally {
       setProcessing(false);
@@ -165,7 +165,7 @@ Bạn có thể chỉnh sửa nội dung này và sử dụng AI để tạo câ
         extractedText: '',
         questions: [],
         success: false,
-        error: 'Định dạng file không được hỗ trợ'
+        error: t('fileUpload.unsupportedFormat')
       };
       
     } catch (error) {
@@ -173,7 +173,7 @@ Bạn có thể chỉnh sửa nội dung này và sử dụng AI để tạo câ
         extractedText: '',
         questions: [],
         success: false,
-        error: `Lỗi xử lý file: ${error instanceof Error ? error.message : 'Unknown error'}`
+        error: t('fileUpload.processingError') + `: ${error instanceof Error ? error.message : 'Unknown error'}`
       };
     }
   };
@@ -215,7 +215,7 @@ Bạn có thể chỉnh sửa nội dung này và sử dụng AI để tạo câ
           extractedText: '',
           questions: [],
           success: false,
-          error: 'Không thể trích xuất text từ ảnh. Vui lòng thử ảnh khác có text rõ ràng hơn.'
+          error: t('fileUpload.cannotExtractText')
         };
       }
       
@@ -334,7 +334,7 @@ Lập trình web hiện đại yêu cầu kiến thức về nhiều công ngh�
         extractedText: '',
         questions: [],
         success: false,
-        error: `Lỗi đọc PDF: ${error instanceof Error ? error.message : 'Unknown error'}`
+        error: t('fileUpload.pdfError', { error: error instanceof Error ? error.message : 'Unknown error' })
       };
     }
   };
@@ -406,7 +406,7 @@ Thực hành:
         extractedText: '',
         questions: [],
         success: false,
-        error: `Lỗi đọc Word: ${error instanceof Error ? error.message : 'Unknown error'}`
+        error: t('fileUpload.wordError', { error: error instanceof Error ? error.message : 'Unknown error' })
       };
     }
   };
@@ -425,7 +425,7 @@ Thực hành:
         extractedText: '',
         questions: [],
         success: false,
-        error: `Lỗi đọc text file: ${error instanceof Error ? error.message : 'Unknown error'}`
+        error: t('fileUpload.textError', { error: error instanceof Error ? error.message : 'Unknown error' })
       };
     }
   };
@@ -444,14 +444,14 @@ Thực hành:
         extractedText: '',
         questions: [],
         success: false,
-        error: `Lỗi đọc spreadsheet: ${error instanceof Error ? error.message : 'Unknown error'}`
+        error: t('fileUpload.spreadsheetError', { error: error instanceof Error ? error.message : 'Unknown error' })
       };
     }
   };
 
   const generateQuestionsWithAI = async () => {
     if (!extractedText.trim()) {
-      toast.error('Không có nội dung để tạo câu hỏi');
+      toast.error(t('fileUpload.noContentToGenerate'));
       return;
     }
 
@@ -464,24 +464,24 @@ Thực hành:
       console.log('AI Config:', aiConfig);
       
       // Show detailed progress
-      toast.info('Đang kết nối với AI service...');
+      toast.info(t('fileUpload.connectingToAI'));
       
       const questions = await callAIService(extractedText, customPrompt);
       
       if (!questions || questions.length === 0) {
-        throw new Error('AI service không trả về câu hỏi nào');
+        throw new Error(t('fileUpload.noAIResponse'));
       }
       
       setGeneratedQuestions(questions);
       setCurrentStep('review');
-      toast.success(`✅ AI đã tạo ${questions.length} câu hỏi thành công!`);
+      toast.success(t('fileUpload.aiGeneratedSuccess', { count: questions.length }));
       
     } catch (error) {
       console.error('AI generation error:', error);
       
       // Show specific error message
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      toast.error(`❌ Lỗi tạo câu hỏi: ${errorMessage}`);
+      toast.error(t('fileUpload.aiGenerationError', { error: errorMessage }));
       
       // Stay on preview step so user can try again
       setCurrentStep('preview');
@@ -538,49 +538,49 @@ Thực hành:
       return convertedQuestions;
       
     } catch (error) {
-      console.error('❌ AI Service Error:', error);
+      console.error(t('fileUpload.aiServiceError'), error);
       
       // Show specific error to user
-      toast.error(`Lỗi AI: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(t('fileUpload.aiError', { error: error instanceof Error ? error.message : 'Unknown error' }));
       
       // Only use fallback if user explicitly wants it
       const shouldUseFallback = confirm(
-        `AI generation failed: ${error instanceof Error ? error.message : 'Unknown error'}\n\nDo you want to use sample questions instead?`
+        t('fileUpload.aiGenerationFailed', { error: error instanceof Error ? error.message : 'Unknown error' }) + '\n\nDo you want to use sample questions instead?'
       );
       
       if (shouldUseFallback) {
-        console.log('🔄 User chose to use fallback mock questions');
+        console.log(t('fileUpload.userChoseFallback'));
         
         const mockQuestions: Question[] = [
           {
             id: `ai-${Date.now()}-1`,
-            text: 'JavaScript được phát triển bởi công ty nào?',
+            text: t('fileUpload.sampleQuestions.question1.text'),
             type: 'multiple',
             answers: [
-              { id: 'a', text: 'Netscape', isCorrect: true },
+              { id: 'a', text: t('fileUpload.sampleQuestions.question1.answer'), isCorrect: true },
               { id: 'b', text: 'Microsoft', isCorrect: false },
               { id: 'c', text: 'Google', isCorrect: false },
               { id: 'd', text: 'Apple', isCorrect: false }
             ],
-            explanation: 'JavaScript được phát triển bởi Brendan Eich tại Netscape vào năm 1995.',
+            explanation: t('fileUpload.sampleQuestions.question1.explanation'),
             points: 10
           },
           {
             id: `ai-${Date.now()}-2`,
-            text: 'React là gì?',
+            text: t('fileUpload.sampleQuestions.question2.text'),
             type: 'multiple',
             answers: [
               { id: 'a', text: 'Framework', isCorrect: false },
-              { id: 'b', text: 'Library', isCorrect: true },
+              { id: 'b', text: t('fileUpload.sampleQuestions.question2.answer'), isCorrect: true },
               { id: 'c', text: 'Language', isCorrect: false },
               { id: 'd', text: 'Database', isCorrect: false }
             ],
-            explanation: 'React là một JavaScript library để xây dựng user interface.',
+            explanation: t('fileUpload.sampleQuestions.question2.explanation'),
             points: 10
           }
         ];
 
-        toast.warning('Đang sử dụng câu hỏi mẫu thay vì AI');
+        toast.warning(t('fileUpload.usingSampleQuestions'));
         return mockQuestions;
       } else {
         // Re-throw the error to stop the process
@@ -592,7 +592,7 @@ Thực hành:
   const handleImportQuestions = () => {
     if (generatedQuestions.length > 0) {
       onQuestionsImported(generatedQuestions);
-      toast.success(`Đã import ${generatedQuestions.length} câu hỏi!`);
+      toast.success(t('fileUpload.importedQuestions', { count: generatedQuestions.length }));
       setIsOpen(false);
       resetState();
     }
@@ -743,7 +743,6 @@ Thực hành:
               </button>
               <button
                 onClick={async () => {
-                  console.log('🧪 Debug: Testing AI connection...');
                   try {
                     const response = await fetch('https://api.openai.com/v1/models', {
                       headers: {
@@ -752,15 +751,15 @@ Thực hành:
                       }
                     });
                     if (response.ok) {
-                      toast.success('✅ API key hoạt động!');
+                      toast.success(t('fileUpload.apiKeyWorking'));
                       console.log('✅ API key is valid');
                     } else {
                       const errorData = await response.json();
-                      toast.error(`❌ API key lỗi: ${errorData.error?.message}`);
+                      toast.error(t('fileUpload.apiKeyError', { message: errorData.error?.message }));
                       console.error('❌ API key error:', errorData);
                     }
                   } catch (error) {
-                    toast.error(`❌ Network error: ${error instanceof Error ? error.message : 'Unknown'}`);
+                    toast.error(t('fileUpload.networkError', { error: error instanceof Error ? error.message : 'Unknown' }));
                     console.error('❌ Network error:', error);
                   }
                 }}

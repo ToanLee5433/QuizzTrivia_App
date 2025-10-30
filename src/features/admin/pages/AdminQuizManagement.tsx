@@ -37,6 +37,8 @@ import {
   Link as LinkIcon,
   Presentation
 } from 'lucide-react';
+import SafeHTML from '../../../shared/components/ui/SafeHTML';
+
 
 interface Quiz {
   id: string;
@@ -167,13 +169,13 @@ const AdminQuizManagement: React.FC = () => {
       // Nếu không có quiz, hiển thị empty state
       if (loadedQuizzes.length === 0) {
         console.log('⚠️ No quizzes found, showing empty state');
-        toast.info('Chưa có quiz nào trong hệ thống');
+        toast.info(t('admin.quizManagement.empty.noQuizzesInSystem'));
       }
       
     } catch (error) {
       console.error('❌ Error loading quizzes:', error);
-      setError('Không thể tải danh sách quiz');
-      toast.error('Không thể tải danh sách quiz: ' + error);
+      setError(t('admin.quizManagement.errors.loadFailed'));
+      toast.error(t('admin.quizManagement.errors.loadFailed') + ': ' + error);
     } finally {
       setLoading(false);
     }
@@ -273,10 +275,10 @@ const AdminQuizManagement: React.FC = () => {
           : quiz
       ));
       
-      toast.success('Đã phê duyệt quiz thành công!');
+      toast.success(t('admin.quizManagement.success.approved'));
     } catch (error) {
       console.error('Error approving quiz:', error);
-      toast.error('Không thể duyệt quiz');
+      toast.error(t('admin.quizManagement.errors.approveFailed'));
     }
   };
 
@@ -296,10 +298,10 @@ const AdminQuizManagement: React.FC = () => {
           : quiz
       ));
       
-      toast.success('Đã từ chối quiz!');
+      toast.success(t('admin.quizManagement.success.rejected'));
     } catch (error) {
       console.error('Error rejecting quiz:', error);
-      toast.error('Không thể từ chối quiz');
+      toast.error(t('admin.quizManagement.errors.rejectFailed'));
     }
   };
 
@@ -307,7 +309,7 @@ const AdminQuizManagement: React.FC = () => {
     try {
       const editRequest = editRequests.find(req => req.id === requestId);
       if (!editRequest) {
-        toast.error('Không tìm thấy yêu cầu chỉnh sửa');
+        toast.error(t('admin.editRequests.errors.notFound'));
         return;
       }
 
@@ -336,8 +338,10 @@ const AdminQuizManagement: React.FC = () => {
       await addDoc(collection(db, 'notifications'), {
         userId: editRequest.requestedBy,
         type: 'edit_request_approved',
-        title: 'Yêu cầu chỉnh sửa đã được phê duyệt',
-        message: `Yêu cầu chỉnh sửa quiz "${editRequest.quizTitle}" của bạn đã được admin phê duyệt. Quiz đã được gỡ xuống để bạn chỉnh sửa. Sau khi sửa xong, vui lòng nộp lại để admin duyệt.`,
+        title: t('admin.editRequests.notifications.approvedTitle'),
+        message: t('admin.editRequests.notifications.approvedMessage', { 
+          quizTitle: editRequest.quizTitle 
+        }),
         quizId: quizId,
         createdAt: serverTimestamp(),
         read: false
@@ -346,10 +350,12 @@ const AdminQuizManagement: React.FC = () => {
       // Remove from edit requests list
       setEditRequests(prev => prev.filter(req => req.id !== requestId));
       
-      toast.success(`Đã phê duyệt yêu cầu chỉnh sửa của ${editRequest.requestedByName || editRequest.requestedByEmail}!`);
+      toast.success(t('admin.editRequests.success.approved', { 
+        userName: editRequest.requestedByName || editRequest.requestedByEmail 
+      }));
     } catch (error) {
       console.error('Error approving edit request:', error);
-      toast.error('Không thể phê duyệt yêu cầu chỉnh sửa');
+      toast.error(t('admin.editRequests.errors.approveFailed'));
     }
   };
 
@@ -357,7 +363,7 @@ const AdminQuizManagement: React.FC = () => {
     try {
       const editRequest = editRequests.find(req => req.id === requestId);
       if (!editRequest) {
-        toast.error('Không tìm thấy yêu cầu chỉnh sửa');
+        toast.error(t('admin.editRequests.errors.notFound'));
         return;
       }
 
@@ -373,8 +379,10 @@ const AdminQuizManagement: React.FC = () => {
       await addDoc(collection(db, 'notifications'), {
         userId: editRequest.requestedBy,
         type: 'edit_request_rejected', 
-        title: 'Yêu cầu chỉnh sửa đã bị từ chối',
-        message: `Yêu cầu chỉnh sửa quiz "${editRequest.quizTitle}" của bạn đã bị admin từ chối. Vui lòng liên hệ admin để biết thêm chi tiết.`,
+        title: t('admin.editRequests.notifications.rejectedTitle'),
+        message: t('admin.editRequests.notifications.rejectedMessage', { 
+          quizTitle: editRequest.quizTitle 
+        }),
         quizId: editRequest.quizId,
         createdAt: serverTimestamp(),
         read: false
@@ -383,10 +391,12 @@ const AdminQuizManagement: React.FC = () => {
       // Remove from edit requests list
       setEditRequests(prev => prev.filter(req => req.id !== requestId));
       
-      toast.success(`Đã từ chối yêu cầu chỉnh sửa của ${editRequest.requestedByName || editRequest.requestedByEmail}!`);
+      toast.success(t('admin.editRequests.success.rejected', { 
+        userName: editRequest.requestedByName || editRequest.requestedByEmail 
+      }));
     } catch (error) {
       console.error('Error rejecting edit request:', error);
-      toast.error('Không thể từ chối yêu cầu chỉnh sửa');
+      toast.error(t('admin.editRequests.errors.rejectFailed'));
     }
   };
 
@@ -406,15 +416,15 @@ const AdminQuizManagement: React.FC = () => {
           : quiz
       ));
       
-      toast.success('Đã mở lại quiz để xem xét!');
+      toast.success(t('admin.quizManagement.success.reopened'));
     } catch (error) {
       console.error('Error reopening quiz:', error);
-      toast.error('Không thể mở lại quiz');
+      toast.error(t('admin.quizManagement.errors.reopenFailed'));
     }
   };
 
   const handleDelete = async (quizId: string) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa quiz này không?')) {
+    if (!window.confirm(t('admin.quizManagement.confirmDelete'))) {
       return;
     }
 
@@ -424,10 +434,10 @@ const AdminQuizManagement: React.FC = () => {
       console.log('✅ Quiz deleted from database successfully');
       
       setQuizzes(prev => prev.filter(quiz => quiz.id !== quizId));
-      toast.success('Quiz đã được xóa khỏi database');
+      toast.success(t('admin.quizManagement.success.deleted'));
     } catch (error) {
       console.error('❌ Error deleting quiz:', error);
-      toast.error('Không thể xóa quiz: ' + error);
+      toast.error(t('admin.quizManagement.errors.deleteFailed') + ': ' + error);
     }
   };
 
@@ -452,22 +462,22 @@ const AdminQuizManagement: React.FC = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'approved':
-        return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">✅ Đã duyệt</span>;
+        return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">✅ {t('status.approved')}</span>;
       case 'rejected':
-        return <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">❌ Từ chối</span>;
+        return <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">❌ {t('status.rejected')}</span>;
       default:
-        return <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">⏳ Chờ duyệt</span>;
+        return <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">⏳ {t('status.pending')}</span>;
     }
   };
 
   const getDifficultyBadge = (difficulty: string) => {
     switch (difficulty) {
       case 'easy':
-        return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">🟢 Dễ</span>;
+        return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">🟢 {t('quiz.difficulty.easy')}</span>;
       case 'hard':
-        return <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">🔴 Khó</span>;
+        return <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">🔴 {t('quiz.difficulty.hard')}</span>;
       default:
-        return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">🟡 Trung bình</span>;
+        return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">🟡 {t('quiz.difficulty.medium')}</span>;
     }
   };
 
@@ -775,7 +785,7 @@ const AdminQuizManagement: React.FC = () => {
                       {getDifficultyBadge(quiz.difficulty)}
                     </div>
                     
-                    <p className="text-gray-600 mb-4 line-clamp-2">{quiz.description}</p>
+                    <SafeHTML content={quiz.description} className="text-gray-600 mb-4 line-clamp-2" />
                     
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-3">
                       <div>
@@ -795,12 +805,12 @@ const AdminQuizManagement: React.FC = () => {
                         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg">
                           <FileText className="w-4 h-4 text-emerald-600" />
                           <span className="text-xs font-medium text-emerald-700">
-                            {quiz.learningResources.length} tài liệu học tập
+                            {t('admin.quizManagement.learningResourcesCount', { count: quiz.learningResources.length })}
                           </span>
                         </div>
                         {quiz.learningResources.some((r: any) => r.required) && (
                           <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full font-medium">
-                            ⚠️ Có tài liệu bắt buộc
+                            ⚠️ {t('admin.quizManagement.hasRequiredResources')}
                           </span>
                         )}
                       </div>
@@ -880,7 +890,7 @@ const AdminQuizManagement: React.FC = () => {
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 text-orange-500" />
-                Yêu cầu chỉnh sửa Quiz ({editRequests.length})
+                {t('admin.quizManagement.editRequestsTitle', { count: editRequests.length })}
               </h3>
             </div>
             
@@ -902,24 +912,24 @@ const AdminQuizManagement: React.FC = () => {
                           </div>
                           <div>
                             <h4 className="font-semibold text-gray-900">
-                              {request.requestedByName || request.requestedByEmail || 'Người dùng không xác định'}
+                              {request.requestedByName || request.requestedByEmail || t('admin.quizManagement.unknownUser')}
                             </h4>
                             <p className="text-sm text-gray-500">
-                              {request.requestedByEmail || request.requestedBy || 'Email không xác định'}
+                              {request.requestedByEmail || request.requestedBy || t('admin.quizManagement.unknownEmail')}
                             </p>
                           </div>
                         </div>
                         
                         <div className="bg-gray-50 rounded-lg p-4 mb-3">
                           <h5 className="font-medium text-gray-900 mb-2">
-                            📝 Quiz: {request.quizTitle || 'Tên quiz không xác định'}
+                            📝 Quiz: {request.quizTitle || t('admin.quizManagement.unknownQuiz')}
                           </h5>
                           <p className="text-sm text-gray-700 mb-2">
-                            <strong>Lý do yêu cầu:</strong> {request.reason || 'Không có lý do cụ thể'}
+                            <strong>{t('admin.quizManagement.requestReason')}:</strong> {request.reason || t('admin.quizManagement.noReason')}
                           </p>
                           {request.description && (
                             <p className="text-sm text-gray-600">
-                              <strong>Chi tiết:</strong> {request.description}
+                              <strong>{t('admin.quizManagement.requestDetails')}:</strong> {request.description}
                             </p>
                           )}
                         </div>
@@ -933,7 +943,7 @@ const AdminQuizManagement: React.FC = () => {
                               year: 'numeric',
                               hour: '2-digit',
                               minute: '2-digit'
-                            }) || 'Thời gian không xác định'}
+                            }) || t('admin.quizManagement.unknownTime')}
                           </span>
                           <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">{t("admin.editRequests.pending")}
                           </span>
@@ -983,7 +993,7 @@ const AdminQuizManagement: React.FC = () => {
               <div className="space-y-6">
                 <div>
                   <h3 className="font-semibold mb-2">{t('admin.preview.description')}:</h3>
-                  <p className="text-gray-600">{previewQuiz.description}</p>
+                  <SafeHTML content={previewQuiz.description} className="text-gray-600" />
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4 text-sm">
@@ -1006,7 +1016,7 @@ const AdminQuizManagement: React.FC = () => {
                   <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-lg p-4">
                     <h3 className="font-semibold mb-3 flex items-center gap-2 text-emerald-800">
                       <FileText className="w-5 h-5" />
-                      📚 Tài liệu học tập ({previewQuiz.learningResources.length})
+                      📚 {t('admin.preview.learningResourcesTitle', { count: previewQuiz.learningResources.length })}
                     </h3>
                     <div className="space-y-2">
                       {previewQuiz.learningResources.map((resource: any, idx: number) => (
@@ -1030,17 +1040,17 @@ const AdminQuizManagement: React.FC = () => {
                               </div>
                               
                               {resource.description && (
-                                <p className="text-xs text-gray-600 mt-1 line-clamp-2">{resource.description}</p>
+                                <SafeHTML content={resource.description} className="text-xs text-gray-600 mt-1 line-clamp-2" />
                               )}
                               
                               <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
                                 {resource.required && (
                                   <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded-full font-medium">
-                                    ⚠️ Bắt buộc
+                                    ⚠️ {t('admin.quizManagement.requiredBadge')}
                                   </span>
                                 )}
                                 {resource.estimatedTime && (
-                                  <span>⏱️ {resource.estimatedTime} phút</span>
+                                  <span>⏱️ {t('admin.quizManagement.estimatedTime', { time: resource.estimatedTime })}</span>
                                 )}
                                 {resource.url && (
                                   <a 
@@ -1049,7 +1059,7 @@ const AdminQuizManagement: React.FC = () => {
                                     rel="noopener noreferrer"
                                     className="text-blue-600 hover:text-blue-800 hover:underline truncate max-w-xs"
                                   >
-                                    🔗 Xem tài liệu
+                                    🔗 {t('admin.quizManagement.viewResource')}
                                   </a>
                                 )}
                               </div>

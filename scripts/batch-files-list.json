@@ -1,0 +1,1465 @@
+[
+  {
+    "file": "PDFViewer.tsx",
+    "fullPath": "src\\shared\\components\\ui\\PDFViewer.tsx",
+    "count": 5,
+    "findings": [
+      {
+        "file": "src\\shared\\components\\ui\\PDFViewer.tsx",
+        "line": 84,
+        "text": "Mở trong tab mới",
+        "fullLine": "title=\"Mở trong tab mới\"",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\shared\\components\\ui\\PDFViewer.tsx",
+        "line": 94,
+        "text": "Tải xuống",
+        "fullLine": "title=\"Tải xuống\"",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\shared\\components\\ui\\PDFViewer.tsx",
+        "line": 103,
+        "text": "Thoát toàn màn hình",
+        "fullLine": "title={isFullscreen ? \"Thoát toàn màn hình\" : \"Toàn màn hình\"}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\shared\\components\\ui\\PDFViewer.tsx",
+        "line": 103,
+        "text": "Toàn màn hình",
+        "fullLine": "title={isFullscreen ? \"Thoát toàn màn hình\" : \"Toàn màn hình\"}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\shared\\components\\ui\\PDFViewer.tsx",
+        "line": 116,
+        "text": "Đóng (ESC)",
+        "fullLine": "title=\"Đóng (ESC)\"",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "fileProcessor.ts",
+    "fullPath": "src\\services\\fileProcessor.ts",
+    "count": 5,
+    "findings": [
+      {
+        "file": "src\\services\\fileProcessor.ts",
+        "line": 33,
+        "text": "Loại file không được hỗ trợ: ${file.type}",
+        "fullLine": "error: `Loại file không được hỗ trợ: ${file.type}`",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\services\\fileProcessor.ts",
+        "line": 84,
+        "text": "Lỗi xử lý ảnh: ${error instanceof Error ? error.message : ",
+        "fullLine": "error: `Lỗi xử lý ảnh: ${error instanceof Error ? error.message : 'Unknown error'}`",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\services\\fileProcessor.ts",
+        "line": 122,
+        "text": "Lỗi xử lý PDF: ${error instanceof Error ? error.message : ",
+        "fullLine": "error: `Lỗi xử lý PDF: ${error instanceof Error ? error.message : 'Unknown error'}`",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\services\\fileProcessor.ts",
+        "line": 160,
+        "text": "Lỗi xử lý tài liệu: ${error instanceof Error ? error.message : ",
+        "fullLine": "error: `Lỗi xử lý tài liệu: ${error instanceof Error ? error.message : 'Unknown error'}`",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\services\\fileProcessor.ts",
+        "line": 176,
+        "text": "Lỗi đọc file text: ${error instanceof Error ? error.message : ",
+        "fullLine": "error: `Lỗi đọc file text: ${error instanceof Error ? error.message : 'Unknown error'}`",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "realDataService.ts",
+    "fullPath": "src\\features\\quiz\\services\\realDataService.ts",
+    "count": 5,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\services\\realDataService.ts",
+        "line": 22,
+        "text": "Quiz IDs:",
+        "fullLine": "console.log('Quiz IDs:', quizzes.map(q => q.id));",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\realDataService.ts",
+        "line": 26,
+        "text": "❌ Error fetching real quiz data:",
+        "fullLine": "console.error('❌ Error fetching real quiz data:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\realDataService.ts",
+        "line": 51,
+        "text": "❌ Error fetching real user data:",
+        "fullLine": "console.error('❌ Error fetching real user data:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\realDataService.ts",
+        "line": 76,
+        "text": "❌ Error fetching real review data:",
+        "fullLine": "console.error('❌ Error fetching real review data:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\realDataService.ts",
+        "line": 100,
+        "text": "❌ Error fetching real category data:",
+        "fullLine": "console.error('❌ Error fetching real category data:', error);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "quiz.ts",
+    "fullPath": "src\\features\\quiz\\services\\quiz.ts",
+    "count": 5,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\services\\quiz.ts",
+        "line": 74,
+        "text": "Error fetching quizzes:",
+        "fullLine": "console.error('Error fetching quizzes:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\quiz.ts",
+        "line": 76,
+        "text": "Error message:",
+        "fullLine": "console.error('Error message:', error.message);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\quiz.ts",
+        "line": 78,
+        "text": "Error code:",
+        "fullLine": "console.error('Error code:', (error as any).code);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\quiz.ts",
+        "line": 93,
+        "text": "Quiz not found",
+        "fullLine": "throw new Error('Quiz not found');",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\quiz.ts",
+        "line": 104,
+        "text": "Error fetching quiz:",
+        "fullLine": "console.error('Error fetching quiz:', error);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "MyQuizzesPage.tsx",
+    "fullPath": "src\\features\\quiz\\pages\\MyQuizzesPage.tsx",
+    "count": 5,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\pages\\MyQuizzesPage.tsx",
+        "line": 133,
+        "text": "Error loading quizzes:",
+        "fullLine": "console.error('Error loading quizzes:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\MyQuizzesPage.tsx",
+        "line": 156,
+        "text": "Yêu cầu chỉnh sửa đã được gửi, chờ admin phê duyệt",
+        "fullLine": "toast.success('Yêu cầu chỉnh sửa đã được gửi, chờ admin phê duyệt');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\MyQuizzesPage.tsx",
+        "line": 162,
+        "text": "Error submitting edit request:",
+        "fullLine": "console.error('Error submitting edit request:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\MyQuizzesPage.tsx",
+        "line": 516,
+        "text": "Xem trước",
+        "fullLine": "title=\"Xem trước\"",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\MyQuizzesPage.tsx",
+        "line": 533,
+        "text": "Bạn có chắc muốn xóa quiz này?",
+        "fullLine": "if (window.confirm('Bạn có chắc muốn xóa quiz này?')) {",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "AnswerReview.tsx",
+    "fullPath": "src\\features\\quiz\\pages\\ResultPage\\components\\AnswerReview.tsx",
+    "count": 5,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage\\components\\AnswerReview.tsx",
+        "line": 22,
+        "text": "Hide",
+        "fullLine": "{showAnswers ? 'Hide' : 'Show'} Detailed Review",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage\\components\\AnswerReview.tsx",
+        "line": 22,
+        "text": "Show",
+        "fullLine": "{showAnswers ? 'Hide' : 'Show'} Detailed Review",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage\\components\\AnswerReview.tsx",
+        "line": 41,
+        "text": "Chưa trả lời",
+        "fullLine": "userAnswerText = userAnswer?.text || 'Chưa trả lời';",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage\\components\\AnswerReview.tsx",
+        "line": 58,
+        "text": "Chưa trả lời",
+        "fullLine": "userAnswerText = userAnswerValue || 'Chưa trả lời';",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage\\components\\AnswerReview.tsx",
+        "line": 68,
+        "text": "Chưa trả lời",
+        "fullLine": ": 'Chưa trả lời';",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "useQuizSession.ts",
+    "fullPath": "src\\features\\quiz\\pages\\QuizPage\\hooks\\useQuizSession.ts",
+    "count": 5,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\pages\\QuizPage\\hooks\\useQuizSession.ts",
+        "line": 109,
+        "text": "📊 Score calculation:",
+        "fullLine": "console.log('📊 Score calculation:', result);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizPage\\hooks\\useQuizSession.ts",
+        "line": 163,
+        "text": "✅ Quiz result saved with ID:",
+        "fullLine": "console.log('✅ Quiz result saved with ID:', resultId);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizPage\\hooks\\useQuizSession.ts",
+        "line": 166,
+        "text": "❌ Failed to save quiz result:",
+        "fullLine": "console.error('❌ Failed to save quiz result:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizPage\\hooks\\useQuizSession.ts",
+        "line": 189,
+        "text": "❌ Failed to save quiz result, redirecting to quiz list",
+        "fullLine": "console.error('❌ Failed to save quiz result, redirecting to quiz list');",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizPage\\hooks\\useQuizSession.ts",
+        "line": 190,
+        "text": "Không thể lưu kết quả quiz. Vui lòng thử lại!",
+        "fullLine": "toast.error('Không thể lưu kết quả quiz. Vui lòng thử lại!');",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "QuizInfoStep.tsx",
+    "fullPath": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizInfoStep.tsx",
+    "count": 5,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizInfoStep.tsx",
+        "line": 122,
+        "text": "Nhập tags, cách nhau bằng dấu phẩy...",
+        "fullLine": "placeholder=\"Nhập tags, cách nhau bằng dấu phẩy...\"",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizInfoStep.tsx",
+        "line": 326,
+        "text": "Quiz công khai sẽ xuất hiện trong danh sách tìm kiếm và trang chủ, giúp nhiều người tham gia hơn.",
+        "fullLine": "? 'Quiz công khai sẽ xuất hiện trong danh sách tìm kiếm và trang chủ, giúp nhiều người tham gia hơn.'",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizInfoStep.tsx",
+        "line": 327,
+        "text": "Quiz riêng tư chỉ những người có link trực tiếp mới có thể truy cập. Thích hợp cho quiz nội bộ hoặc chia sẻ với nhóm nhỏ.",
+        "fullLine": ": 'Quiz riêng tư chỉ những người có link trực tiếp mới có thể truy cập. Thích hợp cho quiz nội bộ hoặc chia sẻ với nhóm nhỏ.'",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizInfoStep.tsx",
+        "line": 393,
+        "text": "✅ Cho phép",
+        "fullLine": "{quiz.allowRetake !== false ? '✅ Cho phép' : '❌ Không cho phép'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizInfoStep.tsx",
+        "line": 393,
+        "text": "❌ Không cho phép",
+        "fullLine": "{quiz.allowRetake !== false ? '✅ Cho phép' : '❌ Không cho phép'}",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "QuizFilters.tsx",
+    "fullPath": "src\\features\\quiz\\components\\QuizFilters.tsx",
+    "count": 5,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\components\\QuizFilters.tsx",
+        "line": 85,
+        "text": "Hiện",
+        "fullLine": "<span>{showAdvanced ? 'Ẩn' : 'Hiện'} tùy chọn nâng cao</span>",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuizFilters.tsx",
+        "line": 103,
+        "text": "🔍 Tìm kiếm quiz...",
+        "fullLine": "placeholder=\"🔍 Tìm kiếm quiz...\"",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuizFilters.tsx",
+        "line": 128,
+        "text": "😊 Dễ",
+        "fullLine": "{d === 'easy' ? '😊 Dễ' : d === 'medium' ? '😐 Trung bình' : '😤 Khó'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuizFilters.tsx",
+        "line": 128,
+        "text": "😐 Trung bình",
+        "fullLine": "{d === 'easy' ? '😊 Dễ' : d === 'medium' ? '😐 Trung bình' : '😤 Khó'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuizFilters.tsx",
+        "line": 128,
+        "text": "😤 Khó",
+        "fullLine": "{d === 'easy' ? '😊 Dễ' : d === 'medium' ? '😐 Trung bình' : '😤 Khó'}",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "QuestionEditor.tsx",
+    "fullPath": "src\\features\\quiz\\components\\QuestionEditor.tsx",
+    "count": 5,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\components\\QuestionEditor.tsx",
+        "line": 119,
+        "text": "📝 Short Answer",
+        "fullLine": "question.type === 'short_answer' ? '📝 Short Answer' :",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuestionEditor.tsx",
+        "line": 148,
+        "text": "Edit question",
+        "fullLine": "title=\"Edit question\"",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuestionEditor.tsx",
+        "line": 155,
+        "text": "Delete question",
+        "fullLine": "title=\"Delete question\"",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuestionEditor.tsx",
+        "line": 259,
+        "text": "Answer ${String.fromCharCode(65 + answerIndex)}",
+        "fullLine": "placeholder={`Answer ${String.fromCharCode(65 + answerIndex)}`}",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuestionEditor.tsx",
+        "line": 303,
+        "text": "❓ Untitled Question",
+        "fullLine": "{question.text || '❓ Untitled Question'}",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "RoleSelection.tsx",
+    "fullPath": "src\\features\\auth\\components\\RoleSelection.tsx",
+    "count": 5,
+    "findings": [
+      {
+        "file": "src\\features\\auth\\components\\RoleSelection.tsx",
+        "line": 43,
+        "text": "Chào mừng bạn với vai trò ${role === ",
+        "fullLine": "toast.success(`Chào mừng bạn với vai trò ${role === 'user' ? 'Người dùng' : 'Người tạo'}!`);",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\components\\RoleSelection.tsx",
+        "line": 49,
+        "text": "Error updating user role:",
+        "fullLine": "console.error('Error updating user role:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\auth\\components\\RoleSelection.tsx",
+        "line": 62,
+        "text": "Chào mừng bạn với vai trò ${role === ",
+        "fullLine": "toast.success(`Chào mừng bạn với vai trò ${role === 'user' ? 'Người dùng' : 'Người tạo'}!`);",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\components\\RoleSelection.tsx",
+        "line": 68,
+        "text": "Vai trò đã được chọn. Dữ liệu sẽ được đồng bộ khi kết nối ổn định.",
+        "fullLine": "toast.info('Vai trò đã được chọn. Dữ liệu sẽ được đồng bộ khi kết nối ổn định.');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\components\\RoleSelection.tsx",
+        "line": 169,
+        "text": "Xác nhận vai trò",
+        "fullLine": "'Xác nhận vai trò'",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "CategoryManagement.tsx",
+    "fullPath": "src\\features\\admin\\pages\\CategoryManagement.tsx",
+    "count": 5,
+    "findings": [
+      {
+        "file": "src\\features\\admin\\pages\\CategoryManagement.tsx",
+        "line": 93,
+        "text": "🔍 Loading categories from Firebase...",
+        "fullLine": "console.log('🔍 Loading categories from Firebase...');",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CategoryManagement.tsx",
+        "line": 106,
+        "text": "📝 Category data:",
+        "fullLine": "console.log('📝 Category data:', { id: doc.id, ...data });",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CategoryManagement.tsx",
+        "line": 126,
+        "text": "❌ Error loading categories:",
+        "fullLine": "console.error('❌ Error loading categories:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CategoryManagement.tsx",
+        "line": 189,
+        "text": "Error saving category:",
+        "fullLine": "console.error('Error saving category:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CategoryManagement.tsx",
+        "line": 215,
+        "text": "Error deleting category:",
+        "fullLine": "console.error('Error deleting category:', error);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "BulkActions.tsx",
+    "fullPath": "src\\features\\admin\\components\\BulkActions.tsx",
+    "count": 5,
+    "findings": [
+      {
+        "file": "src\\features\\admin\\components\\BulkActions.tsx",
+        "line": 27,
+        "text": "Bạn có chắc muốn xóa ${selectedItems.length} ${itemType}?",
+        "fullLine": "if (!confirm(`Bạn có chắc muốn xóa ${selectedItems.length} ${itemType}?`)) return;",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\components\\BulkActions.tsx",
+        "line": 36,
+        "text": "Đã xóa ${selectedItems.length} ${itemType}!",
+        "fullLine": "toast.success(`Đã xóa ${selectedItems.length} ${itemType}!`);",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\components\\BulkActions.tsx",
+        "line": 40,
+        "text": "Lỗi khi xóa hàng loạt!",
+        "fullLine": "toast.error('Lỗi khi xóa hàng loạt!');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\components\\BulkActions.tsx",
+        "line": 55,
+        "text": "Đã cập nhật ${selectedItems.length} ${itemType}!",
+        "fullLine": "toast.success(`Đã cập nhật ${selectedItems.length} ${itemType}!`);",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\components\\BulkActions.tsx",
+        "line": 59,
+        "text": "Lỗi khi cập nhật hàng loạt!",
+        "fullLine": "toast.error('Lỗi khi cập nhật hàng loạt!');",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "createTestResults.ts",
+    "fullPath": "src\\utils\\createTestResults.ts",
+    "count": 4,
+    "findings": [
+      {
+        "file": "src\\utils\\createTestResults.ts",
+        "line": 10,
+        "text": "Test User",
+        "fullLine": "userName: 'Test User',",
+        "type": "english"
+      },
+      {
+        "file": "src\\utils\\createTestResults.ts",
+        "line": 26,
+        "text": "Test User",
+        "fullLine": "userName: 'Test User',",
+        "type": "english"
+      },
+      {
+        "file": "src\\utils\\createTestResults.ts",
+        "line": 42,
+        "text": "Test User",
+        "fullLine": "userName: 'Test User',",
+        "type": "english"
+      },
+      {
+        "file": "src\\utils\\createTestResults.ts",
+        "line": 65,
+        "text": "❌ Error creating test results:",
+        "fullLine": "console.error('❌ Error creating test results:', error);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "Dashboard.tsx",
+    "fullPath": "src\\shared\\pages\\Dashboard.tsx",
+    "count": 4,
+    "findings": [
+      {
+        "file": "src\\shared\\pages\\Dashboard.tsx",
+        "line": 52,
+        "text": "User",
+        "fullLine": "<p className=\"text-gray-600\">{user?.displayName || user?.email || 'User'}</p>",
+        "type": "english"
+      },
+      {
+        "file": "src\\shared\\pages\\Dashboard.tsx",
+        "line": 55,
+        "text": "Admin",
+        "fullLine": "{user?.role === 'admin' ? 'Admin' : user?.role === 'creator' ? 'Creator' : 'User'}",
+        "type": "english"
+      },
+      {
+        "file": "src\\shared\\pages\\Dashboard.tsx",
+        "line": 55,
+        "text": "Creator",
+        "fullLine": "{user?.role === 'admin' ? 'Admin' : user?.role === 'creator' ? 'Creator' : 'User'}",
+        "type": "english"
+      },
+      {
+        "file": "src\\shared\\pages\\Dashboard.tsx",
+        "line": 55,
+        "text": "User",
+        "fullLine": "{user?.role === 'admin' ? 'Admin' : user?.role === 'creator' ? 'Creator' : 'User'}",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "QuizReviewSystem.tsx",
+    "fullPath": "src\\shared\\components\\QuizReviewSystem.tsx",
+    "count": 4,
+    "findings": [
+      {
+        "file": "src\\shared\\components\\QuizReviewSystem.tsx",
+        "line": 27,
+        "text": "Quiz này",
+        "fullLine": "quizTitle = 'Quiz này',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\shared\\components\\QuizReviewSystem.tsx",
+        "line": 73,
+        "text": "Error loading reviews:",
+        "fullLine": "console.error('Error loading reviews:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\shared\\components\\QuizReviewSystem.tsx",
+        "line": 107,
+        "text": "Người dùng ẩn danh",
+        "fullLine": "userName: user.displayName || user.email || 'Người dùng ẩn danh',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\shared\\components\\QuizReviewSystem.tsx",
+        "line": 123,
+        "text": "Error submitting review:",
+        "fullLine": "console.error('Error submitting review:', error);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "storageService.ts",
+    "fullPath": "src\\services\\firebase\\storageService.ts",
+    "count": 4,
+    "findings": [
+      {
+        "file": "src\\services\\firebase\\storageService.ts",
+        "line": 180,
+        "text": "[Storage] Delete error:",
+        "fullLine": "console.error('[Storage] Delete error:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\services\\firebase\\storageService.ts",
+        "line": 201,
+        "text": "[Storage] List files error:",
+        "fullLine": "console.error('[Storage] List files error:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\services\\firebase\\storageService.ts",
+        "line": 227,
+        "text": "[Storage] Update metadata error:",
+        "fullLine": "console.error('[Storage] Update metadata error:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\services\\firebase\\storageService.ts",
+        "line": 269,
+        "text": "Failed to get thumbnails after max retries",
+        "fullLine": "throw new Error('Failed to get thumbnails after max retries');",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "QuizPreviewPage.tsx",
+    "fullPath": "src\\features\\quiz\\pages\\QuizPreviewPage.tsx",
+    "count": 4,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\pages\\QuizPreviewPage.tsx",
+        "line": 42,
+        "text": "Error fetching review stats:",
+        "fullLine": "console.error('Error fetching review stats:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizPreviewPage.tsx",
+        "line": 48,
+        "text": "Error fetching quiz:",
+        "fullLine": "console.error('Error fetching quiz:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizPreviewPage.tsx",
+        "line": 103,
+        "text": "Trung bình",
+        "fullLine": "case 'medium': return 'Trung bình';",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizPreviewPage.tsx",
+        "line": 104,
+        "text": "Khó",
+        "fullLine": "case 'hard': return 'Khó';",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "main.tsx",
+    "fullPath": "src\\main.tsx",
+    "count": 3,
+    "findings": [
+      {
+        "file": "src\\main.tsx",
+        "line": 26,
+        "text": "Warning: findDOMNode is deprecated",
+        "fullLine": "args[0].includes('Warning: findDOMNode is deprecated')",
+        "type": "english"
+      },
+      {
+        "file": "src\\main.tsx",
+        "line": 40,
+        "text": "Warning: findDOMNode is deprecated",
+        "fullLine": "args[0].includes('Warning: findDOMNode is deprecated')",
+        "type": "english"
+      },
+      {
+        "file": "src\\main.tsx",
+        "line": 50,
+        "text": "Quiz App - Build v2.0 - Fixed Redux",
+        "fullLine": "console.log('Quiz App - Build v2.0 - Fixed Redux');",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "NotificationBanner.tsx",
+    "fullPath": "src\\shared\\components\\NotificationBanner.tsx",
+    "count": 3,
+    "findings": [
+      {
+        "file": "src\\shared\\components\\NotificationBanner.tsx",
+        "line": 64,
+        "text": "Error loading notifications:",
+        "fullLine": "console.error('Error loading notifications:', err);",
+        "type": "english"
+      },
+      {
+        "file": "src\\shared\\components\\NotificationBanner.tsx",
+        "line": 65,
+        "text": "Error loading notifications",
+        "fullLine": "setError('Error loading notifications');",
+        "type": "english"
+      },
+      {
+        "file": "src\\shared\\components\\NotificationBanner.tsx",
+        "line": 113,
+        "text": "Đóng thông báo",
+        "fullLine": "aria-label=\"Đóng thông báo\"",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "YouTubePlayer.tsx",
+    "fullPath": "src\\shared\\components\\ui\\YouTubePlayer.tsx",
+    "count": 3,
+    "findings": [
+      {
+        "file": "src\\shared\\components\\ui\\YouTubePlayer.tsx",
+        "line": 133,
+        "text": "Thoát toàn màn hình",
+        "fullLine": "title={isFullscreen ? \"Thoát toàn màn hình\" : \"Toàn màn hình\"}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\shared\\components\\ui\\YouTubePlayer.tsx",
+        "line": 133,
+        "text": "Toàn màn hình",
+        "fullLine": "title={isFullscreen ? \"Thoát toàn màn hình\" : \"Toàn màn hình\"}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\shared\\components\\ui\\YouTubePlayer.tsx",
+        "line": 146,
+        "text": "Đóng (ESC)",
+        "fullLine": "title=\"Đóng (ESC)\"",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "learning.ts",
+    "fullPath": "src\\features\\quiz\\types\\learning.ts",
+    "count": 3,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\types\\learning.ts",
+        "line": 39,
+        "text": "đã đọc",
+        "fullLine": "requireConfirm?: boolean; // Yêu cầu tick \"đã đọc\"",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\types\\learning.ts",
+        "line": 82,
+        "text": "Vì sao xem phần này?",
+        "fullLine": "whyWatch?: string; // \"Vì sao xem phần này?\" - gợi ý cho learner",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\types\\learning.ts",
+        "line": 114,
+        "text": "đã đọc",
+        "fullLine": "confirmed?: boolean; // Đã tick \"đã đọc\"",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "LeaderboardPage.tsx",
+    "fullPath": "src\\features\\quiz\\pages\\LeaderboardPage.tsx",
+    "count": 3,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\pages\\LeaderboardPage.tsx",
+        "line": 117,
+        "text": "Untitled Quiz",
+        "fullLine": "title: quizData.title || 'Untitled Quiz',",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\LeaderboardPage.tsx",
+        "line": 176,
+        "text": "Unknown Quiz",
+        "fullLine": "title: quizData.title || 'Unknown Quiz',",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\LeaderboardPage.tsx",
+        "line": 267,
+        "text": "❌ Error fetching leaderboard data:",
+        "fullLine": "console.error('❌ Error fetching leaderboard data:', error);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "useLeaderboard.ts",
+    "fullPath": "src\\features\\quiz\\pages\\ResultPage\\hooks\\useLeaderboard.ts",
+    "count": 3,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage\\hooks\\useLeaderboard.ts",
+        "line": 77,
+        "text": "👤 User rank:",
+        "fullLine": "console.log('👤 User rank:', userResultIndex >= 0 ? userResultIndex + 1 : 'Not found');",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage\\hooks\\useLeaderboard.ts",
+        "line": 82,
+        "text": "❌ Failed to fetch leaderboard:",
+        "fullLine": "console.error('❌ Failed to fetch leaderboard:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage\\hooks\\useLeaderboard.ts",
+        "line": 83,
+        "text": "Không thể tải bảng xếp hạng!",
+        "fullLine": "toast.error('Không thể tải bảng xếp hạng!');",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "index.tsx",
+    "fullPath": "src\\features\\quiz\\pages\\QuizPage\\index.tsx",
+    "count": 3,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\pages\\QuizPage\\index.tsx",
+        "line": 36,
+        "text": "Quiz không tồn tại",
+        "fullLine": "<p className=\"text-gray-600\">{error || 'Quiz không tồn tại'}</p>",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizPage\\index.tsx",
+        "line": 240,
+        "text": "Chỉ còn ít hơn 1 phút! Hãy hoàn thành ngay.",
+        "fullLine": "? \"Chỉ còn ít hơn 1 phút! Hãy hoàn thành ngay.\"",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizPage\\index.tsx",
+        "line": 241,
+        "text": "Sắp hết giờ! Chỉ còn 10% thời gian.",
+        "fullLine": ": \"Sắp hết giờ! Chỉ còn 10% thời gian.\"}",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "SortableItem.tsx",
+    "fullPath": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\SortableItem.tsx",
+    "count": 3,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\SortableItem.tsx",
+        "line": 42,
+        "text": "Kéo để sắp xếp",
+        "fullLine": "title=\"Kéo để sắp xếp\"",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\SortableItem.tsx",
+        "line": 51,
+        "text": "Di chuyển lên",
+        "fullLine": "title=\"Di chuyển lên\"",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\SortableItem.tsx",
+        "line": 60,
+        "text": "Di chuyển xuống",
+        "fullLine": "title=\"Di chuyển xuống\"",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "AuthPageNew.tsx",
+    "fullPath": "src\\features\\auth\\pages\\AuthPageNew.tsx",
+    "count": 3,
+    "findings": [
+      {
+        "file": "src\\features\\auth\\pages\\AuthPageNew.tsx",
+        "line": 122,
+        "text": "Không tìm thấy thông tin đăng ký",
+        "fullLine": "toast.error('Không tìm thấy thông tin đăng ký');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\pages\\AuthPageNew.tsx",
+        "line": 200,
+        "text": "Có lỗi xảy ra. Vui lòng thử lại.",
+        "fullLine": "toast.error('Có lỗi xảy ra. Vui lòng thử lại.');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\pages\\AuthPageNew.tsx",
+        "line": 250,
+        "text": "❌ Login error:",
+        "fullLine": "console.error('❌ Login error:', error.code, error.message);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "ErrorBoundary.tsx",
+    "fullPath": "src\\shared\\components\\ErrorBoundary.tsx",
+    "count": 2,
+    "findings": [
+      {
+        "file": "src\\shared\\components\\ErrorBoundary.tsx",
+        "line": 25,
+        "text": "Error caught by ErrorBoundary:",
+        "fullLine": "console.error('Error caught by ErrorBoundary:', error, errorInfo);",
+        "type": "english"
+      },
+      {
+        "file": "src\\shared\\components\\ErrorBoundary.tsx",
+        "line": 55,
+        "text": "Ứng dụng gặp sự cố không mong muốn.",
+        "fullLine": "{this.state.error?.message || 'Ứng dụng gặp sự cố không mong muốn.'}",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "store.ts",
+    "fullPath": "src\\lib\\store.ts",
+    "count": 2,
+    "findings": [
+      {
+        "file": "src\\lib\\store.ts",
+        "line": 12,
+        "text": "Redux Error:",
+        "fullLine": "console.error('Redux Error:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\lib\\store.ts",
+        "line": 13,
+        "text": "Đã xảy ra lỗi. Vui lòng tải lại trang.",
+        "fullLine": "toast.error('Đã xảy ra lỗi. Vui lòng tải lại trang.');",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "quizService.ts",
+    "fullPath": "src\\features\\quiz\\services\\quizService.ts",
+    "count": 2,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\services\\quizService.ts",
+        "line": 56,
+        "text": "❌ [MAIN] Error in getQuizzes:",
+        "fullLine": "console.error('❌ [MAIN] Error in getQuizzes:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\quizService.ts",
+        "line": 72,
+        "text": "Error fetching user quizzes:",
+        "fullLine": "console.error('Error fetching user quizzes:', error);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "utils.ts",
+    "fullPath": "src\\features\\quiz\\pages\\ResultPage\\utils.ts",
+    "count": 2,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage\\utils.ts",
+        "line": 42,
+        "text": "Hôm nay ${timeString}",
+        "fullLine": "return `Hôm nay ${timeString}`;",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage\\utils.ts",
+        "line": 44,
+        "text": "Hôm qua ${timeString}",
+        "fullLine": "return `Hôm qua ${timeString}`;",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "MultiplayerPage.tsx",
+    "fullPath": "src\\features\\multiplayer\\pages\\MultiplayerPage.tsx",
+    "count": 2,
+    "findings": [
+      {
+        "file": "src\\features\\multiplayer\\pages\\MultiplayerPage.tsx",
+        "line": 48,
+        "text": "🎮 MultiplayerPage Real Quiz Data:",
+        "fullLine": "console.log('🎮 MultiplayerPage Real Quiz Data:', {",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\multiplayer\\pages\\MultiplayerPage.tsx",
+        "line": 73,
+        "text": "User",
+        "fullLine": "currentUserName={user.displayName || user.email || 'User'}",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "JoinRoomModal.tsx",
+    "fullPath": "src\\features\\multiplayer\\components\\JoinRoomModal.tsx",
+    "count": 2,
+    "findings": [
+      {
+        "file": "src\\features\\multiplayer\\components\\JoinRoomModal.tsx",
+        "line": 65,
+        "text": "yêu cầu mật khẩu",
+        "fullLine": "if (lower.includes('yêu cầu mật khẩu') || lower.includes('password')) {",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\multiplayer\\components\\JoinRoomModal.tsx",
+        "line": 156,
+        "text": "Phòng này yêu cầu mật khẩu",
+        "fullLine": "{error && error !== 'Phòng này yêu cầu mật khẩu' && (",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "Admin.tsx",
+    "fullPath": "src\\features\\admin\\pages\\Admin.tsx",
+    "count": 2,
+    "findings": [
+      {
+        "file": "src\\features\\admin\\pages\\Admin.tsx",
+        "line": 91,
+        "text": "Error creating notification:",
+        "fullLine": "console.error('Error creating notification:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\Admin.tsx",
+        "line": 144,
+        "text": "Error deleting notifications:",
+        "fullLine": "console.error('Error deleting notifications:', error);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "QuickActions.tsx",
+    "fullPath": "src\\features\\admin\\components\\QuickActions.tsx",
+    "count": 2,
+    "findings": [
+      {
+        "file": "src\\features\\admin\\components\\QuickActions.tsx",
+        "line": 60,
+        "text": "Error creating notification:",
+        "fullLine": "console.error('Error creating notification:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\components\\QuickActions.tsx",
+        "line": 119,
+        "text": "Error deleting notifications:",
+        "fullLine": "console.error('Error deleting notifications:', error);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "Home.tsx",
+    "fullPath": "src\\shared\\pages\\Home.tsx",
+    "count": 1,
+    "findings": [
+      {
+        "file": "src\\shared\\pages\\Home.tsx",
+        "line": 80,
+        "text": "Error loading real stats:",
+        "fullLine": "console.error('Error loading real stats:', error);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "SearchComponent.tsx",
+    "fullPath": "src\\shared\\components\\SearchComponent.tsx",
+    "count": 1,
+    "findings": [
+      {
+        "file": "src\\shared\\components\\SearchComponent.tsx",
+        "line": 11,
+        "text": "Tìm kiếm...",
+        "fullLine": "placeholder = \"Tìm kiếm...\",",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "LanguageSwitcher.tsx",
+    "fullPath": "src\\shared\\components\\LanguageSwitcher.tsx",
+    "count": 1,
+    "findings": [
+      {
+        "file": "src\\shared\\components\\LanguageSwitcher.tsx",
+        "line": 13,
+        "text": "Tiếng Việt",
+        "fullLine": "{ code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳' },",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "Header.tsx",
+    "fullPath": "src\\shared\\components\\Header.tsx",
+    "count": 1,
+    "findings": [
+      {
+        "file": "src\\shared\\components\\Header.tsx",
+        "line": 112,
+        "text": "User",
+        "fullLine": "{user?.displayName || user?.email || 'User'}",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "RichTextEditor.tsx",
+    "fullPath": "src\\shared\\components\\ui\\RichTextEditor.tsx",
+    "count": 1,
+    "findings": [
+      {
+        "file": "src\\shared\\components\\ui\\RichTextEditor.tsx",
+        "line": 17,
+        "text": "Nhập nội dung...",
+        "fullLine": "placeholder = 'Nhập nội dung...',",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "Modal.tsx",
+    "fullPath": "src\\shared\\components\\ui\\Modal.tsx",
+    "count": 1,
+    "findings": [
+      {
+        "file": "src\\shared\\components\\ui\\Modal.tsx",
+        "line": 80,
+        "text": "Đóng modal",
+        "fullLine": "aria-label=\"Đóng modal\"",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "Layout.tsx",
+    "fullPath": "src\\shared\\components\\layout\\Layout.tsx",
+    "count": 1,
+    "findings": [
+      {
+        "file": "src\\shared\\components\\layout\\Layout.tsx",
+        "line": 50,
+        "text": "Error signing out:",
+        "fullLine": "console.error('Error signing out:', error);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "roleSync.ts",
+    "fullPath": "src\\lib\\utils\\roleSync.ts",
+    "count": 1,
+    "findings": [
+      {
+        "file": "src\\lib\\utils\\roleSync.ts",
+        "line": 39,
+        "text": "User role synced to Firestore successfully",
+        "fullLine": "console.log('User role synced to Firestore successfully');",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "config.ts",
+    "fullPath": "src\\firebase\\config.ts",
+    "count": 1,
+    "findings": [
+      {
+        "file": "src\\firebase\\config.ts",
+        "line": 33,
+        "text": "❌ Failed to initialize Realtime Database:",
+        "fullLine": "console.error('❌ Failed to initialize Realtime Database:', error);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "RealQuizListPage.tsx",
+    "fullPath": "src\\features\\quiz\\pages\\RealQuizListPage.tsx",
+    "count": 1,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\pages\\RealQuizListPage.tsx",
+        "line": 24,
+        "text": "Error loading real quizzes:",
+        "fullLine": "console.error('Error loading real quizzes:', error);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "PerformanceAnalysis.tsx",
+    "fullPath": "src\\features\\quiz\\pages\\ResultPage\\components\\PerformanceAnalysis.tsx",
+    "count": 1,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage\\components\\PerformanceAnalysis.tsx",
+        "line": 48,
+        "text": "Completed early",
+        "fullLine": "{result.isTimeUp ? 'Used full time' : 'Completed early'}",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "ActionButtons.tsx",
+    "fullPath": "src\\features\\quiz\\pages\\ResultPage\\components\\ActionButtons.tsx",
+    "count": 1,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage\\components\\ActionButtons.tsx",
+        "line": 19,
+        "text": "Result copied to clipboard!",
+        "fullLine": "toast.success('Result copied to clipboard!');",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "useQuizData.ts",
+    "fullPath": "src\\features\\quiz\\pages\\QuizPage\\hooks\\useQuizData.ts",
+    "count": 1,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\pages\\QuizPage\\hooks\\useQuizData.ts",
+        "line": 47,
+        "text": "❌ Quiz not found in store",
+        "fullLine": "console.log('❌ Quiz not found in store');",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "QuestionRenderer.tsx",
+    "fullPath": "src\\features\\quiz\\pages\\QuizPage\\components\\QuestionRenderer.tsx",
+    "count": 1,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\pages\\QuizPage\\components\\QuestionRenderer.tsx",
+        "line": 144,
+        "text": "Ảnh ${index + 1}",
+        "fullLine": "{String.fromCharCode(65 + index)}. {answer.text || `Ảnh ${index + 1}`}",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "LearningResourcesView.tsx",
+    "fullPath": "src\\features\\quiz\\pages\\QuizPage\\components\\LearningResourcesView.tsx",
+    "count": 1,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\pages\\QuizPage\\components\\LearningResourcesView.tsx",
+        "line": 115,
+        "text": "Ảnh/Slide",
+        "fullLine": "image: 'Ảnh/Slide',",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "index.tsx",
+    "fullPath": "src\\features\\quiz\\pages\\CreateQuizPage\\index.tsx",
+    "count": 1,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\index.tsx",
+        "line": 223,
+        "text": "Error creating quiz:",
+        "fullLine": "console.error('Error creating quiz:', error);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "RoomLobby.tsx",
+    "fullPath": "src\\features\\multiplayer\\components\\RoomLobby.tsx",
+    "count": 1,
+    "findings": [
+      {
+        "file": "src\\features\\multiplayer\\components\\RoomLobby.tsx",
+        "line": 91,
+        "text": "Failed to copy room code:",
+        "fullLine": "console.error('Failed to copy room code:', err);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "ProtectedRoute.tsx",
+    "fullPath": "src\\features\\auth\\components\\ProtectedRoute.tsx",
+    "count": 1,
+    "findings": [
+      {
+        "file": "src\\features\\auth\\components\\ProtectedRoute.tsx",
+        "line": 31,
+        "text": "Đang xác thực...",
+        "fullLine": "return <Loading message=\"Đang xác thực...\" />;",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "AutoLogoutOnBan.tsx",
+    "fullPath": "src\\features\\auth\\components\\AutoLogoutOnBan.tsx",
+    "count": 1,
+    "findings": [
+      {
+        "file": "src\\features\\auth\\components\\AutoLogoutOnBan.tsx",
+        "line": 29,
+        "text": "Tài khoản của bạn đã bị khoá. Vui lòng liên hệ quản trị viên.",
+        "fullLine": "toast.error('Tài khoản của bạn đã bị khoá. Vui lòng liên hệ quản trị viên.');",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "QuizPreview.tsx",
+    "fullPath": "src\\features\\admin\\components\\QuizPreview.tsx",
+    "count": 1,
+    "findings": [
+      {
+        "file": "src\\features\\admin\\components\\QuizPreview.tsx",
+        "line": 163,
+        "text": "Points: ${quiz.questions.reduce((sum, q) => sum + (q.points || 0), 0)}",
+        "fullLine": "defaultValue: `Points: ${quiz.questions.reduce((sum, q) => sum + (q.points || 0), 0)}`})}</span>",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "QuickActions_Simple.tsx",
+    "fullPath": "src\\features\\admin\\components\\QuickActions_Simple.tsx",
+    "count": 1,
+    "findings": [
+      {
+        "file": "src\\features\\admin\\components\\QuickActions_Simple.tsx",
+        "line": 55,
+        "text": "Error creating notification:",
+        "fullLine": "console.error('Error creating notification:', error);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "AdminUtilities.tsx",
+    "fullPath": "src\\features\\admin\\components\\AdminUtilities.tsx",
+    "count": 1,
+    "findings": [
+      {
+        "file": "src\\features\\admin\\components\\AdminUtilities.tsx",
+        "line": 24,
+        "text": "Error creating test quizzes:",
+        "fullLine": "console.error('Error creating test quizzes:', error);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "AdminStats.tsx",
+    "fullPath": "src\\features\\admin\\components\\AdminStats.tsx",
+    "count": 1,
+    "findings": [
+      {
+        "file": "src\\features\\admin\\components\\AdminStats.tsx",
+        "line": 46,
+        "text": "Error loading real data:",
+        "fullLine": "console.error('Error loading real data:', error);",
+        "type": "english"
+      }
+    ]
+  }
+]

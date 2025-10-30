@@ -4,6 +4,8 @@ import { QuizFormData } from '../types';
 import { FileText, Video, Image as ImageIcon, Music, Link as LinkIcon, Presentation, Clock, ExternalLink, CheckCircle2, AlertCircle } from 'lucide-react';
 
 import { useTranslation } from 'react-i18next';
+import SafeHTML from '../../../../../shared/components/ui/SafeHTML';
+
 interface ReviewStepProps {
   quiz: QuizFormData;
 }
@@ -130,7 +132,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ quiz }) => {
                     </div>
                     
                     {resource.description && (
-                      <p className="text-sm text-gray-600 mb-3 leading-relaxed">{resource.description}</p>
+                      <SafeHTML content={resource.description} className="text-sm text-gray-600 mb-3 leading-relaxed" />
                     )}
                     
                     <div className="flex flex-wrap items-center gap-3">
@@ -248,7 +250,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ quiz }) => {
             {q.explanation && (
               <div className="mt-3 p-3 bg-amber-50 border-l-4 border-amber-400 rounded-lg">
                 <strong className="text-amber-900 text-sm">💡 Giải thích:</strong>
-                <p className="text-sm text-amber-800 mt-1">{q.explanation}</p>
+                <SafeHTML content={q.explanation} className="text-sm text-amber-800 mt-1" />
               </div>
             )}
           </div>

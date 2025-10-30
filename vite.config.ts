@@ -6,9 +6,7 @@ export default defineConfig({
   server: {
     fs: {
       allow: ['..']
-    },
-    // Fix 404 when refresh page in development
-    historyApiFallback: true
+    }
   },
   // Ensure proper build output
   build: {

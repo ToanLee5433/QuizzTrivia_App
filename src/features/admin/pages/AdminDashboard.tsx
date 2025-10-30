@@ -102,14 +102,6 @@ const AdminDashboard: React.FC = () => {
       quizCreatorIds: quizCreatorIds.size,
       finalStats: newStats
     });
-    
-    // Also log quiz statuses for debugging
-    console.log('🔍 Quiz status breakdown:', 
-      quizzes.reduce((acc, q) => {
-        acc[q.status || 'unknown'] = (acc[q.status || 'unknown'] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>)
-    );
   };
 
   // New category form
@@ -425,20 +417,20 @@ const AdminDashboard: React.FC = () => {
                   <span className={`px-2 py-1 text-xs rounded-full ${
                     user.isActive !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                   }`}>
-                    {user.isActive !== false ? 'Hoạt động' : 'Bị khóa'}
+                    {user.isActive !== false ? t('admin.userStatus.active') : t('admin.userStatus.blocked')}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                   <button
-                    onClick={() => setConfirmModal({ open: true, type: 'toggleUserStatus', payload: { userId: user.id, currentStatus: user.isActive !== false }, message: user.isActive !== false ? 'Bạn có chắc chắn muốn khóa tài khoản này?' : 'Bạn có chắc chắn muốn mở khóa tài khoản này?' })}
+                    onClick={() => setConfirmModal({ open: true, type: 'toggleUserStatus', payload: { userId: user.id, currentStatus: user.isActive !== false }, message: user.isActive !== false ? t('admin.confirmations.lockUser') : t('admin.confirmations.unlockUser') })}
                     className={`px-3 py-1 rounded text-xs ${user.isActive !== false ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-green-100 text-green-600 hover:bg-green-200'}`}
                   >
-                    {user.isActive !== false ? 'Khóa' : 'Mở khóa'}
+                    {user.isActive !== false ? t('admin.userStatus.lockButton') : t('admin.userStatus.unlockButton')}
                   </button>
                   
                   {user.email !== 'admin123@gmail.com' && (
                     <button
-                      onClick={() => setConfirmModal({ open: true, type: 'deleteUser', payload: { userId: user.id }, message: 'Bạn có chắc chắn muốn xóa người dùng này?' })}
+                      onClick={() => setConfirmModal({ open: true, type: 'deleteUser', payload: { userId: user.id }, message: t('admin.confirmations.deleteUser') })}
                       className="px-3 py-1 bg-red-100 text-red-600 rounded text-xs hover:bg-red-200"
                     >{t("action.clear")}
                     </button>
@@ -779,7 +771,6 @@ const AdminDashboard: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => {
-                  console.log('Clicking tab:', tab.id);
                   setActiveTab(tab.id);
                 }}
                 className={`py-4 px-3 border-b-2 font-medium text-sm transition-colors duration-200 ${

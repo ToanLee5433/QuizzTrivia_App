@@ -284,11 +284,8 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
   };
 
   const handleSendChatMessage = (message: string) => {
-    console.log('Attempting to send chat message:', message, 'to room:', state.roomId);
     if (multiplayerService && state.roomId) {
-      multiplayerService.sendChatMessage(state.roomId, message).then(() => {
-        console.log('Chat message sent successfully');
-      }).catch((error) => {
+      multiplayerService.sendChatMessage(state.roomId, message).catch((error) => {
         console.error('Failed to send chat message:', error);
       });
     } else {

@@ -15,6 +15,8 @@ import { Question } from '../types';
 import { Question as GlobalQuestion } from '../../../types';
 
 import { useTranslation } from 'react-i18next';
+import SafeHTML from '../../../../../shared/components/ui/SafeHTML';
+
 // Helper function to convert GlobalQuestion to local Question
 const convertToLocalQuestion = (globalQuestion: GlobalQuestion): Question => {
   return {
@@ -390,7 +392,7 @@ export const FirebaseAIQuestionGenerator: React.FC<FirebaseAIQuestionGeneratorPr
                     {question.explanation && (
                       <div className="mt-3 p-2 bg-blue-50 rounded border border-blue-200">
                         <span className="text-sm font-medium text-blue-800">Giải thích: </span>
-                        <span className="text-sm text-blue-700">{question.explanation}</span>
+                        <SafeHTML content={question.explanation} className="text-sm text-blue-700" />
                       </div>
                     )}
                   </div>

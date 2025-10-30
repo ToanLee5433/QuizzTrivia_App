@@ -24,6 +24,7 @@ const QuizPreviewPage = React.lazy(() => import('./features/quiz/pages/QuizPrevi
 const QuizReviewsPage = React.lazy(() => import('./features/quiz/pages/QuizReviewsPage'));
 const RealQuizListPage = React.lazy(() => import('./features/quiz/pages/RealQuizListPage'));
 const QuizResultViewer = React.lazy(() => import('./features/quiz/pages/QuizResultViewer'));
+const LearningMaterialsPage = React.lazy(() => import('./features/quiz/pages/LearningMaterialsPage'));
 const Profile = React.lazy(() => import('./features/auth/pages/Profile'));
 const FavoritesPage = React.lazy(() => import('./features/quiz/pages/FavoritesPage'));
 const LeaderboardPage = React.lazy(() => import('./features/quiz/pages/LeaderboardPage'));
@@ -334,6 +335,14 @@ const AppContent: React.FC = () => {
           <ProtectedRoute>
             <Suspense fallback={<LoadingFallback />}>
               <QuizPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/quiz/:id/learn" element={
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingFallback />}>
+              <LearningMaterialsPage />
             </Suspense>
           </ProtectedRoute>
         } />

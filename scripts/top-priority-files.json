@@ -1,0 +1,2816 @@
+[
+  {
+    "file": "AdminDashboard.tsx",
+    "fullPath": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+    "count": 28,
+    "findings": [
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 107,
+        "text": "🔍 Quiz status breakdown:",
+        "fullLine": "console.log('🔍 Quiz status breakdown:',",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 153,
+        "text": "Error loading users:",
+        "fullLine": "console.error('Error loading users:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 169,
+        "text": "Error loading quizzes:",
+        "fullLine": "console.error('Error loading quizzes:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 185,
+        "text": "Error loading categories:",
+        "fullLine": "console.error('Error loading categories:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 211,
+        "text": "Error loading data:",
+        "fullLine": "console.error('Error loading data:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 224,
+        "text": "Error updating user role:",
+        "fullLine": "console.error('Error updating user role:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 236,
+        "text": "Error updating user status:",
+        "fullLine": "console.error('Error updating user status:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 250,
+        "text": "Error deleting user:",
+        "fullLine": "console.error('Error deleting user:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 264,
+        "text": "Error approving quiz:",
+        "fullLine": "console.error('Error approving quiz:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 278,
+        "text": "Error rejecting quiz:",
+        "fullLine": "console.error('Error rejecting quiz:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 292,
+        "text": "Error reopening quiz:",
+        "fullLine": "console.error('Error reopening quiz:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 306,
+        "text": "Error deleting quiz:",
+        "fullLine": "console.error('Error deleting quiz:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 331,
+        "text": "Error adding category:",
+        "fullLine": "console.error('Error adding category:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 345,
+        "text": "Error deleting category:",
+        "fullLine": "console.error('Error deleting category:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 408,
+        "text": "Chưa có tên",
+        "fullLine": "{user.displayName || 'Chưa có tên'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 428,
+        "text": "Hoạt động",
+        "fullLine": "{user.isActive !== false ? 'Hoạt động' : 'Bị khóa'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 428,
+        "text": "Bị khóa",
+        "fullLine": "{user.isActive !== false ? 'Hoạt động' : 'Bị khóa'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 433,
+        "text": "Bạn có chắc chắn muốn khóa tài khoản này?",
+        "fullLine": "onClick={() => setConfirmModal({ open: true, type: 'toggleUserStatus', payload: { userId: user.id, currentStatus: user.isActive !== false }, message: user.isActive !== false ? 'Bạn có chắc chắn muốn khóa tài khoản này?' : 'Bạn có chắc chắn muốn mở khóa tài khoản này?' })}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 433,
+        "text": "Bạn có chắc chắn muốn mở khóa tài khoản này?",
+        "fullLine": "onClick={() => setConfirmModal({ open: true, type: 'toggleUserStatus', payload: { userId: user.id, currentStatus: user.isActive !== false }, message: user.isActive !== false ? 'Bạn có chắc chắn muốn khóa tài khoản này?' : 'Bạn có chắc chắn muốn mở khóa tài khoản này?' })}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 436,
+        "text": "Khóa",
+        "fullLine": "{user.isActive !== false ? 'Khóa' : 'Mở khóa'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 436,
+        "text": "Mở khóa",
+        "fullLine": "{user.isActive !== false ? 'Khóa' : 'Mở khóa'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 441,
+        "text": "Bạn có chắc chắn muốn xóa người dùng này?",
+        "fullLine": "onClick={() => setConfirmModal({ open: true, type: 'deleteUser', payload: { userId: user.id }, message: 'Bạn có chắc chắn muốn xóa người dùng này?' })}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 673,
+        "text": "Logout failed",
+        "fullLine": "} catch (err)      console.error(\"Logout failed\", err);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 694,
+        "text": "📊 Tổng quan",
+        "fullLine": "Nhấn vào tab \"📊 Tổng quan\" bên dưới hoặc",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 724,
+        "text": "Xem trang thống kê riêng với biểu đồ",
+        "fullLine": "title=\"Xem trang thống kê riêng với biểu đồ\"",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 735,
+        "text": "Force chuyển về tab Tổng quan",
+        "fullLine": "title=\"Force chuyển về tab Tổng quan\"",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 744,
+        "text": "Cập nhật dữ liệu",
+        "fullLine": "title=\"Cập nhật dữ liệu\"",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\AdminDashboard.tsx",
+        "line": 790,
+        "text": "Chuyển đến tab ${tab.label}",
+        "fullLine": "title={`Chuyển đến tab ${tab.label}`}",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "CreatorManagement.tsx",
+    "fullPath": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+    "count": 27,
+    "findings": [
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 83,
+        "text": "Loading creators...",
+        "fullLine": "console.log('Loading creators...');",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 124,
+        "text": "Người dùng",
+        "fullLine": "displayName: userData.displayName || userData.email || 'Người dùng',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 142,
+        "text": "Error loading data for user ${userDoc.id}:",
+        "fullLine": "console.warn(`Error loading data for user ${userDoc.id}:`, userError);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 146,
+        "text": "Người dùng",
+        "fullLine": "displayName: userData.displayName || userData.email || 'Người dùng',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 174,
+        "text": "Error loading creators:",
+        "fullLine": "console.error('Error loading creators:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 175,
+        "text": "Không thể tải danh sách creator",
+        "fullLine": "toast.error('Không thể tải danh sách creator');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 222,
+        "text": "Error loading stats:",
+        "fullLine": "console.error('Error loading stats:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 248,
+        "text": "Đã cập nhật trạng thái thành công",
+        "fullLine": "toast.success(`Đã cập nhật trạng thái thành công`);",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 250,
+        "text": "Error updating status:",
+        "fullLine": "console.error('Error updating status:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 251,
+        "text": "Có lỗi khi cập nhật trạng thái",
+        "fullLine": "toast.error('Có lỗi khi cập nhật trạng thái');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 256,
+        "text": "Bạn có chắc chắn muốn xóa creator này? Hành động này không thể hoàn tác.",
+        "fullLine": "if (!confirm('Bạn có chắc chắn muốn xóa creator này? Hành động này không thể hoàn tác.')) {",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 263,
+        "text": "Đã xóa creator thành công",
+        "fullLine": "toast.success('Đã xóa creator thành công');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 265,
+        "text": "Error deleting creator:",
+        "fullLine": "console.error('Error deleting creator:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 266,
+        "text": "Có lỗi khi xóa creator",
+        "fullLine": "toast.error('Có lỗi khi xóa creator');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 299,
+        "text": "Hoạt động",
+        "fullLine": "active: 'Hoạt động',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 300,
+        "text": "Tạm khóa",
+        "fullLine": "suspended: 'Tạm khóa',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 301,
+        "text": "Bị cấm",
+        "fullLine": "banned: 'Bị cấm'",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 337,
+        "text": "Tổng Creator",
+        "fullLine": "'Tổng Creator',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 343,
+        "text": "Đang hoạt động",
+        "fullLine": "'Đang hoạt động',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 349,
+        "text": "Tạm khóa",
+        "fullLine": "'Tạm khóa',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 355,
+        "text": "Bị cấm",
+        "fullLine": "'Bị cấm',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 370,
+        "text": "Tìm kiếm creator...",
+        "fullLine": "placeholder=\"Tìm kiếm creator...\"",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 479,
+        "text": "Chưa đăng nhập",
+        "fullLine": "'Chưa đăng nhập'",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 591,
+        "text": "Không",
+        "fullLine": "{selectedCreator.permissions.canCreateQuiz ? 'Có' : 'Không'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 601,
+        "text": "Không",
+        "fullLine": "{selectedCreator.permissions.canEditOwnQuiz ? 'Có' : 'Không'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 611,
+        "text": "Không",
+        "fullLine": "{selectedCreator.permissions.canDeleteOwnQuiz ? 'Có' : 'Không'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\admin\\pages\\CreatorManagement.tsx",
+        "line": 621,
+        "text": "Không",
+        "fullLine": "{selectedCreator.permissions.canViewAnalytics ? 'Có' : 'Không'}",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "aiQuestionService.ts",
+    "fullPath": "src\\features\\quiz\\services\\aiQuestionService.ts",
+    "count": 24,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\services\\aiQuestionService.ts",
+        "line": 56,
+        "text": "GPT-4 và GPT-3.5 từ OpenAI - Chất lượng cao, đa dạng câu hỏi",
+        "fullLine": "description: 'GPT-4 và GPT-3.5 từ OpenAI - Chất lượng cao, đa dạng câu hỏi',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiQuestionService.ts",
+        "line": 64,
+        "text": "Claude 3 từ Anthropic - Tư duy logic tốt, an toàn",
+        "fullLine": "description: 'Claude 3 từ Anthropic - Tư duy logic tốt, an toàn',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiQuestionService.ts",
+        "line": 72,
+        "text": "Gemini Pro từ Google - Hiểu ngữ cảnh tốt, miễn phí hạn chế",
+        "fullLine": "description: 'Gemini Pro từ Google - Hiểu ngữ cảnh tốt, miễn phí hạn chế',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiQuestionService.ts",
+        "line": 80,
+        "text": "Chạy local với Llama, Mistral, CodeLlama - Hoàn toàn miễn phí",
+        "fullLine": "description: 'Chạy local với Llama, Mistral, CodeLlama - Hoàn toàn miễn phí',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiQuestionService.ts",
+        "line": 124,
+        "text": "dễ (học sinh trung học cơ sở)",
+        "fullLine": "easy: 'dễ (học sinh trung học cơ sở)',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiQuestionService.ts",
+        "line": 125,
+        "text": "trung bình (học sinh trung học phổ thông)",
+        "fullLine": "medium: 'trung bình (học sinh trung học phổ thông)',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiQuestionService.ts",
+        "line": 126,
+        "text": "khó (sinh viên đại học)",
+        "fullLine": "hard: 'khó (sinh viên đại học)',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiQuestionService.ts",
+        "line": 127,
+        "text": "đa dạng từ dễ đến khó",
+        "fullLine": "mixed: 'đa dạng từ dễ đến khó'",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiQuestionService.ts",
+        "line": 131,
+        "text": "trắc nghiệm nhiều lựa chọn (4 đáp án, 1 đúng)",
+        "fullLine": "multiple: 'trắc nghiệm nhiều lựa chọn (4 đáp án, 1 đúng)',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiQuestionService.ts",
+        "line": 132,
+        "text": "đúng/sai",
+        "fullLine": "boolean: 'đúng/sai',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiQuestionService.ts",
+        "line": 133,
+        "text": "trả lời ngắn",
+        "fullLine": "short_answer: 'trả lời ngắn'",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiQuestionService.ts",
+        "line": 137,
+        "text": "tiếng Việt",
+        "fullLine": "const lang = language === 'vi' ? 'tiếng Việt' : 'English';",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiQuestionService.ts",
+        "line": 156,
+        "text": "Nội dung câu hỏi",
+        "fullLine": "\"text\": \"Nội dung câu hỏi\",",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiQuestionService.ts",
+        "line": 159,
+        "text": "Đáp án A",
+        "fullLine": "{\"id\": \"ans1\", \"text\": \"Đáp án A\", \"isCorrect\": true},",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiQuestionService.ts",
+        "line": 160,
+        "text": "Đáp án B",
+        "fullLine": "{\"id\": \"ans2\", \"text\": \"Đáp án B\", \"isCorrect\": false},",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiQuestionService.ts",
+        "line": 161,
+        "text": "Đáp án C",
+        "fullLine": "{\"id\": \"ans3\", \"text\": \"Đáp án C\", \"isCorrect\": false},",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiQuestionService.ts",
+        "line": 162,
+        "text": "Đáp án D",
+        "fullLine": "{\"id\": \"ans4\", \"text\": \"Đáp án D\", \"isCorrect\": false}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiQuestionService.ts",
+        "line": 165,
+        "text": "Giải thích tại sao đáp án này đúng",
+        "fullLine": "\"explanation\": \"Giải thích tại sao đáp án này đúng\"",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiQuestionService.ts",
+        "line": 191,
+        "text": "Error generating questions:",
+        "fullLine": "console.error('Error generating questions:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiQuestionService.ts",
+        "line": 205,
+        "text": "Nội dung để tạo câu hỏi:\\n\\n${content}",
+        "fullLine": "const userPrompt = `Nội dung để tạo câu hỏi:\\n\\n${content}`;",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiQuestionService.ts",
+        "line": 243,
+        "text": "${customPrompt || this.generateSystemPrompt(config)}\\n\\nNội dung: ${content}",
+        "fullLine": "const prompt = `${customPrompt || this.generateSystemPrompt(config)}\\n\\nNội dung: ${content}`;",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiQuestionService.ts",
+        "line": 292,
+        "text": "Nội dung để tạo câu hỏi:\\n\\n${content}",
+        "fullLine": "{ role: 'user', content: `Nội dung để tạo câu hỏi:\\n\\n${content}` }",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiQuestionService.ts",
+        "line": 312,
+        "text": "${customPrompt || this.generateSystemPrompt(config)}\\n\\nNội dung: ${content}",
+        "fullLine": "const prompt = `${customPrompt || this.generateSystemPrompt(config)}\\n\\nNội dung: ${content}`;",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiQuestionService.ts",
+        "line": 342,
+        "text": "Ollama error: ${error instanceof Error ? error.message : ",
+        "fullLine": "throw new Error(`Ollama error: ${error instanceof Error ? error.message : 'Unknown error'}. Make sure Ollama is running on localhost:11434`);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "base.ts",
+    "fullPath": "src\\features\\quiz\\api\\base.ts",
+    "count": 24,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\api\\base.ts",
+        "line": 72,
+        "text": "Tạo quiz thành công!",
+        "fullLine": "toast.success('Tạo quiz thành công!');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\api\\base.ts",
+        "line": 75,
+        "text": "Error creating quiz:",
+        "fullLine": "console.error('Error creating quiz:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\api\\base.ts",
+        "line": 76,
+        "text": "Không thể tạo quiz",
+        "fullLine": "toast.error('Không thể tạo quiz');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\api\\base.ts",
+        "line": 77,
+        "text": "Không thể tạo quiz",
+        "fullLine": "throw new Error('Không thể tạo quiz');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\api\\base.ts",
+        "line": 91,
+        "text": "Cập nhật quiz thành công!",
+        "fullLine": "toast.success('Cập nhật quiz thành công!');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\api\\base.ts",
+        "line": 93,
+        "text": "Error updating quiz:",
+        "fullLine": "console.error('Error updating quiz:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\api\\base.ts",
+        "line": 94,
+        "text": "Không thể cập nhật quiz",
+        "fullLine": "toast.error('Không thể cập nhật quiz');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\api\\base.ts",
+        "line": 95,
+        "text": "Không thể cập nhật quiz",
+        "fullLine": "throw new Error('Không thể cập nhật quiz');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\api\\base.ts",
+        "line": 105,
+        "text": "Xóa quiz thành công!",
+        "fullLine": "toast.success('Xóa quiz thành công!');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\api\\base.ts",
+        "line": 107,
+        "text": "Error deleting quiz:",
+        "fullLine": "console.error('Error deleting quiz:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\api\\base.ts",
+        "line": 108,
+        "text": "Không thể xóa quiz",
+        "fullLine": "toast.error('Không thể xóa quiz');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\api\\base.ts",
+        "line": 109,
+        "text": "Không thể xóa quiz",
+        "fullLine": "throw new Error('Không thể xóa quiz');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\api\\base.ts",
+        "line": 129,
+        "text": "Error fetching quiz:",
+        "fullLine": "console.error('Error fetching quiz:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\api\\base.ts",
+        "line": 130,
+        "text": "Không thể tải quiz",
+        "fullLine": "throw new Error('Không thể tải quiz');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\api\\base.ts",
+        "line": 154,
+        "text": "Thiếu trường bắt buộc: ${missingFields.join(",
+        "fullLine": "throw new Error(`Thiếu trường bắt buộc: ${missingFields.join(', ')}`);",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\api\\base.ts",
+        "line": 160,
+        "text": "Điểm số phải trong khoảng 0-100",
+        "fullLine": "throw new Error('Điểm số phải trong khoảng 0-100');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\api\\base.ts",
+        "line": 169,
+        "text": "Số câu đúng không thể lớn hơn tổng số câu",
+        "fullLine": "throw new Error('Số câu đúng không thể lớn hơn tổng số câu');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\api\\base.ts",
+        "line": 192,
+        "text": "Nộp bài thành công!",
+        "fullLine": "toast.success('Nộp bài thành công!');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\api\\base.ts",
+        "line": 197,
+        "text": "Không thể lưu kết quả quiz",
+        "fullLine": "toast.error('Không thể lưu kết quả quiz');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\api\\base.ts",
+        "line": 198,
+        "text": "Không thể lưu kết quả quiz",
+        "fullLine": "throw new Error('Không thể lưu kết quả quiz');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\api\\base.ts",
+        "line": 243,
+        "text": "❌ Error fetching quiz results:",
+        "fullLine": "console.error('❌ Error fetching quiz results:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\api\\base.ts",
+        "line": 244,
+        "text": "❌ Error details:",
+        "fullLine": "console.error('❌ Error details:', {",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\api\\base.ts",
+        "line": 249,
+        "text": "Không thể tải kết quả quiz",
+        "fullLine": "throw new Error('Không thể tải kết quả quiz');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\api\\base.ts",
+        "line": 286,
+        "text": "❌ [getQuizResultById] Error fetching document:",
+        "fullLine": "console.error('❌ [getQuizResultById] Error fetching document:', error);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "aiService.ts",
+    "fullPath": "src\\features\\quiz\\services\\aiService.ts",
+    "count": 22,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\services\\aiService.ts",
+        "line": 48,
+        "text": "Nội dung để tạo câu hỏi:\\n\\n${content}",
+        "fullLine": "{ role: 'user', content: `Nội dung để tạo câu hỏi:\\n\\n${content}` }",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiService.ts",
+        "line": 56,
+        "text": "OpenAI API Error: ${response.status} ${response.statusText}",
+        "fullLine": "throw new Error(`OpenAI API Error: ${response.status} ${response.statusText}`);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiService.ts",
+        "line": 64,
+        "text": "OpenAI Service Error:",
+        "fullLine": "console.error('OpenAI Service Error:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiService.ts",
+        "line": 70,
+        "text": "tiếng Việt",
+        "fullLine": "const lang = language === 'vi' ? 'tiếng Việt' : 'English';",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiService.ts",
+        "line": 87,
+        "text": "Câu hỏi ở đây",
+        "fullLine": "\"text\": \"Câu hỏi ở đây\",",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiService.ts",
+        "line": 89,
+        "text": "Đáp án A",
+        "fullLine": "{\"text\": \"Đáp án A\", \"isCorrect\": true},",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiService.ts",
+        "line": 90,
+        "text": "Đáp án B",
+        "fullLine": "{\"text\": \"Đáp án B\", \"isCorrect\": false},",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiService.ts",
+        "line": 91,
+        "text": "Đáp án C",
+        "fullLine": "{\"text\": \"Đáp án C\", \"isCorrect\": false},",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiService.ts",
+        "line": 92,
+        "text": "Đáp án D",
+        "fullLine": "{\"text\": \"Đáp án D\", \"isCorrect\": false}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiService.ts",
+        "line": 94,
+        "text": "Giải thích tại sao đáp án A đúng",
+        "fullLine": "\"explanation\": \"Giải thích tại sao đáp án A đúng\",",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiService.ts",
+        "line": 127,
+        "text": "Failed to parse AI response:",
+        "fullLine": "console.error('Failed to parse AI response:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiService.ts",
+        "line": 131,
+        "text": "Không thể phân tích câu trả lời từ AI. Vui lòng thử lại.",
+        "fullLine": "throw new Error('Không thể phân tích câu trả lời từ AI. Vui lòng thử lại.');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiService.ts",
+        "line": 161,
+        "text": "Nội dung để tạo câu hỏi:\\n\\n${content}",
+        "fullLine": "{ role: 'user', content: `Nội dung để tạo câu hỏi:\\n\\n${content}` }",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiService.ts",
+        "line": 167,
+        "text": "Claude API Error: ${response.status} ${response.statusText}",
+        "fullLine": "throw new Error(`Claude API Error: ${response.status} ${response.statusText}`);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiService.ts",
+        "line": 175,
+        "text": "Claude Service Error:",
+        "fullLine": "console.error('Claude Service Error:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiService.ts",
+        "line": 207,
+        "text": "${systemPrompt}\\n\\nNội dung để tạo câu hỏi:\\n\\n${content}",
+        "fullLine": "text: `${systemPrompt}\\n\\nNội dung để tạo câu hỏi:\\n\\n${content}`",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiService.ts",
+        "line": 218,
+        "text": "Gemini API Error: ${response.status} ${response.statusText}",
+        "fullLine": "throw new Error(`Gemini API Error: ${response.status} ${response.statusText}`);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiService.ts",
+        "line": 226,
+        "text": "Gemini Service Error:",
+        "fullLine": "console.error('Gemini Service Error:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiService.ts",
+        "line": 257,
+        "text": "${systemPrompt}\\n\\nNội dung để tạo câu hỏi:\\n\\n${content}",
+        "fullLine": "prompt: `${systemPrompt}\\n\\nNội dung để tạo câu hỏi:\\n\\n${content}`,",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiService.ts",
+        "line": 267,
+        "text": "Local AI Error: ${response.status} ${response.statusText}",
+        "fullLine": "throw new Error(`Local AI Error: ${response.status} ${response.statusText}`);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiService.ts",
+        "line": 275,
+        "text": "Local AI Service Error:",
+        "fullLine": "console.error('Local AI Service Error:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\aiService.ts",
+        "line": 311,
+        "text": "AI Service Error:",
+        "fullLine": "console.error('AI Service Error:', error);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "QuizReviewsPage.tsx",
+    "fullPath": "src\\features\\quiz\\pages\\QuizReviewsPage.tsx",
+    "count": 21,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\pages\\QuizReviewsPage.tsx",
+        "line": 44,
+        "text": "📝 Loading quiz details...",
+        "fullLine": "console.log('📝 Loading quiz details...');",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizReviewsPage.tsx",
+        "line": 51,
+        "text": "❌ Quiz not found in database for ID:",
+        "fullLine": "console.error('❌ Quiz not found in database for ID:', quizId);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizReviewsPage.tsx",
+        "line": 57,
+        "text": "Quiz Sample ${quizId}",
+        "fullLine": "title: `Quiz Sample ${quizId}`,",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizReviewsPage.tsx",
+        "line": 58,
+        "text": "Đây là quiz mẫu để test hệ thống đánh giá",
+        "fullLine": "description: 'Đây là quiz mẫu để test hệ thống đánh giá',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizReviewsPage.tsx",
+        "line": 64,
+        "text": "Câu hỏi mẫu?",
+        "fullLine": "text: 'Câu hỏi mẫu?',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizReviewsPage.tsx",
+        "line": 67,
+        "text": "Đáp án A",
+        "fullLine": "{ id: '1', text: 'Đáp án A', isCorrect: true },",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizReviewsPage.tsx",
+        "line": 68,
+        "text": "Đáp án B",
+        "fullLine": "{ id: '2', text: 'Đáp án B', isCorrect: false },",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizReviewsPage.tsx",
+        "line": 69,
+        "text": "Đáp án C",
+        "fullLine": "{ id: '3', text: 'Đáp án C', isCorrect: false },",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizReviewsPage.tsx",
+        "line": 70,
+        "text": "Đáp án D",
+        "fullLine": "{ id: '4', text: 'Đáp án D', isCorrect: false }",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizReviewsPage.tsx",
+        "line": 72,
+        "text": "Giải thích mẫu",
+        "fullLine": "explanation: 'Giải thích mẫu',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizReviewsPage.tsx",
+        "line": 86,
+        "text": "✅ Quiz data loaded successfully:",
+        "fullLine": "console.log('✅ Quiz data loaded successfully:', quizData.title);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizReviewsPage.tsx",
+        "line": 90,
+        "text": "❌ Failed to load quiz:",
+        "fullLine": "console.error('❌ Failed to load quiz:', quizError);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizReviewsPage.tsx",
+        "line": 91,
+        "text": "Không tìm thấy quiz này",
+        "fullLine": "toast.error('Không tìm thấy quiz này');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizReviewsPage.tsx",
+        "line": 97,
+        "text": "📊 Loading reviews...",
+        "fullLine": "console.log('📊 Loading reviews...');",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizReviewsPage.tsx",
+        "line": 132,
+        "text": "⚠️ Error loading reviews:",
+        "fullLine": "console.error('⚠️ Error loading reviews:', reviewError);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizReviewsPage.tsx",
+        "line": 141,
+        "text": "Không thể tải đánh giá",
+        "fullLine": "toast.error('Không thể tải đánh giá');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizReviewsPage.tsx",
+        "line": 147,
+        "text": "Có lỗi khi tải trang đánh giá",
+        "fullLine": "toast.error('Có lỗi khi tải trang đánh giá');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizReviewsPage.tsx",
+        "line": 151,
+        "text": "✅ Loading state set to false",
+        "fullLine": "console.log('✅ Loading state set to false');",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizReviewsPage.tsx",
+        "line": 273,
+        "text": "Làm mới đánh giá",
+        "fullLine": "title=\"Làm mới đánh giá\"",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizReviewsPage.tsx",
+        "line": 327,
+        "text": "Chưa có đánh giá",
+        "fullLine": "{stats?.totalReviews === 0 ? 'Chưa có đánh giá' : 'người đã đánh giá'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\QuizReviewsPage.tsx",
+        "line": 327,
+        "text": "người đã đánh giá",
+        "fullLine": "{stats?.totalReviews === 0 ? 'Chưa có đánh giá' : 'người đã đánh giá'}",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "firestoreMultiplayerService.ts",
+    "fullPath": "src\\features\\multiplayer\\services\\firestoreMultiplayerService.ts",
+    "count": 20,
+    "findings": [
+      {
+        "file": "src\\features\\multiplayer\\services\\firestoreMultiplayerService.ts",
+        "line": 253,
+        "text": "Error creating room:",
+        "fullLine": "console.error('Error creating room:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\multiplayer\\services\\firestoreMultiplayerService.ts",
+        "line": 336,
+        "text": "Error joining room:",
+        "fullLine": "console.error('Error joining room:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\multiplayer\\services\\firestoreMultiplayerService.ts",
+        "line": 361,
+        "text": "Error leaving room:",
+        "fullLine": "console.error('Error leaving room:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\multiplayer\\services\\firestoreMultiplayerService.ts",
+        "line": 385,
+        "text": "Error starting game:",
+        "fullLine": "console.error('Error starting game:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\multiplayer\\services\\firestoreMultiplayerService.ts",
+        "line": 392,
+        "text": "🔍 Loading quiz data:",
+        "fullLine": "console.log('🔍 Loading quiz data:', {",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\multiplayer\\services\\firestoreMultiplayerService.ts",
+        "line": 419,
+        "text": "📡 Quiz data received:",
+        "fullLine": "console.log('📡 Quiz data received:', {",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\multiplayer\\services\\firestoreMultiplayerService.ts",
+        "line": 430,
+        "text": "⚠️ Quiz found but no valid questions array",
+        "fullLine": "console.warn('⚠️ Quiz found but no valid questions array');",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\multiplayer\\services\\firestoreMultiplayerService.ts",
+        "line": 433,
+        "text": "⚠️ Quiz document not found in Firestore",
+        "fullLine": "console.warn('⚠️ Quiz document not found in Firestore');",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\multiplayer\\services\\firestoreMultiplayerService.ts",
+        "line": 436,
+        "text": "❌ Failed to load quiz by quizId:",
+        "fullLine": "console.error('❌ Failed to load quiz by quizId:', e);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\multiplayer\\services\\firestoreMultiplayerService.ts",
+        "line": 497,
+        "text": "Error starting game:",
+        "fullLine": "console.error('Error starting game:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\multiplayer\\services\\firestoreMultiplayerService.ts",
+        "line": 559,
+        "text": "Error submitting answer:",
+        "fullLine": "console.error('Error submitting answer:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\multiplayer\\services\\firestoreMultiplayerService.ts",
+        "line": 616,
+        "text": "Error advancing question:",
+        "fullLine": "console.error('Error advancing question:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\multiplayer\\services\\firestoreMultiplayerService.ts",
+        "line": 621,
+        "text": "Error checking players answers:",
+        "fullLine": "console.error('Error checking players answers:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\multiplayer\\services\\firestoreMultiplayerService.ts",
+        "line": 641,
+        "text": "Error sending chat message:",
+        "fullLine": "console.error('Error sending chat message:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\multiplayer\\services\\firestoreMultiplayerService.ts",
+        "line": 658,
+        "text": "Error sending system message:",
+        "fullLine": "console.error('Error sending system message:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\multiplayer\\services\\firestoreMultiplayerService.ts",
+        "line": 668,
+        "text": "👤 Player status updated:",
+        "fullLine": "console.log('👤 Player status updated:', isReady);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\multiplayer\\services\\firestoreMultiplayerService.ts",
+        "line": 671,
+        "text": "Error updating player status:",
+        "fullLine": "console.error('Error updating player status:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\multiplayer\\services\\firestoreMultiplayerService.ts",
+        "line": 681,
+        "text": "👢 Player kicked:",
+        "fullLine": "console.log('👢 Player kicked:', playerId);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\multiplayer\\services\\firestoreMultiplayerService.ts",
+        "line": 684,
+        "text": "Error kicking player:",
+        "fullLine": "console.error('Error kicking player:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\multiplayer\\services\\firestoreMultiplayerService.ts",
+        "line": 700,
+        "text": "Error updating room settings:",
+        "fullLine": "console.error('Error updating room settings:', error);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "services.ts",
+    "fullPath": "src\\features\\auth\\services.ts",
+    "count": 20,
+    "findings": [
+      {
+        "file": "src\\features\\auth\\services.ts",
+        "line": 39,
+        "text": "🛡️ Admin account detected, setting role to admin",
+        "fullLine": "console.log('🛡️ Admin account detected, setting role to admin');",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\auth\\services.ts",
+        "line": 46,
+        "text": "System Admin",
+        "fullLine": "displayName: userCredential.user.displayName || 'System Admin',",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\auth\\services.ts",
+        "line": 53,
+        "text": "💾 Admin role saved",
+        "fullLine": "console.log('💾 Admin role saved');",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\auth\\services.ts",
+        "line": 76,
+        "text": "❌ Login error:",
+        "fullLine": "console.error('❌ Login error:', authError);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\auth\\services.ts",
+        "line": 175,
+        "text": "Người dùng chưa đăng nhập",
+        "fullLine": "throw new Error('Người dùng chưa đăng nhập');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\services.ts",
+        "line": 194,
+        "text": "Người dùng chưa đăng nhập",
+        "fullLine": "throw new Error('Người dùng chưa đăng nhập');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\services.ts",
+        "line": 207,
+        "text": "Không thể cập nhật profile",
+        "fullLine": "throw new Error('Không thể cập nhật profile');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\services.ts",
+        "line": 226,
+        "text": "Error fetching user data:",
+        "fullLine": "console.error('Error fetching user data:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\auth\\services.ts",
+        "line": 237,
+        "text": "Không tìm thấy tài khoản với email này",
+        "fullLine": "return 'Không tìm thấy tài khoản với email này';",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\services.ts",
+        "line": 239,
+        "text": "Mật khẩu không chính xác",
+        "fullLine": "return 'Mật khẩu không chính xác';",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\services.ts",
+        "line": 241,
+        "text": "Email này đã được sử dụng",
+        "fullLine": "return 'Email này đã được sử dụng';",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\services.ts",
+        "line": 243,
+        "text": "Mật khẩu quá yếu",
+        "fullLine": "return 'Mật khẩu quá yếu';",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\services.ts",
+        "line": 245,
+        "text": "Email không hợp lệ",
+        "fullLine": "return 'Email không hợp lệ';",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\services.ts",
+        "line": 247,
+        "text": "Tài khoản đã bị vô hiệu hóa",
+        "fullLine": "return 'Tài khoản đã bị vô hiệu hóa';",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\services.ts",
+        "line": 249,
+        "text": "Quá nhiều yêu cầu. Vui lòng thử lại sau",
+        "fullLine": "return 'Quá nhiều yêu cầu. Vui lòng thử lại sau';",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\services.ts",
+        "line": 251,
+        "text": "Lỗi kết nối mạng",
+        "fullLine": "return 'Lỗi kết nối mạng';",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\services.ts",
+        "line": 253,
+        "text": "Đã xảy ra lỗi không xác định",
+        "fullLine": "return 'Đã xảy ra lỗi không xác định';",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\services.ts",
+        "line": 291,
+        "text": "🔄 Quiz data:",
+        "fullLine": "console.log('🔄 Quiz data:', quizData);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\auth\\services.ts",
+        "line": 346,
+        "text": "✅ User stats updated successfully in Firebase (profile + leaderboard)",
+        "fullLine": "console.log('✅ User stats updated successfully in Firebase (profile + leaderboard)');",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\auth\\services.ts",
+        "line": 348,
+        "text": "❌ Error updating user stats:",
+        "fullLine": "console.error('❌ Error updating user stats:', error);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "firebaseAIService.ts",
+    "fullPath": "src\\features\\quiz\\services\\firebaseAIService.ts",
+    "count": 19,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\services\\firebaseAIService.ts",
+        "line": 44,
+        "text": "Vui lòng đăng nhập để sử dụng tính năng AI",
+        "fullLine": "throw new Error('Vui lòng đăng nhập để sử dụng tính năng AI');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\firebaseAIService.ts",
+        "line": 72,
+        "text": "Firebase AI Service Error:",
+        "fullLine": "console.error('Firebase AI Service Error:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\firebaseAIService.ts",
+        "line": 73,
+        "text": "Không thể tạo câu hỏi: ${error instanceof Error ? error.message : ",
+        "fullLine": "throw new Error(`Không thể tạo câu hỏi: ${error instanceof Error ? error.message : 'Unknown error'}`);",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\firebaseAIService.ts",
+        "line": 104,
+        "text": "Không thể xác thực người dùng",
+        "fullLine": "throw new Error('Không thể xác thực người dùng');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\firebaseAIService.ts",
+        "line": 116,
+        "text": "${systemPrompt}\\n\\nNội dung để tạo câu hỏi:\\n\\n${content}",
+        "fullLine": "text: `${systemPrompt}\\n\\nNội dung để tạo câu hỏi:\\n\\n${content}`",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\firebaseAIService.ts",
+        "line": 129,
+        "text": "Vertex AI API Error: ${response.status} ${response.statusText}",
+        "fullLine": "throw new Error(`Vertex AI API Error: ${response.status} ${response.statusText}`);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\firebaseAIService.ts",
+        "line": 136,
+        "text": "Không nhận được phản hồi từ AI",
+        "fullLine": "throw new Error('Không nhận được phản hồi từ AI');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\firebaseAIService.ts",
+        "line": 141,
+        "text": "Direct API Error:",
+        "fullLine": "console.error('Direct API Error:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\firebaseAIService.ts",
+        "line": 150,
+        "text": "tiếng Việt",
+        "fullLine": "const lang = language === 'vi' ? 'tiếng Việt' : 'English';",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\firebaseAIService.ts",
+        "line": 167,
+        "text": "Câu hỏi ở đây",
+        "fullLine": "\"text\": \"Câu hỏi ở đây\",",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\firebaseAIService.ts",
+        "line": 169,
+        "text": "Đáp án A",
+        "fullLine": "{\"text\": \"Đáp án A\", \"isCorrect\": true},",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\firebaseAIService.ts",
+        "line": 170,
+        "text": "Đáp án B",
+        "fullLine": "{\"text\": \"Đáp án B\", \"isCorrect\": false},",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\firebaseAIService.ts",
+        "line": 171,
+        "text": "Đáp án C",
+        "fullLine": "{\"text\": \"Đáp án C\", \"isCorrect\": false},",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\firebaseAIService.ts",
+        "line": 172,
+        "text": "Đáp án D",
+        "fullLine": "{\"text\": \"Đáp án D\", \"isCorrect\": false}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\firebaseAIService.ts",
+        "line": 174,
+        "text": "Giải thích tại sao đáp án A đúng",
+        "fullLine": "\"explanation\": \"Giải thích tại sao đáp án A đúng\",",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\firebaseAIService.ts",
+        "line": 215,
+        "text": "Error parsing questions from response:",
+        "fullLine": "console.error('Error parsing questions from response:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\firebaseAIService.ts",
+        "line": 216,
+        "text": "Không thể phân tích câu hỏi từ AI",
+        "fullLine": "throw new Error('Không thể phân tích câu hỏi từ AI');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\firebaseAIService.ts",
+        "line": 234,
+        "text": "Error parsing questions from text:",
+        "fullLine": "console.error('Error parsing questions from text:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\firebaseAIService.ts",
+        "line": 235,
+        "text": "Không thể phân tích câu hỏi từ phản hồi AI",
+        "fullLine": "throw new Error('Không thể phân tích câu hỏi từ phản hồi AI');",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "QuizBulkImport.tsx",
+    "fullPath": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizBulkImport.tsx",
+    "count": 19,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizBulkImport.tsx",
+        "line": 26,
+        "text": "Vui lòng chọn file ${fileType.toUpperCase()} hợp lệ",
+        "fullLine": "toast.error(`Vui lòng chọn file ${fileType.toUpperCase()} hợp lệ`);",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizBulkImport.tsx",
+        "line": 35,
+        "text": "Không tìm thấy câu hỏi hợp lệ trong file",
+        "fullLine": "toast.error('Không tìm thấy câu hỏi hợp lệ trong file');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizBulkImport.tsx",
+        "line": 41,
+        "text": "Đã import thành công ${questions.length} câu hỏi!",
+        "fullLine": "toast.success(`Đã import thành công ${questions.length} câu hỏi!`);",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizBulkImport.tsx",
+        "line": 45,
+        "text": "Error parsing file:",
+        "fullLine": "console.error('Error parsing file:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizBulkImport.tsx",
+        "line": 46,
+        "text": "Có lỗi xảy ra khi đọc file. Vui lòng kiểm tra định dạng file.",
+        "fullLine": "toast.error('Có lỗi xảy ra khi đọc file. Vui lòng kiểm tra định dạng file.');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizBulkImport.tsx",
+        "line": 135,
+        "text": "Câu hỏi",
+        "fullLine": "const headers = ['Câu hỏi', 'Đáp án A', 'Đáp án B', 'Đáp án C', 'Đáp án D', 'Đáp án đúng (A/B/C/D)', 'Giải thích (tùy chọn)', 'Điểm (mặc định 10)'];",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizBulkImport.tsx",
+        "line": 135,
+        "text": "Đáp án A",
+        "fullLine": "const headers = ['Câu hỏi', 'Đáp án A', 'Đáp án B', 'Đáp án C', 'Đáp án D', 'Đáp án đúng (A/B/C/D)', 'Giải thích (tùy chọn)', 'Điểm (mặc định 10)'];",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizBulkImport.tsx",
+        "line": 135,
+        "text": "Đáp án B",
+        "fullLine": "const headers = ['Câu hỏi', 'Đáp án A', 'Đáp án B', 'Đáp án C', 'Đáp án D', 'Đáp án đúng (A/B/C/D)', 'Giải thích (tùy chọn)', 'Điểm (mặc định 10)'];",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizBulkImport.tsx",
+        "line": 135,
+        "text": "Đáp án C",
+        "fullLine": "const headers = ['Câu hỏi', 'Đáp án A', 'Đáp án B', 'Đáp án C', 'Đáp án D', 'Đáp án đúng (A/B/C/D)', 'Giải thích (tùy chọn)', 'Điểm (mặc định 10)'];",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizBulkImport.tsx",
+        "line": 135,
+        "text": "Đáp án D",
+        "fullLine": "const headers = ['Câu hỏi', 'Đáp án A', 'Đáp án B', 'Đáp án C', 'Đáp án D', 'Đáp án đúng (A/B/C/D)', 'Giải thích (tùy chọn)', 'Điểm (mặc định 10)'];",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizBulkImport.tsx",
+        "line": 135,
+        "text": "Đáp án đúng (A/B/C/D)",
+        "fullLine": "const headers = ['Câu hỏi', 'Đáp án A', 'Đáp án B', 'Đáp án C', 'Đáp án D', 'Đáp án đúng (A/B/C/D)', 'Giải thích (tùy chọn)', 'Điểm (mặc định 10)'];",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizBulkImport.tsx",
+        "line": 135,
+        "text": "Giải thích (tùy chọn)",
+        "fullLine": "const headers = ['Câu hỏi', 'Đáp án A', 'Đáp án B', 'Đáp án C', 'Đáp án D', 'Đáp án đúng (A/B/C/D)', 'Giải thích (tùy chọn)', 'Điểm (mặc định 10)'];",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizBulkImport.tsx",
+        "line": 135,
+        "text": "Điểm (mặc định 10)",
+        "fullLine": "const headers = ['Câu hỏi', 'Đáp án A', 'Đáp án B', 'Đáp án C', 'Đáp án D', 'Đáp án đúng (A/B/C/D)', 'Giải thích (tùy chọn)', 'Điểm (mặc định 10)'];",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizBulkImport.tsx",
+        "line": 137,
+        "text": "JavaScript là ngôn ngữ gì?",
+        "fullLine": "'JavaScript là ngôn ngữ gì?',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizBulkImport.tsx",
+        "line": 138,
+        "text": "Ngôn ngữ lập trình",
+        "fullLine": "'Ngôn ngữ lập trình',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizBulkImport.tsx",
+        "line": 139,
+        "text": "Ngôn ngữ đánh dấu",
+        "fullLine": "'Ngôn ngữ đánh dấu',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizBulkImport.tsx",
+        "line": 140,
+        "text": "Hệ quản trị cơ sở dữ liệu",
+        "fullLine": "'Hệ quản trị cơ sở dữ liệu',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizBulkImport.tsx",
+        "line": 141,
+        "text": "Hệ điều hành",
+        "fullLine": "'Hệ điều hành',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\CreateQuizPage\\components\\QuizBulkImport.tsx",
+        "line": 143,
+        "text": "JavaScript là ngôn ngữ lập trình phổ biến",
+        "fullLine": "'JavaScript là ngôn ngữ lập trình phổ biến',",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "QuizCard.tsx",
+    "fullPath": "src\\features\\quiz\\components\\QuizCard.tsx",
+    "count": 18,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\components\\QuizCard.tsx",
+        "line": 82,
+        "text": "Error fetching review stats:",
+        "fullLine": "console.error('Error fetching review stats:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuizCard.tsx",
+        "line": 229,
+        "text": "Bỏ yêu thích",
+        "fullLine": "title={isFavorite ? 'Bỏ yêu thích' : 'Yêu thích quiz này'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuizCard.tsx",
+        "line": 229,
+        "text": "Yêu thích quiz này",
+        "fullLine": "title={isFavorite ? 'Bỏ yêu thích' : 'Yêu thích quiz này'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuizCard.tsx",
+        "line": 238,
+        "text": "Xem đánh giá",
+        "fullLine": "title=\"Xem đánh giá\"",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuizCard.tsx",
+        "line": 246,
+        "text": "🔄 Chơi lại",
+        "fullLine": "{quiz.isCompleted ? '🔄 Chơi lại' : '🚀 Bắt đầu Quiz'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuizCard.tsx",
+        "line": 246,
+        "text": "🚀 Bắt đầu Quiz",
+        "fullLine": "{quiz.isCompleted ? '🔄 Chơi lại' : '🚀 Bắt đầu Quiz'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuizCard.tsx",
+        "line": 281,
+        "text": "🟢 Dễ",
+        "fullLine": "{quiz.difficulty === 'easy' ? '🟢 Dễ' : quiz.difficulty === 'medium' ? '🟡 Trung bình' : '🔴 Khó'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuizCard.tsx",
+        "line": 281,
+        "text": "🟡 Trung bình",
+        "fullLine": "{quiz.difficulty === 'easy' ? '🟢 Dễ' : quiz.difficulty === 'medium' ? '🟡 Trung bình' : '🔴 Khó'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuizCard.tsx",
+        "line": 281,
+        "text": "🔴 Khó",
+        "fullLine": "{quiz.difficulty === 'easy' ? '🟢 Dễ' : quiz.difficulty === 'medium' ? '🟡 Trung bình' : '🔴 Khó'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuizCard.tsx",
+        "line": 296,
+        "text": "Bỏ yêu thích",
+        "fullLine": "title={isFavorite ? 'Bỏ yêu thích' : 'Yêu thích quiz này'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuizCard.tsx",
+        "line": 296,
+        "text": "Yêu thích quiz này",
+        "fullLine": "title={isFavorite ? 'Bỏ yêu thích' : 'Yêu thích quiz này'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuizCard.tsx",
+        "line": 419,
+        "text": "🔄 Chơi lại",
+        "fullLine": "<span>{quiz.isCompleted ? '🔄 Chơi lại' : '🚀 Bắt đầu Quiz'}</span>",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuizCard.tsx",
+        "line": 419,
+        "text": "🚀 Bắt đầu Quiz",
+        "fullLine": "<span>{quiz.isCompleted ? '🔄 Chơi lại' : '🚀 Bắt đầu Quiz'}</span>",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuizCard.tsx",
+        "line": 426,
+        "text": "Xem đánh giá",
+        "fullLine": "title=\"Xem đánh giá\"",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuizCard.tsx",
+        "line": 440,
+        "text": "Bỏ yêu thích",
+        "fullLine": "title={isFavorite ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuizCard.tsx",
+        "line": 440,
+        "text": "Thêm vào yêu thích",
+        "fullLine": "title={isFavorite ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuizCard.tsx",
+        "line": 443,
+        "text": "Đã thích",
+        "fullLine": "{isFavorite ? 'Đã thích' : 'Yêu thích'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\QuizCard.tsx",
+        "line": 443,
+        "text": "Yêu thích",
+        "fullLine": "{isFavorite ? 'Đã thích' : 'Yêu thích'}",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "ClientSideAIGenerator.tsx",
+    "fullPath": "src\\components\\ClientSideAIGenerator.tsx",
+    "count": 17,
+    "findings": [
+      {
+        "file": "src\\components\\ClientSideAIGenerator.tsx",
+        "line": 40,
+        "text": "✅ Kết nối AI thành công!",
+        "fullLine": "toast.success('✅ Kết nối AI thành công!');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ClientSideAIGenerator.tsx",
+        "line": 43,
+        "text": "❌ Không thể kết nối đến AI: ",
+        "fullLine": "toast.error('❌ Không thể kết nối đến AI: ' + result.message);",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ClientSideAIGenerator.tsx",
+        "line": 47,
+        "text": "❌ Lỗi kết nối AI",
+        "fullLine": "toast.error('❌ Lỗi kết nối AI');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ClientSideAIGenerator.tsx",
+        "line": 63,
+        "text": "File không hợp lệ! Chỉ chấp nhận: ${allowedExtensions.join(",
+        "fullLine": "toast.error(`File không hợp lệ! Chỉ chấp nhận: ${allowedExtensions.join(', ')}`);",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ClientSideAIGenerator.tsx",
+        "line": 71,
+        "text": "File quá lớn! Kích thước tối đa: 10MB",
+        "fullLine": "toast.error('File quá lớn! Kích thước tối đa: 10MB');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ClientSideAIGenerator.tsx",
+        "line": 80,
+        "text": "API key không được cấu hình",
+        "fullLine": "toast.error('API key không được cấu hình');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ClientSideAIGenerator.tsx",
+        "line": 95,
+        "text": "Đã xử lý file ${file.name} thành công!",
+        "fullLine": "toast.success(`Đã xử lý file ${file.name} thành công!`);",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ClientSideAIGenerator.tsx",
+        "line": 97,
+        "text": "Không thể xử lý file này",
+        "fullLine": "toast.error(result.error || 'Không thể xử lý file này');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ClientSideAIGenerator.tsx",
+        "line": 101,
+        "text": "Lỗi khi xử lý file",
+        "fullLine": "toast.error('Lỗi khi xử lý file');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ClientSideAIGenerator.tsx",
+        "line": 115,
+        "text": "Dựa trên nội dung file đã tải lên: ${fileContent}. Tạo câu hỏi về: ${formData.topic}",
+        "fullLine": "? `Dựa trên nội dung file đã tải lên: ${fileContent}. Tạo câu hỏi về: ${formData.topic}`",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ClientSideAIGenerator.tsx",
+        "line": 119,
+        "text": "Vui lòng nhập chủ đề hoặc tải lên file!",
+        "fullLine": "toast.error('Vui lòng nhập chủ đề hoặc tải lên file!');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ClientSideAIGenerator.tsx",
+        "line": 151,
+        "text": "❌ Có lỗi xảy ra khi tạo câu hỏi",
+        "fullLine": "toast.error('❌ Có lỗi xảy ra khi tạo câu hỏi');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ClientSideAIGenerator.tsx",
+        "line": 159,
+        "text": "🟢 Dễ",
+        "fullLine": "case 'easy': return '🟢 Dễ';",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ClientSideAIGenerator.tsx",
+        "line": 160,
+        "text": "🟡 Trung bình",
+        "fullLine": "case 'medium': return '🟡 Trung bình';",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ClientSideAIGenerator.tsx",
+        "line": 161,
+        "text": "🔴 Khó",
+        "fullLine": "case 'hard': return '🔴 Khó';",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ClientSideAIGenerator.tsx",
+        "line": 214,
+        "text": "VD: JavaScript, Lịch sử Việt Nam, Toán học...",
+        "fullLine": "placeholder=\"VD: JavaScript, Lịch sử Việt Nam, Toán học...\"",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ClientSideAIGenerator.tsx",
+        "line": 340,
+        "text": " từ file",
+        "fullLine": "{formData.useFileContent && ' từ file'}",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "AchievementSystem.tsx",
+    "fullPath": "src\\shared\\components\\AchievementSystem.tsx",
+    "count": 16,
+    "findings": [
+      {
+        "file": "src\\shared\\components\\AchievementSystem.tsx",
+        "line": 24,
+        "text": "🎯 Bước đầu tiên",
+        "fullLine": "title: '🎯 Bước đầu tiên',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\shared\\components\\AchievementSystem.tsx",
+        "line": 25,
+        "text": "Hoàn thành quiz đầu tiên",
+        "fullLine": "description: 'Hoàn thành quiz đầu tiên',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\shared\\components\\AchievementSystem.tsx",
+        "line": 32,
+        "text": "📚 Thạc sĩ Quiz",
+        "fullLine": "title: '📚 Thạc sĩ Quiz',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\shared\\components\\AchievementSystem.tsx",
+        "line": 33,
+        "text": "Hoàn thành 10 quiz",
+        "fullLine": "description: 'Hoàn thành 10 quiz',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\shared\\components\\AchievementSystem.tsx",
+        "line": 40,
+        "text": "👑 Huyền thoại Quiz",
+        "fullLine": "title: '👑 Huyền thoại Quiz',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\shared\\components\\AchievementSystem.tsx",
+        "line": 41,
+        "text": "Hoàn thành 50 quiz",
+        "fullLine": "description: 'Hoàn thành 50 quiz',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\shared\\components\\AchievementSystem.tsx",
+        "line": 48,
+        "text": "⭐ Điểm cao",
+        "fullLine": "title: '⭐ Điểm cao',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\shared\\components\\AchievementSystem.tsx",
+        "line": 49,
+        "text": "Đạt điểm trung bình trên 80%",
+        "fullLine": "description: 'Đạt điểm trung bình trên 80%',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\shared\\components\\AchievementSystem.tsx",
+        "line": 56,
+        "text": "💯 Hoàn hảo",
+        "fullLine": "title: '💯 Hoàn hảo',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\shared\\components\\AchievementSystem.tsx",
+        "line": 57,
+        "text": "Đạt 100% trong 1 quiz",
+        "fullLine": "description: 'Đạt 100% trong 1 quiz',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\shared\\components\\AchievementSystem.tsx",
+        "line": 64,
+        "text": "🔥 Chuỗi 5",
+        "fullLine": "title: '🔥 Chuỗi 5',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\shared\\components\\AchievementSystem.tsx",
+        "line": 65,
+        "text": "Hoàn thành 5 quiz liên tiếp",
+        "fullLine": "description: 'Hoàn thành 5 quiz liên tiếp',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\shared\\components\\AchievementSystem.tsx",
+        "line": 72,
+        "text": "⚡ Tốc độ ánh sáng",
+        "fullLine": "title: '⚡ Tốc độ ánh sáng',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\shared\\components\\AchievementSystem.tsx",
+        "line": 73,
+        "text": "Hoàn thành quiz trong thời gian kỷ lục",
+        "fullLine": "description: 'Hoàn thành quiz trong thời gian kỷ lục',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\shared\\components\\AchievementSystem.tsx",
+        "line": 346,
+        "text": "🎉 Tôi vừa mở khóa thành tích ",
+        "fullLine": "navigator.clipboard.writeText(`🎉 Tôi vừa mở khóa thành tích \"${showModal.title}\" trong Quiz App!`);",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\shared\\components\\AchievementSystem.tsx",
+        "line": 346,
+        "text": " trong Quiz App!",
+        "fullLine": "navigator.clipboard.writeText(`🎉 Tôi vừa mở khóa thành tích \"${showModal.title}\" trong Quiz App!`);",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "learningService.ts",
+    "fullPath": "src\\features\\quiz\\services\\learningService.ts",
+    "count": 16,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\services\\learningService.ts",
+        "line": 55,
+        "text": "Error getting learning session:",
+        "fullLine": "console.error('Error getting learning session:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\learningService.ts",
+        "line": 142,
+        "text": "❌ Error updating resource progress:",
+        "fullLine": "console.error('❌ Error updating resource progress:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\learningService.ts",
+        "line": 162,
+        "text": "Cần xem tối thiểu ${Math.ceil(threshold.minWatchSec / 60)} phút",
+        "fullLine": "reason: `Cần xem tối thiểu ${Math.ceil(threshold.minWatchSec / 60)} phút`",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\learningService.ts",
+        "line": 168,
+        "text": "Cần xem tối thiểu ${threshold.minWatchPercent}% video",
+        "fullLine": "reason: `Cần xem tối thiểu ${threshold.minWatchPercent}% video`",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\learningService.ts",
+        "line": 181,
+        "text": "Cần đọc đến trang cuối",
+        "fullLine": "reason: 'Cần đọc đến trang cuối'",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\learningService.ts",
+        "line": 191,
+        "text": "Cần xem tối thiểu ${threshold.minPages} trang",
+        "fullLine": "reason: `Cần xem tối thiểu ${threshold.minPages} trang`",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\learningService.ts",
+        "line": 204,
+        "text": "Cần dành ít nhất ${minTimePerPage}s cho mỗi trang",
+        "fullLine": "reason: `Cần dành ít nhất ${minTimePerPage}s cho mỗi trang`",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\learningService.ts",
+        "line": 218,
+        "text": "Cần xem tối thiểu ${threshold.minViewedCount} ảnh/slide",
+        "fullLine": "reason: `Cần xem tối thiểu ${threshold.minViewedCount} ảnh/slide`",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\learningService.ts",
+        "line": 231,
+        "text": "Cần xem mỗi ảnh ít nhất ${threshold.minViewTime}s",
+        "fullLine": "reason: `Cần xem mỗi ảnh ít nhất ${threshold.minViewTime}s`",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\learningService.ts",
+        "line": 242,
+        "text": "Cần xác nhận đã đọc",
+        "fullLine": "reason: 'Cần xác nhận đã đọc'",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\learningService.ts",
+        "line": 251,
+        "text": "Cần đạt tối thiểu ${passingScore} điểm mini-check",
+        "fullLine": "reason: `Cần đạt tối thiểu ${passingScore} điểm mini-check`",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\learningService.ts",
+        "line": 289,
+        "text": "Bạn chưa xem tài liệu bắt buộc",
+        "fullLine": "? ['Bạn chưa xem tài liệu bắt buộc']",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\learningService.ts",
+        "line": 303,
+        "text": "Chưa xem: ${resource.title}",
+        "fullLine": "warnings.push(`Chưa xem: ${resource.title}`);",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\learningService.ts",
+        "line": 349,
+        "text": "Error checking gating status:",
+        "fullLine": "console.error('Error checking gating status:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\learningService.ts",
+        "line": 355,
+        "text": "Có lỗi kiểm tra trạng thái",
+        "fullLine": "warnings: ['Có lỗi kiểm tra trạng thái']",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\learningService.ts",
+        "line": 371,
+        "text": "Error logging learning event:",
+        "fullLine": "console.error('Error logging learning event:', error);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "ReviewForm.tsx",
+    "fullPath": "src\\features\\quiz\\components\\ReviewForm.tsx",
+    "count": 16,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\components\\ReviewForm.tsx",
+        "line": 37,
+        "text": "Bạn cần đăng nhập để đánh giá",
+        "fullLine": "toast.error('Bạn cần đăng nhập để đánh giá');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\ReviewForm.tsx",
+        "line": 42,
+        "text": "Vui lòng chọn số sao",
+        "fullLine": "toast.error('Vui lòng chọn số sao');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\ReviewForm.tsx",
+        "line": 54,
+        "text": "Cập nhật đánh giá thành công!",
+        "fullLine": "toast.success('Cập nhật đánh giá thành công!');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\ReviewForm.tsx",
+        "line": 62,
+        "text": "Gửi đánh giá thành công!",
+        "fullLine": "toast.success('Gửi đánh giá thành công!');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\ReviewForm.tsx",
+        "line": 67,
+        "text": "Error submitting review:",
+        "fullLine": "console.error('Error submitting review:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\ReviewForm.tsx",
+        "line": 68,
+        "text": "Có lỗi khi gửi đánh giá",
+        "fullLine": "toast.error('Có lỗi khi gửi đánh giá');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\ReviewForm.tsx",
+        "line": 80,
+        "text": "Chỉnh sửa đánh giá",
+        "fullLine": "{existingReview ? 'Chỉnh sửa đánh giá' : 'Viết đánh giá'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\ReviewForm.tsx",
+        "line": 80,
+        "text": "Viết đánh giá",
+        "fullLine": "{existingReview ? 'Chỉnh sửa đánh giá' : 'Viết đánh giá'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\ReviewForm.tsx",
+        "line": 118,
+        "text": "Rất không hài lòng",
+        "fullLine": "{rating === 1 && 'Rất không hài lòng'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\ReviewForm.tsx",
+        "line": 119,
+        "text": "Không hài lòng",
+        "fullLine": "{rating === 2 && 'Không hài lòng'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\ReviewForm.tsx",
+        "line": 120,
+        "text": "Bình thường",
+        "fullLine": "{rating === 3 && 'Bình thường'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\ReviewForm.tsx",
+        "line": 121,
+        "text": "Hài lòng",
+        "fullLine": "{rating === 4 && 'Hài lòng'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\ReviewForm.tsx",
+        "line": 122,
+        "text": "Rất hài lòng",
+        "fullLine": "{rating === 5 && 'Rất hài lòng'}",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\ReviewForm.tsx",
+        "line": 137,
+        "text": "Chia sẻ trải nghiệm của bạn về quiz này...",
+        "fullLine": "placeholder=\"Chia sẻ trải nghiệm của bạn về quiz này...\"",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\ReviewForm.tsx",
+        "line": 166,
+        "text": "Cập nhật",
+        "fullLine": "<span>{existingReview ? 'Cập nhật' : 'Gửi đánh giá'}</span>",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\components\\ReviewForm.tsx",
+        "line": 166,
+        "text": "Gửi đánh giá",
+        "fullLine": "<span>{existingReview ? 'Cập nhật' : 'Gửi đánh giá'}</span>",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "imageUploadService.ts",
+    "fullPath": "src\\services\\imageUploadService.ts",
+    "count": 15,
+    "findings": [
+      {
+        "file": "src\\services\\imageUploadService.ts",
+        "line": 62,
+        "text": "Kích thước file vượt quá ${maxSizeKB}KB (${Math.round(fileSizeKB)}KB)",
+        "fullLine": "error: `Kích thước file vượt quá ${maxSizeKB}KB (${Math.round(fileSizeKB)}KB)`",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\services\\imageUploadService.ts",
+        "line": 160,
+        "text": "Bạn cần đăng nhập để upload ảnh",
+        "fullLine": "error: 'Bạn cần đăng nhập để upload ảnh'",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\services\\imageUploadService.ts",
+        "line": 221,
+        "text": "Lỗi khi upload ảnh: ",
+        "fullLine": "error: 'Lỗi khi upload ảnh: ' + error.message",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\services\\imageUploadService.ts",
+        "line": 255,
+        "text": "Không thể lấy URL download: ",
+        "fullLine": "error: 'Không thể lấy URL download: ' + error.message",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\services\\imageUploadService.ts",
+        "line": 265,
+        "text": "Có lỗi xảy ra: ",
+        "fullLine": "error: 'Có lỗi xảy ra: ' + error.message",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\services\\imageUploadService.ts",
+        "line": 294,
+        "text": "Bạn cần đăng nhập để upload ảnh",
+        "fullLine": "error: 'Bạn cần đăng nhập để upload ảnh'",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\services\\imageUploadService.ts",
+        "line": 357,
+        "text": "Lỗi upload: ",
+        "fullLine": "error: 'Lỗi upload: ' + error.message",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\services\\imageUploadService.ts",
+        "line": 397,
+        "text": "Không lấy được URL: ",
+        "fullLine": "error: 'Không lấy được URL: ' + error.message",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\services\\imageUploadService.ts",
+        "line": 410,
+        "text": "Có lỗi xảy ra: ",
+        "fullLine": "error: 'Có lỗi xảy ra: ' + error.message",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\services\\imageUploadService.ts",
+        "line": 467,
+        "text": "Bạn cần đăng nhập",
+        "fullLine": "return { success: false, error: 'Bạn cần đăng nhập' };",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\services\\imageUploadService.ts",
+        "line": 496,
+        "text": "Delete image error:",
+        "fullLine": "console.error('Delete image error:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\services\\imageUploadService.ts",
+        "line": 499,
+        "text": "Không thể xóa ảnh: ",
+        "fullLine": "error: 'Không thể xóa ảnh: ' + error.message",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\services\\imageUploadService.ts",
+        "line": 589,
+        "text": "Failed to load image",
+        "fullLine": "reject(new Error('Failed to load image'));",
+        "type": "english"
+      },
+      {
+        "file": "src\\services\\imageUploadService.ts",
+        "line": 594,
+        "text": "Failed to read file",
+        "fullLine": "reject(new Error('Failed to read file'));",
+        "type": "english"
+      },
+      {
+        "file": "src\\services\\imageUploadService.ts",
+        "line": 644,
+        "text": "Upload thất bại: ",
+        "fullLine": "error: 'Upload thất bại: ' + (error as Error).message",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "reviewService.ts",
+    "fullPath": "src\\features\\quiz\\services\\reviewService.ts",
+    "count": 15,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\services\\reviewService.ts",
+        "line": 45,
+        "text": "Quiz stats updated successfully",
+        "fullLine": "console.log('Quiz stats updated successfully');",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\reviewService.ts",
+        "line": 47,
+        "text": "Error updating quiz stats (review still saved):",
+        "fullLine": "console.warn('Error updating quiz stats (review still saved):', statsError);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\reviewService.ts",
+        "line": 52,
+        "text": "Error creating review:",
+        "fullLine": "console.error('Error creating review:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\reviewService.ts",
+        "line": 53,
+        "text": "Error details:",
+        "fullLine": "console.error('Error details:', JSON.stringify(error, null, 2));",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\reviewService.ts",
+        "line": 54,
+        "text": "Không thể tạo đánh giá: ${error instanceof Error ? error.message : ",
+        "fullLine": "throw new Error(`Không thể tạo đánh giá: ${error instanceof Error ? error.message : 'Unknown error'}`);",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\reviewService.ts",
+        "line": 87,
+        "text": "Error getting quiz reviews (simple):",
+        "fullLine": "console.error('Error getting quiz reviews (simple):', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\reviewService.ts",
+        "line": 132,
+        "text": "Error getting quiz reviews:",
+        "fullLine": "console.error('Error getting quiz reviews:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\reviewService.ts",
+        "line": 168,
+        "text": "Error getting quiz review stats:",
+        "fullLine": "console.error('Error getting quiz review stats:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\reviewService.ts",
+        "line": 188,
+        "text": "Error updating review:",
+        "fullLine": "console.error('Error updating review:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\reviewService.ts",
+        "line": 205,
+        "text": "Error deleting review:",
+        "fullLine": "console.error('Error deleting review:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\reviewService.ts",
+        "line": 218,
+        "text": "Error marking review as helpful:",
+        "fullLine": "console.error('Error marking review as helpful:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\reviewService.ts",
+        "line": 231,
+        "text": "Error removing helpful mark:",
+        "fullLine": "console.error('Error removing helpful mark:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\reviewService.ts",
+        "line": 244,
+        "text": "Error reporting review:",
+        "fullLine": "console.error('Error reporting review:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\reviewService.ts",
+        "line": 261,
+        "text": "Error updating quiz review stats:",
+        "fullLine": "console.error('Error updating quiz review stats:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\services\\reviewService.ts",
+        "line": 289,
+        "text": "Error getting user review:",
+        "fullLine": "console.error('Error getting user review:', error);",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "ResultPage.tsx",
+    "fullPath": "src\\features\\quiz\\pages\\ResultPage.tsx",
+    "count": 15,
+    "findings": [
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage.tsx",
+        "line": 182,
+        "text": "Không tìm thấy kết quả quiz!",
+        "fullLine": "toast.error('Không tìm thấy kết quả quiz!');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage.tsx",
+        "line": 186,
+        "text": "❌ Error fetching result:",
+        "fullLine": "console.error('❌ Error fetching result:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage.tsx",
+        "line": 187,
+        "text": "Không thể tải kết quả quiz!",
+        "fullLine": "toast.error('Không thể tải kết quả quiz!');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage.tsx",
+        "line": 206,
+        "text": "📡 Quiz not in store, fetching from Firestore...",
+        "fullLine": "console.log('📡 Quiz not in store, fetching from Firestore...');",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage.tsx",
+        "line": 213,
+        "text": "❌ Quiz not found:",
+        "fullLine": "console.error('❌ Quiz not found:', quizId);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage.tsx",
+        "line": 214,
+        "text": "Không tìm thấy quiz!",
+        "fullLine": "toast.error('Không tìm thấy quiz!');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage.tsx",
+        "line": 218,
+        "text": "❌ Error fetching quiz:",
+        "fullLine": "console.error('❌ Error fetching quiz:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage.tsx",
+        "line": 219,
+        "text": "Không thể tải quiz!",
+        "fullLine": "toast.error('Không thể tải quiz!');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage.tsx",
+        "line": 282,
+        "text": "👤 User rank:",
+        "fullLine": "console.log('👤 User rank:', userResultIndex >= 0 ? userResultIndex + 1 : 'Not found');",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage.tsx",
+        "line": 287,
+        "text": "❌ Failed to fetch leaderboard:",
+        "fullLine": "console.error('❌ Failed to fetch leaderboard:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage.tsx",
+        "line": 288,
+        "text": "Không thể tải bảng xếp hạng!",
+        "fullLine": "toast.error('Không thể tải bảng xếp hạng!');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage.tsx",
+        "line": 407,
+        "text": "Completed early",
+        "fullLine": "{result.isTimeUp ? 'Used full time' : 'Completed early'}",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage.tsx",
+        "line": 421,
+        "text": "Hide",
+        "fullLine": "{showAnswers ? 'Hide' : 'Show'} Detailed Review",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage.tsx",
+        "line": 421,
+        "text": "Show",
+        "fullLine": "{showAnswers ? 'Hide' : 'Show'} Detailed Review",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\quiz\\pages\\ResultPage.tsx",
+        "line": 590,
+        "text": "Result copied to clipboard!",
+        "fullLine": "toast.success('Result copied to clipboard!');",
+        "type": "english"
+      }
+    ]
+  },
+  {
+    "file": "otpService.ts",
+    "fullPath": "src\\features\\auth\\services\\otpService.ts",
+    "count": 15,
+    "findings": [
+      {
+        "file": "src\\features\\auth\\services\\otpService.ts",
+        "line": 117,
+        "text": "🔐 Mã xác thực đăng ký Quiz App",
+        "fullLine": "subject: '🔐 Mã xác thực đăng ký Quiz App',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\services\\otpService.ts",
+        "line": 119,
+        "text": "Mã OTP của bạn là: ${otp}. Mã này có hiệu lực trong 10 phút.",
+        "fullLine": "text: `Mã OTP của bạn là: ${otp}. Mã này có hiệu lực trong 10 phút.`",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\services\\otpService.ts",
+        "line": 128,
+        "text": "Email OTP đang được gửi đi...",
+        "fullLine": "message: 'Email OTP đang được gửi đi...'",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\services\\otpService.ts",
+        "line": 131,
+        "text": "Error queuing email:",
+        "fullLine": "console.error('Error queuing email:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\auth\\services\\otpService.ts",
+        "line": 134,
+        "text": "Không thể gửi email. Vui lòng thử lại.",
+        "fullLine": "message: error.message || 'Không thể gửi email. Vui lòng thử lại.'",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\services\\otpService.ts",
+        "line": 156,
+        "text": "Mã OTP đã được gửi đến ${email}. Vui lòng kiểm tra hộp thư.",
+        "fullLine": "message: `Mã OTP đã được gửi đến ${email}. Vui lòng kiểm tra hộp thư.`",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\services\\otpService.ts",
+        "line": 164,
+        "text": "Error generating and sending OTP:",
+        "fullLine": "console.error('Error generating and sending OTP:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\auth\\services\\otpService.ts",
+        "line": 167,
+        "text": "Có lỗi xảy ra. Vui lòng thử lại.",
+        "fullLine": "message: 'Có lỗi xảy ra. Vui lòng thử lại.'",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\services\\otpService.ts",
+        "line": 180,
+        "text": "Không tìm thấy OTP. Vui lòng yêu cầu gửi lại.",
+        "fullLine": "return { success: false, message: 'Không tìm thấy OTP. Vui lòng yêu cầu gửi lại.' };",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\services\\otpService.ts",
+        "line": 189,
+        "text": "OTP đã hết hạn. Vui lòng yêu cầu gửi lại.",
+        "fullLine": "return { success: false, message: 'OTP đã hết hạn. Vui lòng yêu cầu gửi lại.' };",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\services\\otpService.ts",
+        "line": 195,
+        "text": "Đã vượt quá số lần thử. Vui lòng yêu cầu OTP mới.",
+        "fullLine": "return { success: false, message: 'Đã vượt quá số lần thử. Vui lòng yêu cầu OTP mới.' };",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\services\\otpService.ts",
+        "line": 203,
+        "text": "Xác thực thành công!",
+        "fullLine": "return { success: true, message: 'Xác thực thành công!' };",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\services\\otpService.ts",
+        "line": 212,
+        "text": "OTP không đúng. Còn ${remaining} lần thử.",
+        "fullLine": "message: `OTP không đúng. Còn ${remaining} lần thử.`",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\features\\auth\\services\\otpService.ts",
+        "line": 216,
+        "text": "Error verifying OTP:",
+        "fullLine": "console.error('Error verifying OTP:', error);",
+        "type": "english"
+      },
+      {
+        "file": "src\\features\\auth\\services\\otpService.ts",
+        "line": 217,
+        "text": "Có lỗi xảy ra khi xác thực.",
+        "fullLine": "return { success: false, message: 'Có lỗi xảy ra khi xác thực.' };",
+        "type": "vietnamese"
+      }
+    ]
+  },
+  {
+    "file": "ImageUploader.tsx",
+    "fullPath": "src\\components\\ImageUploader.tsx",
+    "count": 15,
+    "findings": [
+      {
+        "file": "src\\components\\ImageUploader.tsx",
+        "line": 30,
+        "text": "Tải ảnh lên",
+        "fullLine": "label = 'Tải ảnh lên',",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ImageUploader.tsx",
+        "line": 58,
+        "text": "Kích thước file vượt quá ${maxSizeKB}KB",
+        "fullLine": "toast.error(`Kích thước file vượt quá ${maxSizeKB}KB`);",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ImageUploader.tsx",
+        "line": 83,
+        "text": "⚡ Đang upload siêu nhanh (1-3s)...",
+        "fullLine": "toast.info('⚡ Đang upload siêu nhanh (1-3s)...', { autoClose: 1000 });",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ImageUploader.tsx",
+        "line": 95,
+        "text": "✅ Upload nhanh như chớp! ",
+        "fullLine": "toast.success('✅ Upload nhanh như chớp! ', { autoClose: 2000 });",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ImageUploader.tsx",
+        "line": 99,
+        "text": "🖼️ Thumbnails đã sẵn sàng",
+        "fullLine": "toast.info('🖼️ Thumbnails đã sẵn sàng', { autoClose: 1500 });",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ImageUploader.tsx",
+        "line": 104,
+        "text": "Upload thất bại",
+        "fullLine": "toast.error(result.error || 'Upload thất bại');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ImageUploader.tsx",
+        "line": 111,
+        "text": "Có lỗi xảy ra",
+        "fullLine": "toast.error('Có lỗi xảy ra');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ImageUploader.tsx",
+        "line": 123,
+        "text": "Vui lòng chọn ảnh trước",
+        "fullLine": "toast.error('Vui lòng chọn ảnh trước');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ImageUploader.tsx",
+        "line": 136,
+        "text": "Đang nén ảnh...",
+        "fullLine": "toast.info('Đang nén ảnh...', { autoClose: 1000 });",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ImageUploader.tsx",
+        "line": 138,
+        "text": "Đã nén: ${Math.round(selectedFile.size / 1024)}KB → ${Math.round(fileToUpload.size / 1024)}KB",
+        "fullLine": "toast.success(`Đã nén: ${Math.round(selectedFile.size / 1024)}KB → ${Math.round(fileToUpload.size / 1024)}KB`, { autoClose: 1500 });",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ImageUploader.tsx",
+        "line": 151,
+        "text": "Upload ảnh thành công! ✨",
+        "fullLine": "toast.success('Upload ảnh thành công! ✨');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ImageUploader.tsx",
+        "line": 155,
+        "text": "Thumbnails đã được tạo tự động",
+        "fullLine": "toast.info('Thumbnails đã được tạo tự động', { autoClose: 2000 });",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ImageUploader.tsx",
+        "line": 160,
+        "text": "Upload thất bại",
+        "fullLine": "toast.error(result.error || 'Upload thất bại');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ImageUploader.tsx",
+        "line": 167,
+        "text": "Có lỗi xảy ra khi upload",
+        "fullLine": "toast.error('Có lỗi xảy ra khi upload');",
+        "type": "vietnamese"
+      },
+      {
+        "file": "src\\components\\ImageUploader.tsx",
+        "line": 206,
+        "text": "Vui lòng chọn file ảnh",
+        "fullLine": "toast.error('Vui lòng chọn file ảnh');",
+        "type": "vietnamese"
+      }
+    ]
+  }
+]

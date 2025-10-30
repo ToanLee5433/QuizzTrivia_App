@@ -9,6 +9,8 @@ import { db } from '../../../lib/firebase/config';
 import { Star, Eye, Play } from 'lucide-react';
 import { reviewService } from '../services/reviewService';
 import { QuizReviewStats } from '../types/review';
+import SafeHTML from '../../../shared/components/ui/SafeHTML';
+
 
 interface QuizCardProps {
   quiz: Quiz;
@@ -168,7 +170,7 @@ interface QuizCardProps {
               </div>
             </div>
             
-            <p className="text-gray-600 text-sm mb-3 line-clamp-1">{quiz.description}</p>
+            <SafeHTML content={quiz.description} className="text-gray-600 text-sm mb-3 line-clamp-1" />
             
             <div className="flex items-center gap-6 text-sm text-gray-500 mb-4">
               <div className="flex items-center">
@@ -328,9 +330,7 @@ interface QuizCardProps {
           </h3>
         </div>
         
-        <p className="text-gray-600 text-sm mb-6 line-clamp-2 leading-relaxed">
-          {quiz.description}
-        </p>
+        <SafeHTML content={quiz.description} className="text-gray-600 text-sm mb-6 line-clamp-2 leading-relaxed" />
 
         {/* **THÊM MỚI**: Quiz metadata */}
         <div className="space-y-4 mb-6">
