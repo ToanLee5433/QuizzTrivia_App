@@ -1021,41 +1021,45 @@
   "lanSuaCuoi": "Lần sửa cuối:",
   "landing": {
     "cta": {
-      "primary": "Get Started - Free!",
+      "primary": "Bắt đầu - Miễn phí!",
       "secondary": "Đã có tài khoản?"
     },
     "features": {
       "ranking": {
-        "desc": "Track scores, statistics and compare with friends",
-        "title": "Ranking & Achievements",
+        "desc": "Theo dõi điểm số, thống kê và so sánh với bạn bè",
+        "title": "Bảng xếp hạng & Thành tích",
         "description": "Bảng xếp hạng toàn cầu"
       },
       "realtime": {
-        "desc": "Challenge yourself with countdown timer and track realtime progress",
-        "title": "Real-time",
+        "desc": "Thử thách bản thân với đồng hồ đếm ngược và theo dõi tiến độ thời gian thực",
+        "title": "Thời gian thực",
         "description": "Cập nhật kết quả theo thời gian thực"
       },
       "topics": {
-        "desc": "Science, history, sports, entertainment and many other exciting topics",
-        "title": "Diverse Topics"
+        "desc": "Khoa học, lịch sử, thể thao, giải trí và nhiều chủ đề thú vị khác",
+        "title": "Đa dạng chủ đề"
       },
       "diversity": {
         "title": "Đa dạng chủ đề",
         "description": "Hàng nghìn quiz từ nhiều lĩnh vực khác nhau"
+      },
+      "multiplayer": {
+        "title": "Chơi nhiều người",
+        "description": "Chơi cùng bạn bè và cạnh tranh trực tiếp"
       }
     },
     "footer": {
-      "rights": "All rights reserved."
+      "rights": "Mọi quyền được bảo lưu."
     },
     "hero": {
-      "subtitle": "Discover thousands of exciting quizzes, challenge yourself and enhance your knowledge with Quiz Trivia - the leading interactive quiz platform!",
-      "title": "Test your knowledge"
+      "subtitle": "Khám phá hàng nghìn quiz thú vị, thử thách bản thân và nâng cao kiến thức với Quiz Trivia - nền tảng quiz tương tác hàng đầu!",
+      "title": "Kiểm tra kiến thức của bạn"
     },
     "stats": {
       "players": "Người chơi",
-      "plays": "Plays",
-      "quizzes": "Diverse Quizzes",
-      "support": "Support"
+      "plays": "Lượt chơi",
+      "quizzes": "Quiz đa dạng",
+      "support": "Hỗ trợ"
     }
   },
   "lapTrinh": "Lập trình",
@@ -1539,10 +1543,10 @@
     "quiz_not_found": "❌ Quiz not found:",
     "error_fetching_quiz": "❌ Error fetching quiz:",
     "khong_the_tao_cau_hoi_error_instanceof_error_error": "Không thể tạo câu hỏi: ${error instanceof Error ? error.message : ",
-    "systemprompt_n_nnoi_dung_de_tao_cau_hoi_n_n_conte": "${systemPrompt}\\n\\nNội dung để tạo câu hỏi:\\n\\n${content}",
+    "systemprompt_n_nnoi_dung_de_tao_cau_hoi_n_n_conte": "{{systemPrompt}}\\n\\nNội dung để tạo câu hỏi:\\n\\n{{content}}",
     "khong_the_phan_tich_cau_hoi_tu_ai": "Không thể phân tích câu hỏi từ AI",
     "khong_the_phan_tich_cau_hoi_tu_phan_hoi_ai": "Không thể phân tích câu hỏi từ phản hồi AI",
-    "noi_dung_de_tao_cau_hoi_n_n_content": "Nội dung để tạo câu hỏi:\\n\\n${content}",
+    "noi_dung_de_tao_cau_hoi_n_n_content": "Nội dung để tạo câu hỏi:\\n\\n{{content}}",
     "gpt_4_va_gpt_3_5_tu_openai_chat_luong_cao_da_dang": "GPT-4 và GPT-3.5 từ OpenAI - Chất lượng cao, đa dạng câu hỏi",
     "noi_dung_cau_hoi": "Nội dung câu hỏi",
     "khong_tim_thay_ket_qua_quiz": "Không tìm thấy kết quả quiz!",
@@ -1553,7 +1557,7 @@
     "error_loading_real_quizzes": "Error loading real quizzes:",
     "loading_quiz_details": "🔍 Loading quiz details:",
     "quiz_not_found_in_database_for_id": "❌ Quiz not found in database for ID:",
-    "quiz_sample_quizid": "Quiz Sample ${quizId}",
+    "quiz_sample_quizid": "Quiz Sample {{quizId}}",
     "day_la_quiz_mau_de_test_he_thong_danh_gia": "Đây là quiz mẫu để test hệ thống đánh giá",
     "quiz_data_loaded_successfully": "✅ Quiz data loaded successfully:",
     "failed_to_load_quiz": "Failed to load quiz",
@@ -1602,7 +1606,7 @@
     "khong_co_noi_dung_de_tao_cau_hoi": "Không có nội dung để tạo câu hỏi",
     "ai_service_khong_tra_ve_cau_hoi_nao": "AI service không trả về câu hỏi nào",
     "ai_da_tao_questions_length_cau_hoi_thanh_cong": "✅ AI đã tạo ${questions.length} câu hỏi thành công!",
-    "loi_tao_cau_hoi_errormessage": "❌ Lỗi tạo câu hỏi: ${errorMessage}",
+    "loi_tao_cau_hoi_errormessage": "❌ Lỗi tạo câu hỏi: {{errorMessage}}",
     "dang_su_dung_cau_hoi_mau_thay_vi_ai": "Đang sử dụng câu hỏi mẫu thay vì AI",
     "da_import_generatedquestions_length_cau_hoi": "Đã import ${generatedQuestions.length} câu hỏi!",
     "huong_dan_cu_the_cho_ai_ve_cach_tao_cau_hoi": "Hướng dẫn cụ thể cho AI về cách tạo câu hỏi...",
@@ -1670,7 +1674,7 @@
     "search_quizzes_by_title_description_or_id": "Search quizzes by title, description, or ID...",
     "view_quiz": "View Quiz",
     "edit_quiz": "Edit Quiz",
-    "dua_tren_noi_dung_file_da_tai_len_filecontent_tao": "Dựa trên nội dung file đã tải lên: ${fileContent}. Tạo câu hỏi về: ${formData.topic}"
+    "dua_tren_noi_dung_file_da_tai_len_filecontent_tao": "Dựa trên nội dung file đã tải lên: {{fileContent}}. Tạo câu hỏi về: {{formData.topic}}"
   },
   "quizCanAdminPheDuyet": "• Quiz cần admin phê duyệt",
   "quizCongKhaiSeXuatHienTrongDanhSachTimKiemVaTrangC": "Quiz công khai sẽ xuất hiện trong danh sách tìm kiếm và trang chủ, giúp nhiều người tham gia hơn.",
@@ -2033,7 +2037,7 @@
     "error_tracking_attempt": "Error tracking attempt:",
     "error_tracking_completion": "Error tracking completion:",
     "error_initializing_stats": "Error initializing stats:",
-    "kich_thuoc_file_vuot_qua_maxsizekb_kb_math_round_f": "Kích thước file vượt quá ${maxSizeKB}KB (${Math.round(fileSizeKB)}KB)",
+    "kich_thuoc_file_vuot_qua_maxsizekb_kb_math_round_f": "Kích thước file vượt quá {{maxSizeKB}}KB ({{Math.round(fileSizeKB)}}KB)",
     "loi_khi_upload_anh": "Lỗi khi upload ảnh: ",
     "khong_the_lay_url_download": "Không thể lấy URL download: ",
     "co_loi_xay_ra": "Có lỗi xảy ra",
@@ -2075,7 +2079,7 @@
     "redux_error": "Redux Error:",
     "da_xay_ra_loi_vui_long_tai_lai_trang": "Đã xảy ra lỗi. Vui lòng tải lại trang.",
     "user_role_synced_to_firestore_successfully": "User role synced to Firestore successfully",
-    "minutes_phut": "${minutes} phút",
+    "minutes_phut": "{{minutes}} phút",
     "khong_xac_dinh": "Không xác định",
     "mat_khau_phai_co_it_nhat_6_ky_tu": "Mật khẩu phải có ít nhất 6 ký tự",
     "mat_khau_phai_co_it_nhat_1_chu_hoa": "Mật khẩu phải có ít nhất 1 chữ hoa",
@@ -2107,11 +2111,11 @@
     "can_xem_toi_thieu_threshold_minwatchpercent_video": "Cần xem tối thiểu ${threshold.minWatchPercent}% video",
     "can_doc_den_trang_cuoi": "Cần đọc đến trang cuối",
     "can_xem_toi_thieu_threshold_minpages_trang": "Cần xem tối thiểu ${threshold.minPages} trang",
-    "can_danh_it_nhat_mintimeperpage_s_cho_moi_trang": "Cần dành ít nhất ${minTimePerPage}s cho mỗi trang",
+    "can_danh_it_nhat_mintimeperpage_s_cho_moi_trang": "Cần dành ít nhất {{minTimePerPage}}s cho mỗi trang",
     "can_xem_toi_thieu_threshold_minviewedcount_anh_sli": "Cần xem tối thiểu ${threshold.minViewedCount} ảnh/slide",
     "can_xem_moi_anh_it_nhat_threshold_minviewtime_s": "Cần xem mỗi ảnh ít nhất ${threshold.minViewTime}s",
     "can_xac_nhan_da_doc": "Cần xác nhận đã đọc",
-    "can_dat_toi_thieu_passingscore_diem_mini_check": "Cần đạt tối thiểu ${passingScore} điểm mini-check",
+    "can_dat_toi_thieu_passingscore_diem_mini_check": "Cần đạt tối thiểu {{passingScore}} điểm mini-check",
     "ban_chua_xem_tai_lieu_bat_buoc": "Bạn chưa xem tài liệu bắt buộc",
     "chua_xem_resource_title": "Chưa xem: ${resource.title}",
     "error_checking_gating_status": "Error checking gating status:",
@@ -2157,7 +2161,7 @@
     "tra_loi_ngan": "Trả lời ngắn",
     "giai_thich_tai_sao_dap_an_nay_dung": "Giải thích tại sao đáp án này đúng",
     "error_generating_questions": "Error generating questions:",
-    "customprompt_this_generatesystemprompt_config_n_n": "${customPrompt || this.generateSystemPrompt(config)}\\n\\nNội dung: ${content}",
+    "customprompt_this_generatesystemprompt_config_n_n": "{{customPrompt || this.generateSystemPrompt(config)}}\\n\\nNội dung: {{content}}",
     "ollama_error_error_instanceof_error_error_message": "Ollama error: ${error instanceof Error ? error.message : ",
     "error_fetching_result": "❌ Error fetching result:",
     "user_rank": "👤 User rank:",
@@ -2201,8 +2205,8 @@
     "dang_luu": "Đang lưu...",
     "luu_thay_doi": "Lưu thay đổi",
     "chua_sua": "Chưa sửa",
-    "hom_nay_timestring": "Hôm nay ${timeString}",
-    "hom_qua_timestring": "Hôm qua ${timeString}",
+    "hom_nay_timestring": "Hôm nay {{timeString}}",
+    "hom_qua_timestring": "Hôm qua {{timeString}}",
     "chua_tra_loi": "Chưa trả lời",
     "error_loading_data": "Error loading data:",
     "chi_con_it_hon_1_phut_hay_hoan_thanh_ngay": "Chỉ còn ít hơn 1 phút! Hãy hoàn thành ngay.",
@@ -2219,10 +2223,10 @@
     "di_chuyen_xuong": "Di chuyển xuống",
     "ban_co_chac_muon_xoa_tai_lieu_nay": "Bạn có chắc muốn xóa tài liệu này?",
     "da_xoa_tai_lieu": "Đã xóa tài liệu",
-    "file_qua_lon_toi_da_sizemb_mb_cho_type": "File quá lớn! Tối đa ${sizeMB}MB cho ${type}",
-    "dinh_dang_file_khong_hop_le_cho_type": "❌ Định dạng file không hợp lệ cho ${type}!",
+    "file_qua_lon_toi_da_sizemb_mb_cho_type": "File quá lớn! Tối đa {{sizeMB}}MB cho {{type}}",
+    "dinh_dang_file_khong_hop_le_cho_type": "❌ Định dạng file không hợp lệ cho {{type}}!",
     "upload_anh_thanh_cong": "Upload ảnh thành công! ✨",
-    "upload_type_thanh_cong": "✅ Upload ${type} thành công!",
+    "upload_type_thanh_cong": "✅ Upload {{type}} thành công!",
     "vui_long_nhap_tieu_de": "Vui lòng nhập tiêu đề",
     "vui_long_nhap_url_hoac_upload_file": "Vui lòng nhập URL hoặc upload file",
     "da_cap_nhat_tai_lieu": "Đã cập nhật tài liệu",
@@ -2352,12 +2356,12 @@
     "error_updating_room_settings": "Error updating room settings:",
     "failed_to_copy_room_code": "Failed to copy room code:",
     "question_loading": "Question loading...",
-    "player_position": "Player ${position}",
+    "player_position": "Player {{position}}",
     "player": "Player",
     "answer_submitted": "Answer submitted",
     "answer_selected": "Answer selected",
     "choose_your_answer": "Choose your answer",
-    "cau_hoi_tiep_theo_trong_nextquestioncountdown_giay": "Câu hỏi tiếp theo trong ${nextQuestionCountdown} giây...",
+    "cau_hoi_tiep_theo_trong_nextquestioncountdown_giay": "Câu hỏi tiếp theo trong {{nextQuestionCountdown}} giây...",
     "error_in_handleroomupdate": "Error in handleRoomUpdate:",
     "failed_to_start_game": "Failed to start game",
     "game_start_event_received": "🎮 Game Start Event Received:",
@@ -2380,18 +2384,18 @@
     "da_xay_ra_loi_khong_xac_dinh": "Đã xảy ra lỗi không xác định",
     "user_stats_updated_successfully_in_firebase_profi": "✅ User stats updated successfully in Firebase (profile + leaderboard)",
     "error_updating_user_stats": "❌ Error updating user stats:",
-    "ma_otp_cua_ban_la_otp_ma_nay_co_hieu_luc_trong_10": "Mã OTP của bạn là: ${otp}. Mã này có hiệu lực trong 10 phút.",
+    "ma_otp_cua_ban_la_otp_ma_nay_co_hieu_luc_trong_10": "Mã OTP của bạn là: {{otp}}. Mã này có hiệu lực trong 10 phút.",
     "email_otp_dang_duoc_gui_di": "Email OTP đang được gửi đi...",
     "error_queuing_email": "Error queuing email:",
     "khong_the_gui_email_vui_long_thu_lai": "Không thể gửi email. Vui lòng thử lại.",
-    "ma_otp_da_duoc_gui_den_email_vui_long_kiem_tra_hop": "Mã OTP đã được gửi đến ${email}. Vui lòng kiểm tra hộp thư.",
+    "ma_otp_da_duoc_gui_den_email_vui_long_kiem_tra_hop": "Mã OTP đã được gửi đến {{email}}. Vui lòng kiểm tra hộp thư.",
     "error_generating_and_sending_otp": "Error generating and sending OTP:",
     "co_loi_xay_ra_vui_long_thu_lai": "Có lỗi xảy ra. Vui lòng thử lại.",
     "khong_tim_thay_otp_vui_long_yeu_cau_gui_lai": "Không tìm thấy OTP. Vui lòng yêu cầu gửi lại.",
     "otp_da_het_han_vui_long_yeu_cau_gui_lai": "OTP đã hết hạn. Vui lòng yêu cầu gửi lại.",
     "da_vuot_qua_so_lan_thu_vui_long_yeu_cau_otp_moi": "Đã vượt quá số lần thử. Vui lòng yêu cầu OTP mới.",
     "xac_thuc_thanh_cong": "Xác thực thành công!",
-    "otp_khong_dung_con_remaining_lan_thu": "OTP không đúng. Còn ${remaining} lần thử.",
+    "otp_khong_dung_con_remaining_lan_thu": "OTP không đúng. Còn {{remaining}} lần thử.",
     "error_verifying_otp": "Error verifying OTP:",
     "co_loi_xay_ra_khi_xac_thuc": "Có lỗi xảy ra khi xác thực",
     "profile_debug_user_results": "🔍 Profile Debug - User Results:",
@@ -2481,10 +2485,10 @@
     "chuyen_den_tab_tab_label": "Chuyển đến tab ${tab.label}",
     "error_creating_notification": "Error creating notification:",
     "error_deleting_notifications": "Error deleting notifications:",
-    "ban_co_chac_muon_xoa_selecteditems_length_itemtype": "Bạn có chắc muốn xóa ${selectedItems.length} ${itemType}?",
-    "da_xoa_selecteditems_length_itemtype": "Đã xóa ${selectedItems.length} ${itemType}!",
+    "ban_co_chac_muon_xoa_selecteditems_length_itemtype": "Bạn có chắc muốn xóa {{selectedItems.length}} {{itemType}}?",
+    "da_xoa_selecteditems_length_itemtype": "Đã xóa {{selectedItems.length}} {{itemType}}!",
     "loi_khi_xoa_hang_loat": "Lỗi khi xóa hàng loạt!",
-    "da_cap_nhat_selecteditems_length_itemtype": "Đã cập nhật ${selectedItems.length} ${itemType}!",
+    "da_cap_nhat_selecteditems_length_itemtype": "Đã cập nhật {{selectedItems.length}} {{itemType}}!",
     "loi_khi_cap_nhat_hang_loat": "Lỗi khi cập nhật hàng loạt!",
     "failed_to_load_data_from_firebase": "❌ Failed to load data from Firebase",
     "total_users": "Total Users",
@@ -2492,7 +2496,7 @@
     "view_reviews": "View Reviews",
     "error_loading_real_data": "Error loading real data:",
     "tai_anh_len": "Tải ảnh lên",
-    "kich_thuoc_file_vuot_qua_maxsizekb_kb": "Kích thước file vượt quá ${maxSizeKB}KB",
+    "kich_thuoc_file_vuot_qua_maxsizekb_kb": "Kích thước file vượt quá {{maxSizeKB}}KB",
     "dang_upload_sieu_nhanh_1_3s": "⚡ Đang upload siêu nhanh (1-3s)...",
     "upload_nhanh_nhu_chop": "✅ Upload nhanh như chớp! ",
     "thumbnails_da_san_sang": "🖼️ Thumbnails đã sẵn sàng",
@@ -2833,5 +2837,7 @@
     "thumbnailsGenerated": "Thumbnails đã được tạo tự động",
     "uploadErrorDetailed": "Có lỗi xảy ra khi upload",
     "selectImageFile": "Vui lòng chọn file ảnh"
-  }
+  },
+  "_cacheBuster": 1762360624403,
+  "_lastUpdate": "2025-11-05T16:37:04.416Z"
 }
