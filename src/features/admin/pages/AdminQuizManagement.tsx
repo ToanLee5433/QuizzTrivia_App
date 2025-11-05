@@ -122,8 +122,13 @@ const AdminQuizManagement: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      console.log('🔍 Loading quizzes from Firestore...');
-      const q = query(collection(db, 'quizzes'), orderBy('createdAt', 'desc'));
+      console.log('🔍 Loading quizzes from Firestore (excluding drafts)...');
+      // 📝 Filter out drafts - Admin should only see pending/approved/rejected quizzes
+      const q = query(
+        collection(db, 'quizzes'),
+        where('status', 'in', ['pending', 'approved', 'rejected']),
+        orderBy('createdAt', 'desc')
+      );
       const querySnapshot = await getDocs(q);
       
       console.log('📊 Firestore response:', {

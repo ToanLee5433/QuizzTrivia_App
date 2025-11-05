@@ -67,6 +67,14 @@ const Dashboard = React.memo(() => {
           />
           
           <DashboardCard
+            to="/multiplayer"
+            emoji="🎮"
+            bgColor="bg-gradient-to-br from-purple-100 to-pink-100"
+            title="Multiplayer"
+            description="Chơi quiz cùng bạn bè và cạnh tranh trực tiếp"
+          />
+          
+          <DashboardCard
             to="/favorites"
             emoji="⭐"
             bgColor="bg-yellow-100"

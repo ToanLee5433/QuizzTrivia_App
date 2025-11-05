@@ -1,12 +1,12 @@
-// Firebase AI Service using Vertex AI/Gemini
-// Thay thế cho OpenAI service hiện tại
+// Firebase AI Service using Google Generative AI (Gemini)
+// Service để tạo câu hỏi tự động bằng AI
 
 import { Question } from '../types';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getAuth } from 'firebase/auth';
 
 export interface FirebaseAIConfig {
-  model?: 'gemini-pro' | 'gemini-pro-vision';
+  model?: 'gemini-2.0-flash-exp' | 'gemini-pro' | 'gemini-pro-vision';
   temperature?: number;
   maxTokens?: number;
 }
@@ -21,7 +21,7 @@ export interface QuestionGenerationOptions {
 }
 
 /**
- * Firebase AI Service using Vertex AI/Gemini
+ * Firebase AI Service using Google Generative AI (Gemini)
  */
 export class FirebaseAIService {
   private static functions = getFunctions();
@@ -55,7 +55,7 @@ export class FirebaseAIService {
         prompt: systemPrompt,
         content: content,
         config: {
-          model: config.model || 'gemini-pro',
+          model: config.model || 'gemini-2.0-flash-exp',
           temperature: config.temperature || 0.7,
           maxTokens: config.maxTokens || 2000
         }
@@ -71,75 +71,6 @@ export class FirebaseAIService {
     } catch (error) {
       console.error('Firebase AI Service Error:', error);
       throw new Error(`Không thể tạo câu hỏi: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
-
-  /**
-   * Fallback method using direct Vertex AI REST API
-   */
-  static async generateQuestionsDirectAPI(
-    config: FirebaseAIConfig = {},
-    options: QuestionGenerationOptions
-  ): Promise<Question[]> {
-    const { 
-      content, 
-      customPrompt, 
-      numQuestions = 5, 
-      difficulty = 'mixed', 
-      language = 'vi' 
-    } = options;
-
-    try {
-      // Sử dụng endpoint của Firebase project
-      const projectId = 'datn-quizapp';
-      const apiEndpoint = `https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/gemini-pro:generateContent`;
-      
-      const systemPrompt = customPrompt || this.getDefaultPrompt(numQuestions, difficulty, language);
-      
-      // Get auth token from Firebase
-      const auth = getAuth();
-      const idToken = await auth.currentUser?.getIdToken();
-      
-      if (!idToken) {
-        throw new Error('Không thể xác thực người dùng');
-      }
-
-      const response = await fetch(apiEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `${systemPrompt}\n\nNội dung để tạo câu hỏi:\n\n${content}`
-            }]
-          }],
-          generationConfig: {
-            temperature: config.temperature || 0.7,
-            maxOutputTokens: config.maxTokens || 2000,
-            topP: 0.8,
-            topK: 40
-          }
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Vertex AI API Error: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-      if (!generatedText) {
-        throw new Error('Không nhận được phản hồi từ AI');
-      }
-
-      return this.parseQuestionsFromText(generatedText);
-    } catch (error) {
-      console.error('Direct API Error:', error);
-      throw error;
     }
   }
 

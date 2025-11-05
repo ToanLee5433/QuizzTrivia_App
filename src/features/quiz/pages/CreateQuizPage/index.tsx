@@ -5,22 +5,81 @@ import { RootState } from '../../../../lib/store';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../../../lib/firebase/config';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 import Button from '../../../../shared/components/ui/Button';
+import ConfirmDialog from '../../../../shared/components/ui/ConfirmDialog';
+import ShareLinkModal from '../../../../shared/components/ui/ShareLinkModal';
 
 import { QuizFormData, Question } from './types';
 import { defaultQuiz, steps } from './constants';
 import { generateId } from './utils';
+import { createPasswordHash } from '../../../../lib/utils/passwordHash'; // 🔒 Password hash utility
+import QuizTypeStep from './components/QuizTypeStep'; // 🆕
 import QuizInfoStep from './components/QuizInfoStep';
 import QuestionsStep from './components/QuestionsStep';
-import ResourcesStep from './components/ResourcesStep'; // 🆕
+import ResourcesStep from './components/ResourcesStep';
 import ReviewStep from './components/ReviewStep';
 
 const CreateQuizPage: React.FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const [quiz, setQuiz] = useState<QuizFormData>(defaultQuiz);
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  
+  // 🔗 Share Link Modal
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [publishedQuizId, setPublishedQuizId] = useState<string>('');
+  const [publishedQuizTitle, setPublishedQuizTitle] = useState<string>('');
+  const [publishedQuizHasPassword, setPublishedQuizHasPassword] = useState<boolean>(false);
+  const [publishedQuizPassword, setPublishedQuizPassword] = useState<string>('');
+
+  // Auto scroll to top when step changes
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [step]);
+
+  // Track unsaved changes
+  React.useEffect(() => {
+    const hasChanges = !!(
+      quiz.quizType ||
+      quiz.title ||
+      quiz.description ||
+      quiz.questions.length > 0 ||
+      (quiz.resources && quiz.resources.length > 0)
+    );
+    setHasUnsavedChanges(hasChanges);
+  }, [quiz]);
+
+  // Warn before leaving page
+  React.useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges && !submitting) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges, submitting]);
+
+  // Handle back navigation with confirmation
+  const handleBackNavigation = () => {
+    if (hasUnsavedChanges) {
+      setShowExitConfirm(true);
+    } else {
+      navigate('/creator');
+    }
+  };
+
+  const confirmExit = () => {
+    setShowExitConfirm(false);
+    navigate('/creator');
+  };
 
   // Kiểm tra quyền truy cập
   if (!currentUser) {
@@ -99,12 +158,41 @@ const CreateQuizPage: React.FC = () => {
 
   // Validate từng step
   const validateStep = (stepIndex: number): boolean => {
-    switch (stepIndex) {
-      case 0: // Info step
-        return !!(quiz.title && quiz.description && quiz.category && quiz.difficulty);
-      case 1: // Resources step - BẮT BUỘC có ít nhất 1 tài liệu
+    // Dynamic step mapping based on quiz type
+    const getActualStep = (index: number) => {
+      if (!quiz.quizType) return -1; // Step 0: Quiz Type must be selected
+      if (quiz.quizType === 'standard') {
+        // For standard quiz: Type → Info (with password) → Questions → Review (skip Resources)
+        if (index === 0) return 'type';
+        if (index === 1) return 'info';
+        if (index === 2) return 'questions';
+        if (index === 3) return 'review';
+      } else {
+        // For with-materials quiz: Type → Info (with password) → Resources → Questions → Review
+        if (index === 0) return 'type';
+        if (index === 1) return 'info';
+        if (index === 2) return 'resources';
+        if (index === 3) return 'questions';
+        if (index === 4) return 'review';
+      }
+      return 'unknown';
+    };
+
+    const actualStep = getActualStep(stepIndex);
+
+    switch (actualStep) {
+      case 'type': // Step 0: Quiz Type Selection
+        return !!quiz.quizType;
+      case 'info': // Quiz Info step (includes password now)
+        const basicInfoValid = !!(quiz.title && quiz.description && quiz.category && quiz.difficulty);
+        // If password is required, validate it
+        const passwordValid = quiz.havePassword === 'password'
+          ? !!(quiz.password && quiz.password.length >= 6)
+          : true;
+        return basicInfoValid && passwordValid;
+      case 'resources': // Resources step - Only for with-materials type
         return !!(quiz.resources && quiz.resources.length > 0);
-      case 2: // Questions step
+      case 'questions': // Questions step
         return quiz.questions.length > 0 && quiz.questions.every(q => {
           // Kiểm tra text câu hỏi
           if (!q.text) return false;
@@ -121,7 +209,7 @@ const CreateQuizPage: React.FC = () => {
               return false;
           }
         });
-      case 3: // Review step
+      case 'review': // Review step
         return true;
       default:
         return false;
@@ -163,6 +251,18 @@ const CreateQuizPage: React.FC = () => {
         return value;
       };
 
+      // 🔒 Generate password hash if visibility is password
+      let pwdData = undefined;
+      if (quiz.havePassword === 'password' && quiz.password) {
+        const { salt, hash } = await createPasswordHash(quiz.password);
+        pwdData = {
+          enabled: true,
+          algo: 'SHA256',
+          salt,
+          hash
+        };
+      }
+
       // Clean up undefined values - Firestore doesn't accept undefined
       const cleanQuizData = cleanValue({
         title: quiz.title || '',
@@ -170,6 +270,12 @@ const CreateQuizPage: React.FC = () => {
         category: quiz.category || 'general',
         difficulty: quiz.difficulty || 'easy',
         duration: quiz.duration || 15,
+        quizType: quiz.quizType || 'standard', // 🆕 Save quiz type
+        
+        // 🔒 New Password Protection System
+        visibility: quiz.havePassword === 'password' ? 'password' : 'public',
+        pwd: pwdData, // { enabled, algo, salt, hash }
+        
         questions: (quiz.questions || []).map(q => ({
           id: q.id || '',
           text: q.text || '',
@@ -214,14 +320,139 @@ const CreateQuizPage: React.FC = () => {
 
       console.log('🔍 Clean quiz data:', cleanQuizData);
 
-      await addDoc(collection(db, 'quizzes'), cleanQuizData);
+      const docRef = await addDoc(collection(db, 'quizzes'), cleanQuizData);
 
       toast.success(t('createQuiz.createSuccess'));
+      
+      // 🔗 Show share link modal
+      setPublishedQuizId(docRef.id);
+      setPublishedQuizTitle(quiz.title);
+      setPublishedQuizHasPassword(quiz.havePassword === 'password');
+      setPublishedQuizPassword(quiz.password || '');
+      setShowShareModal(true);
+      
       setQuiz(defaultQuiz);
       setStep(0);
     } catch (error) {
       console.error('Error creating quiz:', error);
       toast.error(t('createQuiz.createError'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // 📝 Save as draft
+  const handleSaveDraft = async () => {
+    if (!currentUser) {
+      toast.error(t('createQuiz.loginRequired'));
+      return;
+    }
+
+    // Validate at least title and quiz type
+    if (!quiz.title || !quiz.quizType) {
+      toast.error('Vui lòng nhập ít nhất tiêu đề và chọn loại quiz để lưu nháp');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const cleanValue = (value: any): any => {
+        if (value === undefined || value === null) {
+          return null;
+        }
+        if (Array.isArray(value)) {
+          return value.map(cleanValue);
+        }
+        if (typeof value === 'object' && value !== null) {
+          const cleaned: any = {};
+          Object.keys(value).forEach(key => {
+            const cleanedVal = cleanValue(value[key]);
+            if (cleanedVal !== undefined) {
+              cleaned[key] = cleanedVal;
+            }
+          });
+          return cleaned;
+        }
+        return value;
+      };
+
+      // 🔒 Generate password hash if visibility is password
+      let pwdData = undefined;
+      if (quiz.havePassword === 'password' && quiz.password) {
+        const { salt, hash } = await createPasswordHash(quiz.password);
+        pwdData = {
+          enabled: true,
+          algo: 'SHA256',
+          salt,
+          hash
+        };
+      }
+
+      const draftQuizData = cleanValue({
+        title: quiz.title || '',
+        description: quiz.description || '',
+        category: quiz.category || 'general',
+        difficulty: quiz.difficulty || 'easy',
+        duration: quiz.duration || 15,
+        quizType: quiz.quizType || 'standard',
+        
+        // 🔒 New Password Protection System
+        visibility: quiz.havePassword === 'password' ? 'password' : 'public',
+        pwd: pwdData, // { enabled, algo, salt, hash }
+        
+        questions: (quiz.questions || []).map(q => ({
+          id: q.id || '',
+          text: q.text || '',
+          type: q.type || 'multiple',
+          answers: (q.answers || []).map(a => ({
+            id: a.id || '',
+            text: a.text || '',
+            isCorrect: a.isCorrect !== undefined ? a.isCorrect : false
+          })),
+          explanation: q.explanation || '',
+          points: q.points !== undefined ? q.points : 1,
+          imageUrl: q.imageUrl || null,
+          correctAnswer: q.correctAnswer || null,
+          acceptedAnswers: q.acceptedAnswers || []
+        })),
+        resources: (quiz.resources || []).map(r => ({
+          id: r.id || '',
+          type: r.type || 'video',
+          title: r.title || '',
+          description: r.description || '',
+          url: r.url || '',
+          required: r.required !== undefined ? r.required : false,
+          threshold: r.threshold || {},
+          learningOutcomes: r.learningOutcomes || [],
+          order: r.order !== undefined ? r.order : 0,
+          thumbnailUrl: r.thumbnailUrl || null,
+          whyWatch: r.whyWatch || null,
+          estimatedTime: r.estimatedTime || null,
+          createdAt: r.createdAt || new Date(),
+          updatedAt: r.updatedAt || new Date()
+        })),
+        createdBy: currentUser.uid,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        isPublished: false,
+        tags: quiz.tags || [],
+        imageUrl: quiz.imageUrl || null,
+        isPublic: quiz.isPublic !== undefined ? quiz.isPublic : false,
+        allowRetake: quiz.allowRetake !== undefined ? quiz.allowRetake : true,
+        status: 'draft', // 📝 Mark as draft
+        isDraft: true
+      });
+
+      console.log('📝 Saving draft:', draftQuizData);
+
+      await addDoc(collection(db, 'quizzes'), draftQuizData);
+
+      toast.success('💾 Đã lưu bản nháp thành công!');
+      setQuiz(defaultQuiz);
+      setStep(0);
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      toast.error('Lỗi khi lưu bản nháp');
     } finally {
       setSubmitting(false);
     }
@@ -240,47 +471,86 @@ const CreateQuizPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 py-10 md:py-14">
+      <div className="max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8">
+        {/* Back to Creator Button */}
+        <button
+          onClick={handleBackNavigation}
+          className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors group"
+        >
+          <span className="text-lg group-hover:-translate-x-1 transition-transform">←</span>
+          <span className="font-medium">Quay lại Creator Dashboard</span>
+        </button>
+
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('createQuiz.title')}</h1>
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 mb-4">
+            ✨ {t('createQuiz.title')}
+          </h1>
           
           {/* Progress Steps */}
-          <div className="flex items-center justify-between mb-6">
-            {steps.map((_, idx) => (
-              <div key={idx} className="flex items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  idx <= step ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'
-                }`}>
-                  {idx + 1}
+          <div className="flex items-center justify-between overflow-x-auto pb-2">
+            {(() => {
+              // Dynamic steps based on quiz type
+              let displaySteps = [...steps];
+              if (quiz.quizType === 'standard') {
+                // Remove Resources step for standard quiz (keep Privacy)
+                displaySteps = [
+                  steps[0], // Chọn Loại Quiz
+                  steps[1], // Thông tin Quiz
+                  steps[2], // Quyền riêng tư
+                  steps[4], // Câu hỏi (skip resources at index 3)
+                  steps[5], // Xem lại & Xuất bản
+                ];
+              }
+
+              return displaySteps.map((stepName, idx) => (
+                <div key={idx} className="flex items-center flex-shrink-0">
+                  <div className={`
+                    w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold
+                    transition-all duration-300 transform
+                    ${idx <= step 
+                      ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg scale-110' 
+                      : 'bg-gray-200 text-gray-600'
+                    }
+                  `}>
+                    {idx < step ? '✓' : idx + 1}
+                  </div>
+                  <span className={`
+                    ml-2 text-sm whitespace-nowrap
+                    ${idx <= step ? 'text-purple-600 font-semibold' : 'text-gray-500'}
+                  `}>
+                    {stepName}
+                  </span>
+                  {idx < displaySteps.length - 1 && (
+                    <div className={`
+                      w-12 sm:w-16 h-1 mx-2 sm:mx-4 rounded-full transition-all duration-300
+                      ${idx < step ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-gray-200'}
+                    `} />
+                  )}
                 </div>
-                <span className={`ml-2 text-sm ${
-                  idx <= step ? 'text-blue-600 font-medium' : 'text-gray-500'
-                }`}>
-                  {steps[idx]}
-                </span>
-                {idx < steps.length - 1 && (
-                  <div className={`w-16 h-0.5 mx-4 ${
-                    idx < step ? 'bg-blue-500' : 'bg-gray-200'
-                  }`} />
-                )}
-              </div>
-            ))}
+              ));
+            })()}
           </div>
         </div>
 
         {/* Content */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
           {/* Step content */}
-          {step === 0 && <QuizInfoStep quiz={quiz} setQuiz={setQuiz} />}
-          {step === 1 && (
+          {step === 0 && (
+            <QuizTypeStep
+              selectedType={quiz.quizType}
+              onTypeSelect={(type) => setQuiz(prev => ({ ...prev, quizType: type }))}
+            />
+          )}
+          {step === 1 && <QuizInfoStep quiz={quiz} setQuiz={setQuiz} />}
+          {step === 2 && quiz.quizType === 'with-materials' && (
             <ResourcesStep
               resources={quiz.resources || []}
               onResourcesChange={(resources) => setQuiz(prev => ({ ...prev, resources }))}
             />
           )}
-          {step === 2 && (
+          {((step === 2 && quiz.quizType === 'standard') || (step === 3 && quiz.quizType === 'with-materials')) && (
             <QuestionsStep
               quiz={quiz}
               setQuiz={setQuiz}
@@ -290,7 +560,9 @@ const CreateQuizPage: React.FC = () => {
               moveQuestion={moveQuestion}
             />
           )}
-          {step === 3 && <ReviewStep quiz={quiz} />}
+          {((step === 3 && quiz.quizType === 'standard') || (step === 4 && quiz.quizType === 'with-materials')) && (
+            <ReviewStep quiz={quiz} />
+          )}
 
           {/* Navigation */}
           <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
@@ -298,24 +570,38 @@ const CreateQuizPage: React.FC = () => {
               onClick={prevStep}
               disabled={step === 0}
               variant="outline"
+              className="h-11"
             >
               ← {t('createQuiz.back')}
             </Button>
 
             <div className="flex gap-3">
-              {step === steps.length - 1 ? (
-                <Button
-                  onClick={handleSubmit}
-                  disabled={submitting || !validateStep(step)}
-                  loading={submitting}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  🚀 {t('createQuiz.publish')}
-                </Button>
+              {/* Check if it's the last step based on quiz type */}
+              {((quiz.quizType === 'standard' && step === 3) || (quiz.quizType === 'with-materials' && step === 4)) ? (
+                <>
+                  <Button
+                    onClick={handleSaveDraft}
+                    disabled={submitting || !quiz.title || !quiz.quizType}
+                    loading={submitting}
+                    variant="outline"
+                    className="h-11 border-blue-300 text-blue-700 hover:bg-blue-50"
+                  >
+                    💾 Lưu bản nháp
+                  </Button>
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={submitting || !validateStep(step)}
+                    loading={submitting}
+                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 h-11"
+                  >
+                    🚀 {t('createQuiz.publish')}
+                  </Button>
+                </>
               ) : (
                 <Button
                   onClick={nextStep}
                   disabled={!validateStep(step)}
+                  className="h-11"
                 >
                   {t('createQuiz.continue')} →
                 </Button>
@@ -324,6 +610,28 @@ const CreateQuizPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Exit Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showExitConfirm}
+        onClose={() => setShowExitConfirm(false)}
+        onConfirm={confirmExit}
+        title="⚠️ Rời khỏi trang tạo Quiz?"
+        message="Bạn có những thay đổi chưa được lưu. Nếu rời đi, tất cả thay đổi sẽ bị mất. Bạn có chắc chắn muốn tiếp tục?"
+        confirmText="Rời khỏi"
+        cancelText="Ở lại"
+        type="warning"
+      />
+
+      {/* 🔗 Share Link Modal */}
+      <ShareLinkModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        quizId={publishedQuizId}
+        quizTitle={publishedQuizTitle}
+        hasPassword={publishedQuizHasPassword}
+        password={publishedQuizPassword}
+      />
     </div>
   );
 };

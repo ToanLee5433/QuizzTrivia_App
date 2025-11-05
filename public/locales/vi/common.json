@@ -1463,6 +1463,14 @@
       "all": "All statuses",
       "draft": "Bản nháp"
     },
+    "typeFilter": {
+      "all": "Tất cả loại",
+      "withMaterials": "Có tài liệu học",
+      "noMaterials": "Quiz thường"
+    },
+    "withMaterials": "Có tài liệu học",
+    "standardQuiz": "Quiz thường",
+    "materials": "tài liệu",
     "submitQuiz": "Nộp bài",
     "submitReview": "Submit Review",
     "tags": "Tags",
@@ -2537,11 +2545,26 @@
     "startSolo": "Bắt đầu chơi đơn",
     "multiplayer": "Nhiều người chơi",
     "multiplayerDesc": "Chơi với bạn bè",
+    "multiplayerOptions": "Chọn chế độ Multiplayer",
+    "selectOption": "Chọn cách bạn muốn chơi",
     "createRoom": "Tạo phòng",
-    "createRoomDesc": "Tạo phòng riêng",
+    "createRoomDesc": "Tạo phòng riêng của bạn",
     "becomeHost": "Trở thành chủ phòng",
     "invitePlayers": "Mời người chơi",
-    "customizeSettings": "Tùy chỉnh cài đặt"
+    "customizeSettings": "Tùy chỉnh cài đặt",
+    "joinRoom": "Tham gia phòng",
+    "joinRoomDesc": "Nhập mã phòng hoặc tìm phòng công khai",
+    "quickJoin": "Tham gia nhanh",
+    "findActiveGames": "Tìm game đang diễn ra",
+    "competeWithOthers": "Cạnh tranh với người khác",
+    "connecting": "Đang kết nối...",
+    "whyMultiplayer": "Tại sao chọn Multiplayer?",
+    "realTimeCompetition": "Thi đấu trực tiếp",
+    "realTimeDesc": "Cạnh tranh với bạn bè và người chơi trên toàn thế giới trong thời gian thực",
+    "leaderboards": "Bảng xếp hạng",
+    "leaderboardsDesc": "Theo dõi thứ hạng và thành tích của bạn trên bảng xếp hạng toàn cầu",
+    "liveChat": "Chat trực tiếp",
+    "liveChatDesc": "Giao tiếp với người chơi khác trong khi chơi"
   },
   "notFound": {
     "title": "Không tìm thấy trang",

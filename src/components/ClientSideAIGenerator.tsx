@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
-import { geminiAI } from '../services/geminiAI';
+import { FirebaseAIService } from '../features/quiz/services/firebaseAIService';
 import { FileProcessor } from '../services/fileProcessor';
-import { AI_CONFIG } from '../config/constants';
 import { Sparkles, Wand2, CheckCircle, XCircle, RefreshCw, Upload, File, Image, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -36,17 +35,19 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
   const testConnection = async () => {
     setIsTesting(true);
     try {
-      const result = await geminiAI.testConnection();
-      if (result.success) {
+      // Test bằng cách gọi Cloud Function testAI
+      const available = await FirebaseAIService.checkAvailability();
+      if (available) {
         setConnectionStatus('connected');
-        toast.success(t('aiGenerator.connectionSuccess'));
+        toast.success('✅ Kết nối Cloud Functions AI thành công!');
       } else {
         setConnectionStatus('failed');
-        toast.error(t('aiGenerator.connectionFailed', { message: result.message }));
+        toast.error('❌ Không thể kết nối Cloud Functions');
       }
     } catch (error) {
       setConnectionStatus('failed');
-      toast.error(t('aiGenerator.connectionError'));
+      toast.error('❌ Lỗi kết nối Cloud Functions');
+      console.error('Test connection error:', error);
     } finally {
       setIsTesting(false);
     }
@@ -114,25 +115,42 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
 
   const generateQuestions = async () => {
     const topicToUse = formData.useFileContent && fileContent 
-      ? `${t('aiGenerator.basedOnFile')}: ${fileContent}. ${t('aiGenerator.createQuestionsAbout')}: ${formData.topic}`
+      ? `Dựa trên file: ${fileContent}.\n\nChủ đề cụ thể: ${formData.topic}`
       : formData.topic;
 
     if (!topicToUse.trim()) {
-      toast.error(t('aiGenerator.pleaseEnterTopicOrFile'));
+      toast.error('Vui lòng nhập chủ đề hoặc upload file');
       return;
     }
 
     setIsGenerating(true);
     try {
-      const result = await geminiAI.generateQuestions(
-        topicToUse,
-        formData.difficulty,
-        formData.numQuestions
+      // Gọi Firebase Cloud Function để generate câu hỏi
+      const questions = await FirebaseAIService.generateQuestions(
+        { 
+          model: 'gemini-2.0-flash-exp',
+          temperature: 0.7 
+        },
+        {
+          content: topicToUse,
+          numQuestions: formData.numQuestions,
+          difficulty: formData.difficulty,
+          language: 'vi'
+        }
       );
 
-      if (result.success && result.questions) {
-        onQuestionsGenerated(result.questions);
-        toast.success(`✅ ${result.message}`);
+      if (questions && questions.length > 0) {
+        // Convert to simple format
+        const simpleQuestions = questions.map(q => ({
+          text: q.text,
+          answers: q.answers.map(a => ({
+            text: a.text,
+            isCorrect: a.isCorrect
+          }))
+        }));
+
+        onQuestionsGenerated(simpleQuestions);
+        toast.success(`✅ Đã tạo thành công ${questions.length} câu hỏi!`);
         
         // Reset form
         setFormData({
@@ -146,11 +164,12 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
         setUploadedFile(null);
         setFileContent('');
       } else {
-        toast.error('❌ ' + result.error);
+        toast.error('❌ Không tạo được câu hỏi');
       }
     } catch (error) {
       console.error('Generation error:', error);
-      toast.error(t('aiGenerator.questionGenerationError'));
+      const errorMsg = error instanceof Error ? error.message : 'Lỗi không xác định';
+      toast.error('❌ ' + errorMsg);
     } finally {
       setIsGenerating(false);
     }
@@ -348,11 +367,11 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <h4 className="text-sm font-medium text-blue-800 mb-2">💡 Thông tin:</h4>
           <ul className="text-sm text-blue-700 space-y-1">
-            <li>• Sử dụng Google Gemini AI miễn phí</li>
-            <li>• Không cần Firebase Functions</li>
-            <li>• Chạy trực tiếp trên trình duyệt</li>
+            <li>• Sử dụng Firebase Cloud Functions + Google Gemini AI</li>
+            <li>• Model: gemini-2.0-flash-exp (mới nhất)</li>
+            <li>• Xử lý thông qua server (bảo mật API key)</li>
             <li>• <strong>Mới:</strong> Hỗ trợ đọc file ảnh, PDF, Word, Text</li>
-            <li>• Free tier: {AI_CONFIG.maxRequestsPerMinute} requests/phút</li>
+            <li>• Không giới hạn quota client-side</li>
           </ul>
         </div>
       </div>

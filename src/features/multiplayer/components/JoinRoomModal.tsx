@@ -8,24 +8,16 @@ interface JoinRoomModalProps {
   isOpen: boolean;
   onClose: () => void;
   onJoinRoom: (roomCode: string, password?: string) => void;
-  onRoomJoined: (roomId: string, roomData: any) => void;
   loading?: boolean;
   error?: string;
-  currentUserId: string;
-  currentUserName: string;
-  multiplayerService: any;
 }
 
 const JoinRoomModal: React.FC<JoinRoomModalProps> = ({
   isOpen,
   onClose,
   onJoinRoom,
-  // onRoomJoined,
   loading = false,
-  error,
-  // currentUserId,
-  // currentUserName,
-  // multiplayerService
+  error
 }) => {
   const { t } = useTranslation();
   const [roomCode, setRoomCode] = useState('');
@@ -37,15 +29,19 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('📝 Join room submit:', { step, roomCode, hasPassword: !!password });
+    
     if (step === 'code') {
       if (!roomCode.trim()) return;
       
-      // Try joining with room code first
+      // Try joining with room code first (no password)
+      console.log('🚪 Attempting to join without password');
       onJoinRoom(roomCode.trim().toUpperCase());
     } else if (step === 'password') {
       if (!password.trim()) return;
       
       // Join with password
+      console.log('🔑 Attempting to join with password');
       onJoinRoom(roomCode.trim().toUpperCase(), password.trim());
     }
   };
@@ -61,8 +57,16 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({
   // Handle specific errors
   React.useEffect(() => {
     if (!error) return;
+    
+    console.log('❌ Join room error received:', error);
     const lower = error.toLowerCase();
-    if (lower.includes('yêu cầu mật khẩu') || lower.includes('password')) {
+    
+    // Check for password-related errors in Vietnamese and English
+    if (lower.includes('yêu cầu mật khẩu') || 
+        lower.includes('password') || 
+        lower.includes('room_requires_password') ||
+        lower.includes('passwordrequired')) {
+      console.log('🔒 Password required, switching to password step');
       setStep('password');
       setShowPasswordField(true);
     }
@@ -72,26 +76,41 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({
   React.useEffect(() => {
     const check = async () => {
       const code = roomCode.trim().toUpperCase();
-      if (step !== 'code' || code.length !== 6 || loading || checkingCode) return;
+      
+      // Only check when we have a complete code and not already in password step
+      if (code.length !== 6 || loading || step === 'password') return;
+      
+      // Prevent concurrent checks
+      if (checkingCode) return;
+      
       try {
         setCheckingCode(true);
         const q = query(collection(db, 'multiplayer_rooms'), where('code', '==', code), limit(1));
         const snap = await getDocs(q);
+        
         if (!snap.empty) {
           const data = snap.docs[0].data() as any;
+          console.log('🔍 Room check:', { code, isPrivate: data.isPrivate });
+          
           if (data.isPrivate) {
+            console.log('🔒 Room requires password, showing password field');
             setShowPasswordField(true);
             setStep('password');
           }
         }
       } catch (e) {
+        console.error('Error checking room:', e);
         // Silent fail; will be handled on submit
       } finally {
         setCheckingCode(false);
       }
     };
-    check();
-  }, [roomCode, step, loading, checkingCode]);
+    
+    // Add small delay to avoid checking on every keystroke
+    const timer = setTimeout(check, 500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomCode, loading]);
 
   if (!isOpen) return null;
 
@@ -153,7 +172,17 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({
           )}
 
           {/* Error Display */}
-          {error && error !== 'Phòng này yêu cầu mật khẩu' && (
+          {error && step !== 'password' && (
+            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+              <span className="text-red-700 text-sm">
+                {error}
+              </span>
+            </div>
+          )}
+          
+          {/* Wrong Password Error (only shown in password step) */}
+          {error && step === 'password' && error.toLowerCase().includes('sai') && (
             <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
               <span className="text-red-700 text-sm">

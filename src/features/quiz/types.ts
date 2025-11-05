@@ -46,6 +46,9 @@ export interface Quiz {
   tags: string[];
   imageUrl?: string;
   
+  // **QUIZ TYPE**: Type of quiz
+  quizType?: 'with-materials' | 'standard';
+  
   // **LEARNING RESOURCES**: Tài liệu học tập
   resources?: Array<{
     id: string;
@@ -69,6 +72,13 @@ export interface Quiz {
   averageScore?: number;
   totalPlayers?: number;
   status?: 'pending' | 'approved' | 'rejected' | 'draft'; // Trạng thái kiểm duyệt
+  
+  // **PRIVACY SETTINGS**: Advanced privacy controls
+  privacy?: 'public' | 'unlisted' | 'private' | 'password-protected';
+  password?: string; // Encrypted password for password-protected quizzes
+  allowedUsers?: string[]; // User IDs who can access private quiz
+  shareToken?: string; // Unique token for sharing unlisted/private quizzes
+  expiresAt?: Date; // Expiration date for shared links
   
   // **ADMIN FEATURES**: Enhanced admin properties
   rating?: number; // Average rating from users

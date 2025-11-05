@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../../lib/store';
 import { useQuizData, useQuizSession, useQuizTimer, useQuizNavigation } from './hooks';
 import Timer from './components/Timer';
 import ProgressIndicator from './components/ProgressIndicator';
@@ -6,15 +8,45 @@ import QuestionRenderer from './components/QuestionRenderer';
 import QuickNavigation from './components/QuickNavigation';
 import ConfirmationModals from './components/ConfirmationModals';
 import LearningResourcesView from './components/LearningResourcesView';
-// import { useNavigate } from 'react-router-dom';
+import QuizPasswordModal from '../../../../shared/components/ui/QuizPasswordModal';
+import { unlockQuiz } from '../../../../lib/services/quizAccessService';
+import { toast } from 'react-toastify';
 
 const QuizPage: React.FC = () => {
-  const { quiz, loading, error } = useQuizData();
+  const { quiz, loading, error, needsPassword, quizMetadata, retryLoad } = useQuizData();
+  const user = useSelector((state: RootState) => state.auth.user);
   const [showResources, setShowResources] = useState(true);
   const [hasViewedResources, setHasViewedResources] = useState(false);
 
-  // Remove the useEffect that was manually updating timer
-  // Timer is now handled by useQuizTimer hook properly
+  // Handle password submission
+  const handlePasswordSubmit = async (password: string): Promise<boolean> => {
+    if (!quizMetadata || !user) {
+      toast.error('Vui lòng đăng nhập để truy cập quiz');
+      return false;
+    }
+
+    try {
+      const success = await unlockQuiz(
+        quizMetadata.id,
+        user.uid,
+        password,
+        quizMetadata
+      );
+
+      if (success) {
+        toast.success('🎉 Đã mở khóa quiz thành công!');
+        // Retry loading questions
+        retryLoad();
+        return true;
+      }
+
+      return false;
+    } catch (err) {
+      console.error('Error unlocking quiz:', err);
+      toast.error('Có lỗi xảy ra khi mở khóa quiz');
+      return false;
+    }
+  };
 
   if (loading) {
     return (
@@ -23,6 +55,20 @@ const QuizPage: React.FC = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Đang tải quiz...</p>
         </div>
+      </div>
+    );
+  }
+
+  // Show password modal if needed
+  if (needsPassword && quizMetadata) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
+        <QuizPasswordModal
+          isOpen={true}
+          quizTitle={quizMetadata.title}
+          onClose={() => window.history.back()}
+          onSubmit={handlePasswordSubmit}
+        />
       </div>
     );
   }

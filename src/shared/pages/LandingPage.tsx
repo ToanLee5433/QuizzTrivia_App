@@ -47,7 +47,7 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Features */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mt-8 sm:mt-12 lg:mt-16 px-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mt-8 sm:mt-12 lg:mt-16 px-4">
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-6">
               <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">🎯</div>
               <h3 className="text-lg sm:text-xl font-semibold mb-2">{t('landing.features.diversity.title')}</h3>
@@ -64,7 +64,15 @@ export const LandingPage: React.FC = () => {
               </p>
             </div>
             
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-6 sm:col-span-2 lg:col-span-1">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-6">
+              <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">🎮</div>
+              <h3 className="text-lg sm:text-xl font-semibold mb-2">Multiplayer</h3>
+              <p className="text-blue-100 text-sm sm:text-base">
+                Chơi cùng bạn bè và cạnh tranh trực tiếp
+              </p>
+            </div>
+            
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-6">
               <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">🏆</div>
               <h3 className="text-lg sm:text-xl font-semibold mb-2">{t('landing.features.ranking.title')}</h3>
               <p className="text-blue-100 text-sm sm:text-base">

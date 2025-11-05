@@ -40,13 +40,19 @@ const Creator = React.lazy(() => import('./shared/pages/Creator'));
 
 // Stage 4: New Features - Offline & Multiplayer
 // const OfflineQuizManager = React.lazy(() => import('./features/offline/components/OfflineQuizManager'));
+const MultiplayerLobby = React.lazy(() => import('./features/multiplayer/pages/MultiplayerLobby'));
 const MultiplayerPage = React.lazy(() => import('./features/multiplayer/pages/MultiplayerPage'));
 const MyQuizzesPage = React.lazy(() => import('./features/quiz/pages/MyQuizzesPage'));
+const QuizDetailedStats = React.lazy(() => import('./features/quiz/pages/QuizDetailedStats'));
 
 // Stage 4: Admin Features - All lazy loaded for better performance
 const Admin = React.lazy(() => import('./features/admin/pages/Admin'));
 const AdminQuizManagement = React.lazy(() => import('./features/admin/pages/AdminQuizManagement'));
 const AdminUserManagement = React.lazy(() => import('./features/admin/pages/AdminUserManagement'));
+const BuildIndexPage = React.lazy(() => import('./features/admin/pages/BuildIndexPage'));
+
+// RAG Chatbot
+import { ChatbotButton } from './components/rag';
 const StatsDashboard = React.lazy(() => import('./features/admin/pages/StatsDashboard'));
 const CategoryManagement = React.lazy(() => import('./features/admin/pages/CategoryManagement'));
 const AdminStats = React.lazy(() => import('./features/admin/components/AdminStats'));
@@ -62,6 +68,7 @@ import AutoLogoutOnBan from './features/auth/components/AutoLogoutOnBan';
 import AdminProtectedRoute from './features/admin/components/AdminProtectedRoute';
 import NotificationBanner from './shared/components/NotificationBanner';
 import RoleBasedRedirect from './shared/components/RoleBasedRedirect';
+import ScrollToTop from './shared/components/ScrollToTop';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -412,6 +419,14 @@ const AppContent: React.FC = () => {
             </Suspense>
           </ProtectedRoute>
         } />
+
+        <Route path="/quiz-stats/:id" element={
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingFallback />}>
+              <QuizDetailedStats />
+            </Suspense>
+          </ProtectedRoute>
+        } />
         
         {/* Stage 4: Admin Routes - Wrap with Suspense */}
         <Route path="/admin" element={
@@ -489,6 +504,14 @@ const AppContent: React.FC = () => {
           </AdminProtectedRoute>
         } />
         
+        <Route path="/admin/build-index" element={
+          <AdminProtectedRoute>
+            <Suspense fallback={<LoadingFallback />}>
+              <BuildIndexPage />
+            </Suspense>
+          </AdminProtectedRoute>
+        } />
+        
         {/* Admin/creators route REMOVED - Creator Management eliminated */}
         
         <Route path="/real-quizzes" element={
@@ -509,15 +532,16 @@ const AppContent: React.FC = () => {
           </ProtectedRoute>
         } />
         
+        {/* Multiplayer Routes - Use MultiplayerLobby for quiz selection */}
         <Route path="/multiplayer" element={
           <ProtectedRoute>
             <Suspense fallback={<LoadingFallback />}>
-              <MultiplayerPage />
+              <MultiplayerLobby />
             </Suspense>
           </ProtectedRoute>
         } />
         
-        <Route path="/multiplayer/*" element={
+        <Route path="/multiplayer/game" element={
           <ProtectedRoute>
             <Suspense fallback={<LoadingFallback />}>
               <MultiplayerPage />
@@ -576,11 +600,14 @@ function App() {
               <div className="app-container">
                 <NotificationBanner />
                 {/* <OfflineStatusIndicator /> */}
+                <ScrollToTop />
                 <Layout>
                   <AutoLogoutOnBan />
                   <AppContent />
                   <ToastContainer position="top-right" autoClose={3000} hideProgressBar newestOnTop closeOnClick pauseOnFocusLoss draggable pauseOnHover aria-label="notification" />
                 </Layout>
+                {/* AI Chatbot - Floating button at bottom-right */}
+                <ChatbotButton />
               </div>
             </ErrorBoundary>
           </AuthProvider>

@@ -9,7 +9,6 @@ const Sidebar: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
 
   const menuItems = [
-    { path: '/', label: 'Trang chủ', icon: '🏠' },
     { path: '/quizzes', label: 'Danh sách Quiz', icon: '📝' },
     { path: '/favorites', label: 'Yêu thích', icon: '❤️' },
     { path: '/leaderboard', label: 'Bảng xếp hạng', icon: '🏆' },

@@ -7,6 +7,7 @@ import {
   WifiOff,
   AlertCircle
 } from 'lucide-react';
+import { logger } from '../utils/logger';
 
 // Import các components con
 import GameModeSelector from './GameModeSelector';
@@ -16,42 +17,47 @@ import RoomLobby from './RoomLobby';
 import MultiplayerQuiz from './MultiplayerQuiz';
 import GameResults from './GameResults';
 import MultiplayerChat from './MultiplayerChat';
+import MobileChatModal from './MobileChatModal';
 
 // Import services
 import { getMultiplayerService, MultiplayerServiceInterface } from '../services/enhancedMultiplayerService';
 
 // Types
+import type { Quiz } from '../types/index';
+import type { GameResults as GameResultsType } from '../types/index';
+
 export interface MultiplayerState {
   currentState: 'mode-selection' | 'create-room' | 'join-room' | 'lobby' | 'game' | 'results';
   roomId?: string;
-  roomData?: any;
-  gameData?: any;
-  results?: any;
+  roomData?: any; // Complex type, needs full refactor
+  gameData?: any; // Complex type, needs full refactor
+  results?: GameResultsType;
   error?: string;
   isConnecting: boolean;
   isConnected: boolean;
 }
 
 interface MultiplayerManagerProps {
-  selectedQuiz?: any;
+  selectedQuiz?: Quiz;
   currentUserId: string;
   currentUserName: string;
-  onBackToQuizSelection: () => void;
-  onQuizComplete: (results: any) => void;
+  onBackToLobby: () => void;
+  onQuizComplete: (results: GameResultsType) => void;
   initialRoomId?: string;
 }
 
 const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
-  selectedQuiz,
+  selectedQuiz: initialSelectedQuiz,
   currentUserId,
   currentUserName,
-  onBackToQuizSelection,
+  onBackToLobby,
   onQuizComplete,
   initialRoomId
 }) => {
   const { t } = useTranslation();
+  const [selectedQuiz] = useState<any>(initialSelectedQuiz);
   const [state, setState] = useState<MultiplayerState>({
-    currentState: 'mode-selection',
+    currentState: 'mode-selection', // Luôn bắt đầu từ mode-selection vì quiz đã được chọn từ MultiplayerLobby
     isConnecting: false,
     isConnected: false
   });
@@ -63,6 +69,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
   const [joinError, setJoinError] = useState<string | undefined>(undefined);
 	const [createLoading, setCreateLoading] = useState<boolean>(false);
 	const [joinLoading, setJoinLoading] = useState<boolean>(false);
+  const [isMobileChatOpen, setIsMobileChatOpen] = useState<boolean>(false);
 
   // Initialize multiplayer service
   useEffect(() => {
@@ -114,7 +121,21 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
 
   // Event handlers
   const handleRoomUpdate = useCallback((roomData: any) => {
-    setState(prev => ({ ...prev, roomData }));
+    logger.debug('Room updated', { 
+      roomId: roomData?.id, 
+      status: roomData?.status,
+      playerCount: roomData?.players?.length 
+    });
+    
+    setState(prev => {
+      // Preserve existing players if not in new roomData
+      const updatedRoomData = {
+        ...roomData,
+        players: roomData.players || prev.roomData?.players || []
+      };
+      
+      return { ...prev, roomData: updatedRoomData };
+    });
     
     // Auto-start countdown when all players ready (no host restriction)
     try {
@@ -126,14 +147,16 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
       if (allReady && state.currentState === 'lobby') {
         if (readyCountdown === null) {
           setReadyCountdown(5);
+          logger.info('All players ready - starting countdown', { total, ready });
         }
       } else {
         if (readyCountdown !== null) {
           setReadyCountdown(null);
+          logger.debug('Countdown cancelled', { total, ready, allReady });
         }
       }
     } catch (error) {
-      console.error('Error in handleRoomUpdate:', error);
+      logger.error('Error in handleRoomUpdate', error);
     }
   }, [state.currentState, readyCountdown]);
 
@@ -143,11 +166,11 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
     if (readyCountdown <= 0) {
       // Start game when countdown reaches 0 (any player can trigger)
       if (multiplayerService && state.roomId) {
-        console.log('🎮 Starting game from countdown...');
+        logger.info('Starting game from countdown...');
         multiplayerService.startGame(state.roomId).then(() => {
-          console.log('✅ Game started successfully');
+          logger.success('Game started successfully');
         }).catch((error) => {
-          console.error('❌ Failed to start game:', error);
+          logger.error('Failed to start game', error);
           toast.error('Failed to start game');
         });
       }
@@ -163,11 +186,8 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
   }, [readyCountdown, multiplayerService, state.roomId]);
 
   const handleGameStart = useCallback((gameData: any) => {
-    console.log('🎮 Game Start Event Received:', {
-      gameData,
-      gameDataKeys: gameData ? Object.keys(gameData) : 'No gameData',
-      hasQuestions: gameData?.questions ? gameData.questions.length : 'No questions',
-      firstQuestion: gameData?.questions?.[0] || 'No first question'
+    logger.debug('Game Start Event Received', {
+      hasQuestions: gameData?.questions?.length || 0
     });
     
     setState(prev => ({ 
@@ -175,16 +195,13 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
       currentState: 'game', 
       gameData 
     }));
-    // toast.success(t('multiplayer.success.gameStarted')); // Removed - too many notifications
-  }, [t]);
+  }, []);
 
   const handleNextQuestion = useCallback((gameData: any) => {
-    // console.log('🔄 Next question data:', gameData); // Removed debug
     setState(prev => ({ 
       ...prev, 
       gameData
     }));
-    // toast.info(`Question ${gameData.index}/${gameData.total}`); // Removed - too many notifications
   }, []);
 
   const handleGameFinish = useCallback((results: any) => {
@@ -197,15 +214,26 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
   }, [onQuizComplete]);
 
   const handlePlayersUpdate = useCallback((players: any[]) => {
-    console.log('Players updated:', players);
-    setState(prev => ({
-      ...prev,
-      roomData: prev.roomData ? { ...prev.roomData, players } : undefined
-    }));
+    logger.debug('Players updated', { count: players.length, playerIds: players.map(p => p.id) });
+    setState(prev => {
+      // Ensure we merge players into existing roomData
+      if (!prev.roomData) {
+        logger.warn('Received players update but no roomData exists');
+        return prev;
+      }
+      
+      return {
+        ...prev,
+        roomData: { 
+          ...prev.roomData, 
+          players 
+        }
+      };
+    });
   }, []);
 
   const handleMessagesUpdate = useCallback((messages: any[]) => {
-    console.log('Messages updated:', messages);
+    logger.debug('Messages updated', { count: messages.length });
     setChatMessages(messages);
   }, []);
 
@@ -246,6 +274,11 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
       gameData: undefined,
       results: undefined
     }));
+  };
+
+  const handleBackToQuizSelection = () => {
+    // Navigate back to lobby to select another quiz
+    onBackToLobby();
   };
 
   const handleRoomCreated = (roomId: string, roomData: any) => {
@@ -323,8 +356,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
         return (
           <GameModeSelector
             isOpen={true}
-            onClose={onBackToQuizSelection}
-            onSelectSinglePlayer={onBackToQuizSelection}
+            onClose={handleBackToQuizSelection}
             onSelectMultiplayer={handleModeSelection}
             connectionStatus={connectionStatus}
           />
@@ -342,7 +374,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
 								toast.info(t('multiplayer.errors.reconnecting'));
 								return;
 							}
-							const result = await multiplayerService.createRoom(roomConfig, selectedQuiz);
+							const result = await multiplayerService.createRoom(roomConfig as any, selectedQuiz);
 							if (result) {
 								handleRoomCreated(result.room.id, result.room);
 							}
@@ -354,11 +386,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
 							setCreateLoading(false);
 						}
             }}
-            onRoomCreated={handleRoomCreated}
             selectedQuiz={selectedQuiz}
-            currentUserId={currentUserId}
-            currentUserName={currentUserName}
-					multiplayerService={multiplayerService}
 					loading={createLoading || connectionStatus !== 'connected'}
           />
         );
@@ -375,62 +403,121 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
               try {
 							setJoinError(undefined);
 							setJoinLoading(true);
+							
+							console.log('🎮 Manager: Attempting to join room', { roomCode, hasPassword: !!password });
+							
 							if (!multiplayerService || connectionStatus !== 'connected') {
 								toast.info(t('multiplayer.errors.reconnecting'));
 								return;
 							}
+							
 							const result = await multiplayerService.joinRoom(roomCode, password);
                 if (result) {
+                  console.log('✅ Manager: Successfully joined room');
                   handleRoomJoined(result.room.id, result.room);
                 }
               } catch (error: any) {
-                console.error('Failed to join room:', error);
-                const errorMessage = error.message || t('multiplayer.errors.joinRoomFailed');
+                console.error('❌ Manager: Failed to join room:', error);
+                console.log('Error details:', { message: error.message, code: error.code });
+                
+                // Translate error messages
+                let errorMessage = t('multiplayer.errors.joinRoomFailed');
+                const errorCode = error.message || '';
+                
+                if (errorCode === 'room_not_found') {
+                  errorMessage = t('multiplayer.errors.roomNotFound', 'Không tìm thấy phòng');
+                } else if (errorCode === 'room_requires_password') {
+                  errorMessage = t('multiplayer.errors.passwordRequired', 'Phòng này yêu cầu mật khẩu');
+                } else if (errorCode === 'wrong_password') {
+                  errorMessage = t('multiplayer.errors.wrongPassword', 'Mật khẩu không đúng');
+                } else if (errorCode === 'room_full') {
+                  errorMessage = t('multiplayer.errors.roomFull', 'Phòng đã đầy');
+                } else if (errorCode === 'game_in_progress') {
+                  errorMessage = t('multiplayer.errors.gameInProgress', 'Game đang diễn ra');
+                } else if (errorCode) {
+                  errorMessage = errorCode;
+                }
+                
+                console.log('📨 Manager: Setting error message:', errorMessage);
                 setJoinError(errorMessage);
-                toast.error(errorMessage);
+                
+                // Don't show toast for password required error - let modal handle it
+                if (errorCode !== 'room_requires_password') {
+                  toast.error(errorMessage);
+                }
 						} finally {
 							setJoinLoading(false);
 						}
             }}
-            onRoomJoined={handleRoomJoined}
 					loading={joinLoading || connectionStatus !== 'connected'}
             error={joinError}
-            currentUserId={currentUserId}
-            currentUserName={currentUserName}
-            multiplayerService={multiplayerService}
           />
         );
 
       case 'lobby':
         return (
-          <div className="flex h-screen">
-            <div className="flex-1">
+          <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50">
+            {/* Main Lobby - Full width on mobile, flex-1 on desktop */}
+            <div className="flex-1 overflow-y-auto">
               <RoomLobby
                 roomData={state.roomData}
                 currentUserId={currentUserId}
                 onLeaveRoom={handleLeaveRoom}
-                multiplayerService={multiplayerService}
+                multiplayerService={multiplayerService ?? undefined}
               />
               {readyCountdown !== null && (
-                <div className="m-4 p-3 bg-blue-50 border border-blue-200 rounded text-blue-700 inline-block">
-                  {t('common.start')}: {readyCountdown}s
+                <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
+                  <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-pulse">
+                    <div className="w-3 h-3 bg-white rounded-full animate-ping"></div>
+                    <span className="font-bold text-lg">
+                      {t('common.start')}: {readyCountdown}s
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
-            <div className="w-80 border-l border-gray-200">
-              <MultiplayerChat
-                messages={chatMessages}
-                onSendMessage={handleSendChatMessage}
-                currentUserId={currentUserId}
-              />
+            
+            {/* Chat Sidebar - Hidden on mobile, show on lg+ */}
+            <div className="hidden lg:block lg:w-80 xl:w-96 border-l border-gray-200 bg-white">
+              <div className="h-screen sticky top-0">
+                <MultiplayerChat
+                  messages={chatMessages}
+                  onSendMessage={handleSendChatMessage}
+                  currentUserId={currentUserId}
+                />
+              </div>
             </div>
+
+            {/* Mobile Chat Button - Show only on mobile */}
+            <button 
+              className="lg:hidden fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-full shadow-2xl flex items-center justify-center z-50 hover:scale-110 transition-transform"
+              onClick={() => setIsMobileChatOpen(true)}
+            >
+              <Users className="w-6 h-6" />
+              {chatMessages.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                  {chatMessages.length > 9 ? '9+' : chatMessages.length}
+                </span>
+              )}
+            </button>
+
+            {/* Mobile Chat Modal */}
+            <MobileChatModal
+              isOpen={isMobileChatOpen}
+              onClose={() => setIsMobileChatOpen(false)}
+              messages={chatMessages}
+              currentUserId={currentUserId}
+              onSendMessage={handleSendChatMessage}
+              disabled={false}
+            />
           </div>
         );
 
       case 'game':
         return (
-          <div className="flex h-screen">
-            <div className="flex-1">
+          <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50">
+            {/* Game Area - Full width on mobile */}
+            <div className="flex-1 overflow-y-auto">
               <MultiplayerQuiz
                 gameData={state.gameData}
                 roomData={state.roomData}
@@ -439,12 +526,17 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
                 multiplayerService={multiplayerService}
               />
             </div>
-            <div className="w-80 border-l border-gray-200">
-              <MultiplayerChat
-                messages={chatMessages}
-                onSendMessage={handleSendChatMessage}
-                currentUserId={currentUserId}
-              />
+            
+            {/* Chat Sidebar - Hidden on mobile during game */}
+            <div className="hidden lg:block lg:w-80 xl:w-96 border-l border-gray-200 bg-white">
+              <div className="h-screen sticky top-0">
+                <MultiplayerChat
+                  messages={chatMessages}
+                  onSendMessage={handleSendChatMessage}
+                  currentUserId={currentUserId}
+                  disabled={true}
+                />
+              </div>
             </div>
           </div>
         );
@@ -452,10 +544,11 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
       case 'results':
         return (
           <GameResults
-            results={state.results}
-            roomData={state.roomData}
+            players={state.results?.players as any || []}
+            currentUserId={currentUserId}
             onPlayAgain={handleBackToModeSelection}
-            onBackToMenu={onBackToQuizSelection}
+            onBackToLobby={onBackToLobby}
+            onLeaveRoom={handleLeaveRoom}
           />
         );
 
@@ -471,14 +564,21 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
-              onClick={onBackToQuizSelection}
+              onClick={handleBackToQuizSelection}
               className="text-white hover:text-gray-200 transition-colors"
             >
               ← {t('common.back')}
             </button>
-            <h1 className="text-xl font-bold text-white">
-              {t('multiplayer.title')}
-            </h1>
+            <div>
+              <h1 className="text-xl font-bold text-white">
+                {t('multiplayer.title')}
+              </h1>
+              {selectedQuiz && (
+                <p className="text-sm text-purple-200">
+                  🎯 {selectedQuiz.title} • {selectedQuiz.questions?.length || 0} câu hỏi
+                </p>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-4">
             {renderConnectionStatus()}

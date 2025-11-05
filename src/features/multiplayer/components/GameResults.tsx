@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Trophy, Medal, Award, Users, Clock, Target } from 'lucide-react';
 
@@ -13,7 +13,6 @@ interface Player {
 }
 
 interface GameResultsProps {
-  results?: any;
   players?: Player[];
   currentUserId?: string;
   gameStats?: {
@@ -21,25 +20,31 @@ interface GameResultsProps {
     totalTime: number;
     averageScore: number;
   };
-  roomData?: any;
   onPlayAgain?: () => void;
   onBackToLobby?: () => void;
-  onBackToMenu?: () => void;
   onLeaveRoom?: () => void;
 }
 
 const GameResults: React.FC<GameResultsProps> = ({
-  // results,
   players = [],
   currentUserId = '',
   gameStats = { totalQuestions: 0, totalTime: 0, averageScore: 0 },
-  // roomData,
   onPlayAgain,
   onBackToLobby,
-  // onBackToMenu,
   onLeaveRoom
 }) => {
   const { t } = useTranslation();
+
+  // Memoize expensive computations
+  const currentPlayer = useMemo(
+    () => players.find(p => p.id === currentUserId),
+    [players, currentUserId]
+  );
+
+  const sortedPlayers = useMemo(
+    () => [...players].sort((a, b) => b.score - a.score),
+    [players]
+  );
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -66,9 +71,6 @@ const GameResults: React.FC<GameResultsProps> = ({
         return 'bg-gray-50 border-gray-200';
     }
   };
-
-  const currentPlayer = players.find(p => p.id === currentUserId);
-  const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">

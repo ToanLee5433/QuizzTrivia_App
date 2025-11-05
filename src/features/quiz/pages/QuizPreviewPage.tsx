@@ -12,6 +12,7 @@ import QuickReviewSection from '../../../shared/components/QuickReviewSection';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
 import GameModeSelector from '../../multiplayer/components/GameModeSelector';
+import PasswordModal from '../../../shared/components/ui/PasswordModal';
 
 const QuizPreviewPage: React.FC = () => {
   const { t } = useTranslation();
@@ -23,6 +24,9 @@ const QuizPreviewPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [reviewStats, setReviewStats] = useState<QuizReviewStats | null>(null);
   const [showGameModeSelector, setShowGameModeSelector] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordVerified, setPasswordVerified] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'single' | 'multi' | null>(null);
 
   useEffect(() => {
     const fetchQuiz = async () => {
@@ -63,6 +67,43 @@ const QuizPreviewPage: React.FC = () => {
     }
   }, [location.state]);
 
+  // 🔒 Handle start quiz with password check
+  const handleStartQuiz = (mode: 'single' | 'multi') => {
+    if (!quiz) return;
+    
+    const havePassword = (quiz as any).havePassword || 'public';
+    
+    // If password-protected and not verified yet, show password modal
+    if (havePassword === 'password' && !passwordVerified) {
+      setPendingAction(mode);
+      setShowPasswordModal(true);
+      return;
+    }
+    
+    // Otherwise, proceed with starting quiz
+    if (mode === 'single') {
+      navigate(`/quiz/${quiz.id}`);
+    } else {
+      navigate('/multiplayer', { state: { selectedQuiz: quiz } });
+    }
+  };
+
+  // 🔒 Handle password verification success
+  const handlePasswordSuccess = () => {
+    if (!quiz) return;
+    
+    setShowPasswordModal(false);
+    setPasswordVerified(true);
+    
+    // Execute pending action
+    if (pendingAction === 'single') {
+      navigate(`/quiz/${quiz.id}`);
+    } else if (pendingAction === 'multi') {
+      navigate('/multiplayer', { state: { selectedQuiz: quiz } });
+    }
+    setPendingAction(null);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -87,6 +128,9 @@ const QuizPreviewPage: React.FC = () => {
       </div>
     );
   }
+
+  // 🔒 Check if user has access to this quiz
+  // Removed - All quizzes are accessible (password check happens when starting)
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -432,16 +476,26 @@ const QuizPreviewPage: React.FC = () => {
       <GameModeSelector
         isOpen={showGameModeSelector}
         onClose={() => setShowGameModeSelector(false)}
-        onSelectSinglePlayer={() => {
-          setShowGameModeSelector(false);
-          navigate(`/quiz/${quiz.id}`);
-        }}
         onSelectMultiplayer={() => {
           setShowGameModeSelector(false);
-          navigate('/multiplayer', { state: { selectedQuiz: quiz } });
+          handleStartQuiz('multi');
         }}
         connectionStatus="connected"
       />
+
+      {/* 🔒 Password Modal for password-protected quizzes */}
+      {quiz && (quiz as any).havePassword === 'password' && (
+        <PasswordModal
+          isOpen={showPasswordModal}
+          onClose={() => {
+            setShowPasswordModal(false);
+            setPendingAction(null);
+          }}
+          onSuccess={handlePasswordSuccess}
+          correctPassword={(quiz as any).password || ''}
+          quizTitle={quiz.title}
+        />
+      )}
     </div>
   );
 };

@@ -11,7 +11,10 @@ export const defaultQuiz: QuizFormData = {
   tags: [],
   allowRetake: true, // Mặc định cho phép làm lại
   isPublic: true, // Mặc định là Public
+  quizType: undefined, // 🆕 Will be selected in step 0
   resources: [], // 🆕 Learning Materials
+  havePassword: 'public', // 🔒 Default is public (no password required)
+  password: '', // 🔒 Password for password-protected quiz
 };
 
 export const categories = [
@@ -30,8 +33,9 @@ export const difficulties = [
 ];
 
 export const steps = [
-  'Thông tin Quiz',
-  'Tài liệu học tập', // 🆕 Resources step (moved to step 2)
-  'Câu hỏi',
-  'Xem lại & Xuất bản',
+  'Chọn Loại Quiz', // Step 0: Quiz Type Selection
+  'Thông tin Quiz', // Step 1: Quiz Info (includes password now)
+  'Tài liệu học tập', // Step 2: Resources (conditional - only for with-materials)
+  'Câu hỏi', // Step 3: Questions
+  'Xem lại & Xuất bản', // Step 4: Review
 ];

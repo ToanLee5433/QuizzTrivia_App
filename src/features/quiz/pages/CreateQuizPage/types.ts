@@ -32,9 +32,20 @@ export interface QuizFormData {
   isPublic?: boolean;
   allowRetake?: boolean;
   
+  // 🆕 Quiz Type
+  quizType?: 'with-materials' | 'standard';
+  
   // 🆕 Learning Materials
   resources?: LearningResource[];
   learningResources?: LearningResource[]; // Alias for backward compatibility
+  
+  // 🔒 Have Password Settings (Simplified)
+  havePassword?: 'public' | 'password'; // public: hiện trong list, vào ngay | password: hiện trong list, cần password
+  password?: string; // Required for password-protected quizzes
+  
+  // 📝 Draft System
+  status?: 'draft' | 'pending' | 'approved' | 'rejected'; // draft: bản nháp, pending: chờ duyệt, approved: đã duyệt, rejected: bị từ chối
+  isDraft?: boolean; // Helper flag for quick checks
 }
 
 export interface SortableItemProps {

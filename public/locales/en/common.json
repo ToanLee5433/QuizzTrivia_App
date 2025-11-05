@@ -1463,6 +1463,14 @@
       "all": "All statuses",
       "draft": "Draft"
     },
+    "typeFilter": {
+      "all": "All Types",
+      "withMaterials": "With Learning Materials",
+      "noMaterials": "Standard Quiz"
+    },
+    "withMaterials": "With Materials",
+    "standardQuiz": "Standard Quiz",
+    "materials": "materials",
     "submitQuiz": "Submit Quiz",
     "submitReview": "Submit Review",
     "tags": "Tags",
@@ -2537,11 +2545,26 @@
     "startSolo": "Start Solo",
     "multiplayer": "Multiplayer",
     "multiplayerDesc": "Play with friends",
+    "multiplayerOptions": "Multiplayer Options",
+    "selectOption": "Choose how you want to play",
     "createRoom": "Create Room",
-    "createRoomDesc": "Create private room",
+    "createRoomDesc": "Create your own private room",
     "becomeHost": "Become Host",
     "invitePlayers": "Invite Players",
-    "customizeSettings": "Customize Settings"
+    "customizeSettings": "Customize Settings",
+    "joinRoom": "Join Room",
+    "joinRoomDesc": "Enter a room code or browse public rooms",
+    "quickJoin": "Quick join",
+    "findActiveGames": "Find active games",
+    "competeWithOthers": "Compete with others",
+    "connecting": "Connecting...",
+    "whyMultiplayer": "Why Choose Multiplayer?",
+    "realTimeCompetition": "Real-time Competition",
+    "realTimeDesc": "Compete with friends and players worldwide in real-time",
+    "leaderboards": "Leaderboards",
+    "leaderboardsDesc": "Track your ranking and achievements on global leaderboards",
+    "liveChat": "Live Chat",
+    "liveChatDesc": "Communicate with other players during the game"
   },
   "notFound": {
     "title": "Page Not Found",

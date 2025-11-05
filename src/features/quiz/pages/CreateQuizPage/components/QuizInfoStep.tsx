@@ -5,7 +5,7 @@ import { categories, difficulties } from '../constants';
 import RichTextEditor from '../../../../../shared/components/ui/RichTextEditor';
 import RichTextViewer from '../../../../../shared/components/ui/RichTextViewer';
 import ImageUploader from '../../../../../components/ImageUploader';
-import { BookOpen, Clock, Tag, Star, FileText, ImageIcon, Globe, Lock } from 'lucide-react';
+import { BookOpen, Clock, Tag, Star, FileText, ImageIcon, Lock, Key } from 'lucide-react';
 
 interface QuizInfoStepProps {
   quiz: QuizFormData;
@@ -223,111 +223,77 @@ const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
           </p>
         </div>
 
-        {/* Privacy Settings - Public/Private */}
-        <div className="space-y-3">
+        {/* Password Protection */}
+        <div className="space-y-4">
           <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-            <Globe className="w-4 h-4" />
-            Quyền riêng tư
+            <Lock className="w-4 h-4" />
+            Bảo mật Quiz
           </label>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Public Option */}
-            <button
-              type="button"
-              onClick={() => setQuiz(q => ({ ...q, isPublic: true }))}
-              className={`relative p-4 border-2 rounded-xl transition-all ${
-                quiz.isPublic === true
-                  ? 'border-blue-500 bg-blue-50 shadow-md'
-                  : 'border-gray-200 hover:border-blue-300 bg-white'
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-lg ${
-                  quiz.isPublic === true ? 'bg-blue-500' : 'bg-gray-200'
-                }`}>
-                  <Globe className={`w-5 h-5 ${
-                    quiz.isPublic === true ? 'text-white' : 'text-gray-600'
-                  }`} />
-                </div>
-                <div className="flex-1 text-left">
-                  <h4 className={`font-semibold mb-1 ${
-                    quiz.isPublic === true ? 'text-blue-900' : 'text-gray-900'
-                  }`}>
-                    🌍 Public (Công khai)
-                  </h4>
-                  <p className="text-sm text-gray-600">
-                    Mọi người đều có thể tìm kiếm và làm quiz này
-                  </p>
-                </div>
-                {quiz.isPublic === true && (
-                  <div className="absolute top-2 right-2">
-                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                      <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                  </div>
-                )}
+          {/* Have Password Checkbox */}
+          <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200">
+            <input
+              type="checkbox"
+              id="havePassword"
+              checked={quiz.havePassword === 'password'}
+              onChange={(e) => {
+                setQuiz(q => ({
+                  ...q,
+                  havePassword: e.target.checked ? 'password' : 'public',
+                  password: e.target.checked ? q.password : ''
+                }));
+              }}
+              className="w-5 h-5 text-purple-600 rounded focus:ring-2 focus:ring-purple-500"
+            />
+            <label htmlFor="havePassword" className="flex-1 cursor-pointer">
+              <div className="font-semibold text-purple-900 flex items-center gap-2">
+                🔒 Yêu cầu mật khẩu để làm bài
               </div>
-            </button>
-
-            {/* Private Option */}
-            <button
-              type="button"
-              onClick={() => setQuiz(q => ({ ...q, isPublic: false }))}
-              className={`relative p-4 border-2 rounded-xl transition-all ${
-                quiz.isPublic === false
-                  ? 'border-purple-500 bg-purple-50 shadow-md'
-                  : 'border-gray-200 hover:border-purple-300 bg-white'
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-lg ${
-                  quiz.isPublic === false ? 'bg-purple-500' : 'bg-gray-200'
-                }`}>
-                  <Lock className={`w-5 h-5 ${
-                    quiz.isPublic === false ? 'text-white' : 'text-gray-600'
-                  }`} />
-                </div>
-                <div className="flex-1 text-left">
-                  <h4 className={`font-semibold mb-1 ${
-                    quiz.isPublic === false ? 'text-purple-900' : 'text-gray-900'
-                  }`}>
-                    🔒 Private (Riêng tư)
-                  </h4>
-                  <p className="text-sm text-gray-600">
-                    Chỉ bạn và người có link mới truy cập được
-                  </p>
-                </div>
-                {quiz.isPublic === false && (
-                  <div className="absolute top-2 right-2">
-                    <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
-                      <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </button>
+              <p className="text-sm text-purple-700 mt-1">
+                Quiz sẽ hiển thị công khai nhưng cần mật khẩu để truy cập
+              </p>
+            </label>
           </div>
 
-          {/* Info message */}
-          <div className={`p-3 rounded-lg flex items-start gap-2 text-sm ${
-            quiz.isPublic === true 
-              ? 'bg-blue-50 border border-blue-200' 
-              : 'bg-purple-50 border border-purple-200'
-          }`}>
-            <div className="mt-0.5">
-              {quiz.isPublic === true ? '🌍' : '🔒'}
+          {/* Password Input - Show when checkbox is checked */}
+          {quiz.havePassword === 'password' && (
+            <div className="ml-4 space-y-2 animate-in fade-in duration-300">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <Key className="w-4 h-4" />
+                Mật khẩu <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="password"
+                  value={quiz.password || ''}
+                  onChange={(e) => setQuiz(q => ({ ...q, password: e.target.value }))}
+                  placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
+                  minLength={6}
+                  className={`w-full px-4 py-3 pr-12 border-2 rounded-xl focus:outline-none focus:ring-2 transition-all ${
+                    quiz.password && quiz.password.length >= 6
+                      ? 'border-green-300 focus:border-green-500 focus:ring-green-500/20'
+                      : 'border-purple-200 focus:border-purple-500 focus:ring-purple-500/20'
+                  }`}
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {quiz.password && quiz.password.length >= 6 ? (
+                    <span className="text-green-600">✓</span>
+                  ) : (
+                    <Lock className="w-5 h-5 text-gray-400" />
+                  )}
+                </div>
+              </div>
+              {quiz.password && quiz.password.length < 6 && (
+                <p className="text-sm text-red-600 flex items-center gap-2">
+                  <span className="w-1 h-1 bg-red-600 rounded-full" />
+                  Mật khẩu phải có ít nhất 6 ký tự
+                </p>
+              )}
+              <p className="text-xs text-gray-600">
+                💡 Chia sẻ mật khẩu này với người cần làm quiz
+              </p>
             </div>
-            <p className={quiz.isPublic === true ? 'text-blue-800' : 'text-purple-800'}>
-              {quiz.isPublic === true 
-                ? 'Quiz công khai sẽ xuất hiện trong danh sách tìm kiếm và trang chủ, giúp nhiều người tham gia hơn.'
-                : 'Quiz riêng tư chỉ những người có link trực tiếp mới có thể truy cập. Thích hợp cho quiz nội bộ hoặc chia sẻ với nhóm nhỏ.'
-              }
-            </p>
-          </div>
+          )}
         </div>
 
         {/* Additional Settings */}

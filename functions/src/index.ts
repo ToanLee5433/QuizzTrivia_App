@@ -1,6 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import { VertexAI } from '@google-cloud/vertexai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as cors from 'cors';
 import * as nodemailer from 'nodemailer';
 
@@ -10,20 +10,17 @@ admin.initializeApp();
 // Initialize CORS
 const corsHandler = cors({ origin: true });
 
-// Initialize Vertex AI
-const vertex_ai = new VertexAI({
-  project: 'datn-quizapp',
-  location: 'us-central1'
-});
-
-const model = 'gemini-pro';
+// Initialize Google Generative AI
+const GOOGLE_AI_API_KEY = 'AIzaSyDQT4sxlCRVxm0xqvfzaBIobv-3y8KfV-k';
+const genAI = new GoogleGenerativeAI(GOOGLE_AI_API_KEY);
+const aiModel = 'gemini-2.0-flash-exp';
 
 // Configure email transporter (sử dụng Gmail SMTP)
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: functions.config().email?.user || process.env.EMAIL_USER,
-    pass: functions.config().email?.password || process.env.EMAIL_PASSWORD
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD
   }
 });
 
@@ -105,9 +102,9 @@ export const generateQuestions = functions.https.onCall(async (data, context) =>
   }
 
   try {
-    // Tạo request cho Vertex AI
-    const generativeModel = vertex_ai.preview.getGenerativeModel({
-      model: config?.model || model,
+    // Tạo request cho Google Generative AI
+    const model = genAI.getGenerativeModel({ 
+      model: config?.model || aiModel,
       generationConfig: {
         temperature: config?.temperature || 0.7,
         topP: 0.8,
@@ -116,22 +113,16 @@ export const generateQuestions = functions.https.onCall(async (data, context) =>
       },
     });
 
-    const request = {
-      contents: [{
-        role: 'user',
-        parts: [{
-          text: `${prompt}\n\nNội dung để tạo câu hỏi:\n\n${content}`
-        }]
-      }]
-    };
-
-    const response = await generativeModel.generateContent(request);
+    const promptText = `${prompt}\n\nNội dung để tạo câu hỏi:\n\n${content}`;
     
-    if (!response.response || !response.response.candidates || response.response.candidates.length === 0) {
+    const response = await model.generateContent(promptText);
+    const result = response.response;
+    
+    if (!result || !result.text()) {
       throw new Error('Không nhận được phản hồi từ AI');
     }
 
-    const generatedText = response.response.candidates[0].content.parts[0].text;
+    const generatedText = result.text();
     
     // Parse JSON từ response
     let parsedQuestions;
@@ -177,25 +168,15 @@ export const testAI = functions.https.onCall(async (data, context) => {
   }
 
   try {
-    const generativeModel = vertex_ai.preview.getGenerativeModel({
-      model: model,
-    });
+    const model = genAI.getGenerativeModel({ model: aiModel });
 
-    const request = {
-      contents: [{
-        role: 'user',
-        parts: [{
-          text: 'Hello, this is a test. Please respond with "AI is working"'
-        }]
-      }]
-    };
-
-    const response = await generativeModel.generateContent(request);
+    const response = await model.generateContent('Hello, this is a test. Please respond with "AI is working"');
+    const result = response.response;
     
     return {
       success: true,
-      message: 'Firebase AI is available',
-      response: response.response?.candidates?.[0]?.content?.parts?.[0]?.text || 'No response'
+      message: 'Google Generative AI is available',
+      response: result.text() || 'No response'
     };
 
   } catch (error) {
@@ -233,8 +214,8 @@ export const generateQuestionsHTTP = functions.https.onRequest((req, res) => {
         return;
       }
 
-      const generativeModel = vertex_ai.preview.getGenerativeModel({
-        model: config?.model || model,
+      const model = genAI.getGenerativeModel({ 
+        model: config?.model || aiModel,
         generationConfig: {
           temperature: config?.temperature || 0.7,
           topP: 0.8,
@@ -243,17 +224,11 @@ export const generateQuestionsHTTP = functions.https.onRequest((req, res) => {
         },
       });
 
-      const request = {
-        contents: [{
-          role: 'user',
-          parts: [{
-            text: `${prompt}\n\nNội dung để tạo câu hỏi:\n\n${content}`
-          }]
-        }]
-      };
-
-      const response = await generativeModel.generateContent(request);
-      const generatedText = response.response?.candidates?.[0]?.content?.parts?.[0]?.text;
+      const promptText = `${prompt}\n\nNội dung để tạo câu hỏi:\n\n${content}`;
+      
+      const response = await model.generateContent(promptText);
+      const result = response.response;
+      const generatedText = result.text();
 
       if (!generatedText) {
         throw new Error('No response from AI');
@@ -319,7 +294,7 @@ export const sendOTP = functions.https.onCall(async (data, context) => {
 
     // Send email
     await transporter.sendMail({
-      from: `"Quiz App" <${functions.config().email?.user || process.env.EMAIL_USER}>`,
+      from: `"Quiz App" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: '🔐 Mã xác thực đăng ký Quiz App',
       html: getOTPEmailHTML(otp)
@@ -356,3 +331,8 @@ export const sendOTP = functions.https.onCall(async (data, context) => {
     );
   }
 });
+
+// ============================================================
+// 🤖 RAG (Retrieval-Augmented Generation) Functions
+// ============================================================
+export { askRAG, askRAGHealth } from './rag/ask';

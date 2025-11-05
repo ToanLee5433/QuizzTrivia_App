@@ -1,0 +1,104 @@
+{
+  "rules": {
+    "rooms": {
+      "$roomId": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        
+        "presence": {
+          "$userId": {
+            ".read": "auth != null",
+            ".write": "auth != null && auth.uid == $userId",
+            ".validate": "newData.hasChildren(['isOnline', 'lastSeen', 'username'])",
+            "isOnline": {
+              ".validate": "newData.isBoolean()"
+            },
+            "lastSeen": {
+              ".validate": "newData.isNumber()"
+            },
+            "username": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 50"
+            }
+          }
+        },
+        
+        "playerStatuses": {
+          "$userId": {
+            ".read": "auth != null",
+            ".write": "auth != null && auth.uid == $userId",
+            ".validate": "newData.hasChildren(['isReady', 'updatedAt'])",
+            "isReady": {
+              ".validate": "newData.isBoolean()"
+            },
+            "updatedAt": {
+              ".validate": "newData.isNumber()"
+            }
+          }
+        },
+        
+        "game": {
+          ".read": "auth != null",
+          ".write": "auth != null",
+          "timer": {
+            ".validate": "newData.hasChildren(['timeLeft', 'isRunning', 'updatedAt'])",
+            "timeLeft": {
+              ".validate": "newData.isNumber() && newData.val() >= 0"
+            },
+            "isRunning": {
+              ".validate": "newData.isBoolean()"
+            },
+            "updatedAt": {
+              ".validate": "newData.isNumber()"
+            }
+          },
+          "currentQuestion": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          },
+          "updatedAt": {
+            ".validate": "newData.isNumber()"
+          }
+        },
+        
+        "answerProgress": {
+          "$userId": {
+            ".read": "auth != null",
+            ".write": "auth != null && auth.uid == $userId",
+            ".validate": "newData.hasChildren(['hasAnswered', 'answeredAt'])",
+            "hasAnswered": {
+              ".validate": "newData.isBoolean()"
+            },
+            "answeredAt": {
+              ".validate": "newData.isNumber()"
+            }
+          }
+        },
+        
+        "chat": {
+          ".read": "auth != null",
+          "$messageId": {
+            ".write": "auth != null && !data.exists()",
+            ".validate": "newData.hasChildren(['userId', 'username', 'message', 'timestamp'])",
+            "userId": {
+              ".validate": "newData.isString() && newData.val() == auth.uid"
+            },
+            "username": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 50"
+            },
+            "message": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 500"
+            },
+            "timestamp": {
+              ".validate": "newData.isNumber()"
+            },
+            "type": {
+              ".validate": "newData.isString() && (newData.val() == 'user' || newData.val() == 'system')"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        }
+      }
+    }
+  }
+}

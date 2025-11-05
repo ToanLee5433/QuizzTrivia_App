@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import MultiplayerManager from '../components/MultiplayerManager';
+import MultiplayerErrorBoundary from '../components/MultiplayerErrorBoundary';
+import { logger } from '../utils/logger';
 
 interface LocationState {
   selectedQuiz?: any;
@@ -22,39 +24,33 @@ const MultiplayerPage: React.FC = () => {
       return;
     }
     
-    // Require actual quiz selection - NO fallback
+    // Quiz is now optional - can be selected inside multiplayer
     const selectedQuiz = state?.selectedQuiz;
     
-    if (!selectedQuiz) {
-      console.error('❌ No quiz selected for multiplayer!');
-      navigate('/quizzes', { 
-        state: { 
-          error: 'Please select a quiz before starting multiplayer game' 
-        } 
+    if (selectedQuiz) {
+      // Validate quiz if provided
+      if (!selectedQuiz.questions || selectedQuiz.questions.length === 0) {
+        logger.error('Selected quiz has no questions!');
+        navigate('/quizzes', { 
+          state: { 
+            error: 'Selected quiz has no questions. Please choose a different quiz.' 
+          } 
+        });
+        return;
+      }
+      
+      logger.debug('MultiplayerPage Real Quiz Data', {
+        quizId: selectedQuiz.id,
+        quizTitle: selectedQuiz.title,
+        questionsCount: selectedQuiz.questions?.length || 0
       });
-      return;
+    } else {
+      logger.debug('No quiz pre-selected - will select inside multiplayer');
     }
-    
-    if (!selectedQuiz.questions || selectedQuiz.questions.length === 0) {
-      console.error('❌ Selected quiz has no questions!');
-      navigate('/quizzes', { 
-        state: { 
-          error: 'Selected quiz has no questions. Please choose a different quiz.' 
-        } 
-      });
-      return;
-    }
-    
-    console.log('🎮 MultiplayerPage Real Quiz Data:', {
-      quizId: selectedQuiz.id,
-      quizTitle: selectedQuiz.title,
-      questionsCount: selectedQuiz.questions?.length || 0,
-      hasValidQuestions: selectedQuiz.questions?.every((q: any) => q.text && q.answers && q.answers.length > 0)
-    });
   }, [user, state?.selectedQuiz, navigate]);
   
   // Don't render anything if redirecting
-  if (!user || !state?.selectedQuiz) {
+  if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -66,19 +62,21 @@ const MultiplayerPage: React.FC = () => {
   }
   
   return (
-    <div className="min-h-screen bg-gray-50">
-      <MultiplayerManager 
-        selectedQuiz={state.selectedQuiz}
-        currentUserId={user.uid}
-        currentUserName={user.displayName || user.email || 'User'}
-        onBackToQuizSelection={() => navigate('/quizzes')}
-        onQuizComplete={() => {
-          // Don't auto-redirect - let players see final results
-          // navigate('/leaderboard')
-        }}
-        initialRoomId={initialRoomId}
-      />
-    </div>
+    <MultiplayerErrorBoundary>
+      <div className="min-h-screen bg-gray-50">
+        <MultiplayerManager 
+          selectedQuiz={state?.selectedQuiz} // Now optional
+          currentUserId={user.uid}
+          currentUserName={user.displayName || user.email || 'User'}
+          onBackToLobby={() => navigate('/multiplayer')}
+          onQuizComplete={() => {
+            // Don't auto-redirect - let players see final results
+            // navigate('/leaderboard')
+          }}
+          initialRoomId={initialRoomId}
+        />
+      </div>
+    </MultiplayerErrorBoundary>
   );
 };
 

@@ -138,6 +138,11 @@ const Home: React.FC = () => {
                 <span className="mr-2">📚</span>{t("quizList.exploreQuizzes")}
               </Button>
             </Link>
+            <Link to="/multiplayer">
+              <Button className="w-full sm:w-auto bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 font-bold px-8 py-4 text-lg rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 ring-2 ring-white/50">
+                <span className="mr-2">🎮</span>Chơi Multiplayer
+              </Button>
+            </Link>
             <Link to="/creator">
               <Button className="w-full sm:w-auto border-2 border-white text-white hover:bg-white hover:text-blue-600 font-bold px-8 py-4 text-lg rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
                 <span className="mr-2">✨</span>{t("creator.createNewQuiz")}

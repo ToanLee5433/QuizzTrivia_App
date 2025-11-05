@@ -161,6 +161,12 @@ interface QuizCardProps {
                     ✓ Hoàn thành
                   </span>
                 )}
+                {/* 🔒 Password Badge - Support both old (havePassword) and new (visibility) format */}
+                {((quiz as any).havePassword === 'password' || (quiz as any).visibility === 'password') && (
+                  <span className="px-2 py-1 bg-purple-100 text-purple-700 border border-purple-300 text-xs rounded-full font-bold flex items-center gap-1">
+                    🔒 Cần mật khẩu
+                  </span>
+                )}
                 {/* 🆕 Resource Badge */}
                 {hasResources && (
                   <span className="px-2 py-1 bg-emerald-100 text-emerald-700 border border-emerald-300 text-xs rounded-full font-bold flex items-center gap-1">
@@ -282,9 +288,10 @@ interface QuizCardProps {
           <span className={`px-3 py-1.5 rounded-2xl text-xs font-semibold backdrop-blur-sm shadow-lg ${getDifficultyColor(quiz.difficulty)}`}>
             {quiz.difficulty === 'easy' ? '🟢 Dễ' : quiz.difficulty === 'medium' ? '🟡 Trung bình' : '🔴 Khó'}
           </span>
-          {quiz.isPublic && (
-            <span className="px-3 py-1.5 rounded-2xl text-xs font-semibold bg-green-500/80 text-white backdrop-blur-sm shadow-lg">
-              📢 Công khai
+          {/* 🔒 Password Badge - Support both old (havePassword) and new (visibility) format */}
+          {((quiz as any).havePassword === 'password' || (quiz as any).visibility === 'password') && (
+            <span className="px-3 py-1.5 rounded-2xl text-xs font-semibold bg-purple-500/90 text-white backdrop-blur-sm shadow-lg border border-purple-400">
+              🔒 Cần mật khẩu
             </span>
           )}
         </div>

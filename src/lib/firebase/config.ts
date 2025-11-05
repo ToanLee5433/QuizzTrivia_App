@@ -3,7 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-// import { getDatabase, Database } from "firebase/database"; // Disabled - not configured
+import { getDatabase } from "firebase/database"; // ✅ ENABLED for multiplayer real-time sync
 import { getAnalytics } from "firebase/analytics";
 // import { toast } from "react-toastify";
 
@@ -16,7 +16,8 @@ const firebaseConfig = {
   storageBucket: "datn-quizapp.firebasestorage.app",
   messagingSenderId: "741975099365",
   appId: "1:741975099365:web:75a1d1eb4b6d89f0f7110c",
-  measurementId: "G-6Y1VQMBGJ0"
+  measurementId: "G-6Y1VQMBGJ0",
+  databaseURL: "https://datn-quizapp-default-rtdb.firebaseio.com" // ✅ Realtime Database URL (US Central)
 };
 
 import { getApps, getApp } from "firebase/app";
@@ -32,6 +33,7 @@ setPersistence(auth, browserLocalPersistence)
 
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+export const rtdb = getDatabase(app); // ✅ Realtime Database instance for multiplayer
 
 // Optional analytics
 let analytics: any = null;

@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../lib/store';
 
 import { useTranslation } from 'react-i18next';
-import SafeHTML from 'ui/SafeHTML';
+import SafeHTML from './ui/SafeHTML';
 
 interface Achievement {
   id: string;

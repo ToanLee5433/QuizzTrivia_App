@@ -134,3 +134,46 @@ export interface MultiplayerError {
   message: string;
   details?: any;
 }
+
+// Additional types for better type safety
+export interface Quiz {
+  id: string;
+  title: string;
+  description?: string;
+  questions: Question[];
+  category?: string;
+  difficulty?: 'easy' | 'medium' | 'hard';
+  createdBy?: string;
+  createdAt?: Date;
+}
+
+export interface RoomConfig {
+  name: string;
+  maxPlayers: number;
+  isPrivate: boolean;
+  password?: string;
+  settings: {
+    timePerQuestion: number;
+    showLeaderboard: boolean;
+    showAnswers?: boolean;
+    allowLateJoin: boolean;
+    autoStart?: boolean;
+  };
+}
+
+export interface PlayerResult {
+  playerId: string;
+  playerName: string;
+  isCorrect: boolean;
+  selectedAnswer: number | null;
+  points: number;
+  timeSpent: number;
+}
+
+export interface GameResults {
+  roomId: string;
+  quizId: string;
+  players: PlayerStats[];
+  gameStats: GameStatistics;
+  completedAt: Date;
+}

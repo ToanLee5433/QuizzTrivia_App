@@ -1,7 +1,8 @@
 import React from 'react';
 import { Question } from '../../../types';
-
 import { useTranslation } from 'react-i18next';
+import ConfirmDialog from '../../../../../shared/components/ui/ConfirmDialog';
+
 interface ConfirmationModalsProps {
   modalControls: {
     showExitModal: boolean;
@@ -29,59 +30,28 @@ const ConfirmationModals: React.FC<ConfirmationModalsProps> = ({
   return (
     <>
       {/* Exit Confirmation Modal */}
-      {modalControls.showExitModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Bạn có chắc muốn thoát?
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Tiến độ của bạn sẽ bị mất nếu thoát bây giờ.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => modalControls.setShowExitModal(false)}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
-              >
-                Tiếp tục làm bài
-              </button>
-              <button
-                onClick={onConfirmExit}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-              >
-                Thoát
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        isOpen={modalControls.showExitModal}
+        onClose={() => modalControls.setShowExitModal(false)}
+        onConfirm={onConfirmExit}
+        title="⚠️ Thoát khỏi bài Quiz?"
+        message="Tiến độ làm bài của bạn sẽ bị mất nếu thoát bây giờ. Bạn có chắc chắn muốn tiếp tục?"
+        confirmText="Thoát"
+        cancelText="Tiếp tục làm bài"
+        type="danger"
+      />
 
       {/* Submit Confirmation Modal */}
-      {modalControls.showSubmitModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Xác nhận nộp bài
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Bạn có chắc chắn muốn nộp bài? Sau khi nộp sẽ không thể thay đổi đáp án.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => modalControls.setShowSubmitModal(false)}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
-              >{t("common.cancel")}
-              </button>
-              <button
-                onClick={onConfirmSubmit}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-              >
-                Nộp bài
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        isOpen={modalControls.showSubmitModal}
+        onClose={() => modalControls.setShowSubmitModal(false)}
+        onConfirm={onConfirmSubmit}
+        title="✅ Nộp bài Quiz?"
+        message="Bạn có chắc chắn muốn nộp bài? Sau khi nộp sẽ không thể thay đổi đáp án."
+        confirmText="Nộp bài"
+        cancelText={t("common.cancel")}
+        type="info"
+      />
 
       {/* Unanswered Questions Modal */}
       {modalControls.showUnansweredModal && (

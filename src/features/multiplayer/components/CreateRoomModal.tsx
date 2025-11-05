@@ -1,16 +1,13 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Lock, Users, Clock, Settings } from 'lucide-react';
+import type { Quiz, RoomConfig } from '../types/index';
 
 interface CreateRoomModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreateRoom: (roomConfig: any) => void;
-  onRoomCreated: (roomId: string, roomData: any) => void;
-  selectedQuiz?: any;
-  currentUserId: string;
-  currentUserName: string;
-  multiplayerService: any;
+  onCreateRoom: (roomConfig: RoomConfig) => void;
+  selectedQuiz?: Quiz;
   loading?: boolean;
 }
 
@@ -18,11 +15,7 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
   isOpen,
   onClose,
   onCreateRoom,
-  // onRoomCreated,
   selectedQuiz,
-  // currentUserId,
-  // currentUserName,
-  // multiplayerService,
   loading = false
 }) => {
   const { t } = useTranslation();
@@ -32,6 +25,19 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
   const [isPrivate, setIsPrivate] = useState(false);
   const [password, setPassword] = useState('');
   const [showLeaderboard, setShowLeaderboard] = useState(true);
+  
+  // Reset password when isPrivate is unchecked
+  React.useEffect(() => {
+    if (!isPrivate) {
+      setPassword('');
+    }
+  }, [isPrivate]);
+
+  // Constants for validation
+  const MIN_TIME_LIMIT = 5;
+  const MAX_TIME_LIMIT = 300; // 5 minutes max for better UX
+  const MIN_PLAYERS = 2;
+  const MAX_PLAYERS = 20;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +46,7 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
       return;
     }
 
-      const roomConfig = {
+    const roomConfig = {
       name: roomName.trim(),
       maxPlayers,
       isPrivate,
@@ -51,6 +57,12 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
         allowLateJoin: true
       }
     };
+
+    console.log('🏗️ CreateRoomModal: Submitting room config', {
+      isPrivate,
+      hasPassword: !!password,
+      roomConfig
+    });
 
     onCreateRoom(roomConfig);
   };
@@ -95,19 +107,19 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <Users className="w-4 h-4 inline mr-2" />
-              {t('multiplayer.maxPlayers')} (1-20)
+              {t('multiplayer.maxPlayers')} ({MIN_PLAYERS}-{MAX_PLAYERS})
             </label>
             <input
               type="number"
               value={maxPlayers}
               onChange={(e) => {
                 const value = parseInt(e.target.value);
-                if (value >= 1 && value <= 20) {
+                if (value >= MIN_PLAYERS && value <= MAX_PLAYERS) {
                   setMaxPlayers(value);
                 }
               }}
-              min="1"
-              max="20"
+              min={MIN_PLAYERS}
+              max={MAX_PLAYERS}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
               disabled={loading}
@@ -118,25 +130,27 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <Clock className="w-4 h-4 inline mr-2" />
-              {t('multiplayer.timeLimit')} (giây, tối đa 1000)
+              {t('multiplayer.timeLimit')} ({MIN_TIME_LIMIT}-{MAX_TIME_LIMIT} giây)
             </label>
             <input
               type="number"
               value={timeLimit}
               onChange={(e) => {
                 const value = parseInt(e.target.value);
-                if (value >= 5 && value <= 1000) {
+                if (value >= MIN_TIME_LIMIT && value <= MAX_TIME_LIMIT) {
                   setTimeLimit(value);
                 }
               }}
-              min="5"
-              max="1000"
+              min={MIN_TIME_LIMIT}
+              max={MAX_TIME_LIMIT}
               placeholder="VD: 30"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
               disabled={loading}
             />
-            <p className="text-xs text-gray-500 mt-1">Từ 5 đến 1000 giây cho mỗi câu hỏi</p>
+            <p className="text-xs text-gray-500 mt-1">
+              Từ {MIN_TIME_LIMIT} đến {MAX_TIME_LIMIT} giây cho mỗi câu hỏi (tối đa 5 phút)
+            </p>
           </div>
 
           {/* Settings */}

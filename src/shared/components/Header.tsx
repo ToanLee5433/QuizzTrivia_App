@@ -1,8 +1,12 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { RootState } from '../../lib/store';
+import { signOut } from 'firebase/auth';
+import { auth } from '../../lib/firebase/config';
+import { logout } from '../../features/auth/store';
+import { toast } from 'react-toastify';
 import NotificationCenter from './NotificationCenter';
 import LanguageSwitcher from './LanguageSwitcher';
 import { User, LogOut, Settings, Crown, Zap, Home, BookOpen, Heart, Trophy, UserCircle, Plus, ChevronDown } from 'lucide-react';
@@ -13,21 +17,32 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
   const { t } = useTranslation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [prevScrollPos, setPrevScrollPos] = useState(0);
+  const [visible, setVisible] = useState(true);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  // Handle scroll effect
+  // Handle scroll effect with hide/show
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 10);
+      const currentScrollPos = window.scrollY;
+      
+      // Determine if navbar should be visible
+      const isVisible = prevScrollPos > currentScrollPos || currentScrollPos < 10;
+      
+      setVisible(isVisible);
+      setScrolled(currentScrollPos > 10);
+      setPrevScrollPos(currentScrollPos);
     };
+    
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [prevScrollPos]);
 
   // Close menus when clicking outside
   useEffect(() => {
@@ -51,8 +66,16 @@ const Header: React.FC<HeaderProps> = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleLogout = () => {
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      dispatch(logout());
+      toast.success('Đăng xuất thành công!');
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Có lỗi xảy ra khi đăng xuất');
+    }
   };
 
   const navigationItems = [
@@ -60,7 +83,6 @@ const Header: React.FC<HeaderProps> = () => {
     { path: '/quizzes', label: t('nav.quizzes'), icon: BookOpen },
     { path: '/favorites', label: t('nav.favorites'), icon: Heart },
     { path: '/leaderboard', label: t('nav.leaderboard'), icon: Trophy },
-    { path: '/profile', label: t('nav.profile'), icon: UserCircle },
   ];
 
   if (user?.role === 'creator' || user?.role === 'admin') {
@@ -75,6 +97,8 @@ const Header: React.FC<HeaderProps> = () => {
     <>
       <header 
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+          visible ? 'translate-y-0' : '-translate-y-full'
+        } ${
           scrolled 
             ? 'bg-white/95 backdrop-blur-xl shadow-lg border-b border-gray-200/50' 
             : 'bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 shadow-xl'

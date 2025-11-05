@@ -11,11 +11,12 @@
     "logs": "firebase functions:log"
   },
   "engines": {
-    "node": "18"
+    "node": "20"
   },
   "main": "lib/index.js",
   "dependencies": {
     "@google-cloud/vertexai": "^1.10.0",
+    "@google/generative-ai": "^0.24.1",
     "@types/nodemailer": "^6.4.17",
     "cors": "^2.8.5",
     "firebase-admin": "^11.8.0",

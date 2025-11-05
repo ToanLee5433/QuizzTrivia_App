@@ -15,6 +15,8 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
+import { logger } from '../utils/logger';
+import realtimeService from './realtimeMultiplayerService';
 
 // Types
 export interface Room {
@@ -46,6 +48,7 @@ export interface Player {
   id: string;
   username: string;
   isReady: boolean;
+  isOnline: boolean;
   // Removed isHost - all players are equal
   score: number;
   answers: PlayerAnswer[];
@@ -153,7 +156,7 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
   async connect(userId: string, username: string): Promise<void> {
     this.userId = userId;
     this.username = username;
-    console.log('🔗 Connected to Firestore Multiplayer Service:', { userId, username });
+    logger.success('Connected to Firestore Multiplayer Service', { userId, username });
     this.emit('connected', { userId, username });
   }
 
@@ -167,13 +170,19 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
       await this.leaveRoom(this.currentRoomId);
     }
     
-    console.log('🔌 Disconnected from Firestore Multiplayer Service');
+    logger.info('Disconnected from Firestore Multiplayer Service');
     this.emit('disconnected');
   }
 
   // Room Management
   async createRoom(roomConfig: Partial<Room>, selectedQuiz?: any): Promise<{ room: Room; player: Player }> {
     try {
+      console.log('🏗️ Service createRoom: Received config', {
+        isPrivate: roomConfig.isPrivate,
+        password: roomConfig.password,
+        fullConfig: roomConfig
+      });
+      
       // Generate unique room code
       const code = this.generateRoomCode();
       
@@ -185,6 +194,7 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
         id: this.userId,
         username: this.username,
         isReady: false,
+        isOnline: true,
         // Removed isHost - all players are equal
         score: 0,
         answers: [],
@@ -214,12 +224,21 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
         },
         createdAt: serverTimestamp()
       };
+      
+      console.log('💾 Service createRoom: Saving to Firestore', {
+        isPrivate: roomData.isPrivate,
+        password: roomData.password,
+        code: roomData.code
+      });
 
       await setDoc(roomDoc, roomData);
 
       // Add player to room
       const playerDoc = doc(collection(db, 'multiplayer_rooms', roomDoc.id, 'players'), this.userId);
       await setDoc(playerDoc, player);
+
+      // Setup Realtime Database presence for instant sync
+      await realtimeService.setupPresence(roomDoc.id, this.userId, this.username);
 
       // Set current room
       this.currentRoomId = roomDoc.id;
@@ -245,7 +264,7 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
         createdAt: new Date()
       };
 
-      console.log('🏠 Room created:', room);
+      logger.success('Room created', { roomId: room.id, code: room.code });
       this.emit('room:created', room);
       
       return { room, player };
@@ -257,21 +276,35 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
 
   async joinRoom(roomCode: string, password?: string): Promise<{ room: Room; player: Player }> {
     try {
+      logger.info('🚪 Service: Attempting to join room', { roomCode, hasPassword: !!password });
+      
       // Find room by code
       const q = query(collection(db, 'multiplayer_rooms'), where('code', '==', roomCode), limit(1));
       const snapshot = await getDocs(q);
       
-      if (snapshot.empty) throw new Error('room_not_found');
+      if (snapshot.empty) {
+        logger.error('❌ Service: Room not found', { roomCode });
+        throw new Error('room_not_found');
+      }
       
       const roomDoc = snapshot.docs[0];
       const roomData = roomDoc.data();
       
+      logger.debug('🔍 Service: Room found', { 
+        roomId: roomDoc.id, 
+        isPrivate: roomData.isPrivate,
+        hasPassword: !!roomData.password,
+        providedPassword: !!password
+      });
+      
       // Check if room requires password
       if (roomData.isPrivate && !password) {
+        logger.warn('🔒 Service: Room requires password but none provided');
         throw new Error('room_requires_password');
       }
       
       if (roomData.isPrivate && roomData.password !== password) {
+        logger.error('❌ Service: Wrong password provided');
         throw new Error('wrong_password');
       }
       
@@ -286,11 +319,14 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
         throw new Error('game_in_progress');
       }
       
+      logger.success('✅ Service: All checks passed, creating player');
+      
       // Create player
       const player: Player = {
         id: this.userId,
         username: this.username,
         isReady: false,
+        isOnline: true,
         // Removed isHost - all players are equal
         score: 0,
         answers: [],
@@ -300,6 +336,9 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
       // Add player to room
       const playerDoc = doc(collection(db, 'multiplayer_rooms', roomDoc.id, 'players'), this.userId);
       await setDoc(playerDoc, player);
+      
+      // Setup Realtime Database presence for instant sync
+      await realtimeService.setupPresence(roomDoc.id, this.userId, this.username);
       
       // Set current room
       this.currentRoomId = roomDoc.id;
@@ -328,12 +367,12 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
         createdAt: roomData.createdAt?.toDate() || new Date()
       };
       
-      console.log('🚪 Joined room:', room);
+      logger.success('Joined room', { roomId: room.id, code: room.code });
       this.emit('room:joined', room);
       
       return { room, player };
     } catch (error) {
-      console.error('Error joining room:', error);
+      logger.error('Error joining room', error);
       throw error;
     }
   }
@@ -355,10 +394,10 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
       
       this.currentRoomId = null;
       
-      console.log('👋 Left room:', roomId);
+      logger.info('Left room', { roomId });
       this.emit('room:left', roomId);
     } catch (error) {
-      console.error('Error leaving room:', error);
+      logger.error('Error leaving room', error);
       throw error;
     }
   }
@@ -366,7 +405,7 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
   // Game Control
   async startGame(roomId: string): Promise<void> {
     try {
-      console.log('🚀 Starting 5-second game countdown...');
+      logger.info('Starting 5-second game countdown...');
       
       // First, set room status to 'starting' with countdown timer
       const roomRef = doc(db, 'multiplayer_rooms', roomId);
@@ -378,18 +417,18 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
       
       // After 5 seconds, actually start the game
       setTimeout(() => {
-        this.actuallyStartGame(roomId).catch(console.error);
+        this.actuallyStartGame(roomId).catch(logger.error);
       }, 5000);
       
     } catch (error) {
-      console.error('Error starting game:', error);
+      logger.error('Error starting game', error);
       throw error;
     }
   }
 
   private async actuallyStartGame(roomId: string): Promise<void> {
     try {
-      console.log('🔍 Loading quiz data:', {
+      logger.debug('Loading quiz data', {
         roomId,
         hasUserId: !!this.userId,
         timestamp: new Date().toISOString()
@@ -406,17 +445,17 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
       let questions = [];
       
       if (roomData.quiz && roomData.quiz.questions && roomData.quiz.questions.length > 0) {
-        console.log('✅ Using embedded quiz questions:', questions.length);
+        logger.success('Using embedded quiz questions', { count: questions.length });
         questions = roomData.quiz.questions;
       } else if (roomData.quizId) {
         try {
-          console.log('📡 Fetching quiz from Firestore with ID:', roomData.quizId);
+          logger.debug('Fetching quiz from Firestore', { quizId: roomData.quizId });
           
           const quizRef = doc(db, 'quizzes', roomData.quizId);
           const quizSnap = await getDoc(quizRef);
           
           if (quizSnap.exists()) {
-            console.log('📡 Quiz data received:', {
+            logger.debug('Quiz data received', {
               id: quizSnap.id,
               hasData: !!quizSnap.data(),
               hasQuestions: !!quizSnap.data()?.questions
@@ -425,21 +464,21 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
             const quizData = quizSnap.data();
             if (quizData?.questions && Array.isArray(quizData.questions)) {
               questions = quizData.questions;
-              console.log('✅ Loaded quiz questions from Firestore:', questions.length, questions.slice(0, 2));
+              logger.success('Loaded quiz questions from Firestore', { count: questions.length });
             } else {
-              console.warn('⚠️ Quiz found but no valid questions array');
+              logger.warn('Quiz found but no valid questions array');
             }
           } else {
-            console.warn('⚠️ Quiz document not found in Firestore');
+            logger.warn('Quiz document not found in Firestore');
           }
         } catch (e) {
-          console.error('❌ Failed to load quiz by quizId:', e);
+          logger.error('Failed to load quiz by quizId', e);
         }
       }
       
       // Fallback to mock questions if no real questions available
       if (!questions || questions.length === 0) {
-        console.warn('⚠️ No quiz questions found, using fallback mock questions');
+        logger.warn('No quiz questions found, using fallback mock questions');
         questions = [
           {
             id: 'mock-q1',
@@ -491,10 +530,10 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
         questionsCount: questions.length
       };
       
-      console.log('🎮 Game actually started with data:', emitData);
+      logger.success('Game actually started', { roomId, questionsCount: questions.length });
       this.emit('game:start', emitData);
     } catch (error) {
-      console.error('Error starting game:', error);
+      logger.error('Error starting game', error);
       throw error;
     }
   }
@@ -573,7 +612,7 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
       );
       
       if (allAnswered && players.length > 0) {
-        console.log('🚀 All players answered, updating room status and advancing...');
+        logger.info('All players answered, advancing to next question...');
         
         // Update room with advancement countdown immediately for real-time sync
         const roomRef = doc(db, 'multiplayer_rooms', roomId);
@@ -625,20 +664,20 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
   // Communication
   async sendChatMessage(roomId: string, message: string): Promise<void> {
     try {
+      // Use Realtime Database for instant chat delivery
       const messageData = {
         userId: this.userId,
         username: this.username,
         message: message.trim(),
-        timestamp: serverTimestamp(),
         type: 'user'
       };
       
-      await addDoc(collection(db, 'multiplayer_rooms', roomId, 'messages'), messageData);
+      await realtimeService.sendChatMessage(roomId, messageData);
       
-      console.log('💬 Chat message sent:', message);
+      logger.debug('Chat message sent via Realtime DB');
       // Don't emit locally - let the listener handle it for consistency
     } catch (error) {
-      console.error('Error sending chat message:', error);
+      logger.error('Error sending chat message', error);
       throw error;
     }
   }
@@ -655,7 +694,7 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
       
       await addDoc(collection(db, 'multiplayer_rooms', roomId, 'messages'), messageData);
     } catch (error) {
-      console.error('Error sending system message:', error);
+      logger.error('Error sending system message', error);
     }
   }
 
@@ -665,10 +704,10 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
       const playerDoc = doc(db, 'multiplayer_rooms', roomId, 'players', this.userId);
       await updateDoc(playerDoc, { isReady });
       
-      console.log('👤 Player status updated:', isReady);
+      logger.debug('Player status updated', { isReady });
       this.emit('player:status_updated', { isReady });
     } catch (error) {
-      console.error('Error updating player status:', error);
+      logger.error('Error updating player status', error);
       throw error;
     }
   }
@@ -678,10 +717,10 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
       const playerDoc = doc(db, 'multiplayer_rooms', roomId, 'players', playerId);
       await deleteDoc(playerDoc);
       
-      console.log('👢 Player kicked:', playerId);
+      logger.info('Player kicked', { playerId });
       this.emit('player:kicked', playerId);
     } catch (error) {
-      console.error('Error kicking player:', error);
+      logger.error('Error kicking player', error);
       throw error;
     }
   }
@@ -694,10 +733,10 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
         [`settings.${Object.keys(settings)[0]}`]: Object.values(settings)[0] 
       });
       
-      console.log('⚙️ Room settings updated:', settings);
+      logger.debug('Room settings updated', settings);
       this.emit('room:settings_updated', settings);
     } catch (error) {
-      console.error('Error updating room settings:', error);
+      logger.error('Error updating room settings', error);
       throw error;
     }
   }
@@ -742,6 +781,9 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
     const playersCollection = collection(db, 'multiplayer_rooms', roomId, 'players');
     const q = query(playersCollection, orderBy('joinedAt', 'asc'));
     
+    // Store Firestore players for merging with Realtime DB data
+    let firestorePlayers: Player[] = [];
+    
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const players: Player[] = [];
       snapshot.forEach((doc) => {
@@ -752,34 +794,52 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
         } as Player);
       });
       
+      firestorePlayers = players;
+      
+      logger.info('Players snapshot updated', { 
+        roomId, 
+        count: players.length,
+        playerNames: players.map(p => p.username)
+      });
+      
       this.emit('players:updated', players);
+    });
+    
+    // Listen to Realtime Database presence for instant online/offline updates
+    realtimeService.listenToPresence(roomId, (presence) => {
+      // Merge Firestore data with Realtime DB presence
+      const enhancedPlayers = firestorePlayers.map(player => ({
+        ...player,
+        isOnline: presence[player.id]?.isOnline ?? player.isOnline
+      }));
+      
+      logger.debug('Merged presence data', { 
+        roomId, 
+        onlineCount: Object.values(presence).filter(p => p.isOnline).length 
+      });
+      
+      this.emit('players:updated', enhancedPlayers);
     });
     
     this.unsubscribeFunctions.push(unsubscribe);
   }
 
   private listenToMessages(roomId: string) {
-    const messagesCollection = collection(db, 'multiplayer_rooms', roomId, 'messages');
-    const q = query(messagesCollection, orderBy('timestamp', 'asc'));
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const messages: ChatMessage[] = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        messages.push({
-          id: doc.id,
-          userId: data.userId,
-          username: data.username,
-          message: data.message,
-          timestamp: data.timestamp?.toDate() || new Date(),
-          type: data.type
-        });
-      });
+    // Use Realtime Database for instant chat updates
+    realtimeService.listenToChatMessages(roomId, (realtimeMessages) => {
+      // Convert Realtime DB format to ChatMessage format
+      const messages: ChatMessage[] = realtimeMessages.map((msg: any) => ({
+        id: msg.id || `${msg.userId}_${msg.timestamp}`,
+        userId: msg.userId,
+        username: msg.username,
+        message: msg.message,
+        timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
+        type: msg.type || 'user'
+      }));
       
+      logger.debug('Chat messages updated from Realtime DB', { count: messages.length });
       this.emit('messages:updated', messages);
     });
-    
-    this.unsubscribeFunctions.push(unsubscribe);
   }
 
   // Utility

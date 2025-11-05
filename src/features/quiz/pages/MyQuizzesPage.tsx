@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
-import { collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 import { toast } from 'react-toastify';
 import { 
@@ -17,7 +17,12 @@ import {
   Plus,
   Send,
   MessageSquare,
-  TrendingUp
+  TrendingUp,
+  Lock,
+  Share2,
+  BarChart3,
+  FileText,
+  Copy
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SafeHTML from '../../../shared/components/ui/SafeHTML';
@@ -41,6 +46,19 @@ interface Quiz {
   plays?: number;
   avgRating?: number;
   editRequests?: EditRequest[];
+  quizType?: 'with-materials' | 'standard'; // 🆕 Quiz type
+  havePassword?: 'public' | 'password'; // 🔒 Password protection
+  password?: string; // 🔒 Password value
+  isDraft?: boolean; // 📝 Draft flag
+  imageUrl?: string; // 🖼️ Cover image
+  resources?: Array<{
+    id: string;
+    type: 'video' | 'pdf' | 'image' | 'link' | 'slides';
+    title: string;
+    description?: string;
+    url: string;
+    required: boolean;
+  }>;
 }
 
 interface EditRequest {
@@ -64,10 +82,14 @@ const MyQuizzesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all'); // New: Filter by quiz type
   const [showEditRequestModal, setShowEditRequestModal] = useState(false);
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const [editReason, setEditReason] = useState('');
   const [submittingRequest, setSubmittingRequest] = useState(false);
+  
+  // 🔗 Share Link functionality
+  const [copiedQuizId, setCopiedQuizId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -164,6 +186,79 @@ const MyQuizzesPage: React.FC = () => {
       toast.error(t('quiz.editRequestError'));
     } finally {
       setSubmittingRequest(false);
+    }
+  };
+
+  // 🔗 Copy quiz link to clipboard
+  const handleCopyLink = async (quizId: string) => {
+    const link = `${window.location.origin}/quiz/${quizId}/preview`;
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopiedQuizId(quizId);
+      toast.success('📋 Đã copy link quiz!');
+      setTimeout(() => setCopiedQuizId(null), 2000);
+    } catch (error) {
+      console.error('Error copying link:', error);
+      toast.error('Không thể copy link');
+    }
+  };
+  
+  // 📤 Publish draft quiz (send to admin for approval)
+  const handlePublishDraft = async (quiz: Quiz) => {
+    // Validate quiz has questions
+    if (!quiz.questions || !Array.isArray(quiz.questions) || quiz.questions.length === 0) {
+      toast.error('Quiz phải có ít nhất 1 câu hỏi để xuất bản');
+      return;
+    }
+    
+    // Validate each question has answers (for multiple choice)
+    const invalidQuestions = quiz.questions.filter(q => {
+      if (q.type === 'multiple' && (!q.answers || q.answers.length < 2)) {
+        return true;
+      }
+      if (q.type === 'multiple' && !q.answers.some((a: any) => a.isCorrect)) {
+        return true;
+      }
+      return false;
+    });
+    
+    if (invalidQuestions.length > 0) {
+      toast.error(`Có ${invalidQuestions.length} câu hỏi chưa hợp lệ (thiếu đáp án hoặc chưa chọn đáp án đúng)`);
+      return;
+    }
+    
+    if (window.confirm(`📤 Xuất bản quiz "${quiz.title}" để gửi lên admin duyệt?`)) {
+      try {
+        const quizRef = doc(db, 'quizzes', quiz.id);
+        await updateDoc(quizRef, {
+          status: 'pending',
+          isDraft: false,
+          isPublished: true,
+          updatedAt: serverTimestamp()
+        });
+        
+        toast.success('✅ Đã xuất bản quiz! Quiz đang chờ admin duyệt.');
+        loadMyQuizzes(); // Reload to see updated status
+      } catch (error) {
+        console.error('Error publishing draft:', error);
+        toast.error('Không thể xuất bản quiz');
+      }
+    }
+  };
+
+  // 🔗 Copy quiz info (link + password if exists)
+  const handleCopyQuizInfo = async (quiz: Quiz) => {
+    const link = `${window.location.origin}/quiz/${quiz.id}/preview`;
+    const textToCopy = quiz.havePassword === 'password' && quiz.password
+      ? `📚 Quiz: ${quiz.title}\n🔗 Link: ${link}\n🔒 Mật khẩu: ${quiz.password}`
+      : `📚 Quiz: ${quiz.title}\n🔗 Link: ${link}`;
+    
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      toast.success('📋 Đã copy thông tin quiz!');
+    } catch (error) {
+      console.error('Failed to copy:', error);
+      toast.error('Lỗi khi copy thông tin');
     }
   };
 
@@ -270,7 +365,14 @@ const MyQuizzesPage: React.FC = () => {
                          quiz.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || quiz.status === statusFilter;
     
-    return matchesSearch && matchesStatus;
+    // New: Filter by quiz type (prefer quizType field, fallback to checking resources)
+    const hasLearningMaterials = quiz.quizType === 'with-materials' || 
+                                (quiz.quizType === undefined && quiz.resources && quiz.resources.length > 0);
+    const matchesType = typeFilter === 'all' || 
+                       (typeFilter === 'with-materials' && hasLearningMaterials) ||
+                       (typeFilter === 'no-materials' && !hasLearningMaterials);
+    
+    return matchesSearch && matchesStatus && matchesType;
   });
 
   if (!user || (user.role !== 'creator' && user.role !== 'admin')) {
@@ -311,6 +413,19 @@ const MyQuizzesPage: React.FC = () => {
               </div>
             </div>
             
+            {/* New: Quiz Type Filter */}
+            <div className="sm:w-56">
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">📚 {t("quiz.typeFilter.all")}</option>
+                <option value="with-materials">📖 {t("quiz.typeFilter.withMaterials")}</option>
+                <option value="no-materials">✏️ {t("quiz.typeFilter.noMaterials")}</option>
+              </select>
+            </div>
+            
             <div className="sm:w-48">
               <select
                 value={statusFilter}
@@ -327,8 +442,8 @@ const MyQuizzesPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        {/* Stats with Quiz Type Breakdown */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
@@ -337,6 +452,10 @@ const MyQuizzesPage: React.FC = () => {
               <div className="ml-4">
                 <p className="text-sm text-gray-600">{t("quiz.stats.totalQuizzes")}</p>
                 <p className="text-2xl font-bold text-gray-900">{quizzes.length}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  📖 {quizzes.filter(q => q.quizType === 'with-materials' || (q.resources && q.resources.length > 0)).length} • 
+                  ✏️ {quizzes.filter(q => q.quizType === 'standard' || (!q.resources || q.resources.length === 0)).length}
+                </p>
               </div>
             </div>
           </div>
@@ -350,6 +469,9 @@ const MyQuizzesPage: React.FC = () => {
                 <p className="text-sm text-gray-600">{t("admin.quizManagement.filter.approved")}</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {quizzes.filter(q => q.status === 'approved').length}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  🔒 {quizzes.filter(q => q.status === 'approved' && q.havePassword === 'password').length} có mật khẩu
                 </p>
               </div>
             </div>
@@ -369,6 +491,37 @@ const MyQuizzesPage: React.FC = () => {
             </div>
           </div>
           
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center">
+              <div className="p-2 bg-gray-100 rounded-lg">
+                <FileText className="w-6 h-6 text-gray-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm text-gray-600">📝 {t("quiz.statusFilter.draft")}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {quizzes.filter(q => q.status === 'draft').length}
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center">
+              <div className="p-2 bg-red-100 rounded-lg">
+                <XCircle className="w-6 h-6 text-red-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm text-gray-600">{t("admin.quizManagement.filter.rejected")}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {quizzes.filter(q => q.status === 'rejected').length}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Additional Stats Row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
             <div className="flex items-center">
               <div className="p-2 bg-purple-100 rounded-lg">
@@ -406,6 +559,20 @@ const MyQuizzesPage: React.FC = () => {
                 <p className="text-sm text-gray-600">{t("complete")}</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {quizzes.reduce((sum, q) => sum + (q.completions || 0), 0)}
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center">
+              <div className="p-2 bg-indigo-100 rounded-lg">
+                <BarChart3 className="w-6 h-6 text-indigo-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm text-gray-600">📊 Điểm TB</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {(quizzes.reduce((sum, q) => sum + (q.averageScore || 0), 0) / Math.max(quizzes.length, 1)).toFixed(1)}%
                 </p>
               </div>
             </div>
@@ -464,17 +631,37 @@ const MyQuizzesPage: React.FC = () => {
                     <tr key={quiz.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4">
                         <div>
-                          <div className="text-sm font-semibold text-gray-900">
+                          <div className="text-sm font-semibold text-gray-900 mb-1">
                             {quiz.title}
                           </div>
+                          {/* Quiz Type Badge - prefer quizType field, fallback to checking resources */}
+                          {(quiz.quizType === 'with-materials' || (quiz.quizType === undefined && quiz.resources && quiz.resources.length > 0)) ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 mr-2">
+                              📖 {t("quiz.withMaterials")}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+                              ✏️ {t("quiz.standardQuiz")}
+                            </span>
+                          )}
+                          {/* 🔒 Password Badge */}
+                          {quiz.havePassword === 'password' && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 mr-2">
+                              <Lock className="w-3 h-3 mr-1" />
+                              Password
+                            </span>
+                          )}
                           {/* Render rich-text description safely (support HTML without showing tags) */}
                           <SafeHTML
                             content={quiz.description}
-                            className="text-sm text-gray-600 max-w-xs line-clamp-1"
+                            className="text-sm text-gray-600 max-w-xs line-clamp-1 mt-1"
                             as="div"
                           />
                           <div className="text-xs text-gray-400 mt-1">
                             {quiz.questions?.length || 0} {t('quiz.questions')}
+                            {quiz.resources && quiz.resources.length > 0 && (
+                              <span className="ml-2">• {quiz.resources.length} {t('quiz.materials')}</span>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -516,29 +703,82 @@ const MyQuizzesPage: React.FC = () => {
                         <div className="flex items-center justify-end space-x-2">
                           <button
                             onClick={() => navigate(`/quiz/${quiz.id}/preview`)}
-                            className="text-blue-600 hover:text-blue-900 p-1"
+                            className="text-blue-600 hover:text-blue-900 p-1.5 hover:bg-blue-50 rounded transition-colors"
                             title="Xem trước"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           
+                          {/* 🔗 Copy Link Button */}
+                          {quiz.status !== 'draft' && (
+                            <button
+                              onClick={() => handleCopyLink(quiz.id)}
+                              className={`p-1.5 rounded transition-colors ${
+                                copiedQuizId === quiz.id
+                                  ? 'text-green-600 bg-green-50'
+                                  : 'text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50'
+                              }`}
+                              title="Copy link"
+                            >
+                              {copiedQuizId === quiz.id ? (
+                                <CheckCircle className="w-4 h-4" />
+                              ) : (
+                                <Copy className="w-4 h-4" />
+                              )}
+                            </button>
+                          )}
+                          
+                          {/* 📊 Stats Button */}
+                          {quiz.status === 'approved' && (
+                            <button
+                              onClick={() => navigate(`/quiz-stats/${quiz.id}`)}
+                              className="text-purple-600 hover:text-purple-900 p-1.5 hover:bg-purple-50 rounded transition-colors"
+                              title="Xem thống kê"
+                            >
+                              <BarChart3 className="w-4 h-4" />
+                            </button>
+                          )}
+                          
+                          {/* 🔗 Share with Info */}
+                          {(quiz.status === 'approved' || quiz.status === 'pending') && (
+                            <button
+                              onClick={() => handleCopyQuizInfo(quiz)}
+                              className="text-green-600 hover:text-green-900 p-1.5 hover:bg-green-50 rounded transition-colors"
+                              title="Copy thông tin quiz (bao gồm mật khẩu)"
+                            >
+                              <Share2 className="w-4 h-4" />
+                            </button>
+                          )}
+                          
                           <button
                             onClick={() => handleEditQuiz(quiz)}
-                            className="text-green-600 hover:text-green-900 p-1"
+                            className="text-orange-600 hover:text-orange-900 p-1.5 hover:bg-orange-50 rounded transition-colors"
                             title={t("edit")}
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           
+                          {/* 📤 Publish Draft Button */}
+                          {quiz.status === 'draft' && (
+                            <button
+                              onClick={() => handlePublishDraft(quiz)}
+                              className="text-blue-600 hover:text-blue-900 p-1.5 hover:bg-blue-50 rounded transition-colors"
+                              title="Xuất bản quiz để admin duyệt"
+                            >
+                              <Send className="w-4 h-4" />
+                            </button>
+                          )}
+                          
                           {quiz.status === 'draft' && (
                             <button
                               onClick={() => {
                                 // Handle delete
-                                if (window.confirm('Bạn có chắc muốn xóa quiz này?')) {
+                                if (window.confirm(`⚠️ Bạn có chắc muốn xóa quiz "${quiz.title}"?`)) {
                                   // Delete logic here
+                                  toast.info('Tính năng xóa đang được phát triển');
                                 }
                               }}
-                              className="text-red-600 hover:text-red-900 p-1"
+                              className="text-red-600 hover:text-red-900 p-1.5 hover:bg-red-50 rounded transition-colors"
                               title={t("action.clear")}
                             >
                               <Trash2 className="w-4 h-4" />

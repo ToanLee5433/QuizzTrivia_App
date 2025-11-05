@@ -1,225 +1,307 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isAdmin() {
-      return request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-    // Users collection
-    match /users/{userId} {
-      // Allow all authenticated users to read user profiles (used by leaderboard, admin, etc.)
-      allow read: if request.auth != null;
-      
-      // Users can write their own document; admins can write any
-      allow write: if request.auth != null && (
-        request.auth.uid == userId || isAdmin()
-      );
+    
+    /* ===== Helper Functions ===== */
+    function signedIn() {
+      return request.auth != null;
     }
     
-    // Multiplayer rooms rules
+    function isAdmin() {
+      return signedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Check if user is the owner of a resource (for metadata with createdBy field)
+    function isOwner() {
+      return signedIn() && resource.data.createdBy == request.auth.uid;
+    }
+    
+    // Check if user is creator role
+    function isCreator() {
+      return signedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'creator';
+    }
+    
+    // Get quiz document for subcollection access checks
+    function quizDoc(quizId) {
+      return get(/databases/$(database)/documents/quizzes/$(quizId));
+    }
+    
+    // Check if user has unlocked password-protected quiz
+    function hasAccess(quizId) {
+      return exists(/databases/$(database)/documents/quizzes/$(quizId)/access/$(request.auth.uid));
+    }
+    
+    /* ===== Users Collection ===== */
+    match /users/{userId} {
+      // Allow all authenticated users to read user profiles (leaderboard, admin, etc.)
+      allow read: if signedIn();
+      
+      // Users can write their own document; admins can write any
+      allow write: if signedIn() && (request.auth.uid == userId || isAdmin());
+    }
+    
+    /* ===== Multiplayer Rooms ===== */
     match /multiplayer_rooms/{roomId} {
       // Allow authenticated users to read any room
-      allow read: if request.auth != null;
+      allow read: if signedIn();
       
       // Allow authenticated users to create new rooms
-      allow create: if request.auth != null;
+      allow create: if signedIn();
       
-      // Allow any authenticated player in the room to update room game state 
-      // (removing host restriction - all players are equal)
-      allow update: if request.auth != null && 
+      // Allow any authenticated player in the room to update room game state
+      allow update: if signedIn() && 
         exists(/databases/$(database)/documents/multiplayer_rooms/$(roomId)/players/$(request.auth.uid));
       
-      // Allow room creator to delete room
-      allow delete: if request.auth != null;
+      // Only room creator can delete (more secure than allowing any user)
+      allow delete: if signedIn() && isOwner();
       
       // Players subcollection
       match /players/{playerId} {
-        // Allow authenticated users to read players
-        allow read: if request.auth != null;
-        
-        // Allow authenticated users to add themselves as players
-        allow create: if request.auth != null 
-          && request.auth.uid == playerId;
-        
-        // Allow players to update their own data (presence/ready/answers)
-        allow update: if request.auth != null 
-          && request.auth.uid == playerId;
-        
-        // Allow any player in the room to delete others (vote-kick system)
-        allow delete: if request.auth != null 
-          && exists(/databases/$(database)/documents/multiplayer_rooms/$(roomId)/players/$(request.auth.uid));
+        allow read: if signedIn();
+        allow create: if signedIn() && request.auth.uid == playerId;
+        allow update: if signedIn() && request.auth.uid == playerId;
+        allow delete: if signedIn() &&
+          exists(/databases/$(database)/documents/multiplayer_rooms/$(roomId)/players/$(request.auth.uid));
       }
       
       // Messages subcollection
       match /messages/{messageId} {
-        // Allow authenticated users to read messages
-        allow read: if request.auth != null;
-        
-        // Allow authenticated users to create messages
-        // Our app writes messages with field `userId`, not `senderId`
-        // Allow normal messages by the same authenticated user, and allow system messages
-        allow create: if request.auth != null 
-          && (
-            request.resource.data.userId == request.auth.uid ||
-            request.resource.data.type == 'system'
-          );
-        
-        // Don't allow message updates or deletes
+        allow read: if signedIn();
+        allow create: if signedIn() && (
+          request.resource.data.userId == request.auth.uid ||
+          request.resource.data.type == 'system'
+        );
         allow update, delete: if false;
       }
       
       // Game state subcollection
       match /gameState/{stateId} {
-        // Allow authenticated users to read game state
-        allow read: if request.auth != null;
-        
-        // Allow any player in the room to update game state
-        allow write: if request.auth != null 
-          && exists(/databases/$(database)/documents/multiplayer_rooms/$(roomId)/players/$(request.auth.uid));
+        allow read: if signedIn();
+        allow write: if signedIn() &&
+          exists(/databases/$(database)/documents/multiplayer_rooms/$(roomId)/players/$(request.auth.uid));
       }
     }
 
-    // Submissions per question (immutable creates)
+    /* ===== Multiplayer Submissions (immutable) ===== */
     match /multiplayer_rooms/{roomId}/submissions/{submissionId} {
-      allow read: if request.auth != null
-        && exists(/databases/$(database)/documents/multiplayer_rooms/$(roomId)/players/$(request.auth.uid));
-      // Create only if owned by user, user is in room, and doc doesn't already exist
-      allow create: if request.auth != null
-        && request.resource.data.playerId == request.auth.uid
-        && exists(/databases/$(database)/documents/multiplayer_rooms/$(roomId)/players/$(request.auth.uid))
-        && !exists(/databases/$(database)/documents/multiplayer_rooms/$(roomId)/submissions/$(submissionId));
-      // No updates or deletes to preserve integrity
+      allow read: if signedIn() &&
+        exists(/databases/$(database)/documents/multiplayer_rooms/$(roomId)/players/$(request.auth.uid));
+      allow create: if signedIn() &&
+        request.resource.data.playerId == request.auth.uid &&
+        exists(/databases/$(database)/documents/multiplayer_rooms/$(roomId)/players/$(request.auth.uid)) &&
+        !exists(/databases/$(database)/documents/multiplayer_rooms/$(roomId)/submissions/$(submissionId));
       allow update, delete: if false;
     }
     
-    // Quizzes collection
+    /* ===== QUIZZES - NEW ARCHITECTURE =====
+       Cấu trúc:
+       - quizzes/{quizId}                 : METADATA (title, description, visibility, pwd, stats, status, ...)
+       - quizzes/{quizId}/questions/{qid} : NỘI DUNG ĐỀ (câu hỏi, đáp án) - BẢO VỆ
+       - quizzes/{quizId}/access/{uid}    : DẤU HIỆU đã mở khóa password
+       
+       Quy tắc phân quyền theo ROLE và STATUS:
+       
+       ┌─────────────┬──────────┬──────────┬───────────────────────┐
+       │ ROLE        │ DRAFT    │ PENDING  │ APPROVED              │
+       ├─────────────┼──────────┼──────────┼───────────────────────┤
+       │ Admin       │ ✅ R/W   │ ✅ R/W   │ ✅ R/W                │
+       │ Creator     │ ✅ Own   │ ✅ Own   │ ✅ Own (edit request) │
+       │ User        │ ❌       │ ❌       │ ✅ Read (public)      │
+       └─────────────┴──────────┴──────────┴───────────────────────┘
+       
+       METADATA ACCESS:
+       - draft: Chỉ owner + admin
+       - pending: Chỉ owner + admin (đang chờ duyệt)
+       - approved: Tất cả user (hiển thị danh sách)
+       - rejected: Chỉ owner + admin
+       
+       QUESTIONS ACCESS:
+       - visibility = "public" + approved → Mọi user
+       - visibility = "password" + approved + hasAccess(uid) → User đã unlock
+       - Owner/Admin → Luôn truy cập (để quản lý)
+    */
     match /quizzes/{quizId} {
-      // Allow all authenticated users to read quizzes
-      allow read: if request.auth != null;
       
-      // Allow authenticated users to create quizzes
-      allow create: if request.auth != null;
+      /* --- READ METADATA (GET/LIST) ---
+         Phân quyền theo STATUS:
+         - draft/pending/rejected: Chỉ owner hoặc admin
+         - approved: Tất cả user đăng nhập
+      */
+      allow get, list: if signedIn() && (
+        // Admin sees all
+        isAdmin() ||
+        // Owner sees their own quizzes
+        resource.data.createdBy == request.auth.uid ||
+        // Everyone sees approved quizzes
+        resource.data.status == 'approved'
+      );
       
-      // Allow quiz creators to update/delete their own quizzes
-      allow update, delete: if request.auth != null 
-        && resource.data.createdBy == request.auth.uid;
+      /* --- CREATE QUIZ ---
+         Creator và Admin có thể tạo quiz.
+         Mặc định status = 'draft' khi tạo.
+      */
+      allow create: if signedIn() && (
+        isCreator() || isAdmin()
+      ) && request.resource.data.status == 'draft';
+      
+      /* --- UPDATE QUIZ ---
+         Owner: Có thể sửa quiz draft/rejected của mình
+         Admin: Có thể sửa mọi quiz và thay đổi status
+      */
+      allow update: if signedIn() && (
+        // Admin can update any quiz and change status
+        isAdmin() ||
+        // Owner can update their draft/rejected quizzes (not approved/pending)
+        (resource.data.createdBy == request.auth.uid && 
+         resource.data.status in ['draft', 'rejected'])
+      );
+      
+      /* --- DELETE QUIZ ---
+         Chỉ owner hoặc admin mới được xóa.
+      */
+      allow delete: if signedIn() && (
+        resource.data.createdBy == request.auth.uid || isAdmin()
+      );
+      
+      /* --- UPDATE STATS (safe counters) ---
+         Cho phép mọi user cập nhật stats (views, attempts, completions).
+      */
+      allow update: if signedIn() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stats']);
+      
+      /* --- ACCESS SUBCOLLECTION ---
+         Client ghi /access/{uid} sau khi user nhập password đúng.
+         Rules kiểm tra: proofHash client gửi lên === hash trong quizzes/{quizId}.pwd.hash
+      */
+      match /access/{uid} {
+        // CREATE: Chỉ cho phép khi:
+        // - User đăng nhập đúng uid
+        // - Quiz có visibility = "password"
+        // - pwd.enabled = true
+        // - proofHash gửi lên khớp với pwd.hash trong metadata
+        allow create: if signedIn() &&
+          request.auth.uid == uid &&
+          quizDoc(quizId).data.visibility == "password" &&
+          quizDoc(quizId).data.pwd.enabled == true &&
+          request.resource.data.proofHash == quizDoc(quizId).data.pwd.hash;
+        
+        // READ/DELETE: User chỉ xem/xóa access của chính họ
+        allow read, delete: if signedIn() && request.auth.uid == uid;
+        
+        // UPDATE: Không cho phép (access là immutable)
+        allow update: if false;
+      }
+      
+      /* --- QUESTIONS SUBCOLLECTION (BẢO VỆ NỘI DUNG ĐỀ) ---
+         Phân quyền theo STATUS + VISIBILITY:
+         
+         Điều kiện đọc:
+         1. Admin - luôn đọc được (để quản lý)
+         2. Owner - luôn đọc được quiz của mình
+         3. User thường - chỉ khi:
+            - Quiz đã approved VÀ
+            - (visibility = "public" HOẶC đã unlock password)
+      */
+      match /questions/{qid} {
+        allow read: if signedIn() && (
+          // Admin can read all
+          isAdmin() ||
+          // Owner can read their own quiz questions
+          quizDoc(quizId).data.createdBy == request.auth.uid ||
+          // Regular users: only approved + (public OR unlocked)
+          (quizDoc(quizId).data.status == 'approved' && (
+            quizDoc(quizId).data.visibility == "public" ||
+            (quizDoc(quizId).data.visibility == "password" && hasAccess(quizId))
+          ))
+        );
+        
+        // WRITE: Chỉ owner hoặc admin
+        allow write: if signedIn() && (
+          isAdmin() ||
+          quizDoc(quizId).data.createdBy == request.auth.uid
+        );
+      }
     }
+    
+    /* ===== OTHER COLLECTIONS (keep existing logic) ===== */
     
     // Reviews collection
     match /reviews/{reviewId} {
-      // Allow all authenticated users to read reviews
-      allow read: if request.auth != null;
-      
-      // Allow authenticated users to create reviews
-      allow create: if request.auth != null 
-        && request.resource.data.userId == request.auth.uid;
-      
-      // Allow users to update/delete their own reviews
-      allow update, delete: if request.auth != null 
-        && resource.data.userId == request.auth.uid;
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if signedIn() && resource.data.userId == request.auth.uid;
     }
     
-    // System notifications collection
+    // System notifications
     match /system_notifications/{notificationId} {
-      // Allow all authenticated users to read system notifications
-      allow read: if request.auth != null;
-      
-      // Only admins can create/update/delete system notifications
+      allow read: if signedIn();
       allow write: if isAdmin();
     }
     
-    // User favorites collection
+    // User favorites
     match /user_favorites/{userId} {
-      // Allow users to read/write their own favorites
-      allow read, write: if request.auth != null 
-        && request.auth.uid == userId;
+      allow read, write: if signedIn() && request.auth.uid == userId;
     }
     
-    // Quiz results collection
+    // User quiz activities (tracking views, attempts, etc.)
+    match /userQuizActivities/{activityId} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
+    }
+    
+    // Quiz results
     match /quizResults/{resultId} {
-      // Allow authenticated users to read quiz results
-      allow read: if request.auth != null;
-      
-      // Allow authenticated users to create their own quiz results
-      allow create: if request.auth != null 
-        && request.resource.data.userId == request.auth.uid;
-      
-      // Allow users to update/delete their own quiz results
-      allow update, delete: if request.auth != null 
-        && resource.data.userId == request.auth.uid;
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if signedIn() && resource.data.userId == request.auth.uid;
     }
     
-    // Edit requests collection
+    // Edit requests
     match /editRequests/{requestId} {
-      // Allow authenticated users to read edit requests
-      allow read: if request.auth != null;
-      
-      // Allow authenticated users to create edit requests
-      allow create: if request.auth != null 
-        && request.resource.data.requestedBy == request.auth.uid;
-      
-      // Allow users to update/delete their own edit requests
-      allow update, delete: if request.auth != null 
-        && resource.data.requestedBy == request.auth.uid;
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.requestedBy == request.auth.uid;
+      allow update, delete: if signedIn() && resource.data.requestedBy == request.auth.uid;
     }
     
-    // Categories collection
+    // Categories
     match /categories/{categoryId} {
-      // Allow all authenticated users to read categories
-      allow read: if request.auth != null;
-      
-      // Only admins can create/update/delete categories
+      allow read: if signedIn();
       allow write: if isAdmin();
     }
 
-    // Quiz reviews collection
+    // Quiz reviews (public ratings)
     match /quizReviews/{reviewId} {
-      // Allow all users to read reviews (non-sensitive public ratings)
       allow read: if true;
-      
-      // Allow authenticated users to create reviews for themselves
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      
-      // Allow users to update/delete their own reviews
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if signedIn() && resource.data.userId == request.auth.uid;
     }
-
-    // Safety: if any quizReviews exist as subcollections, still allow public read
+    
     match /{path=**}/quizReviews/{reviewId} {
       allow read: if true;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if signedIn() && resource.data.userId == request.auth.uid;
     }
 
-    // Per-user notifications collection
+    // Per-user notifications
     match /notifications/{notificationId} {
-      // Users can read their own notifications; admins can read all
-      allow read: if request.auth != null && (
-        resource.data.userId == request.auth.uid || isAdmin()
-      );
-      
-      // Only admins create notifications (system messages)
+      allow read: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if isAdmin();
-      
-      // Users can mark their own notifications as read; admins can update
-      allow update: if request.auth != null && (
-        resource.data.userId == request.auth.uid || isAdmin()
-      );
-      
-      // Allow delete by owner or admin
-      allow delete: if request.auth != null && (
-        resource.data.userId == request.auth.uid || isAdmin()
-      );
+      allow update, delete: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
     }
     
-    // Mail collection for Trigger Email from Firestore extension
+    // Mail collection (Trigger Email extension)
     match /mail/{mailId} {
-      // Allow any user to create email documents (for OTP, notifications, etc.)
-      // Extension needs to read/write/delete these documents
-      allow create: if true; // Allow unauthenticated users to send OTP during registration
-      
-      // Extension needs to update delivery status
-      allow read, update, delete: if true; // Extension service account has full access
+      allow create: if true;
+      allow read, update, delete: if true;
+    }
+    
+    // System collection (for vector index, configs, etc.)
+    match /system/{docId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
     }
     
     // Default: deny all

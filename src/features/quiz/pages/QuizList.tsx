@@ -92,12 +92,16 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
   const categories = Array.from(new Set(quizzes.map(q => q.category)));
   const difficulties = Array.from(new Set(quizzes.map(q => q.difficulty)));
   
-  // Chỉ hiển thị quiz đã được duyệt
+  // Chỉ hiển thị quiz đã được duyệt - CẢ PUBLIC VÀ PASSWORD ĐỀU HIỂN THỊ 🔒
   let filtered = quizzes.filter(q => {
     const hasResources = (q as any).resources && (q as any).resources.length > 0;
     
+    // 🔒 HavePassword: Cả public và password đều hiển thị trong danh sách
+    // Chỉ khác nhau ở chỗ password cần nhập mật khẩu khi vào
+    
     return (
       q.status === 'approved' &&
+      // All approved quizzes show in list (both public and password)
       (category === 'all' || q.category === category) &&
       (difficulty === 'all' || q.difficulty === difficulty) &&
       (showCompleted || !q.isCompleted) &&
@@ -185,6 +189,18 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
                   <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
                 </svg>
                 {showStats ? 'Ẩn thống kê' : 'Hiện thống kê'}
+              </button>
+              {/* Multiplayer Button - Nổi bật */}
+              <button 
+                onClick={() => navigate('/multiplayer')}
+                className="group relative flex items-center gap-2 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 text-white px-5 py-2.5 rounded-xl hover:shadow-xl hover:scale-105 transition-all duration-300 font-semibold overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <svg className="w-5 h-5 relative z-10 group-hover:rotate-12 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 3C4.13 3 1 6.13 1 10c0 2.38 1.19 4.47 3 5.74V21l6-3h2c3.87 0 7-3.13 7-7s-3.13-7-7-7H8zm13 0v6l3 3-3 3v6l-5.5-4.5L18 13l3-3-3-3V1l3 2z"/>
+                </svg>
+                <span className="relative z-10">🎮 Chơi với bạn bè</span>
+                <span className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-0.5 rounded-bl-lg rounded-tr-lg">HOT</span>
               </button>
               {(user?.role === 'creator' || user?.role === 'admin') && (
                 <button 

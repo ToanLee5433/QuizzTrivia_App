@@ -7,6 +7,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
 import { toast } from 'react-toastify';
 import SafeHTML from '../../../shared/components/ui/SafeHTML';
+import { logger } from '../utils/logger';
 
 
 // Type definitions
@@ -23,6 +24,28 @@ interface Question {
   options?: string[];
   type?: string;
   points?: number;
+}
+
+interface Player {
+  id: string;
+  username: string;
+  name?: string; // Alias for username
+  displayName?: string; // Alternative name field
+  isReady: boolean;
+  isOnline: boolean;
+  joinedAt: Date;
+}
+
+interface PlayerAnswer {
+  questionId?: string;
+  selectedAnswer: number;
+  answer?: string;
+  timeToAnswer: number;
+  timeSpent?: number;
+  pointsEarned: number;
+  points?: number; // Alias for pointsEarned
+  isCorrect: boolean;
+  timestamp: number;
 }
 
 interface PlayerResult {
@@ -61,19 +84,10 @@ interface RoomData {
     title?: string;
     questions: Question[];
   };
-  players?: any[];
+  players?: Player[];
   questionAnswers?: {
     [questionIndex: number]: {
-      [playerId: string]: {
-        questionId?: string;
-        selectedAnswer: number;
-        answer?: string;
-        timeToAnswer: number;
-        timeSpent?: number;
-        pointsEarned: number;
-        isCorrect: boolean;
-        timestamp: number;
-      };
+      [playerId: string]: PlayerAnswer;
     };
   };
 }
@@ -122,8 +136,8 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
   
   // Client-side game state for fast performance
   const [playerScores, setPlayerScores] = useState<{[playerId: string]: number}>({});
-  const [playerAnswers, setPlayerAnswers] = useState<{[playerId: string]: any[]}>({});
-  const [currentQuestionAnswers, setCurrentQuestionAnswers] = useState<{[playerId: string]: any}>({});
+  const [playerAnswers, setPlayerAnswers] = useState<{[playerId: string]: PlayerAnswer[]}>({});
+  const [currentQuestionAnswers, setCurrentQuestionAnswers] = useState<{[playerId: string]: PlayerAnswer}>({});
 
   const [waitingForOthers, setWaitingForOthers] = useState<boolean>(false);
   
@@ -261,11 +275,11 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
     if (!currentRoomData?.questionAnswers) return;
 
     const serverPlayerScores: {[playerId: string]: number} = {};
-    const serverPlayerAnswers: {[playerId: string]: any[]} = {};
+    const serverPlayerAnswers: {[playerId: string]: PlayerAnswer[]} = {};
 
     // Calculate scores and answers from server data for ALL players
     Object.values(currentRoomData.questionAnswers).forEach(questionData => {
-      Object.entries(questionData).forEach(([playerId, answerData]: [string, any]) => {
+      Object.entries(questionData).forEach(([playerId, answerData]: [string, PlayerAnswer]) => {
         // Calculate scores
         serverPlayerScores[playerId] = (serverPlayerScores[playerId] || 0) + (answerData.pointsEarned || 0);
         
@@ -278,7 +292,10 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
           selectedAnswer: answerData.selectedAnswer,
           isCorrect: answerData.isCorrect,
           timeSpent: answerData.timeToAnswer || answerData.timeSpent,
-          points: answerData.pointsEarned || 0
+          timeToAnswer: answerData.timeToAnswer || answerData.timeSpent || 0,
+          pointsEarned: answerData.pointsEarned || 0,
+          points: answerData.pointsEarned || 0,
+          timestamp: answerData.timestamp || Date.now()
         });
       });
     });
@@ -378,7 +395,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
             correctAnswers,
             totalQuestions,
             percentage: Math.round(percentage * 10) / 10,
-            timeSpent: myAnswers.reduce((sum, a) => sum + (a.timeSpent || 0), 0),
+            timeSpent: myAnswers.reduce<number>((sum, a) => sum + (a.timeSpent || 0), 0),
             completedAt: serverTimestamp(),
             answers: myAnswers.map((a, index) => ({
               questionId: processedQuestions[index]?.id || `q${index}`,
@@ -390,9 +407,9 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
             }))
           });
 
-          console.log('✅ Multiplayer results saved successfully');
+          logger.success('Multiplayer results saved successfully');
         } catch (error) {
-          console.error('❌ Failed to save multiplayer results:', error);
+          logger.error('Failed to save multiplayer results', error);
           toast.error('Failed to save your results');
         }
       }
@@ -493,10 +510,14 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
       setCurrentQuestionAnswers(prev => ({
         ...prev,
         [currentUser.uid]: {
-          answer: indexToSubmit ?? -1,
+          selectedAnswer: indexToSubmit ?? -1,
+          answer: `${indexToSubmit ?? -1}`,
+          timeToAnswer: timeSpent,
           timeSpent,
           isCorrect,
-          points
+          pointsEarned: points,
+          points,
+          timestamp: Date.now()
         }
       }));
       
@@ -508,9 +529,13 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
           {
             questionId: finalQuestion.id,
             selectedAnswer: indexToSubmit ?? -1,
-            isCorrect,
+            answer: `${indexToSubmit ?? -1}`,
+            timeToAnswer: timeSpent,
             timeSpent,
-            points
+            isCorrect,
+            pointsEarned: points,
+            points,
+            timestamp: Date.now()
           }
         ]
       }));
@@ -592,7 +617,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
               <h4 className="font-semibold text-gray-700 mb-3 text-center">Current Standings</h4>
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {(currentRoomData?.players || [])
-                  .map((player: any) => ({
+                  .map((player: Player) => ({
                     ...player,
                     score: playerScores[player.id] || 0
                   }))
@@ -675,7 +700,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
                   .sort(([,a], [,b]) => b - a)
                   .slice(0, 3)
                   .map(([playerId, score], index) => {
-                    const player = currentRoomData?.players?.find((p: any) => p.id === playerId);
+                    const player = currentRoomData?.players?.find((p: Player) => p.id === playerId);
                     const isCurrentUser = playerId === currentUser?.uid;
                     const position = index + 1;
                     const playerAnswerHistory = playerAnswers[playerId] || [];
@@ -762,7 +787,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
                   {Object.entries(playerScores)
                     .sort(([,a], [,b]) => b - a)
                     .map(([playerId, score], index) => {
-                      const player = currentRoomData?.players?.find((p: any) => p.id === playerId);
+                      const player = currentRoomData?.players?.find((p: Player) => p.id === playerId);
                       const isCurrentUser = playerId === currentUser?.uid;
                       const position = index + 1;
                       const playerAnswerHistory = playerAnswers[playerId] || [];
@@ -770,7 +795,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
                       const totalQuestions = processedQuestions.length;
                       const accuracy = totalQuestions > 0 ? Math.round((correctAnswers/totalQuestions)*100) : 0;
                       const avgTimePerQuestion = playerAnswerHistory.length > 0 ? 
-                        Math.round(playerAnswerHistory.reduce((sum, a) => sum + a.timeSpent, 0) / playerAnswerHistory.length) : 0;
+                        Math.round(playerAnswerHistory.reduce((sum, a) => sum + (a.timeSpent || 0), 0) / playerAnswerHistory.length) : 0;
                       
                       const positionColors = {
                         1: 'bg-gradient-to-r from-yellow-100 to-orange-100 border-yellow-400',

@@ -77,14 +77,39 @@ export interface MultiplayerServiceInterface {
 }
 
 import { FirestoreMultiplayerService } from './firestoreMultiplayerService';
+import realtimeService from './realtimeMultiplayerService';
 
 // Singleton instance
 let multiplayerServiceInstance: any = null;
 
+/**
+ * Get multiplayer service with hybrid approach
+ * - Firestore: Persistent data (rooms, scores, metadata)
+ * - Realtime DB: Live state (presence, timer, chat)
+ */
 export function getMultiplayerService(): MultiplayerServiceInterface {
   if (!multiplayerServiceInstance) {
-    // Always use Firestore for real-time shared state across tabs
-    multiplayerServiceInstance = new FirestoreMultiplayerService() as any;
+    // Create Firestore service with Realtime DB integration
+    const firestoreService = new FirestoreMultiplayerService() as any;
+    
+    // Enhance with Realtime DB capabilities
+    const originalConnect = firestoreService.connect.bind(firestoreService);
+    firestoreService.connect = async (userId: string, userName: string) => {
+      await originalConnect(userId, userName);
+      console.log('✅ Connected to Firestore + Realtime DB');
+    };
+    
+    const originalDisconnect = firestoreService.disconnect.bind(firestoreService);
+    firestoreService.disconnect = () => {
+      originalDisconnect();
+      realtimeService.cleanupAll();
+      console.log('✅ Disconnected from all services');
+    };
+    
+    // Store reference to realtime service
+    firestoreService.realtimeService = realtimeService;
+    
+    multiplayerServiceInstance = firestoreService;
   }
   return multiplayerServiceInstance as any;
 }
@@ -92,6 +117,7 @@ export function getMultiplayerService(): MultiplayerServiceInterface {
 export function resetMultiplayerService(): void {
   if (multiplayerServiceInstance) {
     multiplayerServiceInstance.disconnect();
+    realtimeService.cleanupAll();
     multiplayerServiceInstance = null;
   }
 }
