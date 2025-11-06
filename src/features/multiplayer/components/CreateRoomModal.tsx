@@ -52,7 +52,7 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
       isPrivate,
       password: isPrivate ? password : undefined,
       settings: {
-        	timePerQuestion: timeLimit,
+        timePerQuestion: timeLimit,
         showLeaderboard,
         allowLateJoin: true
       }
@@ -143,7 +143,7 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
               }}
               min={MIN_TIME_LIMIT}
               max={MAX_TIME_LIMIT}
-              placeholder="VD: 30"
+              placeholder={t('placeholders.enterNumber')}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
               disabled={loading}

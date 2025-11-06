@@ -2,9 +2,9 @@ import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../../lib/store';
-import { Question, Quiz } from '../../../types';
+import { Question, Quiz, AnswerMap, AnswerValue } from '../../../types';
 import { QuizSession } from '../types';
-import { checkShortAnswer } from '../utils';
+import { checkShortAnswer, isAnswerProvided } from '../utils';
 import { quizStatsService } from '../../../../../services/quizStatsService';
 import { toast } from 'react-toastify';
 
@@ -44,7 +44,7 @@ export const useQuizSession = ({ quiz }: UseQuizSessionProps) => {
     return () => clearInterval(interval);
   }, []);
 
-  const updateAnswer = useCallback((questionId: string, answer: any) => {
+  const updateAnswer = useCallback((questionId: string, answer: AnswerValue) => {
     setSession(prev => ({
       ...prev,
       answers: {
@@ -62,7 +62,7 @@ export const useQuizSession = ({ quiz }: UseQuizSessionProps) => {
   }, []);
 
   // Unified function to check if an answer is correct for any question type
-  const isAnswerCorrect = useCallback((question: Question, userAnswer: any): boolean => {
+  const isAnswerCorrect = useCallback((question: Question, userAnswer: AnswerValue): boolean => {
     if (userAnswer === undefined || userAnswer === null) {
       return false;
     }
@@ -80,14 +80,17 @@ export const useQuizSession = ({ quiz }: UseQuizSessionProps) => {
         return JSON.stringify(correctIds) === JSON.stringify(userIds);
       }
       case 'short_answer': {
-        return checkShortAnswer(userAnswer, question);
+        if (typeof userAnswer === 'string') {
+          return checkShortAnswer(userAnswer, question);
+        }
+        return false;
       }
       default:
         return false;
     }
   }, []);
 
-  const calculateScore = useCallback((questions: Question[], answers: Record<string, any>) => {
+  const calculateScore = useCallback((questions: Question[], answers: AnswerMap) => {
     let correctAnswers = 0;
     const totalQuestions = questions.length;
 
@@ -122,9 +125,9 @@ export const useQuizSession = ({ quiz }: UseQuizSessionProps) => {
 
     // Calculate score
     const score = calculateScore(quiz.questions, finalSession.answers);
-    
-  let resultId: string | undefined;
-  try {
+
+    let resultId: string | undefined;
+    try {
       // Save result to Firestore for leaderboard
       if (user) {
         console.log('💾 Saving quiz result to Firestore...');
@@ -132,7 +135,8 @@ export const useQuizSession = ({ quiz }: UseQuizSessionProps) => {
         // Convert answers to UserAnswer[] format using the same logic
         const userAnswers = Object.entries(finalSession.answers).map(([questionId, answer]) => {
           const question = quiz.questions.find(q => q.id === questionId);
-          const isCorrect = question ? isAnswerCorrect(question, answer) : false;
+          const answerValue: AnswerValue = answer as AnswerValue;
+          const isCorrect = question ? isAnswerCorrect(question, answerValue) : false;
           
           return {
             questionId,
@@ -142,7 +146,7 @@ export const useQuizSession = ({ quiz }: UseQuizSessionProps) => {
           };
         });
         
-        const resultData = {
+  const resultData = {
           userId: user.uid,
           userEmail: user.email || '',
           userName: user.displayName || user.email?.split('@')[0] || 'Anonymous',
@@ -158,14 +162,14 @@ export const useQuizSession = ({ quiz }: UseQuizSessionProps) => {
         console.log('💾 Submitting quiz result:', resultData);
         
         // Import submitQuizResult function
-        const { submitQuizResult } = await import('../../../api/base');
-  resultId = await submitQuizResult(resultData);
-  console.log('✅ Quiz result saved with ID:', resultId);
+    const { submitQuizResult } = await import('../../../api/base');
+    resultId = await submitQuizResult(resultData);
+    console.log('✅ Quiz result saved with ID:', resultId);
       }
-    } catch (error) {
+  } catch (error) {
       console.error('❌ Failed to save quiz result:', error);
       // Continue to results page even if save fails
-    }
+  }
     
     // Navigate to unified result viewer using the actual result document ID
     // This ensures we always have a valid resultId to fetch data
@@ -193,23 +197,13 @@ export const useQuizSession = ({ quiz }: UseQuizSessionProps) => {
   }, [session, quiz, navigate, calculateScore, user]);
 
   const getAnsweredQuestions = useCallback(() => {
-    return Object.keys(session.answers).filter(questionId => {
-      const answer = session.answers[questionId];
-      return answer !== undefined && 
-             answer !== null && 
-             answer !== '' && 
-             !(Array.isArray(answer) && answer.length === 0);
-    });
+    return Object.entries(session.answers)
+      .filter(([, answer]) => isAnswerProvided(answer as AnswerValue))
+      .map(([questionId]) => questionId);
   }, [session.answers]);
 
   const getUnansweredQuestions = useCallback(() => {
-    return quiz.questions.filter(question => {
-      const answer = session.answers[question.id];
-      return answer === undefined || 
-             answer === null || 
-             answer === '' || 
-             (Array.isArray(answer) && answer.length === 0);
-    });
+    return quiz.questions.filter(question => !isAnswerProvided(session.answers[question.id]));
   }, [quiz.questions, session.answers]);
 
   const progress = (getAnsweredQuestions().length / quiz.questions.length) * 100;

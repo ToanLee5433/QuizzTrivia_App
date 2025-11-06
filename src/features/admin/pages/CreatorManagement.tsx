@@ -314,7 +314,7 @@ const CreatorManagement: React.FC = () => {
         <div className="text-center">
           <Shield className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">{t("messages.unauthorized")}</h2>
-          <p className="text-gray-600">Bạn cần quyền admin để truy cập trang này</p>
+          <p className="text-gray-600">{t('creatorManagement.adminRequired')}</p>
         </div>
       </div>
     );
@@ -325,8 +325,8 @@ const CreatorManagement: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Quản lý Creator</h1>
-          <p className="text-gray-600 mt-2">Quản lý và theo dõi hoạt động của các creator</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('creatorManagement.title')}</h1>
+          <p className="text-gray-600 mt-2">{t('creatorManagement.description')}</p>
         </div>
 
         {/* Stats Cards */}
@@ -402,8 +402,8 @@ const CreatorManagement: React.FC = () => {
           ) : filteredCreators.length === 0 ? (
             <div className="p-8 text-center">
               <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Không có creator nào</h3>
-              <p className="text-gray-600">Không tìm thấy creator phù hợp với bộ lọc</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">{t('creatorManagement.noCreators')}</h3>
+              <p className="text-gray-600">{t('creatorManagement.noCreatorsMatch')}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -419,10 +419,10 @@ const CreatorManagement: React.FC = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t("leaderboard.plays")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Đánh giá
+                      {t('creatorManagement.rating')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Hoạt động cuối
+                      {t('creatorManagement.lastActivity')}
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{t("admin.quizManagement.table.actions")}
                     </th>
@@ -476,7 +476,7 @@ const CreatorManagement: React.FC = () => {
                             {creator.lastLoginAt.toLocaleDateString('vi-VN')}
                           </div>
                         ) : (
-                          'Chưa đăng nhập'
+                          t('creatorManagement.notLoggedIn')
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -530,7 +530,7 @@ const CreatorManagement: React.FC = () => {
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-gray-900">
-                    Chi tiết Creator
+                    {t('creatorManagement.creatorDetail')}
                   </h3>
                   <button
                     onClick={() => setShowCreatorModal(false)}
@@ -555,7 +555,7 @@ const CreatorManagement: React.FC = () => {
                       </h4>
                       <p className="text-gray-600">{selectedCreator.email}</p>
                       <p className="text-sm text-gray-500">
-                        Tham gia: {selectedCreator.createdAt.toLocaleDateString('vi-VN')}
+                        {t('creatorManagement.joinedOn')}: {selectedCreator.createdAt.toLocaleDateString('vi-VN')}
                       </p>
                     </div>
                   </div>
@@ -564,7 +564,7 @@ const CreatorManagement: React.FC = () => {
                     <div className="text-center p-4 bg-blue-50 rounded-lg">
                       <Trophy className="w-6 h-6 text-blue-600 mx-auto mb-2" />
                       <p className="text-2xl font-bold text-gray-900">{selectedCreator.quizCount}</p>
-                      <p className="text-sm text-gray-600">Quiz đã tạo</p>
+                      <p className="text-sm text-gray-600">{t('creatorManagement.quizzesCreated')}</p>
                     </div>
                     <div className="text-center p-4 bg-green-50 rounded-lg">
                       <TrendingUp className="w-6 h-6 text-green-600 mx-auto mb-2" />
@@ -574,15 +574,15 @@ const CreatorManagement: React.FC = () => {
                     <div className="text-center p-4 bg-yellow-50 rounded-lg">
                       <Star className="w-6 h-6 text-yellow-600 mx-auto mb-2" />
                       <p className="text-2xl font-bold text-gray-900">{selectedCreator.avgRating.toFixed(1)}</p>
-                      <p className="text-sm text-gray-600">Đánh giá TB</p>
+                      <p className="text-sm text-gray-600">{t('creatorManagement.avgRating')}</p>
                     </div>
                   </div>
 
                   <div>
-                    <h5 className="font-medium text-gray-900 mb-2">Quyền hạn</h5>
+                    <h5 className="font-medium text-gray-900 mb-2">{t('creatorManagement.permissions')}</h5>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Tạo quiz</span>
+                        <span className="text-sm text-gray-600">{t('creatorManagement.permissions.createQuiz')}</span>
                         <span className={`text-xs px-2 py-1 rounded ${
                           selectedCreator.permissions.canCreateQuiz 
                             ? 'bg-green-100 text-green-800' 
@@ -602,23 +602,23 @@ const CreatorManagement: React.FC = () => {
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Xóa quiz</span>
+                        <span className="text-sm text-gray-600">{t('creatorManagement.permissions.deleteQuiz')}</span>
                         <span className={`text-xs px-2 py-1 rounded ${
                           selectedCreator.permissions.canDeleteOwnQuiz 
                             ? 'bg-green-100 text-green-800' 
                             : 'bg-red-100 text-red-800'
                         }`}>
-                          {selectedCreator.permissions.canDeleteOwnQuiz ? 'Có' : 'Không'}
+                          {selectedCreator.permissions.canDeleteOwnQuiz ? t('yes') : t('no')}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Xem analytics</span>
+                        <span className="text-sm text-gray-600">{t('creatorManagement.permissions.viewAnalytics')}</span>
                         <span className={`text-xs px-2 py-1 rounded ${
                           selectedCreator.permissions.canViewAnalytics 
                             ? 'bg-green-100 text-green-800' 
                             : 'bg-red-100 text-red-800'
                         }`}>
-                          {selectedCreator.permissions.canViewAnalytics ? 'Có' : 'Không'}
+                          {selectedCreator.permissions.canViewAnalytics ? t('yes') : t('no')}
                         </span>
                       </div>
                     </div>

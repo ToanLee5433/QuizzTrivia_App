@@ -68,6 +68,12 @@ const CategoryManagement: React.FC = () => {
 
   const icons = ['📚', '🔬', '💻', '🎨', '📊', '🌍', '🏃‍♂️', '🎵', '🍳', '📈', '🧮', '📝'];
 
+  // Move useEffect before conditional return - Fix React Hooks rules
+  useEffect(() => {
+    if (!user || user.role !== 'admin') return;
+    loadCategories();
+  }, [user]);
+
   // Kiểm tra quyền admin
   if (!user || user.role !== 'admin') {
     return (
@@ -82,10 +88,6 @@ const CategoryManagement: React.FC = () => {
       </div>
     );
   }
-
-  useEffect(() => {
-    loadCategories();
-  }, []);
 
   const loadCategories = async () => {
     try {

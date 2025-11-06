@@ -100,7 +100,7 @@ const QuizFilters: React.FC<QuizFiltersProps> = ({
         <div className="lg:col-span-2">
           <input
             type="text"
-            placeholder="🔍 Tìm kiếm quiz..."
+            placeholder={t('placeholders.searchQuiz')}
             value={filters.search}
             onChange={(e) => updateFilter('search', e.target.value)}
             className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"

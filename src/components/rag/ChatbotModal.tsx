@@ -14,6 +14,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, Sparkles, Book, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { auth } from '../../lib/firebase/config';
 import { MessageList } from './MessageList';
 import { TypingIndicator } from './TypingIndicator';
@@ -36,6 +37,7 @@ interface ChatbotModalProps {
 }
 
 export function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
+  const { t } = useTranslation();
   const currentUser = auth.currentUser;
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -310,7 +312,7 @@ export function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Đặt câu hỏi của bạn... (Enter để gửi, Shift+Enter để xuống dòng)"
+                placeholder={t('placeholders.askQuestion')}
                 className="flex-1 resize-none px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 dark:text-white"
                 rows={1}
                 style={{ maxHeight: '120px' }}

@@ -11,6 +11,7 @@ import LearningResourcesView from './components/LearningResourcesView';
 import QuizPasswordModal from '../../../../shared/components/ui/QuizPasswordModal';
 import { unlockQuiz } from '../../../../lib/services/quizAccessService';
 import { toast } from 'react-toastify';
+import { Quiz, AnswerValue } from '../../types';
 
 const QuizPage: React.FC = () => {
   const { quiz, loading, error, needsPassword, quizMetadata, retryLoad } = useQuizData();
@@ -108,7 +109,7 @@ const QuizPage: React.FC = () => {
 };
 
 interface QuizPageContentProps {
-  quiz: any;
+  quiz: Quiz;
 }
 
 const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
@@ -219,7 +220,7 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
                 question={currentQuestion}
                 questionNumber={session.currentQuestionIndex + 1}
                 value={session.answers[currentQuestion.id]}
-                onChange={(answer: any) => updateAnswer(currentQuestion.id, answer)}
+                onChange={(answer: AnswerValue) => updateAnswer(currentQuestion.id, answer)}
               />
 
               {/* Navigation Buttons */}

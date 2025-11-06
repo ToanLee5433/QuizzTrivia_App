@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Question } from '../types';
 import { 
   Plus, Trash2, Edit3, Check, X, ArrowUp, ArrowDown, 
@@ -28,6 +29,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
   onMove,
   totalQuestions
 }) => {
+  const { t } = useTranslation();
   const [localQuestion, setLocalQuestion] = useState<Question>(question);
 
   const handleSave = () => {
@@ -176,7 +178,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
               <textarea
                 value={localQuestion.text}
                 onChange={(e) => setLocalQuestion({ ...localQuestion, text: e.target.value })}
-                placeholder="Enter your question here..."
+                placeholder={t('placeholders.enterQuestionHere')}
                 className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
                 rows={3}
               />
@@ -292,7 +294,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
               <textarea
                 value={localQuestion.explanation || ''}
                 onChange={(e) => setLocalQuestion({ ...localQuestion, explanation: e.target.value })}
-                placeholder="Explain why this is the correct answer..."
+                placeholder={t('placeholders.explainAnswer')}
                 className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                 rows={3}
               />

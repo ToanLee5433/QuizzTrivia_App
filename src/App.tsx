@@ -76,7 +76,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   const dispatch = useDispatch();
 
   useEffect(() => {
-    let mounted = true;
+    const mounted = true;
     // Set timeout để tránh loading vô hạn
     const timeout = setTimeout(() => {
       if (mounted) {

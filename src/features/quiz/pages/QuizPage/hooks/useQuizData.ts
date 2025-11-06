@@ -1,13 +1,110 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../../../lib/store';
 import { setCurrentQuiz } from '../../../store';
-import { Quiz } from '../../../types';
+import { Quiz, Question } from '../../../types';
 import { quizStatsService } from '../../../../../services/quizStatsService';
 import { getQuizMetadata, QuizMetadata } from '../../../../../lib/services/quizAccessService';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../../../../lib/firebase/config';
+
+type QuizResource = NonNullable<Quiz['resources']>[number];
+type QuizPageMetadata = QuizMetadata & {
+  resources?: QuizResource[];
+};
+
+const RESOURCE_TYPES: ReadonlyArray<QuizResource['type']> = ['video', 'pdf', 'image', 'link', 'slides'];
+
+const isPermissionDeniedError = (error: unknown): error is { code: string } =>
+  typeof error === 'object' &&
+  error !== null &&
+  'code' in error &&
+  typeof (error as { code?: unknown }).code === 'string' &&
+  (error as { code: string }).code === 'permission-denied';
+
+const toQuizResource = (raw: unknown): QuizResource | null => {
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+
+  const candidate = raw as Record<string, unknown>;
+  const { id, type, title, url } = candidate;
+
+  if (typeof id !== 'string' || typeof type !== 'string' || typeof title !== 'string' || typeof url !== 'string') {
+    return null;
+  }
+
+  if (!RESOURCE_TYPES.includes(type as QuizResource['type'])) {
+    return null;
+  }
+
+  const resource: QuizResource = {
+    id,
+    type: type as QuizResource['type'],
+    title,
+    url,
+    required: candidate.required === undefined ? false : Boolean(candidate.required)
+  };
+
+  if (typeof candidate.description === 'string') {
+    resource.description = candidate.description;
+  }
+
+  if (typeof candidate.thumbnailUrl === 'string') {
+    resource.thumbnailUrl = candidate.thumbnailUrl;
+  }
+
+  if (typeof candidate.whyWatch === 'string') {
+    resource.whyWatch = candidate.whyWatch;
+  }
+
+  if (typeof candidate.estimatedTime === 'number') {
+    resource.estimatedTime = candidate.estimatedTime;
+  }
+
+  if (typeof candidate.order === 'number') {
+    resource.order = candidate.order;
+  }
+
+  return resource;
+};
+
+const normalizeResources = (rawResources: unknown): QuizResource[] | undefined => {
+  if (!Array.isArray(rawResources)) {
+    return undefined;
+  }
+
+  const normalized = rawResources
+    .map(toQuizResource)
+    .filter((resource): resource is QuizResource => resource !== null);
+
+  if (normalized.length === 0) {
+    return undefined;
+  }
+
+  return normalized.sort((a, b) => {
+    const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+    const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+    return orderA - orderB;
+  });
+};
+
+const enhanceMetadata = (metadata: QuizMetadata): QuizPageMetadata => {
+  const rawResources = (metadata as { resources?: unknown }).resources;
+  const normalizedResources = normalizeResources(rawResources);
+  const base: Record<string, unknown> = { ...metadata };
+
+  if ('resources' in base) {
+    delete base.resources;
+  }
+
+  if (normalizedResources) {
+    base.resources = normalizedResources;
+  }
+
+  return base as QuizPageMetadata;
+};
 
 export const useQuizData = () => {
   const { id } = useParams<{ id: string }>();
@@ -20,70 +117,62 @@ export const useQuizData = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [needsPassword, setNeedsPassword] = useState(false);
-  const [quizMetadata, setQuizMetadata] = useState<QuizMetadata | null>(null);
+  const [quizMetadata, setQuizMetadata] = useState<QuizPageMetadata | null>(null);
 
-  useEffect(() => {
+  const loadQuizData = useCallback(async () => {
     if (!id) {
-      console.log('❌ No quiz ID provided');
-      navigate('/quiz-list');
       return;
     }
-    
-    loadQuizData();
-  }, [id, user]);
 
-  const loadQuizData = async () => {
-    if (!id) return;
-    
     console.log('🔍 QuizPage: Loading quiz:', id);
     setLoading(true);
     setError(null);
-    
+
     try {
-      // First, try to find quiz in Redux store
       const foundQuiz = quizzes.find(q => q.id === id);
-      
+
       if (foundQuiz) {
         console.log('✅ Found quiz in Redux store:', foundQuiz.title);
-        
-        // 🔒 CHECK PASSWORD PROTECTION - Even if quiz is in Redux!
-        // This is critical because Redux may have old quiz format with questions embedded
-        const quizVisibility = (foundQuiz as any).visibility || (foundQuiz as any).havePassword;
-        
-        if (quizVisibility === 'password') {
+
+        const hasPasswordProtection =
+          foundQuiz.visibility === 'password' ||
+          foundQuiz.havePassword === true ||
+          foundQuiz.havePassword === 'password';
+
+        if (hasPasswordProtection) {
           console.log('🔒 Quiz requires password, checking access...');
-          
-          // Load metadata to get pwd info
+
           const metadata = await getQuizMetadata(id);
           if (!metadata) {
             setError('Quiz không tồn tại');
             setLoading(false);
             return;
           }
-          
-          setQuizMetadata(metadata);
-          
-          // Try to access questions to verify permission
+
+          const enrichedMetadata = enhanceMetadata(metadata);
+          setQuizMetadata(enrichedMetadata);
+
           try {
             const questionsRef = collection(db, 'quizzes', id, 'questions');
-            await getDocs(questionsRef); // Just test permission, don't need result
-            
-            // If we can read questions, user has access
+            await getDocs(questionsRef);
+
             console.log('✅ User has access to password-protected quiz');
-            setQuiz(foundQuiz);
-            dispatch(setCurrentQuiz(foundQuiz));
-            
-            // Track view
+            setNeedsPassword(false);
+            const quizWithResources: Quiz = enrichedMetadata.resources
+              ? { ...foundQuiz, resources: enrichedMetadata.resources }
+              : foundQuiz;
+            setQuiz(quizWithResources);
+            dispatch(setCurrentQuiz(quizWithResources));
+
             if (user) {
               quizStatsService.trackView(id, user.uid);
             } else {
               quizStatsService.trackView(id);
             }
-            
+
             setLoading(false);
-          } catch (permissionError: any) {
-            // Permission denied - need password
-            if (permissionError.code === 'permission-denied') {
+          } catch (permissionError) {
+            if (isPermissionDeniedError(permissionError)) {
               console.log('🔒 Access denied - showing password modal');
               setNeedsPassword(true);
               setError(null);
@@ -92,62 +181,58 @@ export const useQuizData = () => {
             }
             setLoading(false);
           }
-          
+
           return;
         }
-        
-        // Public quiz - use from Redux
+
+        setNeedsPassword(false);
         setQuiz(foundQuiz);
         dispatch(setCurrentQuiz(foundQuiz));
-        
-        // Track view
+
         if (user) {
           quizStatsService.trackView(id, user.uid);
         } else {
           quizStatsService.trackView(id);
         }
-        
+
         setLoading(false);
         return;
       }
 
-      // Not in store, try to load from Firestore
       console.log('🔍 Quiz not in store, loading from Firestore...');
-      
-      // Load metadata first (always allowed)
+
       const metadata = await getQuizMetadata(id);
-      
+
       if (!metadata) {
         setError('Quiz không tồn tại');
         setLoading(false);
         return;
       }
-      
-      console.log('� Loaded metadata:', metadata.title, 'visibility:', metadata.visibility);
-      setQuizMetadata(metadata);
 
-      // Try to load questions
+      console.log('✅ Loaded metadata:', metadata.title, 'visibility:', metadata.visibility);
+      const enrichedMetadata = enhanceMetadata(metadata);
+      setQuizMetadata(enrichedMetadata);
+
       try {
         const questionsRef = collection(db, 'quizzes', id, 'questions');
         const questionsSnap = await getDocs(questionsRef);
-        
+
         const questions = questionsSnap.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
-        }));
+        })) as Question[];
 
         console.log('✅ Loaded questions:', questions.length);
 
-        // Build complete quiz object
         const completeQuiz = {
-          ...metadata,
+          ...enrichedMetadata,
           questions
-        } as unknown as Quiz;
+        } as Quiz;
 
+        setNeedsPassword(false);
         setQuiz(completeQuiz);
         dispatch(setCurrentQuiz(completeQuiz));
 
-        // Track view
         if (user) {
           quizStatsService.trackView(id, user.uid);
         } else {
@@ -155,39 +240,46 @@ export const useQuizData = () => {
         }
 
         setLoading(false);
-      } catch (questionsError: any) {
+      } catch (questionsError) {
         console.error('❌ Error loading questions:', questionsError);
-        
-        // Check if it's a permission error (password-protected quiz)
-        if (questionsError.code === 'permission-denied') {
+
+        if (isPermissionDeniedError(questionsError)) {
           console.log('🔒 Quiz requires password');
-          
-          // Check if this is a password-protected quiz
+
           if (metadata.visibility === 'password') {
             setNeedsPassword(true);
-            setError(null); // Clear error, will show password modal
+            setError(null);
           } else {
             setError('Không có quyền truy cập quiz này');
           }
         } else {
           setError('Lỗi khi tải câu hỏi');
         }
-        
+
         setLoading(false);
       }
-      
-    } catch (err: any) {
+    } catch (err) {
       console.error('❌ Error loading quiz:', err);
-      setError(err.message || 'Không thể tải quiz');
+      setError(err instanceof Error ? err.message : 'Không thể tải quiz');
       setLoading(false);
     }
-  };
+  }, [dispatch, id, quizzes, user]);
+
+  useEffect(() => {
+    if (!id) {
+      console.log('❌ No quiz ID provided');
+      navigate('/quiz-list');
+      return;
+    }
+
+    loadQuizData();
+  }, [id, navigate, loadQuizData]);
 
   // Function to retry loading after password unlock
-  const retryLoad = () => {
+  const retryLoad = useCallback(() => {
     setNeedsPassword(false);
     loadQuizData();
-  };
+  }, [loadQuizData]);
   
   // Handle currentQuiz from Redux (when fetched individually)
   useEffect(() => {

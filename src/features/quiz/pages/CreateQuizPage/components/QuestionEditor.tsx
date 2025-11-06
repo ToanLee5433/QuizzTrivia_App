@@ -17,7 +17,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
   // Xử lý thay đổi loại câu hỏi
   const handleTypeChange = (newType: Question['type']) => {
     let newAnswers: Answer[] = [];
-    let newQuestion = { ...question, type: newType };
+    const newQuestion = { ...question, type: newType };
     
     switch (newType) {
       case 'multiple':
@@ -146,7 +146,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
       <div className="flex gap-2 mb-4">
         <input
           className="flex-1 border p-2 rounded"
-          placeholder="Nội dung câu hỏi"
+          placeholder={t('placeholders.questionContent')}
           value={question.text}
           onChange={e => onChange({ ...question, text: e.target.value })}
         />
@@ -155,10 +155,10 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
           value={question.type}
           onChange={e => handleTypeChange(e.target.value as Question['type'])}
         >
-          <option value="multiple">Trắc nghiệm</option>
-          <option value="boolean">Đúng/Sai</option>
-          <option value="short_answer">Điền từ</option>
-          <option value="image">Chọn ảnh</option>
+          <option value="multiple">{t('quizCreation.multipleChoice')}</option>
+          <option value="boolean">{t('quizCreation.trueFalse')}</option>
+          <option value="short_answer">{t('quizCreation.fillBlank')}</option>
+          <option value="image">{t('quizCreation.imageChoice')}</option>
         </select>
         <input
           type="number"
@@ -176,8 +176,8 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
       {question.type === 'multiple' && (
         <div className="space-y-3">
           <div className="flex justify-between items-center">
-            <h4 className="font-medium text-gray-700">Đáp án trắc nghiệm</h4>
-            <Button onClick={handleAddAnswer} variant="outline" size="sm">+ Thêm đáp án</Button>
+            <h4 className="font-medium text-gray-700">{t('quizCreation.multipleChoiceAnswers')}</h4>
+            <Button onClick={handleAddAnswer} variant="outline" size="sm">{t('quizCreation.addAnswer')}</Button>
           </div>
           {question.answers.map((a, idx) => (
             <div key={a.id} className="flex gap-2 items-center bg-white p-2 rounded border">
@@ -213,9 +213,9 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
 
       {question.type === 'boolean' && (
         <div className="space-y-3">
-          <h4 className="font-medium text-gray-700">Câu hỏi Đúng/Sai</h4>
+          <h4 className="font-medium text-gray-700">{t('quizCreation.trueFalseQuestion')}</h4>
           <div className="bg-gray-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-600 mb-3">Chọn đáp án đúng cho câu hỏi này:</p>
+            <p className="text-sm text-gray-600 mb-3">{t('quizCreation.selectCorrectAnswer')}</p>
             <div className="space-y-2">
               {question.answers.map((answer, idx) => (
                 <label key={answer.id} className="flex items-center gap-3 cursor-pointer">
@@ -240,13 +240,13 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
 
       {question.type === 'short_answer' && (
         <div className="space-y-3">
-          <h4 className="font-medium text-gray-700">Câu hỏi điền từ</h4>
+          <h4 className="font-medium text-gray-700">{t('quizCreation.fillBlankQuestion')}</h4>
           <div className="bg-white p-3 rounded border space-y-3">
             <div>
-              <label className="block text-sm font-medium mb-1">Đáp án chính xác:</label>
+              <label className="block text-sm font-medium mb-1">{t('quizCreation.correctAnswer')}</label>
               <input
                 className="w-full border p-2 rounded"
-                placeholder="Nhập đáp án chính xác..."
+                placeholder={t('placeholders.enterCorrectAnswer')}
                 value={question.correctAnswer || ''}
                 onChange={e => handleCorrectAnswerChange(e.target.value)}
               />
@@ -254,7 +254,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
             
             {question.acceptedAnswers && question.acceptedAnswers.length > 0 && (
               <div>
-                <label className="block text-sm font-medium mb-1">Các cách viết được chấp nhận:</label>
+                <label className="block text-sm font-medium mb-1">{t('quizCreation.acceptedVariations')}</label>
                 <div className="space-y-1">
                   {question.acceptedAnswers.map((answer, idx) => (
                     <div key={idx} className="flex gap-2 items-center">
@@ -273,7 +273,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
             )}
             
             <Button onClick={addAcceptedAnswer} variant="outline" size="sm">
-              + Thêm cách viết khác
+              {t('quizCreation.addVariation')}
             </Button>
           </div>
         </div>
@@ -282,8 +282,8 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
       {question.type === 'image' && (
         <div className="space-y-3">
           <div className="flex justify-between items-center">
-            <h4 className="font-medium text-gray-700">Chọn ảnh đáp án</h4>
-            <Button onClick={handleAddAnswer} variant="outline" size="sm">+ Thêm ảnh</Button>
+            <h4 className="font-medium text-gray-700">{t('quizCreation.imageAnswers')}</h4>
+            <Button onClick={handleAddAnswer} variant="outline" size="sm">{t('quizCreation.addImage')}</Button>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {question.answers.map((a, idx) => (
@@ -303,14 +303,14 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
                 
                 <input
                   className="w-full border p-2 rounded text-sm"
-                  placeholder="Mô tả ảnh (tùy chọn)"
+                  placeholder={t('placeholders.imageDescription')}
                   value={a.text}
                   onChange={e => handleAnswerChange(idx, 'text', e.target.value)}
                 />
                 
                 <input
                   className="w-full border p-2 rounded text-sm"
-                  placeholder="URL ảnh"
+                  placeholder={t('placeholders.imageUrlOptional')}
                   value={a.imageUrl || ''}
                   onChange={e => handleAnswerChange(idx, 'imageUrl', e.target.value)}
                 />
@@ -335,7 +335,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
                     checked={a.isCorrect}
                     onChange={() => handleSetCorrect(idx)}
                   />
-                  <span className="text-sm font-medium text-green-600">Đáp án đúng</span>
+                  <span className="text-sm font-medium text-green-600">{t('quizCreation.correctAnswerLabel')}</span>
                 </label>
               </div>
             ))}
@@ -347,7 +347,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
       <div className="mt-4">
         <textarea
           className="w-full border p-2 rounded"
-          placeholder="Giải thích đáp án (tùy chọn)"
+          placeholder={t('placeholders.answerExplanation')}
           rows={2}
           value={question.explanation || ''}
           onChange={e => onChange({ ...question, explanation: e.target.value })}

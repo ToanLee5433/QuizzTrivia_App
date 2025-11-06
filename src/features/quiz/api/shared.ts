@@ -28,7 +28,7 @@ export const getUserQuizResults = async (userId: string): Promise<QuizResult[]> 
       const data = doc.data();
       console.log('🔍 Raw Firestore data for result:', doc.id, data);
       
-      let result = {
+      const result = {
         id: doc.id,
         ...data,
         completedAt: data.completedAt?.toDate

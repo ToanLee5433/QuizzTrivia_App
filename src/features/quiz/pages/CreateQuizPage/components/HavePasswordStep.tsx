@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Globe, Lock, Eye, EyeOff, Share2, Key, Shield, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface HavePasswordStepProps {
   havePassword: 'public' | 'password';
@@ -8,6 +9,7 @@ interface HavePasswordStepProps {
 }
 
 const HavePasswordStep: React.FC<HavePasswordStepProps> = ({ havePassword, password = '', onChange }) => {
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const isPasswordValid = havePassword === 'password' ? (password && password.length >= 6) : true;
 
@@ -110,7 +112,7 @@ const HavePasswordStep: React.FC<HavePasswordStepProps> = ({ havePassword, passw
                     ? 'border-gray-200 focus:border-purple-500' 
                     : 'border-red-300 focus:border-red-500'
                 }`}
-                placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
+                placeholder={t('placeholders.minPasswordLength')}
                 minLength={6}
               />
               <button

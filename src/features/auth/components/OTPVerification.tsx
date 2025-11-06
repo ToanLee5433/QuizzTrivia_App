@@ -89,25 +89,41 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
   const handleVerifyOTP = async () => {
     const otpCode = otp.join('');
     if (otpCode.length !== 6) {
-      toast.error('Vui lòng nhập đầy đủ 6 số');
+      toast.error(t('auth.otp.errors.incomplete'));
       return;
     }
 
     setLoading(true);
     try {
       const result = verifyOTP(email, otpCode);
+      const getErrorMessage = () => {
+        switch (result.code) {
+          case 'otp.notFound':
+            return t('auth.otp.errors.notFound');
+          case 'otp.expired':
+            return t('auth.otp.errors.expired');
+          case 'otp.maxAttempts':
+            return t('auth.otp.errors.maxAttempts');
+          case 'otp.incorrect':
+            return t('auth.otp.errors.incorrect', {
+              remaining: result.metadata?.remaining ?? 0
+            });
+          default:
+            return t('auth.otp.errors.generic');
+        }
+      };
       
       if (result.success) {
-        toast.success(result.message);
+        toast.success(t('auth.otp.verifySuccess'));
         onVerificationSuccess();
       } else {
-        toast.error(result.message);
+        toast.error(getErrorMessage());
         // Clear OTP on failure
         setOtp(['', '', '', '', '', '']);
         inputRefs.current[0]?.focus();
       }
     } catch (error) {
-      toast.error('Có lỗi xảy ra khi xác thực');
+      toast.error(t('auth.otp.errors.generic'));
     } finally {
       setLoading(false);
     }
@@ -118,18 +134,22 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
     setResendLoading(true);
     try {
       const result = await generateAndSendOTP(email);
+      const resendErrorKey =
+        result.code === 'otp.emailFailed'
+          ? 'auth.otp.errors.emailFailed'
+          : 'auth.otp.errors.resend';
       
       if (result.success) {
-        toast.success('Mã OTP mới đã được gửi!');
+        toast.success(t('auth.otp.resendSuccess'));
         setTimer(60);
         setCanResend(false);
         setOtp(['', '', '', '', '', '']);
         inputRefs.current[0]?.focus();
       } else {
-        toast.error(result.message);
+        toast.error(t(resendErrorKey));
       }
     } catch (error) {
-      toast.error('Không thể gửi lại mã xác thực');
+      toast.error(t('auth.otp.errors.resend'));
     } finally {
       setResendLoading(false);
     }
@@ -152,10 +172,10 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
             <Mail className="w-8 h-8 text-blue-600" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            {t("auth.emailVerification")}
+            {t('auth.emailVerification')}
           </h2>
           <p className="text-gray-600">
-            Chúng tôi đã gửi mã xác thực 6 số đến
+            {t('auth.otp.sentHint')}
           </p>
           <p className="font-semibold text-blue-600 mt-1">{email}</p>
         </div>
@@ -163,7 +183,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
         {/* OTP Input */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-3">
-            Nhập mã xác thực
+            {t('auth.otp.codeInputLabel')}
           </label>
           <div className="flex gap-3 justify-center" onPaste={handlePaste}>
             {otp.map((digit, index) => (
@@ -190,7 +210,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
           {!canResend ? (
             <div className="flex items-center justify-center gap-2 text-gray-600">
               <Timer className="w-4 h-4" />
-              <span>Gửi lại mã sau {timer}s</span>
+              <span>{t('auth.otp.timer', { seconds: timer })}</span>
             </div>
           ) : (
             <button
@@ -199,7 +219,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
               className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium mx-auto disabled:opacity-50 transition-colors"
             >
               <RefreshCw className={`w-4 h-4 ${resendLoading ? 'animate-spin' : ''}`} />
-              {resendLoading ? 'Đang gửi...' : 'Gửi lại mã xác thực'}
+              {resendLoading ? t('auth.otp.resendLoading') : t('auth.otp.resendAction')}
             </button>
           )}
         </div>
@@ -214,12 +234,12 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
             {loading ? (
               <>
                 <RefreshCw className="w-4 h-4 animate-spin" />
-                {t("profile.authenticating")}
+                {t('profile.authenticating')}
               </>
             ) : (
               <>
                 <CheckCircle className="w-4 h-4" />
-                Xác thực
+                {t('auth.otp.verifyAction')}
               </>
             )}
           </button>
@@ -235,8 +255,8 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
 
         {/* Help text */}
         <div className="mt-6 text-center text-sm text-gray-500">
-          <p>Không nhận được mã?</p>
-          <p>Kiểm tra thư mục spam hoặc nhấn "Gửi lại mã xác thực"</p>
+          <p>{t('auth.otp.help.noCode')}</p>
+          <p>{t('auth.otp.help.checkSpam')}</p>
         </div>
       </div>
     </div>

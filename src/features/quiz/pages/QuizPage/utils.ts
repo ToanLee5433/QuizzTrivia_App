@@ -1,4 +1,4 @@
-import { Question } from '../../types';
+import { Question, AnswerValue } from '../../types';
 
 // Utility function để kiểm tra đáp án điền từ
 export const checkShortAnswer = (userAnswer: string, question: Question): boolean => {
@@ -22,4 +22,20 @@ export const checkShortAnswer = (userAnswer: string, question: Question): boolea
   }
   
   return false;
+};
+
+export const isAnswerProvided = (answer?: AnswerValue): boolean => {
+  if (answer === undefined || answer === null) {
+    return false;
+  }
+
+  if (Array.isArray(answer)) {
+    return answer.length > 0;
+  }
+
+  if (typeof answer === 'string') {
+    return answer.trim().length > 0;
+  }
+
+  return true;
 };

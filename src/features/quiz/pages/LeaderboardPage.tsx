@@ -59,20 +59,10 @@ const LeaderboardPage: React.FC = () => {
   const [showAllUsers, setShowAllUsers] = useState(false);
   const [showAllQuizzes, setShowAllQuizzes] = useState(false);
 
-  // Don't render until i18n is ready
-  if (!ready) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading translations...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Calculate comprehensive leaderboard data
+  // Calculate comprehensive leaderboard data - Move before conditional return
   useEffect(() => {
+    if (!ready) return; // Skip if i18n not ready
+    
     const fetchLeaderboardData = async () => {
       setLoading(true);
       try {
@@ -102,7 +92,7 @@ const LeaderboardPage: React.FC = () => {
           const userData = doc.data();
           usersMap.set(doc.id, {
             id: doc.id,
-            displayName: userData.displayName || userData.email?.split('@')[0] || 'Anonymous',
+            displayName: userData.displayName || userData.email?.split('@')[0] || t('leaderboard.anonymous'),
             email: userData.email,
             ...userData
           });
@@ -114,7 +104,7 @@ const LeaderboardPage: React.FC = () => {
           const quizData = doc.data();
           quizzesMap.set(doc.id, {
             id: doc.id,
-            title: quizData.title || 'Untitled Quiz',
+            title: quizData.title || t('leaderboard.untitledQuiz'),
             description: quizData.description || '',
             category: quizData.category || 'general',
             difficulty: quizData.difficulty || 'medium',
@@ -143,7 +133,7 @@ const LeaderboardPage: React.FC = () => {
             const userData = usersMap.get(userId) || {};
             userStats.set(userId, {
               userId,
-              displayName: userData.displayName || result.userName || 'Anonymous',
+              displayName: userData.displayName || result.userName || t('leaderboard.anonymous'),
               email: userData.email || result.userEmail,
               totalScore: 0,
               totalAttempts: 0,
@@ -173,7 +163,7 @@ const LeaderboardPage: React.FC = () => {
             const quizData = quizzesMap.get(quizId) || {};
             quizStats.set(quizId, {
               id: quizId,
-              title: quizData.title || 'Unknown Quiz',
+              title: quizData.title || t('leaderboard.unknownQuiz'),
               description: quizData.description || '',
               category: quizData.category || 'general',
               difficulty: quizData.difficulty || 'medium',
@@ -271,7 +261,19 @@ const LeaderboardPage: React.FC = () => {
     };
 
     fetchLeaderboardData();
-  }, [user]);
+  }, [user, ready, t]);
+
+  // Don't render until i18n is ready - Moved after hooks
+  if (!ready) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">{t('leaderboard.loading')}</p>
+        </div>
+      </div>
+    );
+  }
 
   // Filter users by search
   const filteredUsers = topUsers.filter(u => {
@@ -473,7 +475,7 @@ const LeaderboardPage: React.FC = () => {
                           <div className="font-semibold text-gray-900 flex items-center gap-2">
                             {user.displayName}
                             <span className={`px-2 py-1 rounded-full text-xs border ${getBadgeColor(user.badge)}`}>
-                              {user.badge}
+                              {t(`leaderboard.badges.${user.badge}`)}
                             </span>
                           </div>
                             <div className="text-sm text-gray-500">
@@ -483,7 +485,7 @@ const LeaderboardPage: React.FC = () => {
                       </div>
                       <div className="text-right">
                         <div className="font-bold text-lg text-blue-600">🎯 {user.totalAttempts}</div>
-                        <div className="text-sm text-gray-500">{Math.round(user.averageScore)}% TB</div>
+                        <div className="text-sm text-gray-500">{Math.round(user.averageScore)}% {t('leaderboard.avgShort')}</div>
                       </div>
                       <div className="text-gray-400">
                         {getBadgeIcon(user.badge)}

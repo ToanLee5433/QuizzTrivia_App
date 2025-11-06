@@ -38,7 +38,15 @@
   "admin": {
     "activated": "activated",
     "categoryManagement": "Category Management",
-    "dashboard": "Admin Dashboard",
+    "dashboard": {
+      "title": "Admin Dashboard",
+      "viewStatsChart": "View Statistics Chart",
+      "clickOverviewTab": "Click on Overview tab below or",
+      "viewSeparateStatsPage": "View separate stats page",
+      "viewSeparateStatsPageTitle": "View separate stats page with charts",
+      "forceOverviewTab": "Force switch to Overview tab",
+      "separateStats": "Separate Stats"
+    },
     "dataLoadError": "Error loading data!",
     "deactivated": "deactivated",
     "loadingRealData": "Loading real data...",
@@ -156,6 +164,7 @@
       "performance": "Performance"
     },
     "stats": {
+      "title": "Admin Statistics",
       "totalUsers": "Total Users",
       "totalCreators": "Total Creators",
       "publishedQuizzes": "Published Quizzes",
@@ -387,7 +396,9 @@
       "weakPassword": "Weak password",
       "registerError": "Registration error",
       "googleLoginError": "Google login error",
-      "loginError": "Login error"
+      "loginError": "Login error",
+      "pendingRegistrationNotFound": "We couldn't find your registration details. Please try again.",
+      "genericError": "Something went wrong. Please try again."
     },
     "forgotPassword": "Forgot password?",
     "googleLoginSuccess": "Google login successful!",
@@ -404,6 +415,31 @@
     "termsOfService": "terms of service",
     "welcomeBack": "Welcome back!",
     "logout": "Logout",
+    "otp": {
+      "sent": "An OTP has been sent to {{email}}. Please check your inbox.",
+      "sentHint": "We have sent a 6-digit verification code to",
+      "codeInputLabel": "Enter verification code",
+      "timer": "Resend code in {{seconds}}s",
+      "resendAction": "Resend verification code",
+      "resendLoading": "Sending...",
+      "resendSuccess": "A new OTP has been sent!",
+      "verifyAction": "Verify",
+      "verifySuccess": "Verification successful!",
+      "help": {
+        "noCode": "Didn't receive the code?",
+        "checkSpam": "Check your spam folder or tap \"Resend verification code\"."
+      },
+      "errors": {
+        "incomplete": "Please enter all 6 digits.",
+        "emailFailed": "We couldn't send the OTP email. Please try again.",
+        "generic": "Something went wrong. Please try again.",
+        "resend": "Unable to resend the verification code. Please try again.",
+        "notFound": "We couldn't find an active OTP. Please request a new code.",
+        "expired": "This OTP has expired. Request a new one.",
+        "maxAttempts": "You have exceeded the maximum number of attempts. Please request a new code.",
+        "incorrect": "Incorrect OTP. {{remaining}} attempt(s) left."
+      }
+    },
     "validation": {
       "emailRequired": "Email is required",
       "emailInvalid": "Invalid email",
@@ -772,8 +808,18 @@
     "totalCreators": "Creators",
     "totalQuizzes": "Total Quizzes",
     "totalUsers": "Users",
-    "viewRanking": "View your ranking and achievements",
-    "welcome": "Welcome"
+  "viewRanking": "View your ranking and achievements",
+  "welcome": "Welcome, {{name}}",
+    "defaultUserName": "User",
+    "roles": {
+      "admin": "Admin",
+      "creator": "Creator",
+      "user": "User"
+    },
+    "multiplayer": {
+      "title": "Multiplayer",
+      "description": "Play quizzes live with your friends"
+    }
   },
   "dat100Trong1Quiz": "Đạt 100% trong 1 Quiz",
   "datDiemTrungBinhTren80": "Đạt Score trung bình trên 80%",
@@ -1076,6 +1122,7 @@
       "thisMonth": "This month",
       "thisWeek": "This week"
     },
+    "loading": "Loading translations...",
     "noData": "No data yet",
     "noQuizzes": "No quizzes yet",
     "perfect100": "perfect 100",
@@ -1090,7 +1137,17 @@
     "topQuizzes": "Most Popular Quizzes",
     "viewMore": "View more",
     "yourPosition": "Your position",
-    "viewAllCount": "View All"
+    "viewAllCount": "View All",
+    "badges": {
+      "legendary": "Legendary",
+      "expert": "Expert",
+      "advanced": "Advanced",
+      "intermediate": "Intermediate",
+      "beginner": "Beginner"
+    },
+    "anonymous": "Anonymous",
+    "untitledQuiz": "Untitled Quiz",
+    "unknownQuiz": "Unknown Quiz"
   },
   "lichSu": "Lịch sử",
   "lichSuTheGioiVaVietNam": "Lịch sử thế giới và Việt Nam",
@@ -1377,6 +1434,45 @@
       "medium": "Medium",
       "hard": "Hard"
     },
+    "card": {
+      "duration": {
+        "minutes": "{{count}} minutes",
+        "minutes_one": "{{count}} minute",
+        "minutes_other": "{{count}} minutes",
+        "hours": "{{count}} hours",
+        "hours_one": "{{count}} hour",
+        "hours_other": "{{count}} hours",
+        "hoursAndMinutes": "{{hours}}h {{minutes}}m"
+      },
+      "difficultyBadge": {
+        "easy": "🟢 Easy",
+        "medium": "🟡 Medium",
+        "hard": "🔴 Hard"
+      },
+      "resources": "📚 {{count}} learning resources",
+      "resources_one": "📚 {{count}} learning resource",
+      "resources_other": "📚 {{count}} learning resources",
+      "questions": "{{count}} questions",
+      "questions_one": "{{count}} question",
+      "questions_other": "{{count}} questions",
+      "players": "{{count}} plays",
+      "players_one": "{{count}} play",
+      "players_other": "{{count}} plays",
+      "tagsRemaining": "+{{count}}",
+      "completedWithScore": "Completed: {{score}}%",
+      "favoriteTooltipAdd": "Favorite this quiz",
+      "favoriteTooltipRemove": "Remove from favorites",
+      "viewReviews": "View reviews",
+      "retake": "🔄 Play again",
+      "start": "🚀 Start quiz",
+      "completed": "✓ Completed",
+      "passwordRequired": "🔒 Password required",
+      "resourcesHint": "💡 Review the materials before you start!",
+      "reviewsButton": "Reviews",
+      "favoriteAdded": "Favorited",
+      "favoriteAction": "Add to favorites",
+      "ratingSummary": "{{rating}} ({{count}} reviews)"
+    },
     "draft": "Draft",
     "duration": "Duration",
     "editReasonRequired": "Please enter edit reason",
@@ -1395,7 +1491,43 @@
     "loadError": "Error loading quiz list",
     "loading": "Loading quiz...",
     "loadingRealQuizzes": "Loading real quizzes list...",
-    "myQuizzes": "My Quizzes",
+    "myQuizzes": {
+      "title": "My Quizzes",
+      "copyLinkSuccess": "📋 Link copied successfully!",
+      "copyLinkError": "Cannot copy link",
+      "requireQuestion": "Quiz must have at least 1 question to publish",
+      "invalidQuestions": "{{count}} invalid questions (missing answers or no correct answer selected)",
+      "confirmPublish": "📤 Publish quiz \"{{title}}\" for admin review?",
+      "publishSuccess": "Quiz submitted, awaiting admin approval!",
+      "publishError": "Error publishing quiz",
+      "editRequestSuccess": "Edit request submitted, awaiting admin approval",
+      "copyInfoTemplate": "📚 Quiz: {{title}}\n🔗 Link: {{link}}",
+      "copyInfoTemplateWithPassword": "📚 Quiz: {{title}}\n🔗 Link: {{link}}\n🔒 Password: {{password}}",
+      "copyInfoSuccess": "📋 Quiz info copied!",
+      "copyInfoError": "Failed to copy quiz info",
+      "badge": {
+        "password": "🔒 Password protected"
+      },
+      "stats": {
+        "typeBreakdown": "📖 {{with}} • ✏️ {{without}}",
+        "approvedWithPassword": "🔒 {{count}} protected",
+        "avgScoreLabel": "📊 Average score",
+        "views": "👁️ {{count}} views",
+        "attempts": "🎯 {{count}} attempts",
+        "completions": "✅ {{count}} completions",
+        "averageScoreValue": "📊 AVG: {{value}}%",
+        "avgRating": "⭐ {{rating}}/5"
+      },
+      "actions": {
+        "preview": "Preview",
+        "copyLinkTitle": "Copy link",
+        "viewStatsTitle": "View stats",
+        "copyInfoTitle": "Copy quiz info (including password)",
+        "publishDraftTitle": "Publish quiz for admin review",
+        "deleteDraftConfirm": "⚠️ Are you sure you want to delete quiz \"{{title}}\"?",
+        "deleteDraftInfo": "Delete feature is under development"
+      }
+    },
     "myQuizzesDescription": "Manage and track quizzes you've created",
     "noDescription": "No description",
     "noMatchFound": "No quizzes match the filter",
@@ -1460,6 +1592,95 @@
       "attempts": "Attempts",
       "completions": "Completions"
     },
+    "discoverTitle": "Discover Quizzes",
+    "discoverDescription": "Learn new knowledge through fun quizzes",
+  "hideStats": "Hide Stats",
+  "showStats": "Show Stats",
+  "playWithFriends": "Play with Friends",
+  "createNew": "Create New Quiz",
+  "hotBadge": "HOT",
+    "resourceFilter": {
+      "all": "All Quizzes",
+      "withResources": "With Learning Materials",
+      "noResources": "Direct Practice"
+    },
+    "learningResources": {
+      "headerTitle": "📚 Learning materials",
+      "headerSubtitle": "Review the resources to prepare for the quiz.",
+      "progressTitle": "Learning progress",
+      "progressCount": "{{viewed}}/{{total}} resources",
+      "totalEstimatedTime": "⏱️ Estimated time: {{minutes}} minutes",
+      "warningMessage": "⚠️ Reminder: You need to view all {{count}} required resources before starting the quiz",
+      "requiredSectionTitle": "Required resources ({{count}})",
+      "optionalSectionTitle": "Recommended resources ({{count}})",
+      "typeLabels": {
+        "video": "Video",
+        "pdf": "PDF",
+        "image": "Image/Slides",
+        "link": "Link",
+        "slides": "Slides"
+      },
+      "estimatedTimeShort": "{{minutes}} minutes",
+      "badges": {
+        "required": "Required",
+        "recommended": "Recommended",
+        "viewed": "Viewed"
+      },
+      "whyWatchTitle": "Why this matters",
+      "actions": {
+        "review": "Review",
+        "view": "View now",
+        "markViewed": "Mark as viewed",
+        "skip": "Skip",
+        "startQuiz": "Start the quiz",
+        "completeRequired": "View required materials to continue"
+      },
+      "remainingRequired": "{{count}} required resource(s) remaining"
+    },
+    "filters": {
+      "allCategories": "All Categories",
+      "allDifficulties": "All Difficulties",
+      "allCategoriesOption": "🏷️ All categories",
+      "allDifficultiesOption": "📊 All difficulties"
+    },
+    "difficultyOptions": {
+      "easy": "😊 Easy",
+      "medium": "😐 Medium",
+      "hard": "😤 Hard"
+    },
+    "sort": {
+      "newest": "Newest",
+      "oldest": "Oldest",
+      "popular": "Popular",
+      "byDifficulty": "By Difficulty"
+    },
+    "showCompleted": "Show completed quizzes",
+    "viewMode": {
+      "grid": "Grid",
+      "list": "List",
+      "label": "Display"
+    },
+  "resultsFound": "Found",
+  "itemLabel": "quizzes",
+    "inCategory": "in category",
+    "withDifficulty": "with difficulty",
+    "resultsSummary": {
+      "searchTerm": "for \"{{term}}\"",
+      "category": "in category \"{{category}}\"",
+      "difficulty": "with difficulty \"{{difficulty}}\""
+    },
+    "noResults": {
+      "title": "No quizzes found",
+      "description": "No quizzes match current filters"
+    },
+    "clearFilters": "Clear Filters",
+    "loadingData": "Loading data...",
+    "errors": {
+      "connection": "Firestore connection blocked",
+      "troubleshoot": "Troubleshooting",
+      "generic": "An error occurred"
+    },
+    "retryConnection": "Retry Connection",
     "status": {
       "hasEditRequests": "Has edit requests"
     },
@@ -1491,6 +1712,18 @@
     "moreQuestions": "More Questions",
     "boolean": {
       "true": "True"
+    },
+    "questionRenderer": {
+      "shortAnswerHint": "💡 Enter your answer in the field below.",
+      "imageLoadError": "Image failed to load",
+      "noImage": "No image provided",
+      "checkboxHint": "💡 You can choose multiple answers for this question.",
+      "checkboxSelectionIndicator": "✓",
+      "imageFallback": "Image {{index}}",
+      "optionAlt": "Option {{letter}}"
+    },
+    "quickNavigation": {
+      "heading": "Quick navigation"
     },
     "enterAnswer": "Enter answer",
     "unsupportedType": "Unsupported question type",
@@ -2762,6 +2995,24 @@
     }
   },
   "creatorManagement": {
+    "title": "Creator Management",
+    "description": "Manage and monitor creator activities",
+    "adminRequired": "You need admin permission to access this page",
+    "noCreators": "No creators",
+    "noCreatorsMatch": "No creators match the filter",
+    "rating": "Rating",
+    "lastActivity": "Last Activity",
+    "notLoggedIn": "Not logged in",
+    "creatorDetail": "Creator Details",
+    "joinedOn": "Joined on",
+    "quizzesCreated": "Quizzes created",
+    "avgRating": "Avg Rating",
+    "permissions": {
+      "title": "Permissions",
+      "createQuiz": "Create quiz",
+      "deleteQuiz": "Delete quiz",
+      "viewAnalytics": "View analytics"
+    },
     "loadError": "Unable to load creator list",
     "updateSuccess": "Status updated successfully",
     "updateError": "Error updating status",
@@ -2772,6 +3023,7 @@
     "stats": {
       "total": "Total Creators",
       "active": "Active",
+      "suspended": "Suspended",
       "banned": "Banned"
     },
     "status": {
@@ -2799,22 +3051,43 @@
     "confirmDelete": "Are you sure you want to delete this review?"
   },
   "aiGenerator": {
+    "title": "AI Question Generator",
+    "subtitle": "Using Firebase Cloud Functions + Google Gemini",
+    "cloudConnectionSuccess": "✅ Connected to Cloud Functions AI!",
+    "cloudConnectionFailed": "❌ Unable to reach Cloud Functions",
+    "cloudConnectionError": "❌ Cloud Functions connection error",
     "connectionSuccess": "✅ AI connection successful!",
     "connectionFailed": "❌ Cannot connect to AI: {{message}}",
     "connectionError": "❌ AI connection error",
     "fileInvalid": "Invalid file! Only accept: {{extensions}}",
     "fileTooLarge": "File too large! Maximum size: 10MB",
     "apiKeyMissing": "API key is not configured",
+    "apiKeyNotConfigured": "API key is not configured",
     "fileProcessSuccess": "Successfully processed file {{filename}}!",
+    "fileProcessedSuccess": "Successfully processed file {{fileName}}!",
     "fileProcessError": "Cannot process this file",
     "fileProcessFailed": "Error processing file",
+    "fileProcessingError": "Error processing file",
     "topicOrFileRequired": "Please enter a topic or upload a file!",
+    "topicOrFileRequiredShort": "Please enter a topic or upload file",
     "generateError": "❌ Error occurred while generating questions",
+    "generateSuccess": "✅ Successfully generated {{count}} questions!",
+    "generateEmpty": "❌ Unable to generate questions",
+    "generateErrorDetailed": "❌ {{message}}",
+    "topicFromFile": "Based on file: {{content}}.\n\nSpecific topic: {{topic}}",
+    "unknownError": "Unknown error",
+    "processingFile": "Processing file...",
+    "processedSuccess": "Processed successfully",
+    "chooseFile": "Choose file",
+    "supportedFormats": "Supported: JPG, PNG, PDF, DOC, DOCX, TXT",
     "difficulty": {
       "easy": "🟢 Easy",
       "medium": "🟡 Medium",
       "hard": "🔴 Hard"
     },
+    "difficultyEasy": "Easy",
+    "difficultyMedium": "Medium",
+    "difficultyHard": "Hard",
     "testConnection": "Test Connection",
     "testing": "Testing...",
     "generate": "Generate Questions",
@@ -2824,7 +3097,138 @@
     "topic": "Topic",
     "topicPlaceholder": "Enter topic or content...",
     "numQuestions": "Number of Questions",
+    "questions": "questions",
     "useFileContent": "Use file content"
+  },
+  "placeholders": {
+    "searchQuiz": "🔍 Search quizzes...",
+    "searchQuizzes": "Search quizzes...",
+    "enterNumber": "E.g: 30",
+    "askQuestion": "Ask your question... (Enter to send, Shift+Enter for new line)",
+    "enterPassword": "Enter password...",
+    "quizDescription": "Brief description of the quiz content...",
+    "enterTags": "Enter tags, separated by commas...",
+    "imageUrl": "https://example.com/image.jpg",
+    "minPasswordLength": "Enter password (min 6 characters)",
+    "questionContent": "Question content",
+    "enterCorrectAnswer": "Enter the correct answer...",
+    "imageDescription": "Image description (optional)",
+    "imageUrlOptional": "Image URL",
+    "answerExplanation": "Answer explanation (optional)",
+    "shareExperience": "Share your experience with this quiz...",
+    "avatarUrl": "https://example.com/avatar.jpg",
+    "enterQuestionHere": "Enter your question here...",
+    "explainAnswer": "Explain why this is the correct answer..."
+  },
+  "passwordModal": {
+    "title": "Password Protected Quiz",
+    "subtitle": "Enter password to continue",
+    "quizLabel": "Quiz:",
+    "description": "This quiz is password protected. Please contact the creator to get the password.",
+    "passwordLabel": "Password",
+    "tooManyAttempts": "You've entered the wrong password too many times. Please try again later.",
+    "incorrectRemaining": "Incorrect password! {{remaining}} attempts left.",
+    "incorrectFinal": "Incorrect password! This is your last attempt.",
+    "attempts": "Attempts: {{current}}/{{max}}",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "maxAttemptsReached": "⚠️ You have exceeded the maximum number of attempts. Please contact the quiz creator for assistance."
+  },
+  "quizCreation": {
+    "editQuizInfo": "Edit your quiz information",
+    "quizDescription": "Quiz Description",
+    "quizDescriptionLabel": "Quiz Description *",
+    "timeMinutes": "Time (minutes)",
+    "timeLimitMinutes": "Time Limit (minutes)",
+    "from5to120minutes": "From 5 to 120 minutes",
+    "tagsOptional": "Tags (optional)",
+    "tagsExample": "Example: javascript, react, frontend",
+    "coverImage": "Quiz Cover Image",
+    "uploadImage": "📤 Upload image",
+    "enterUrl": "🔗 Enter URL",
+    "preview": "Preview:",
+    "coverImageHint": "💡 Cover image makes quiz more attractive. Upload super fast 1-3s or use URL!",
+    "quizSecurity": "Quiz Security",
+    "requirePassword": "🔒 Require password to take quiz",
+    "quizVisibleNeedPassword": "Quiz will be publicly visible but requires password to access",
+    "password": "Password",
+    "passwordRequired": "Password *",
+    "passwordMinLength": "Password must be at least 6 characters",
+    "passwordHint": "💡 Share this password with people who need to take the quiz",
+    "additionalSettings": "Additional Settings",
+    "allowRetake": "🔄 Allow retake",
+    "allowRetakeDesc": "Learners can retake quiz multiple times to improve score",
+    "privacy": "Privacy:",
+    "public": "🌍 Public",
+    "accessSettings": "Access Settings",
+    "chooseAccessMethod": "Choose how people access your quiz",
+    "publicTitle": "Public",
+    "publicDesc": "Everyone can view and take quiz immediately",
+    "visibleInList": "Visible in list",
+    "hasShareLink": "Has share link",
+    "noPasswordNeeded": "Take immediately without password",
+    "withPasswordTitle": "With Password",
+    "withPasswordDesc": "Everyone sees quiz but needs password to take it",
+    "requirePasswordToTake": "Require password to take quiz",
+    "shareLinkAndPassword": "Share link + password",
+    "setPassword": "Set Password",
+    "userNeedPasswordToTake": "Users need to enter this password to take quiz",
+    "shareLink": "📎 Share Link",
+    "questions": "Questions",
+    "addQuestion": "Add Question",
+    "noQuestionsYet": "No Questions Yet",
+    "startBuildingQuiz": "Start building your quiz by adding questions.",
+    "addFirstQuestion": "Add First Question",
+    "quizSettings": "Quiz Settings",
+    "passingScore": "Passing Score (%)",
+    "published": "Published (visible to users)",
+    "multipleChoice": "Multiple Choice",
+    "trueFalse": "True/False",
+    "fillBlank": "Fill in the Blank",
+    "imageChoice": "Image Choice",
+    "multipleChoiceAnswers": "Multiple Choice Answers",
+    "addAnswer": "+ Add Answer",
+    "trueFalseQuestion": "True/False Question",
+    "selectCorrectAnswer": "Select the correct answer for this question:",
+    "fillBlankQuestion": "Fill in the Blank Question",
+    "correctAnswer": "Correct Answer:",
+    "acceptedVariations": "Accepted variations:",
+    "addVariation": "+ Add variation",
+    "imageAnswers": "Image Answers",
+    "addImage": "+ Add Image",
+    "correctAnswerLabel": "Correct Answer",
+    "pending": "⏳ Pending",
+    "approved": "✅ Approved",
+    "rejected": "❌ Rejected",
+    "save": "Save",
+    "cancel": "Cancel",
+    "questionText": "Question Text",
+    "questionType": "Question Type",
+    "points": "Points",
+    "difficulty": "Difficulty",
+    "answerOptions": "Answer Options",
+    "explanation": "Explanation (Optional)",
+    "correct": "Correct",
+    "easy": "🟢 Easy",
+    "medium": "🟡 Medium",
+    "hard": "🔴 Hard"
+  },
+  "filters": {
+    "showing": "Showing",
+    "showHideAdvanced": "Show/Hide advanced options",
+    "show": "Show",
+    "hide": "Hide",
+    "advancedOptions": "advanced options",
+    "popular": "🔥 Most Popular",
+    "questions": "🔢 By Number of Questions",
+    "duration": "⏱️ By Duration",
+    "minQuestions": "Minimum questions: {{count}}",
+    "maxDuration": "Maximum duration: {{minutes}} minutes"
+  },
+  "reviewForm": {
+    "yourRating": "Your Rating",
+    "commentOptional": "Comment (optional)",
+    "characterCount": "{{current}}/{{max}} characters"
   },
   "imageUploader": {
     "uploading": "⚡ Uploading super fast (1-3s)...",

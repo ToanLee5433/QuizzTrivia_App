@@ -336,7 +336,7 @@ const EditQuizPageAdvanced: React.FC = () => {
                     </label>
                     <textarea
                       className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
-                      placeholder="Mô tả ngắn gọn về nội dung quiz..."
+                      placeholder={t('placeholders.quizDescription')}
                       rows={4}
                       value={quizInfo.description}
                       onChange={(e) => setQuizInfo({ ...quizInfo, description: e.target.value })}
@@ -382,7 +382,7 @@ const EditQuizPageAdvanced: React.FC = () => {
                     <div className="space-y-2">
                       <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                         <Clock className="w-4 h-4" />
-                        Thời gian (phút)
+                        {t('quizCreation.timeMinutes')}
                       </label>
                       <input
                         type="number"
@@ -403,9 +403,9 @@ const EditQuizPageAdvanced: React.FC = () => {
                         value={quizInfo.status}
                         onChange={(e) => setQuizInfo({ ...quizInfo, status: e.target.value as any })}
                       >
-                        <option value="pending">⏳ Chờ duyệt</option>
-                        <option value="approved">✅ Đã duyệt</option>
-                        <option value="rejected">❌ Từ chối</option>
+                        <option value="pending">{t('quizCreation.pending')}</option>
+                        <option value="approved">{t('quizCreation.approved')}</option>
+                        <option value="rejected">{t('quizCreation.rejected')}</option>
                       </select>
                     </div>
                   </div>
@@ -493,7 +493,7 @@ const EditQuizPageAdvanced: React.FC = () => {
                     onChange={(e) => setQuizInfo({ ...quizInfo, isPublished: e.target.checked })}
                     className="w-6 h-6 text-blue-600 rounded-lg focus:ring-blue-500"
                   />
-                  <span className="text-lg font-semibold text-gray-700">Published (visible to users)</span>
+                  <span className="text-lg font-semibold text-gray-700">{t('quizCreation.published')}</span>
                 </label>
               </div>
             </div>

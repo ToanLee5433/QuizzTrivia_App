@@ -176,7 +176,7 @@ const MyQuizzesPage: React.FC = () => {
         status: 'pending'
       });
 
-      toast.success('Yêu cầu chỉnh sửa đã được gửi, chờ admin phê duyệt');
+      toast.success(t('myQuizzes.editRequestSuccess'));
       setShowEditRequestModal(false);
       setEditReason('');
       setSelectedQuiz(null);
@@ -195,11 +195,11 @@ const MyQuizzesPage: React.FC = () => {
     try {
       await navigator.clipboard.writeText(link);
       setCopiedQuizId(quizId);
-      toast.success('📋 Đã copy link quiz!');
+      toast.success(t('myQuizzes.copyLinkSuccess'));
       setTimeout(() => setCopiedQuizId(null), 2000);
     } catch (error) {
       console.error('Error copying link:', error);
-      toast.error('Không thể copy link');
+      toast.error(t('myQuizzes.copyLinkError'));
     }
   };
   
@@ -207,7 +207,7 @@ const MyQuizzesPage: React.FC = () => {
   const handlePublishDraft = async (quiz: Quiz) => {
     // Validate quiz has questions
     if (!quiz.questions || !Array.isArray(quiz.questions) || quiz.questions.length === 0) {
-      toast.error('Quiz phải có ít nhất 1 câu hỏi để xuất bản');
+      toast.error(t('myQuizzes.requireQuestion'));
       return;
     }
     
@@ -223,11 +223,11 @@ const MyQuizzesPage: React.FC = () => {
     });
     
     if (invalidQuestions.length > 0) {
-      toast.error(`Có ${invalidQuestions.length} câu hỏi chưa hợp lệ (thiếu đáp án hoặc chưa chọn đáp án đúng)`);
+      toast.error(t('myQuizzes.invalidQuestions', { count: invalidQuestions.length }));
       return;
     }
     
-    if (window.confirm(`📤 Xuất bản quiz "${quiz.title}" để gửi lên admin duyệt?`)) {
+    if (window.confirm(t('myQuizzes.confirmPublish', { title: quiz.title }))) {
       try {
         const quizRef = doc(db, 'quizzes', quiz.id);
         await updateDoc(quizRef, {
@@ -237,11 +237,11 @@ const MyQuizzesPage: React.FC = () => {
           updatedAt: serverTimestamp()
         });
         
-        toast.success('✅ Đã xuất bản quiz! Quiz đang chờ admin duyệt.');
+        toast.success(t('myQuizzes.publishSuccess'));
         loadMyQuizzes(); // Reload to see updated status
       } catch (error) {
         console.error('Error publishing draft:', error);
-        toast.error('Không thể xuất bản quiz');
+        toast.error(t('myQuizzes.publishError'));
       }
     }
   };
@@ -250,15 +250,15 @@ const MyQuizzesPage: React.FC = () => {
   const handleCopyQuizInfo = async (quiz: Quiz) => {
     const link = `${window.location.origin}/quiz/${quiz.id}/preview`;
     const textToCopy = quiz.havePassword === 'password' && quiz.password
-      ? `📚 Quiz: ${quiz.title}\n🔗 Link: ${link}\n🔒 Mật khẩu: ${quiz.password}`
-      : `📚 Quiz: ${quiz.title}\n🔗 Link: ${link}`;
+      ? t('myQuizzes.copyInfoTemplateWithPassword', { title: quiz.title, link, password: quiz.password })
+      : t('myQuizzes.copyInfoTemplate', { title: quiz.title, link });
     
     try {
       await navigator.clipboard.writeText(textToCopy);
-      toast.success('📋 Đã copy thông tin quiz!');
+      toast.success(t('myQuizzes.copyInfoSuccess'));
     } catch (error) {
       console.error('Failed to copy:', error);
-      toast.error('Lỗi khi copy thông tin');
+      toast.error(t('myQuizzes.copyInfoError'));
     }
   };
 
@@ -375,6 +375,21 @@ const MyQuizzesPage: React.FC = () => {
     return matchesSearch && matchesStatus && matchesType;
   });
 
+  const formatNumber = (value?: number) => (value ?? 0).toLocaleString();
+  const totalWithMaterials = quizzes.filter(q => q.quizType === 'with-materials' || (q.quizType === undefined && q.resources && q.resources.length > 0)).length;
+  const totalStandard = quizzes.filter(q => q.quizType === 'standard' || (!q.resources || q.resources.length === 0)).length;
+  const totalApproved = quizzes.filter(q => q.status === 'approved').length;
+  const totalPending = quizzes.filter(q => q.status === 'pending').length;
+  const totalDraft = quizzes.filter(q => q.status === 'draft').length;
+  const totalRejected = quizzes.filter(q => q.status === 'rejected').length;
+  const approvedWithPasswordCount = quizzes.filter(q => q.status === 'approved' && q.havePassword === 'password').length;
+  const totalViews = quizzes.reduce((sum, q) => sum + (q.views || 0), 0);
+  const totalAttempts = quizzes.reduce((sum, q) => sum + (q.attempts || 0), 0);
+  const totalCompletions = quizzes.reduce((sum, q) => sum + (q.completions || 0), 0);
+  const averageScore = quizzes.length > 0
+    ? quizzes.reduce((sum, q) => sum + (q.averageScore || 0), 0) / quizzes.length
+    : 0;
+
   if (!user || (user.role !== 'creator' && user.role !== 'admin')) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -392,8 +407,8 @@ const MyQuizzesPage: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{t("quiz.myQuizzes")}</h1>
-            <p className="text-gray-600 mt-2">{t("quiz.myQuizzesDescription")}</p>
+            <h1 className="text-3xl font-bold text-gray-900">{t("myQuizzes.title")}</h1>
+            <p className="text-gray-600 mt-2">{t("myQuizzesDescription")}</p>
           </div>
         </div>
 
@@ -453,8 +468,10 @@ const MyQuizzesPage: React.FC = () => {
                 <p className="text-sm text-gray-600">{t("quiz.stats.totalQuizzes")}</p>
                 <p className="text-2xl font-bold text-gray-900">{quizzes.length}</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  📖 {quizzes.filter(q => q.quizType === 'with-materials' || (q.resources && q.resources.length > 0)).length} • 
-                  ✏️ {quizzes.filter(q => q.quizType === 'standard' || (!q.resources || q.resources.length === 0)).length}
+                  {t('myQuizzes.stats.typeBreakdown', {
+                    with: totalWithMaterials,
+                    without: totalStandard
+                  })}
                 </p>
               </div>
             </div>
@@ -468,10 +485,10 @@ const MyQuizzesPage: React.FC = () => {
               <div className="ml-4">
                 <p className="text-sm text-gray-600">{t("admin.quizManagement.filter.approved")}</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {quizzes.filter(q => q.status === 'approved').length}
+                  {formatNumber(totalApproved)}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  🔒 {quizzes.filter(q => q.status === 'approved' && q.havePassword === 'password').length} có mật khẩu
+                  {t('myQuizzes.stats.approvedWithPassword', { count: approvedWithPasswordCount })}
                 </p>
               </div>
             </div>
@@ -485,7 +502,7 @@ const MyQuizzesPage: React.FC = () => {
               <div className="ml-4">
                 <p className="text-sm text-gray-600">{t("admin.quizManagement.filter.pending")}</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {quizzes.filter(q => q.status === 'pending').length}
+                  {formatNumber(totalPending)}
                 </p>
               </div>
             </div>
@@ -499,7 +516,7 @@ const MyQuizzesPage: React.FC = () => {
               <div className="ml-4">
                 <p className="text-sm text-gray-600">📝 {t("quiz.statusFilter.draft")}</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {quizzes.filter(q => q.status === 'draft').length}
+                  {formatNumber(totalDraft)}
                 </p>
               </div>
             </div>
@@ -513,7 +530,7 @@ const MyQuizzesPage: React.FC = () => {
               <div className="ml-4">
                 <p className="text-sm text-gray-600">{t("admin.quizManagement.filter.rejected")}</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {quizzes.filter(q => q.status === 'rejected').length}
+                  {formatNumber(totalRejected)}
                 </p>
               </div>
             </div>
@@ -530,7 +547,7 @@ const MyQuizzesPage: React.FC = () => {
               <div className="ml-4">
                 <p className="text-sm text-gray-600">{t("quiz.stats.totalViews")}</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {quizzes.reduce((sum, q) => sum + (q.views || 0), 0)}
+                  {formatNumber(totalViews)}
                 </p>
               </div>
             </div>
@@ -544,7 +561,7 @@ const MyQuizzesPage: React.FC = () => {
               <div className="ml-4">
                 <p className="text-sm text-gray-600">{t("quiz.stats.totalAttempts")}</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {quizzes.reduce((sum, q) => sum + (q.attempts || 0), 0)}
+                  {formatNumber(totalAttempts)}
                 </p>
               </div>
             </div>
@@ -558,7 +575,7 @@ const MyQuizzesPage: React.FC = () => {
               <div className="ml-4">
                 <p className="text-sm text-gray-600">{t("complete")}</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {quizzes.reduce((sum, q) => sum + (q.completions || 0), 0)}
+                  {formatNumber(totalCompletions)}
                 </p>
               </div>
             </div>
@@ -570,9 +587,9 @@ const MyQuizzesPage: React.FC = () => {
                 <BarChart3 className="w-6 h-6 text-indigo-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm text-gray-600">📊 Điểm TB</p>
+                <p className="text-sm text-gray-600">{t('myQuizzes.stats.avgScoreLabel')}</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {(quizzes.reduce((sum, q) => sum + (q.averageScore || 0), 0) / Math.max(quizzes.length, 1)).toFixed(1)}%
+                  {t('myQuizzes.stats.averageScoreValue', { value: averageScore.toFixed(1) })}
                 </p>
               </div>
             </div>
@@ -648,7 +665,7 @@ const MyQuizzesPage: React.FC = () => {
                           {quiz.havePassword === 'password' && (
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 mr-2">
                               <Lock className="w-3 h-3 mr-1" />
-                              Password
+                              {t('myQuizzes.badge.password')}
                             </span>
                           )}
                           {/* Render rich-text description safely (support HTML without showing tags) */}
@@ -685,14 +702,14 @@ const MyQuizzesPage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900">
                         <div className="space-y-1">
-                          <div>👁️ {quiz.views || 0} {t('quiz.stats.views')}</div>
-                          <div>🎯 {quiz.attempts || 0} {t('quiz.stats.attempts')}</div>
-                          <div>✅ {quiz.completions || 0} {t('quiz.stats.completions')}</div>
+                          <div>{t('myQuizzes.stats.views', { count: quiz.views || 0 })}</div>
+                          <div>{t('myQuizzes.stats.attempts', { count: quiz.attempts || 0 })}</div>
+                          <div>{t('myQuizzes.stats.completions', { count: quiz.completions || 0 })}</div>
                           {quiz.averageScore !== undefined && (
-                            <div>📊 {quiz.averageScore}% {t('leaderboard.avgShort')}</div>
+                            <div>{t('myQuizzes.stats.averageScoreValue', { value: Number(quiz.averageScore).toFixed(1) })}</div>
                           )}
-                          {quiz.avgRating && (
-                            <div>⭐ {quiz.avgRating.toFixed(1)}/5</div>
+                          {typeof quiz.avgRating === 'number' && (
+                            <div>{t('myQuizzes.stats.avgRating', { rating: quiz.avgRating.toFixed(1) })}</div>
                           )}
                         </div>
                       </td>
@@ -704,7 +721,7 @@ const MyQuizzesPage: React.FC = () => {
                           <button
                             onClick={() => navigate(`/quiz/${quiz.id}/preview`)}
                             className="text-blue-600 hover:text-blue-900 p-1.5 hover:bg-blue-50 rounded transition-colors"
-                            title="Xem trước"
+                            title={t('myQuizzes.actions.preview')}
                           >
                             <Eye className="w-4 h-4" />
                           </button>
@@ -718,7 +735,7 @@ const MyQuizzesPage: React.FC = () => {
                                   ? 'text-green-600 bg-green-50'
                                   : 'text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50'
                               }`}
-                              title="Copy link"
+                              title={t('myQuizzes.actions.copyLinkTitle')}
                             >
                               {copiedQuizId === quiz.id ? (
                                 <CheckCircle className="w-4 h-4" />
@@ -733,7 +750,7 @@ const MyQuizzesPage: React.FC = () => {
                             <button
                               onClick={() => navigate(`/quiz-stats/${quiz.id}`)}
                               className="text-purple-600 hover:text-purple-900 p-1.5 hover:bg-purple-50 rounded transition-colors"
-                              title="Xem thống kê"
+                              title={t('myQuizzes.actions.viewStatsTitle')}
                             >
                               <BarChart3 className="w-4 h-4" />
                             </button>
@@ -744,7 +761,7 @@ const MyQuizzesPage: React.FC = () => {
                             <button
                               onClick={() => handleCopyQuizInfo(quiz)}
                               className="text-green-600 hover:text-green-900 p-1.5 hover:bg-green-50 rounded transition-colors"
-                              title="Copy thông tin quiz (bao gồm mật khẩu)"
+                              title={t('myQuizzes.actions.copyInfoTitle')}
                             >
                               <Share2 className="w-4 h-4" />
                             </button>
@@ -763,7 +780,7 @@ const MyQuizzesPage: React.FC = () => {
                             <button
                               onClick={() => handlePublishDraft(quiz)}
                               className="text-blue-600 hover:text-blue-900 p-1.5 hover:bg-blue-50 rounded transition-colors"
-                              title="Xuất bản quiz để admin duyệt"
+                              title={t('myQuizzes.actions.publishDraftTitle')}
                             >
                               <Send className="w-4 h-4" />
                             </button>
@@ -773,9 +790,9 @@ const MyQuizzesPage: React.FC = () => {
                             <button
                               onClick={() => {
                                 // Handle delete
-                                if (window.confirm(`⚠️ Bạn có chắc muốn xóa quiz "${quiz.title}"?`)) {
+                                if (window.confirm(t('myQuizzes.actions.deleteDraftConfirm', { title: quiz.title }))) {
                                   // Delete logic here
-                                  toast.info('Tính năng xóa đang được phát triển');
+                                  toast.info(t('myQuizzes.actions.deleteDraftInfo'));
                                 }
                               }}
                               className="text-red-600 hover:text-red-900 p-1.5 hover:bg-red-50 rounded transition-colors"

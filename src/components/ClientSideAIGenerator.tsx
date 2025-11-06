@@ -39,14 +39,14 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
       const available = await FirebaseAIService.checkAvailability();
       if (available) {
         setConnectionStatus('connected');
-        toast.success('✅ Kết nối Cloud Functions AI thành công!');
+        toast.success(t('aiGenerator.cloudConnectionSuccess'));
       } else {
         setConnectionStatus('failed');
-        toast.error('❌ Không thể kết nối Cloud Functions');
+        toast.error(t('aiGenerator.cloudConnectionFailed'));
       }
     } catch (error) {
       setConnectionStatus('failed');
-      toast.error('❌ Lỗi kết nối Cloud Functions');
+      toast.error(t('aiGenerator.cloudConnectionError'));
       console.error('Test connection error:', error);
     } finally {
       setIsTesting(false);
@@ -115,11 +115,11 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
 
   const generateQuestions = async () => {
     const topicToUse = formData.useFileContent && fileContent 
-      ? `Dựa trên file: ${fileContent}.\n\nChủ đề cụ thể: ${formData.topic}`
+      ? t('aiGenerator.topicFromFile', { content: fileContent, topic: formData.topic })
       : formData.topic;
 
     if (!topicToUse.trim()) {
-      toast.error('Vui lòng nhập chủ đề hoặc upload file');
+      toast.error(t('aiGenerator.topicOrFileRequiredShort'));
       return;
     }
 
@@ -150,7 +150,7 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
         }));
 
         onQuestionsGenerated(simpleQuestions);
-        toast.success(`✅ Đã tạo thành công ${questions.length} câu hỏi!`);
+        toast.success(t('aiGenerator.generateSuccess', { count: questions.length }));
         
         // Reset form
         setFormData({
@@ -164,12 +164,12 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
         setUploadedFile(null);
         setFileContent('');
       } else {
-        toast.error('❌ Không tạo được câu hỏi');
+        toast.error(t('aiGenerator.generateEmpty'));
       }
     } catch (error) {
       console.error('Generation error:', error);
-      const errorMsg = error instanceof Error ? error.message : 'Lỗi không xác định';
-      toast.error('❌ ' + errorMsg);
+      const errorMsg = error instanceof Error ? error.message : t('aiGenerator.unknownError');
+      toast.error(t('aiGenerator.generateErrorDetailed', { message: errorMsg }));
     } finally {
       setIsGenerating(false);
     }
@@ -177,9 +177,9 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
 
   const getDifficultyLabel = (difficulty: string) => {
     switch (difficulty) {
-      case 'easy': return '🟢 Dễ';
-      case 'medium': return '🟡 Trung bình';
-      case 'hard': return '🔴 Khó';
+      case 'easy': return t('aiGenerator.difficulty.easy');
+      case 'medium': return t('aiGenerator.difficulty.medium');
+      case 'hard': return t('aiGenerator.difficulty.hard');
       default: return difficulty;
     }
   };

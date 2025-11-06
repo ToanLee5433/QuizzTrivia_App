@@ -5,7 +5,6 @@
 
 import React, { useState } from 'react';
 import { 
-  Bot, 
   Zap, 
   Loader2, 
   Brain,
@@ -15,7 +14,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { simpleAIService, SimpleAIConfig } from '../../../services/simpleAIService';
-import { Question } from '../types';
+import { Question } from '../../../types';
 
 interface SimpleAIGeneratorProps {
   content: string;

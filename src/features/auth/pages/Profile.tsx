@@ -693,7 +693,7 @@ const Profile: React.FC = () => {
                       value={avatarUrl}
                       onChange={(e) => setAvatarUrl(e.target.value)}
                       className="w-full mt-2 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="https://example.com/avatar.jpg"
+                      placeholder={t('placeholders.avatarUrl')}
                     />
                   </details>
                 </div>

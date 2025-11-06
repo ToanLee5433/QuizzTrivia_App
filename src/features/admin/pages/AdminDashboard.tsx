@@ -681,17 +681,17 @@ const AdminDashboard: React.FC = () => {
         <div className="max-w-7xl mx-auto flex items-center justify-between">            <div className="flex items-center gap-3">
               <span className="text-2xl">📊</span>
               <div>
-                <h3 className="font-bold">Để xem thống kê biểu đồ</h3>
+                <h3 className="font-bold">{t('admin.dashboard.viewStatsChart')}</h3>
                 <p className="text-blue-100 text-sm">
-                  Nhấn vào tab "📊 Tổng quan" bên dưới hoặc 
+                  {t('admin.dashboard.clickOverviewTab')}{' '}
                   <a href="/admin/quiz-stats" className="underline font-bold ml-1 hover:text-white">
-                    ➤ Xem trang thống kê riêng
+                    ➤ {t('admin.dashboard.viewSeparateStatsPage')}
                   </a>
                 </p>
               </div>
             </div>
           <div className="text-right">
-            <p className="text-sm text-blue-100">Tab hiện tại: <span className="font-bold text-white">{activeTab}</span></p>
+            <p className="text-sm text-blue-100">{t('admin.currentTab')}: <span className="font-bold text-white">{activeTab}</span></p>
           </div>
         </div>
       </div>
@@ -713,10 +713,10 @@ const AdminDashboard: React.FC = () => {
               <a
                 href="/admin/quiz-stats"
                 className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors duration-200 flex items-center space-x-2"
-                title="Xem trang thống kê riêng với biểu đồ"
+                title={t('admin.dashboard.viewSeparateStatsPageTitle')}
               >
                 <span>📊</span>
-                <span>Thống kê riêng</span>
+                <span>{t('admin.dashboard.separateStats')}</span>
               </a>
               <button
                 onClick={() => {
@@ -724,7 +724,7 @@ const AdminDashboard: React.FC = () => {
                   setActiveTab('dashboard');
                 }}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-2"
-                title="Force chuyển về tab Tổng quan"
+                title={t('admin.dashboard.forceOverviewTab')}
               >
                 <span>📊</span>
                 <span>{t("admin.tabs.overview")}</span>

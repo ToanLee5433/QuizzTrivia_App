@@ -3,8 +3,8 @@
  * Replaces complex multi-provider aiQuestionService
  */
 
-import { Question } from '../pages/CreateQuizPage/types';
-import { FirebaseAIService, QuestionGenerationOptions } from './firebaseAIService';
+import { Question } from '../types';
+import { FirebaseAIService, FirebaseAIConfig, QuestionGenerationOptions } from './firebaseAIService';
 
 export interface SimpleAIConfig {
   numQuestions?: number;
@@ -47,9 +47,9 @@ class SimpleAIService {
         language: config.language || 'vi'
       };
 
-      const firebaseConfig = {
+      const firebaseConfig: FirebaseAIConfig = {
         temperature: config.temperature || 0.7,
-        model: 'gemini-2.0-flash-exp'
+        model: 'gemini-2.0-flash-exp' as const
       };
 
       const questions = await FirebaseAIService.generateQuestions(

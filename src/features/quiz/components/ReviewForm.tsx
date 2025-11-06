@@ -134,7 +134,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                 onChange={(e) => setComment(e.target.value)}
                 rows={4}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                placeholder="Chia sẻ trải nghiệm của bạn về quiz này..."
+                placeholder={t('placeholders.shareExperience')}
                 maxLength={500}
               />
               <p className="text-xs text-gray-500 mt-1">

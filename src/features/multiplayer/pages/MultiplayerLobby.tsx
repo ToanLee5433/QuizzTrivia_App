@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { RootState } from '../../../lib/store';
 import { collection, getDocs } from 'firebase/firestore';
 import { db, auth } from '../../../lib/firebase/config';
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react';
 
 const MultiplayerLobby: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
@@ -194,7 +196,7 @@ const MultiplayerLobby: React.FC = () => {
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="🔍 Tìm kiếm quiz..."
+                  placeholder={t('placeholders.searchQuiz')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg p-3 pl-10 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"

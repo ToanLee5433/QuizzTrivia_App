@@ -3,6 +3,7 @@ import { collection, getDocs } from 'firebase/firestore';
 import { db, auth } from '../../../firebase/config';
 import { Search, BookOpen, Clock, Loader2 } from 'lucide-react';
 import { logger } from '../utils/logger';
+import { useTranslation } from 'react-i18next';
 
 interface QuizSelectorProps {
   onSelectQuiz: (quiz: any) => void;
@@ -10,6 +11,7 @@ interface QuizSelectorProps {
 }
 
 const QuizSelector: React.FC<QuizSelectorProps> = ({ onSelectQuiz, onBack }) => {
+  const { t } = useTranslation();
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -183,7 +185,7 @@ const QuizSelector: React.FC<QuizSelectorProps> = ({ onSelectQuiz, onBack }) => 
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Tìm kiếm quiz..."
+                  placeholder={t('placeholders.searchQuizzes')}
                   className="w-full pl-10 pr-4 py-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400"
                 />
               </div>

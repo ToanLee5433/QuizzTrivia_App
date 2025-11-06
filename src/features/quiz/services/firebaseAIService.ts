@@ -149,25 +149,6 @@ QUAN TRỌNG: Chỉ trả về JSON thuần túy, không thêm text hoặc markd
   }
 
   /**
-   * Parse questions từ raw text response
-   */
-  private static parseQuestionsFromText(text: string): Question[] {
-    try {
-      // Remove markdown code blocks if present
-      const cleanText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      
-      // Try to parse JSON
-      const parsed = JSON.parse(cleanText);
-      const questionsData = parsed.questions || [];
-
-      return this.parseQuestionsFromResponse(questionsData);
-    } catch (error) {
-      console.error('Error parsing questions from text:', error);
-      throw new Error('Không thể phân tích câu hỏi từ phản hồi AI');
-    }
-  }
-
-  /**
    * Kiểm tra availability của Firebase AI
    */
   static async checkAvailability(): Promise<boolean> {

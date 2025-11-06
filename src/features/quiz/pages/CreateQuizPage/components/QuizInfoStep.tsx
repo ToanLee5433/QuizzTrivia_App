@@ -108,32 +108,32 @@ const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
             onChange={e => setQuiz(q => ({ ...q, duration: parseInt(e.target.value) || 15 }))}
             placeholder="15"
           />
-          <p className="text-sm text-gray-500">Từ 5 đến 120 phút</p>
+          <p className="text-sm text-gray-500">{t('quizCreation.from5to120minutes')}</p>
         </div>
 
         {/* Tags */}
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
             <Tag className="w-4 h-4" />
-            Tags (tùy chọn)
+            {t('quizCreation.tagsOptional')}
           </label>
           <input
             className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-            placeholder="Nhập tags, cách nhau bằng dấu phẩy..."
+            placeholder={t('placeholders.enterTags')}
             value={quiz.tags?.join(', ') || ''}
             onChange={e => setQuiz(q => ({ 
               ...q, 
               tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag) 
             }))}
           />
-          <p className="text-sm text-gray-500">Ví dụ: javascript, react, frontend</p>
+          <p className="text-sm text-gray-500">{t('quizCreation.tagsExample')}</p>
         </div>
 
         {/* Cover Image Upload */}
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
             <ImageIcon className="w-4 h-4" />
-            Ảnh bìa Quiz
+            {t('quizCreation.coverImage')}
           </label>
           
           {/* Tab chọn Upload hoặc URL */}
@@ -150,7 +150,7 @@ const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
               }}
               className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
             >
-              📤 Upload ảnh
+              {t('quizCreation.uploadImage')}
             </button>
             <button
               type="button"
@@ -164,7 +164,7 @@ const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
               }}
               className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             >
-              🔗 Nhập URL
+              {t('quizCreation.enterUrl')}
             </button>
           </div>
 
@@ -200,7 +200,7 @@ const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
               type="url"
               value={quiz.imageUrl || ''}
               onChange={(e) => setQuiz(q => ({ ...q, imageUrl: e.target.value }))}
-              placeholder="https://example.com/image.jpg"
+              placeholder={t('placeholders.imageUrl')}
               className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             />
             {quiz.imageUrl && (
@@ -219,15 +219,15 @@ const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
           </div>
 
           <p className="text-xs text-gray-500">
-            💡 Ảnh bìa giúp quiz thu hút hơn. Upload siêu nhanh 1-3s hoặc dùng URL!
+            {t('quizCreation.coverImageHint')}
           </p>
         </div>
 
         {/* Password Protection */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
             <Lock className="w-4 h-4" />
-            Bảo mật Quiz
+            {t('quizCreation.quizSecurity')}
           </label>
           
           {/* Have Password Checkbox */}
@@ -247,10 +247,10 @@ const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
             />
             <label htmlFor="havePassword" className="flex-1 cursor-pointer">
               <div className="font-semibold text-purple-900 flex items-center gap-2">
-                🔒 Yêu cầu mật khẩu để làm bài
+                {t('quizCreation.requirePassword')}
               </div>
               <p className="text-sm text-purple-700 mt-1">
-                Quiz sẽ hiển thị công khai nhưng cần mật khẩu để truy cập
+                {t('quizCreation.quizVisibleNeedPassword')}
               </p>
             </label>
           </div>
@@ -260,14 +260,14 @@ const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
             <div className="ml-4 space-y-2 animate-in fade-in duration-300">
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
                 <Key className="w-4 h-4" />
-                Mật khẩu <span className="text-red-500">*</span>
+                {t('quizCreation.passwordRequired')}
               </label>
               <div className="relative">
                 <input
                   type="password"
                   value={quiz.password || ''}
                   onChange={(e) => setQuiz(q => ({ ...q, password: e.target.value }))}
-                  placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
+                  placeholder={t('placeholders.minPasswordLength')}
                   minLength={6}
                   className={`w-full px-4 py-3 pr-12 border-2 rounded-xl focus:outline-none focus:ring-2 transition-all ${
                     quiz.password && quiz.password.length >= 6
@@ -300,7 +300,7 @@ const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
         <div className="space-y-3">
           <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
             <Star className="w-4 h-4" />
-            Cài đặt bổ sung
+            {t('quizCreation.additionalSettings')}
           </label>
           
           <div className="space-y-2">
@@ -341,14 +341,16 @@ const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
           <p><strong>{t('quiz.difficulty')}:</strong> {quiz.difficulty || t('createQuiz.info.noDifficulty')}</p>
           <p><strong>{t('quiz.duration')}:</strong> {quiz.duration} {t('minutes')}</p>
           <p>
-            <strong>Quyền riêng tư:</strong>{' '}
+            <strong>{t('quizCreation.privacy')}</strong>{' '}
             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded ${
               quiz.isPublic === true 
                 ? 'bg-blue-100 text-blue-700' 
                 : 'bg-purple-100 text-purple-700'
             }`}>
               {quiz.isPublic === true ? (
-                <>🌍 Công khai</>
+                <>
+                {t('quizCreation.public')}
+              </>
               ) : (
                 <>🔒 Riêng tư</>
               )}

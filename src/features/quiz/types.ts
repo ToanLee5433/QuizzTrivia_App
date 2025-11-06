@@ -8,6 +8,10 @@ export interface Answer {
   videoUrl?: string; // For video answers
 }
 
+export type AnswerValue = string | string[] | number | boolean | null;
+
+export type AnswerMap = Record<string, AnswerValue>;
+
 export interface Question {
   id: string;
   text: string;
@@ -72,6 +76,8 @@ export interface Quiz {
   averageScore?: number;
   totalPlayers?: number;
   status?: 'pending' | 'approved' | 'rejected' | 'draft'; // Trạng thái kiểm duyệt
+  visibility?: 'public' | 'private' | 'unlisted' | 'password';
+  havePassword?: boolean | 'password';
   
   // **PRIVACY SETTINGS**: Advanced privacy controls
   privacy?: 'public' | 'unlisted' | 'private' | 'password-protected';

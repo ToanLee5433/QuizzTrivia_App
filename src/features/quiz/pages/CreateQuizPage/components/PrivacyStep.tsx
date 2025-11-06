@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Globe, Lock, Eye, EyeOff, Share2, Key, Shield, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface PrivacyStepProps {
   privacy: 'public' | 'password';
@@ -8,6 +9,7 @@ interface PrivacyStepProps {
 }
 
 const PrivacyStep: React.FC<PrivacyStepProps> = ({ privacy, password = '', onChange }) => {
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const isPasswordValid = privacy === 'password' ? (password && password.length >= 6) : true;
 
@@ -17,8 +19,8 @@ const PrivacyStep: React.FC<PrivacyStepProps> = ({ privacy, password = '', onCha
         <div className="inline-block p-3 bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl mb-4">
           <Shield className="w-8 h-8 text-purple-600" />
         </div>
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">Cài đặt quyền truy cập</h2>
-        <p className="text-gray-600">Chọn cách mọi người truy cập quiz của bạn</p>
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">{t('quizCreation.accessSettings')}</h2>
+        <p className="text-gray-600">{t('quizCreation.chooseAccessMethod')}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -91,14 +93,14 @@ const PrivacyStep: React.FC<PrivacyStepProps> = ({ privacy, password = '', onCha
               <Key className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-1">Đặt mật khẩu</h3>
-              <p className="text-sm text-gray-600">Người dùng cần nhập mật khẩu này để làm bài</p>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">{t('quizCreation.setPassword')}</h3>
+              <p className="text-sm text-gray-600">{t('quizCreation.userNeedPasswordToTake')}</p>
             </div>
           </div>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mật khẩu <span className="text-red-500">*</span>
+              {t('quizCreation.passwordRequired')}
             </label>
             <div className="relative">
               <input
@@ -110,7 +112,7 @@ const PrivacyStep: React.FC<PrivacyStepProps> = ({ privacy, password = '', onCha
                     ? 'border-gray-200 focus:border-purple-500' 
                     : 'border-red-300 focus:border-red-500'
                 }`}
-                placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
+                placeholder={t('placeholders.minPasswordLength')}
                 minLength={6}
               />
               <button
@@ -125,7 +127,7 @@ const PrivacyStep: React.FC<PrivacyStepProps> = ({ privacy, password = '', onCha
             {!isPasswordValid && password.length > 0 && (
               <p className="mt-2 text-sm text-red-600 flex items-center gap-2">
                 <AlertCircle className="w-4 h-4" />
-                Mật khẩu phải có ít nhất 6 ký tự
+                {t('quizCreation.passwordMinLength')}
               </p>
             )}
           </div>
@@ -139,7 +141,7 @@ const PrivacyStep: React.FC<PrivacyStepProps> = ({ privacy, password = '', onCha
             <Share2 className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h4 className="font-bold text-blue-900 mb-1">📎 Link chia sẻ</h4>
+            <h4 className="font-bold text-blue-900 mb-1">{t('quizCreation.shareLink')}</h4>
             <p className="text-sm text-blue-800">
               {privacy === 'public' 
                 ? 'Sau khi xuất bản, bạn sẽ nhận được link để chia sẻ. Mọi người click vào link sẽ làm quiz ngay lập tức.'
