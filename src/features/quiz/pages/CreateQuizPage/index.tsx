@@ -272,10 +272,16 @@ const CreateQuizPage: React.FC = () => {
           salt,
           hash
         };
+        console.log('🔒 [PUBLISH] Password data generated:', {
+          havePassword: quiz.havePassword,
+          passwordLength: quiz.password.length,
+          salt: salt.substring(0, 20) + '...',
+          hash: hash.substring(0, 20) + '...'
+        });
       }
 
     // Clean up undefined values - Firestore doesn't accept undefined
-    const cleanQuizData = deepCleanValue({
+    const baseQuizData = {
         title: quiz.title || '',
         description: quiz.description || '',
         category: quiz.category || 'general',
@@ -285,7 +291,7 @@ const CreateQuizPage: React.FC = () => {
         
         // 🔒 New Password Protection System
         visibility: quiz.havePassword === 'password' ? 'password' : 'public',
-        pwd: pwdData, // { enabled, algo, salt, hash }
+        ...(pwdData ? { pwd: pwdData } : {}), // Only add pwd if it exists
         
         questions: (quiz.questions || []).map(q => ({
           id: q.id || '',
@@ -327,9 +333,16 @@ const CreateQuizPage: React.FC = () => {
         isPublic: quiz.isPublic !== undefined ? quiz.isPublic : false,
         allowRetake: quiz.allowRetake !== undefined ? quiz.allowRetake : true,
         status: 'pending'
-      }) as Record<string, unknown>;
+      };
 
-      console.log('🔍 Clean quiz data:', cleanQuizData);
+      const cleanQuizData = deepCleanValue(baseQuizData) as Record<string, unknown>;
+
+      console.log('🔍 [PUBLISH] Clean quiz data:', {
+        ...cleanQuizData,
+        pwd: cleanQuizData.pwd || 'NOT SET',
+        visibility: cleanQuizData.visibility,
+        havePassword: cleanQuizData.havePassword
+      });
 
       const docRef = await addDoc(collection(db, 'quizzes'), cleanQuizData);
 
@@ -378,9 +391,15 @@ const CreateQuizPage: React.FC = () => {
           salt,
           hash
         };
+        console.log('🔒 [DRAFT] Password data generated:', {
+          havePassword: quiz.havePassword,
+          passwordLength: quiz.password.length,
+          salt: salt.substring(0, 20) + '...',
+          hash: hash.substring(0, 20) + '...'
+        });
       }
 
-    const draftQuizData = deepCleanValue({
+    const baseDraftData = {
         title: quiz.title || '',
         description: quiz.description || '',
         category: quiz.category || 'general',
@@ -390,7 +409,7 @@ const CreateQuizPage: React.FC = () => {
         
         // 🔒 New Password Protection System
         visibility: quiz.havePassword === 'password' ? 'password' : 'public',
-        pwd: pwdData, // { enabled, algo, salt, hash }
+        ...(pwdData ? { pwd: pwdData } : {}), // Only add pwd if it exists
         
         questions: (quiz.questions || []).map(q => ({
           id: q.id || '',
@@ -433,7 +452,9 @@ const CreateQuizPage: React.FC = () => {
         allowRetake: quiz.allowRetake !== undefined ? quiz.allowRetake : true,
         status: 'draft', // 📝 Mark as draft
         isDraft: true
-      }) as Record<string, unknown>;
+      };
+
+      const draftQuizData = deepCleanValue(baseDraftData) as Record<string, unknown>;
 
       console.log('📝 Saving draft:', draftQuizData);
 
