@@ -13,6 +13,7 @@ import {
   Star
 } from 'lucide-react';
 import type { MultiplayerServiceInterface } from '../services/enhancedMultiplayerService';
+import realtimeService from '../services/realtimeMultiplayerService';
 
 interface Player {
   id: string;
@@ -54,7 +55,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
 }) => {
   const { t } = useTranslation();
   const [copySuccess, setCopySuccess] = useState(false);
-  const [readyCountdown, setReadyCountdown] = useState<number | null>(null);
+  const [countdownData, setCountdownData] = useState<{ remaining: number; isActive: boolean } | null>(null);
 
   const players = useMemo(() => roomData?.players || [], [roomData?.players]);
   const readyCount = useMemo(() => players.filter(p => p.isReady).length, [players]);
@@ -72,31 +73,51 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
     });
   }, [players, readyCount, allReady]);
   
-  // Removed isHost logic - all players are equal
-
-  // Show countdown for everyone when all players are ready; any player can trigger start
+  // Listen to RTDB countdown (synchronized across all clients)
   useEffect(() => {
-    if (allReady && players.length >= 2) {
-      setReadyCountdown(5);
-      const interval = setInterval(() => {
-        setReadyCountdown(prev => {
-          if (prev === null || prev <= 1) {
-            clearInterval(interval);
-            // Any player can start the game when countdown reaches 0
-            if (multiplayerService && roomData?.id) {
-              multiplayerService.startGame(roomData.id);
-            }
-            return null;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+    if (!roomData?.id) return;
 
-      return () => clearInterval(interval);
-    } else {
-      setReadyCountdown(null);
+    const unsubscribe = realtimeService.listenToCountdown(roomData.id, (data) => {
+      setCountdownData(data);
+      
+      // When countdown reaches 0, start the game
+      if (data && data.remaining <= 0 && data.isActive) {
+        console.log('⏰ Countdown finished - starting game');
+        if (multiplayerService) {
+          multiplayerService.startGame(roomData.id).catch(err => {
+            console.error('Failed to start game:', err);
+          });
+        }
+        realtimeService.cancelCountdown(roomData.id);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [roomData?.id, multiplayerService]);
+
+  // Start countdown when all players ready (only one player triggers it)
+  useEffect(() => {
+    if (allReady && players.length >= 2 && !countdownData) {
+      // Only the first player alphabetically starts countdown to avoid race condition
+      const sortedPlayers = [...players].sort((a, b) => a.id.localeCompare(b.id));
+      const shouldStartCountdown = sortedPlayers[0].id === currentUserId;
+      
+      if (shouldStartCountdown && roomData?.id) {
+        console.log('🚀 Starting countdown (triggered by first player)');
+        realtimeService.startCountdown(roomData.id, 5);
+        realtimeService.setGameStatus(roomData.id, 'starting');
+      }
+    } else if (!allReady && countdownData?.isActive) {
+      // Cancel countdown if someone unreadies
+      if (roomData?.id) {
+        console.log('❌ Cancelling countdown (player unreadied)');
+        realtimeService.cancelCountdown(roomData.id);
+        realtimeService.setGameStatus(roomData.id, 'waiting');
+      }
     }
-  }, [allReady, players.length, multiplayerService, roomData?.id]);
+  }, [allReady, players, countdownData, currentUserId, roomData?.id]);
 
   const handleCopyRoomCode = async () => {
     if (roomData?.code) {
@@ -204,13 +225,13 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
               
               {/* Action Buttons */}
               <div className="flex flex-col gap-2 sm:gap-3 w-full lg:w-auto">
-                {/* Countdown Timer */}
-                {readyCountdown && (
+                {/* Countdown Timer - Synced via RTDB */}
+                {countdownData && countdownData.isActive && countdownData.remaining > 0 && (
                   <div className="bg-gradient-to-r from-orange-500 to-red-500 px-4 py-3 sm:px-6 sm:py-4 rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 sm:gap-3 shadow-lg animate-pulse">
                     <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0" />
                     <div className="text-center">
-                      <div className="text-2xl sm:text-3xl font-black text-white">{readyCountdown}</div>
-                      <div className="text-xs text-orange-50 font-semibold">Starting...</div>
+                      <div className="text-2xl sm:text-3xl font-black text-white">{countdownData.remaining}</div>
+                      <div className="text-xs text-orange-50 font-semibold">{t('multiplayer.starting')}</div>
                     </div>
                   </div>
                 )}

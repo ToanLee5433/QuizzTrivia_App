@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 interface HavePasswordStepProps {
   havePassword: 'public' | 'password';
   password?: string;
-  onChange: (field: string, value: any) => void;
+  onChange: (field: 'havePassword' | 'password', value: string) => void;
 }
 
 const HavePasswordStep: React.FC<HavePasswordStepProps> = ({ havePassword, password = '', onChange }) => {
@@ -19,8 +19,8 @@ const HavePasswordStep: React.FC<HavePasswordStepProps> = ({ havePassword, passw
         <div className="inline-block p-3 bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl mb-4">
           <Shield className="w-8 h-8 text-purple-600" />
         </div>
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">Cài đặt quyền truy cập</h2>
-        <p className="text-gray-600">Chọn cách mọi người truy cập quiz của bạn</p>
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">{t('quizCreation.accessSettings')}</h2>
+        <p className="text-gray-600">{t('quizCreation.chooseAccessMethod')}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -36,20 +36,20 @@ const HavePasswordStep: React.FC<HavePasswordStepProps> = ({ havePassword, passw
           <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center mb-4 shadow-lg">
             <Globe className="w-7 h-7 text-white" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Công khai</h3>
-          <p className="text-sm text-gray-600 mb-4">Mọi người đều có thể xem và làm quiz ngay lập tức</p>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">{t('quizCreation.publicTitle')}</h3>
+          <p className="text-sm text-gray-600 mb-4">{t('quizCreation.publicDesc')}</p>
           <div className="space-y-2 text-sm text-gray-700">
             <div className="flex items-center gap-2">
               <Eye className="w-4 h-4 text-blue-600" />
-              <span>Hiển thị trong danh sách</span>
+              <span>{t('quizCreation.visibleInList')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Share2 className="w-4 h-4 text-blue-600" />
-              <span>Có link chia sẻ</span>
+              <span>{t('quizCreation.hasShareLink')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Globe className="w-4 h-4 text-blue-600" />
-              <span>Làm ngay không cần mật khẩu</span>
+              <span>{t('quizCreation.noPasswordNeeded')}</span>
             </div>
           </div>
         </div>
@@ -66,20 +66,20 @@ const HavePasswordStep: React.FC<HavePasswordStepProps> = ({ havePassword, passw
           <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center mb-4 shadow-lg">
             <Lock className="w-7 h-7 text-white" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Có mật khẩu</h3>
-          <p className="text-sm text-gray-600 mb-4">Mọi người thấy quiz nhưng cần mật khẩu để làm bài</p>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">{t('quizCreation.withPasswordTitle')}</h3>
+          <p className="text-sm text-gray-600 mb-4">{t('quizCreation.withPasswordDesc')}</p>
           <div className="space-y-2 text-sm text-gray-700">
             <div className="flex items-center gap-2">
               <Eye className="w-4 h-4 text-purple-600" />
-              <span>Hiển thị trong danh sách</span>
+              <span>{t('quizCreation.visibleInList')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Key className="w-4 h-4 text-purple-600" />
-              <span>Yêu cầu mật khẩu để làm bài</span>
+              <span>{t('quizCreation.requirePasswordToTake')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Share2 className="w-4 h-4 text-purple-600" />
-              <span>Chia sẻ link + mật khẩu</span>
+              <span>{t('quizCreation.shareLinkAndPassword')}</span>
             </div>
           </div>
         </div>
@@ -93,14 +93,14 @@ const HavePasswordStep: React.FC<HavePasswordStepProps> = ({ havePassword, passw
               <Key className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-1">Đặt mật khẩu</h3>
-              <p className="text-sm text-gray-600">Người dùng cần nhập mật khẩu này để làm bài</p>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">{t('quizCreation.setPassword')}</h3>
+              <p className="text-sm text-gray-600">{t('quizCreation.userNeedPasswordToTake')}</p>
             </div>
           </div>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mật khẩu <span className="text-red-500">*</span>
+              {t('quizCreation.passwordRequired')}
             </label>
             <div className="relative">
               <input
@@ -127,7 +127,7 @@ const HavePasswordStep: React.FC<HavePasswordStepProps> = ({ havePassword, passw
             {!isPasswordValid && password.length > 0 && (
               <p className="mt-2 text-sm text-red-600 flex items-center gap-2">
                 <AlertCircle className="w-4 h-4" />
-                Mật khẩu phải có ít nhất 6 ký tự
+                {t('quizCreation.passwordMinLength')}
               </p>
             )}
           </div>
@@ -141,11 +141,11 @@ const HavePasswordStep: React.FC<HavePasswordStepProps> = ({ havePassword, passw
             <Share2 className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h4 className="font-bold text-blue-900 mb-1">📎 Link chia sẻ</h4>
+            <h4 className="font-bold text-blue-900 mb-1">{t('quizCreation.shareLink')}</h4>
             <p className="text-sm text-blue-800">
               {havePassword === 'public' 
-                ? 'Sau khi xuất bản, bạn sẽ nhận được link để chia sẻ. Mọi người click vào link sẽ làm quiz ngay lập tức.'
-                : 'Sau khi xuất bản, bạn sẽ nhận được link để chia sẻ. Người dùng cần nhập mật khẩu để bắt đầu làm bài.'
+                ? t('quizCreation.shareLinkDescriptionPublic')
+                : t('quizCreation.shareLinkDescriptionPassword')
               }
             </p>
           </div>

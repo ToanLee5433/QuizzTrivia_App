@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db, auth } from '../../../firebase/config';
 import { Search, BookOpen, Clock, Loader2 } from 'lucide-react';
 import { logger } from '../utils/logger';
@@ -55,18 +55,20 @@ const QuizSelector: React.FC<QuizSelectorProps> = ({ onSelectQuiz, onBack }) => 
     const fetchQuizzesData = async () => {
       try {
         setLoading(true);
-        const quizzesRef = collection(db, 'quizzes');
+        const quizzesRef = query(
+          collection(db, 'quizzes'),
+          where('status', '==', 'approved')
+        );
         
-        logger.debug('[QuizSelector] Fetching quizzes...', { userId: auth.currentUser?.uid });
+        logger.debug('[QuizSelector] Fetching APPROVED quizzes...', { userId: auth.currentUser?.uid });
         
-        // Fetch ALL quizzes (same as QuizList page)
-        // Don't filter by status or isPublic here
+        // Fetch ONLY APPROVED quizzes (can be accessed by users)
         const snapshot = await getDocs(quizzesRef);
         
-        logger.debug('[QuizSelector] Total quizzes found', { count: snapshot.size });
+        logger.debug('[QuizSelector] Total approved quizzes found', { count: snapshot.size });
         
         if (snapshot.empty) {
-          logger.warn('[QuizSelector] No quizzes found in database!');
+          logger.warn('[QuizSelector] No approved quizzes found in database!');
           setQuizzes([]);
           return;
         }

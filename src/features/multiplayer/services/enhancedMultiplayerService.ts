@@ -62,7 +62,7 @@ export interface MultiplayerServiceInterface {
   disconnect(): void;
   resumeRoom(roomId: string): Promise<{ room: Room } | null>;
   setPresence(roomId: string, isOnline: boolean): Promise<void>;
-  createRoom(roomConfig: Partial<Room>, quizId?: string): Promise<{ room: Room; player: Player }>;
+  createRoom(roomConfig: Partial<Room>, selectedQuiz?: any): Promise<{ room: Room; player: Player }>;
   joinRoom(roomCode: string, password?: string): Promise<{ room: Room; player: Player }>;
   leaveRoom(roomId: string): Promise<void>;
   startGame(roomId: string): Promise<void>;

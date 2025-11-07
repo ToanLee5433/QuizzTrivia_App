@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { RootState } from '../../../lib/store';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db, auth } from '../../../lib/firebase/config';
 import QuizCard, { QuizCardSkeleton } from '../../quiz/components/QuizCard';
 import { Quiz } from '../../quiz/types';
@@ -51,8 +51,11 @@ const MultiplayerLobby: React.FC = () => {
         });
       }
       
-      // Fetch ALL quizzes first (no filters)
-      const allQuizzesRef = collection(db, 'quizzes');
+      // Fetch ONLY APPROVED quizzes with status filter
+      const allQuizzesRef = query(
+        collection(db, 'quizzes'),
+        where('status', '==', 'approved')
+      );
       const allSnapshot = await getDocs(allQuizzesRef);
       
       const allQuizData = allSnapshot.docs.map(doc => ({
@@ -60,11 +63,10 @@ const MultiplayerLobby: React.FC = () => {
         ...doc.data()
       } as Quiz));
       
-      // Filter quizzes - Chỉ cần 1 câu hỏi trở lên và đã được approve
+      // Filter quizzes - Chỉ cần 1 câu hỏi trở lên (đã approved từ query)
       const validQuizzes = allQuizData.filter(quiz => {
         const hasQuestions = quiz.questions && quiz.questions.length >= 1;
-        const isApproved = quiz.status === 'approved';
-        return hasQuestions && isApproved;
+        return hasQuestions;
       });
       
       setQuizzes(validQuizzes);

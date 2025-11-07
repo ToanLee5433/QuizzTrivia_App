@@ -8,7 +8,7 @@ import { Quiz } from '../../features/quiz/types';
 import QuizCard from '../../features/quiz/components/QuizCard';
 import Button from '../components/ui/Button';
 import PopularQuizzesRanking from '../components/PopularQuizzesRanking';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../lib/firebase/config';
 
 import { useTranslation } from 'react-i18next';
@@ -49,9 +49,9 @@ const Home: React.FC = () => {
     try {
       setStatsLoading(true);
       
-      // Lấy dữ liệu thực từ Firebase
+      // Lấy dữ liệu thực từ Firebase - CHỈ QUIZ APPROVED
       const [quizzesSnapshot, usersSnapshot] = await Promise.all([
-        getDocs(collection(db, 'quizzes')),
+        getDocs(query(collection(db, 'quizzes'), where('status', '==', 'approved'))),
         getDocs(collection(db, 'users'))
       ]);
       

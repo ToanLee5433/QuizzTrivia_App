@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
+import { X } from 'lucide-react';
 import { Question } from '../types';
 
 interface QuizBulkImportProps {
@@ -7,6 +9,7 @@ interface QuizBulkImportProps {
 }
 
 const QuizBulkImport: React.FC<QuizBulkImportProps> = ({ onQuestionsImported }) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -23,7 +26,8 @@ const QuizBulkImport: React.FC<QuizBulkImportProps> = ({ onQuestionsImported }) 
         : ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
       
       if (!validTypes.some(type => file.type.includes(type) || file.name.toLowerCase().endsWith(fileType === 'csv' ? '.csv' : '.xlsx'))) {
-        toast.error(`Vui lòng chọn file ${fileType.toUpperCase()} hợp lệ`);
+        const typeLabel = t(`quizCreation.bulkImport.fileTypes.${fileType}`);
+        toast.error(t('quizCreation.bulkImport.toast.invalidFile', { type: typeLabel }));
         setUploading(false);
         return;
       }
@@ -32,18 +36,18 @@ const QuizBulkImport: React.FC<QuizBulkImportProps> = ({ onQuestionsImported }) 
       const questions = await parseFile(file, fileType);
       
       if (questions.length === 0) {
-        toast.error('Không tìm thấy câu hỏi hợp lệ trong file');
+        toast.error(t('quizCreation.bulkImport.toast.noQuestions'));
         setUploading(false);
         return;
       }
 
       onQuestionsImported(questions);
-      toast.success(`Đã import thành công ${questions.length} câu hỏi!`);
+      toast.success(t('quizCreation.bulkImport.toast.success', { count: questions.length }));
       setIsOpen(false);
       
     } catch (error) {
       console.error('Error parsing file:', error);
-      toast.error('Có lỗi xảy ra khi đọc file. Vui lòng kiểm tra định dạng file.');
+      toast.error(t('quizCreation.bulkImport.toast.parseError'));
     } finally {
       setUploading(false);
       // Reset file input
@@ -132,16 +136,25 @@ const QuizBulkImport: React.FC<QuizBulkImportProps> = ({ onQuestionsImported }) 
   };
 
   const downloadTemplate = (fileType: 'csv' | 'excel') => {
-    const headers = ['Câu hỏi', 'Đáp án A', 'Đáp án B', 'Đáp án C', 'Đáp án D', 'Đáp án đúng (A/B/C/D)', 'Giải thích (tùy chọn)', 'Điểm (mặc định 10)'];
+    const headers = [
+      t('quizCreation.bulkImport.template.headers.question'),
+      t('quizCreation.bulkImport.template.headers.answerA'),
+      t('quizCreation.bulkImport.template.headers.answerB'),
+      t('quizCreation.bulkImport.template.headers.answerC'),
+      t('quizCreation.bulkImport.template.headers.answerD'),
+      t('quizCreation.bulkImport.template.headers.correctAnswer'),
+      t('quizCreation.bulkImport.template.headers.explanation'),
+      t('quizCreation.bulkImport.template.headers.points')
+    ];
     const sampleRow = [
-      'JavaScript là ngôn ngữ gì?',
-      'Ngôn ngữ lập trình',
-      'Ngôn ngữ đánh dấu',
-      'Hệ quản trị cơ sở dữ liệu',
-      'Hệ điều hành',
-      'A',
-      'JavaScript là ngôn ngữ lập trình phổ biến',
-      '10'
+      t('quizCreation.bulkImport.template.sample.question'),
+      t('quizCreation.bulkImport.template.sample.answerA'),
+      t('quizCreation.bulkImport.template.sample.answerB'),
+      t('quizCreation.bulkImport.template.sample.answerC'),
+      t('quizCreation.bulkImport.template.sample.answerD'),
+      t('quizCreation.bulkImport.template.sample.correctAnswer'),
+      t('quizCreation.bulkImport.template.sample.explanation'),
+      t('quizCreation.bulkImport.template.sample.points')
     ];
     
     const csvContent = [headers, sampleRow]
@@ -163,32 +176,34 @@ const QuizBulkImport: React.FC<QuizBulkImportProps> = ({ onQuestionsImported }) 
         className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center space-x-2"
       >
         <span>📁</span>
-        <span>Tải File</span>
+        <span>{t('quizCreation.bulkImport.button')}</span>
       </button>
 
       {isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900">📁 Tải file câu hỏi</h3>
+              <h3 className="text-xl font-bold text-gray-900">{t('quizCreation.bulkImport.modalTitle')}</h3>
               <button
+                type="button"
                 onClick={() => setIsOpen(false)}
                 className="text-gray-400 hover:text-gray-600"
+                aria-label={t('close')}
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="space-y-6">
               {/* File Format Instructions */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-semibold text-blue-800 mb-2">📋 Định dạng file:</h4>
+                <h4 className="font-semibold text-blue-800 mb-2">{t('quizCreation.bulkImport.instructionsTitle')}</h4>
                 <ul className="text-sm text-blue-700 space-y-1">
-                  <li>• Cột 1: Câu hỏi</li>
-                  <li>• Cột 2-5: Đáp án A, B, C, D</li>
-                  <li>• Cột 6: Đáp án đúng (A/B/C/D)</li>
-                  <li>• Cột 7: Giải thích (tùy chọn)</li>
-                  <li>• Cột 8: Điểm (mặc định 10)</li>
+                  <li>• {t('quizCreation.bulkImport.instructions.column1')}</li>
+                  <li>• {t('quizCreation.bulkImport.instructions.columns2To5')}</li>
+                  <li>• {t('quizCreation.bulkImport.instructions.column6')}</li>
+                  <li>• {t('quizCreation.bulkImport.instructions.column7')}</li>
+                  <li>• {t('quizCreation.bulkImport.instructions.column8')}</li>
                 </ul>
               </div>
 
@@ -198,13 +213,13 @@ const QuizBulkImport: React.FC<QuizBulkImportProps> = ({ onQuestionsImported }) 
                   onClick={() => downloadTemplate('csv')}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
                 >
-                  📄 Tải mẫu CSV
+                  {t('quizCreation.bulkImport.downloadCsvTemplate')}
                 </button>
                 <button
                   onClick={() => downloadTemplate('excel')}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
                 >
-                  📊 Tải mẫu Excel
+                  {t('quizCreation.bulkImport.downloadExcelTemplate')}
                 </button>
               </div>
 
@@ -212,7 +227,7 @@ const QuizBulkImport: React.FC<QuizBulkImportProps> = ({ onQuestionsImported }) 
               <div className="space-y-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    📄 Chọn file CSV:
+                    {t('quizCreation.bulkImport.selectCsv')}
                   </label>
                   <input
                     type="file"
@@ -225,7 +240,7 @@ const QuizBulkImport: React.FC<QuizBulkImportProps> = ({ onQuestionsImported }) 
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    📊 Chọn file Excel:
+                    {t('quizCreation.bulkImport.selectExcel')}
                   </label>
                   <input
                     type="file"
@@ -240,15 +255,14 @@ const QuizBulkImport: React.FC<QuizBulkImportProps> = ({ onQuestionsImported }) 
               {uploading && (
                 <div className="flex items-center justify-center py-4">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                  <span className="ml-2 text-blue-600">Đang xử lý file...</span>
+                  <span className="ml-2 text-blue-600">{t('quizCreation.bulkImport.uploading')}</span>
                 </div>
               )}
 
               {/* Tips */}
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                 <p className="text-sm text-yellow-800">
-                  💡 <strong>Mẹo:</strong> Sử dụng template để đảm bảo định dạng đúng. 
-                  File có thể chứa nhiều câu hỏi, mỗi câu hỏi trên một dòng.
+                  <strong>{t('quizCreation.bulkImport.tipTitle')}</strong> {t('quizCreation.bulkImport.tipDescription')}
                 </p>
               </div>
             </div>

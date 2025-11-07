@@ -16,7 +16,7 @@ import JoinRoomModal from './JoinRoomModal';
 import RoomLobby from './RoomLobby';
 import MultiplayerQuiz from './MultiplayerQuiz';
 import GameResults from './GameResults';
-import MultiplayerChat from './MultiplayerChat';
+import RealtimeChat from './RealtimeChat';
 import MobileChatModal from './MobileChatModal';
 
 // Import services
@@ -63,7 +63,6 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
   });
   
   const [multiplayerService, setMultiplayerService] = useState<MultiplayerServiceInterface | null>(null);
-  const [chatMessages, setChatMessages] = useState<any[]>([]); // eslint-disable-line @typescript-eslint/no-explicit-any
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
   const [readyCountdown, setReadyCountdown] = useState<number | null>(null);
   const [joinError, setJoinError] = useState<string | undefined>(undefined);
@@ -87,7 +86,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
         // Set up event listeners
         service.on('room:updated', handleRoomUpdate);
         service.on('players:updated', handlePlayersUpdate);
-        service.on('messages:updated', handleMessagesUpdate);
+        // messages:updated listener removed - RealtimeChat handles this directly
         service.on('game:start', handleGameStart);
         service.on('game:next-question', handleNextQuestion);
         service.on('game:finish', handleGameFinish);
@@ -233,10 +232,8 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
     });
   }, []);
 
-  const handleMessagesUpdate = useCallback((messages: any[]) => {
-    logger.debug('Messages updated', { count: messages.length });
-    setChatMessages(messages);
-  }, []);
+  // Messages are now handled directly by RealtimeChat component via RTDB listeners
+  // No need for handleMessagesUpdate callback
 
   // const handleChatMessage = useCallback((message: any) => {
   //   console.log('MultiplayerManager received chat message:', message);
@@ -317,18 +314,8 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
     toast.info(t('multiplayer.success.leftRoom'));
   };
 
-  const handleSendChatMessage = (message: string) => {
-    if (multiplayerService && state.roomId) {
-      multiplayerService.sendChatMessage(state.roomId, message).catch((error) => {
-        console.error('Failed to send chat message:', error);
-      });
-    } else {
-      console.error('Cannot send message - service or roomId missing:', { 
-        hasService: !!multiplayerService, 
-        roomId: state.roomId 
-      });
-    }
-  };
+  // Chat message handler - not needed with RealtimeChat component
+  // Messages are sent directly from RealtimeChat via RTDB
 
   // Render connection status
   const renderConnectionStatus = () => {
@@ -375,12 +362,20 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
 							toast.info(t('multiplayer.errors.reconnecting'));
 							return;
 						}
-						const result = await multiplayerService.createRoom(roomConfig as any, selectedQuiz?.id);
+						
+						// Pass full quiz object instead of just quizId
+						console.log('🎮 Manager: Creating room with quiz', { 
+							quizId: selectedQuiz?.id, 
+							quizTitle: selectedQuiz?.title,
+							hasQuestions: !!selectedQuiz?.questions?.length
+						});
+						
+						const result = await multiplayerService.createRoom(roomConfig as any, selectedQuiz);
 						if (result) {
 							handleRoomCreated(result.room.id, result.room);
 						}
 					} catch (error: any) {
-						console.error('Failed to create room:', error);
+						console.error('❌ Manager: Failed to create room:', error);
 						const errorMessage = error.message || t('multiplayer.errors.createRoomFailed');
 						toast.error(errorMessage);
 						} finally {
@@ -481,10 +476,11 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
             {/* Chat Sidebar - Hidden on mobile, show on lg+ */}
             <div className="hidden lg:block lg:w-80 xl:w-96 border-l border-gray-200 bg-white">
               <div className="h-screen sticky top-0">
-                <MultiplayerChat
-                  messages={chatMessages}
-                  onSendMessage={handleSendChatMessage}
+                <RealtimeChat
+                  roomId={state.roomId || ''}
                   currentUserId={currentUserId}
+                  currentUsername={currentUserName}
+                  isMobile={false}
                 />
               </div>
             </div>
@@ -495,21 +491,15 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
               onClick={() => setIsMobileChatOpen(true)}
             >
               <Users className="w-6 h-6" />
-              {chatMessages.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                  {chatMessages.length > 9 ? '9+' : chatMessages.length}
-                </span>
-              )}
             </button>
 
             {/* Mobile Chat Modal */}
             <MobileChatModal
               isOpen={isMobileChatOpen}
               onClose={() => setIsMobileChatOpen(false)}
-              messages={chatMessages}
+              roomId={state.roomId || ''}
               currentUserId={currentUserId}
-              onSendMessage={handleSendChatMessage}
-              disabled={false}
+              currentUsername={currentUserName}
             />
           </div>
         );
@@ -531,11 +521,11 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
             {/* Chat Sidebar - Hidden on mobile during game */}
             <div className="hidden lg:block lg:w-80 xl:w-96 border-l border-gray-200 bg-white">
               <div className="h-screen sticky top-0">
-                <MultiplayerChat
-                  messages={chatMessages}
-                  onSendMessage={handleSendChatMessage}
+                <RealtimeChat
+                  roomId={state.roomId || ''}
                   currentUserId={currentUserId}
-                  disabled={true}
+                  currentUsername={currentUserName}
+                  isMobile={false}
                 />
               </div>
             </div>

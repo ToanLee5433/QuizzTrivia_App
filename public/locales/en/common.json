@@ -873,6 +873,50 @@
       "questions": "Questions",
       "review": "Review & Publish"
     },
+    "type": {
+      "headerTitle": "Select your quiz style",
+      "headerSubtitle": "Decide whether this quiz includes learning materials or stays focused on quick assessments.",
+      "cards": {
+        "withMaterials": {
+          "title": "Quiz with Learning Materials",
+          "subtitle": "Guide learners before they answer",
+          "description": "Attach videos, PDFs, and notes that students review before starting the quiz.",
+          "features": {
+            "learning": "Structured learning journey",
+            "progress": "Track material completion",
+            "completion": "Highlight required resources"
+          },
+          "badge": "Best for courses"
+        },
+        "standard": {
+          "title": "Standard Quiz",
+          "subtitle": "Fast assessment experience",
+          "description": "Create a streamlined quiz that focuses solely on questions and scoring.",
+          "features": {
+            "speed": "Create & publish in minutes",
+            "focus": "Keep attention on questions",
+            "assessment": "Ideal for quick checks"
+          },
+          "badge": "Most popular"
+        }
+      },
+      "selected": "Currently selected",
+      "tip": {
+        "title": "Not sure which to pick?",
+        "withMaterialsTitle": "Quiz with learning materials:",
+        "withMaterialsDescription": "Add supporting resources and require learners to review them before starting.",
+        "standardTitle": "Standard quiz:",
+        "standardDescription": "Perfect for quick knowledge checks without extra content."
+      },
+      "stats": {
+        "completionLabel": "Average completion",
+        "ratingLabel": "Average rating",
+        "durationLabel": "Typical time to finish",
+        "completionValue": "{{value}}%",
+  "ratingValue": "{{value}}/5",
+        "durationValue": "{{value}} min"
+      }
+    },
     "review": {
       "sections": {
         "overview": "✅ Quiz Overview",
@@ -905,9 +949,113 @@
       "acceptedVariationsLabel": "📝 Accepted variations:",
       "explanationLabel": "💡 Explanation:"
     },
+    "ai": {
+      "title": "AI Question Generator",
+      "subtitle": "Generate questions from your prompt using AI",
+      "steps": {
+        "input": "Input",
+        "generating": "Generating",
+        "preview": "Preview"
+      },
+      "inputMode": {
+        "prompt": "Text Prompt",
+        "file": "Upload File"
+      },
+      "promptLabel": "Enter your topic or content",
+      "promptPlaceholder": "E.g., \"Create questions about World War II, focusing on major battles and key figures\"",
+      "promptHint": "Be specific for better results. Minimum 10 characters.",
+      "fileLabel": "Upload a file to analyze",
+      "fileHint": "Upload an image, PDF, or document. AI will analyze and create questions.",
+      "typesLabel": "Question Types",
+      "types": {
+        "multiple": "Multiple Choice",
+        "boolean": "True/False",
+        "shortAnswer": "Short Answer",
+        "checkbox": "Multiple Select",
+        "ordering": "Ordering",
+        "matching": "Matching Pairs",
+        "fillBlanks": "Fill in the Blanks",
+        "audio": "Audio Question"
+      },
+      "numQuestionsLabel": "Number of Questions",
+      "difficultyLabel": "Difficulty",
+      "languageLabel": "Language",
+      "generate": "Generate Questions",
+      "generating": "Generating Questions...",
+      "generatingHint": "AI is analyzing your prompt and creating high-quality questions. This may take a moment.",
+      "reviewTitle": "Review Generated Questions",
+      "selected": "selected",
+      "addToQuiz": "Add to Quiz",
+      "success": "Generated {{count}} questions!",
+      "applied": "Added {{count}} questions to quiz!",
+      "errors": {
+        "emptyPrompt": "Please enter a prompt",
+        "promptTooShort": "Prompt must be at least 10 characters",
+        "generationFailed": "Generation failed",
+        "noQuestions": "No questions generated",
+        "unexpected": "An unexpected error occurred",
+        "noSelection": "Please select at least one question",
+        "noFile": "Please select a file to upload"
+      }
+    },
+    "points": "pts",
     "title": "Create New Quiz"
   },
   "createdAt": "Created At",
+  "language": {
+    "vietnamese": "Vietnamese",
+    "english": "English"
+  },
+  "fileUpload": {
+    "dragDrop": "Drag & drop file here, or click to select",
+    "supportedFormats": "Supported: Images (PNG, JPG, GIF, WebP), PDF, Word (DOC, DOCX), Text (TXT)",
+    "maxSize": "Maximum file size: {{size}}",
+    "selectFile": "Select File",
+    "removeFile": "Remove File",
+    "errors": {
+      "tooLarge": "File size exceeds {{max}}",
+      "invalidType": "Unsupported file type"
+    },
+    "unsupportedFormat": "Unsupported file format",
+    "processing": "Processing file: {{filename}}...",
+    "cannotReadFile": "Cannot read file",
+    "extractedSuccess": "Extracted {{count}} characters from file!",
+    "processingError": "Error occurred while processing file",
+    "sampleContentCreated": "Sample content created for AI testing",
+    "noContentToGenerate": "No content to generate questions",
+    "connectingToAI": "Connecting to AI service...",
+    "aiGeneratedSuccess": "✅ AI generated {{count}} questions successfully!",
+    "aiGenerationError": "❌ Error generating questions: {{error}}",
+    "aiError": "AI Error: {{error}}",
+    "usingSampleQuestions": "Using sample questions instead of AI",
+    "importedQuestions": "Imported {{count}} questions!",
+    "apiKeyWorking": "✅ API key is working!",
+    "apiKeyError": "❌ API key error: {{message}}",
+    "networkError": "❌ Network error: {{error}}",
+    "ocrError": "OCR Error: {{error}}",
+    "pdfError": "PDF Error: {{error}}",
+    "wordError": "Word Error: {{error}}",
+    "textError": "Text Error: {{error}}",
+    "spreadsheetError": "Spreadsheet Error: {{error}}",
+    "cannotExtractText": "Cannot extract text from image. Please try another image with clearer text.",
+    "noAIResponse": "AI service did not return any questions",
+    "aiServiceError": "❌ AI Service Error:",
+    "aiGenerationFailed": "AI generation failed: {{error}}",
+    "userChoseFallback": "🔄 User chose to use fallback mock questions",
+    "sampleQuestions": {
+      "question1": {
+        "text": "Which company developed JavaScript?",
+        "answer": "Netscape",
+        "explanation": "JavaScript was developed by Brendan Eich at Netscape in 1995."
+      },
+      "question2": {
+        "text": "What is React?",
+        "answer": "JavaScript library",
+        "explanation": "React is a JavaScript library for building user interfaces."
+      }
+    },
+    "customPrompt": "Specific instructions for AI on how to generate questions..."
+  },
   "creator": {
     "createNewQuiz": "Create New Quiz",
     "loginMessage": "You need to login to access the Creator page",
@@ -1032,7 +1180,8 @@
   "difficulty": {
     "easy": "Easy",
     "hard": "Hard",
-    "medium": "Medium"
+    "medium": "Medium",
+    "mixed": "Mixed"
   },
   "dinhDangFile": "📋 Định dạng file:",
   "dinhDangFileKhongDuocHoTro": "Định dạng file No được hỗ trợ",
@@ -3014,47 +3163,6 @@
   "users": {
     "confirmDelete": "Confirm delete user?"
   },
-  "fileUpload": {
-    "unsupportedFormat": "Unsupported file format",
-    "processing": "Processing file: {{filename}}...",
-    "cannotReadFile": "Cannot read file",
-    "extractedSuccess": "Extracted {{count}} characters from file!",
-    "processingError": "Error occurred while processing file",
-    "sampleContentCreated": "Sample content created for AI testing",
-    "noContentToGenerate": "No content to generate questions",
-    "connectingToAI": "Connecting to AI service...",
-    "aiGeneratedSuccess": "✅ AI generated {{count}} questions successfully!",
-    "aiGenerationError": "❌ Error generating questions: {{error}}",
-    "aiError": "AI Error: {{error}}",
-    "usingSampleQuestions": "Using sample questions instead of AI",
-    "importedQuestions": "Imported {{count}} questions!",
-    "apiKeyWorking": "✅ API key is working!",
-    "apiKeyError": "❌ API key error: {{message}}",
-    "networkError": "❌ Network error: {{error}}",
-    "ocrError": "OCR Error: {{error}}",
-    "pdfError": "PDF Error: {{error}}",
-    "wordError": "Word Error: {{error}}",
-    "textError": "Text Error: {{error}}",
-    "spreadsheetError": "Spreadsheet Error: {{error}}",
-    "cannotExtractText": "Cannot extract text from image. Please try another image with clearer text.",
-    "noAIResponse": "AI service did not return any questions",
-    "aiServiceError": "❌ AI Service Error:",
-    "aiGenerationFailed": "AI generation failed: {{error}}",
-    "userChoseFallback": "🔄 User chose to use fallback mock questions",
-    "sampleQuestions": {
-      "question1": {
-        "text": "Which company developed JavaScript?",
-        "answer": "Netscape",
-        "explanation": "JavaScript was developed by Brendan Eich at Netscape in 1995."
-      },
-      "question2": {
-        "text": "What is React?",
-        "answer": "JavaScript library",
-        "explanation": "React is a JavaScript library for building user interfaces."
-      }
-    },
-    "customPrompt": "Specific instructions for AI on how to generate questions..."
-  },
   "resources": {
     "title": "Learning Resources",
     "required": "Required",
@@ -3303,13 +3411,19 @@
     "minPasswordLength": "Enter password (min 6 characters)",
     "questionContent": "Question content",
     "enterCorrectAnswer": "Enter the correct answer...",
+    "correctAnswer": "Enter correct answer",
     "imageDescription": "Image description (optional)",
     "imageUrlOptional": "Image URL",
     "answerExplanation": "Answer explanation (optional)",
     "shareExperience": "Share your experience with this quiz...",
     "avatarUrl": "https://example.com/avatar.jpg",
     "enterQuestionHere": "Enter your question here...",
-    "explainAnswer": "Explain why this is the correct answer..."
+    "explainAnswer": "Explain why this is the correct answer...",
+    "audioUrl": "Audio file URL or upload link",
+    "orderingItemText": "Item {{number}} text",
+    "leftItemText": "Left item {{number}}",
+    "rightItemText": "Right item {{number}}",
+    "textWithBlanks": "Enter text with {{blanks}} syntax. E.g: The capital of France is {{Paris}}"
   },
   "passwordModal": {
     "title": "Password Protected Quiz",
@@ -3368,7 +3482,95 @@
     "shareLinkAndPassword": "Share link + password",
     "setPassword": "Set Password",
     "userNeedPasswordToTake": "Users need to enter this password to take quiz",
-    "shareLink": "📎 Share Link",
+  "shareLink": "📎 Share Link",
+  "shareLinkDescriptionPublic": "After publishing, you'll receive a share link. Anyone with the link can start the quiz immediately.",
+  "shareLinkDescriptionPassword": "After publishing, you'll receive a share link. Learners must enter the password before taking the quiz.",
+    "bulkImport": {
+      "button": "Upload File",
+      "modalTitle": "📁 Upload question file",
+      "instructionsTitle": "📋 File format:",
+      "instructions": {
+        "column1": "Column 1: Question",
+        "columns2To5": "Columns 2-5: Answers A, B, C, D",
+        "column6": "Column 6: Correct answer (A/B/C/D)",
+        "column7": "Column 7: Explanation (optional)",
+        "column8": "Column 8: Points (default 10)"
+      },
+      "downloadCsvTemplate": "📄 Download CSV template",
+      "downloadExcelTemplate": "📊 Download Excel template",
+      "selectCsv": "📄 Choose CSV file:",
+      "selectExcel": "📊 Choose Excel file:",
+      "tipTitle": "💡 Tip:",
+      "tipDescription": "Use the template to ensure the format is correct. The file can contain multiple questions, one per line.",
+      "uploading": "Processing file...",
+      "fileTypes": {
+        "csv": "CSV",
+        "excel": "Excel"
+      },
+      "toast": {
+        "invalidFile": "Please choose a valid {{type}} file.",
+        "noQuestions": "No valid questions found in the file.",
+        "success_one": "Imported {{count}} question successfully!",
+        "success_other": "Imported {{count}} questions successfully!",
+        "parseError": "An error occurred while reading the file. Please check the file format."
+      },
+      "template": {
+        "headers": {
+          "question": "Question",
+          "answerA": "Answer A",
+          "answerB": "Answer B",
+          "answerC": "Answer C",
+          "answerD": "Answer D",
+          "correctAnswer": "Correct answer (A/B/C/D)",
+          "explanation": "Explanation (optional)",
+          "points": "Points (default 10)"
+        },
+        "sample": {
+          "question": "What is JavaScript?",
+          "answerA": "Programming language",
+          "answerB": "Markup language",
+          "answerC": "Database system",
+          "answerD": "Operating system",
+          "correctAnswer": "A",
+          "explanation": "JavaScript is a popular programming language",
+          "points": "10"
+        }
+      }
+    },
+    "simpleAI": {
+      "poweredBy": "Powered by Google Generative AI",
+      "bannerTitle": "Use AI for free",
+      "bannerDescription": "Firebase Cloud Functions with Google Gemini 2.0 Flash help you generate high-quality questions from your content.",
+      "fields": {
+        "numQuestions": "Number of questions",
+        "difficulty": "Difficulty",
+        "language": "Language",
+        "temperature": "Creativity (Temperature): {{value}}",
+        "content": "Content ({{length}} characters)"
+      },
+      "difficultyOptions": {
+        "mixed": "🎯 Mixed"
+      },
+      "languages": {
+        "vi": "🇻🇳 Vietnamese",
+        "en": "🇬🇧 English"
+      },
+      "temperatureScale": {
+        "precise": "Precise",
+        "creative": "Creative"
+      },
+      "reviewTitle": "Generated {{count}} questions",
+      "reviewTitle_one": "Generated {{count}} question",
+      "reviewTitle_other": "Generated {{count}} questions",
+      "actions": {
+        "goBack": "← Regenerate",
+        "deleteQuestion": "Remove this question",
+        "addToQuizButton": "Add {{count}} questions",
+        "addToQuizButton_one": "Add {{count}} question",
+        "addToQuizButton_other": "Add {{count}} questions"
+      },
+      "explanationPrefix": "💡"
+    },
     "questions": "Questions",
     "addQuestion": "Add Question",
     "noQuestionsYet": "No Questions Yet",
@@ -3381,6 +3583,10 @@
     "trueFalse": "True/False",
     "fillBlank": "Fill in the Blank",
     "imageChoice": "Image Choice",
+    "audioQuestion": "Audio Question",
+    "orderingQuestion": "Ordering",
+    "matchingQuestion": "Matching Pairs",
+    "fillBlanksQuestion": "Fill in Blanks",
     "multipleChoiceAnswers": "Multiple Choice Answers",
     "addAnswer": "+ Add Answer",
     "trueFalseQuestion": "True/False Question",
@@ -3392,6 +3598,23 @@
     "imageAnswers": "Image Answers",
     "addImage": "+ Add Image",
     "correctAnswerLabel": "Correct Answer",
+    "audioFile": "Audio File",
+    "audioNotSupported": "Your browser does not support audio playback",
+    "orderingItems": "Items to Order (Drag to arrange correct sequence)",
+    "addItem": "+ Add Item",
+    "orderingHint": "Students will drag items to arrange them in the correct order (1, 2, 3...)",
+    "matchingPairs": "Matching Pairs",
+    "addPair": "+ Add Pair",
+    "leftColumn": "Left Column",
+    "rightColumn": "Right Column",
+    "matchingHint": "Students will match items from left column to right column",
+    "removePair": "Remove Pair",
+    "fillBlanksText": "Text with Blanks",
+    "parseBlanks": "Parse Blanks",
+    "detectedBlanks": "Detected Blanks",
+    "blankNumber": "Blank #{{number}}",
+    "caseSensitive": "Case Sensitive",
+    "fillBlanksHint": "Use {{answer}} syntax to mark blanks. Example: The capital of France is {{Paris}}",
     "pending": "⏳ Pending",
     "approved": "✅ Approved",
     "rejected": "❌ Rejected",

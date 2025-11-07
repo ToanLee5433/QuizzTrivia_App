@@ -332,7 +332,7 @@ const CreateQuizPage: React.FC = () => {
         imageUrl: quiz.imageUrl || null,
         isPublic: quiz.isPublic !== undefined ? quiz.isPublic : false,
         allowRetake: quiz.allowRetake !== undefined ? quiz.allowRetake : true,
-        status: 'pending'
+        status: 'draft'
       };
 
       const cleanQuizData = deepCleanValue(baseQuizData) as Record<string, unknown>;

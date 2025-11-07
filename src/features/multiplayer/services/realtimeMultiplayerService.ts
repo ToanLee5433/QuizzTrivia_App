@@ -32,20 +32,20 @@ class RealtimeMultiplayerService {
     try {
       const presenceRef = ref(rtdb, `rooms/${roomId}/presence/${userId}`);
       
-      // Set online
+      // Set online - phải match với database.rules.json validation
       await set(presenceRef, {
-        online: true,
-        userName,
-        lastSeen: serverTimestamp(),
+        isOnline: true,
+        username: userName,
+        lastSeen: Date.now(),
       });
 
       logger.success(`Presence setup for ${userName} in room ${roomId}`);
 
       // Auto set offline on disconnect
       onDisconnect(presenceRef).set({
-        online: false,
-        userName,
-        lastSeen: serverTimestamp(),
+        isOnline: false,
+        username: userName,
+        lastSeen: Date.now(),
       });
     } catch (error) {
       logger.error('Failed to setup presence:', error);
@@ -61,7 +61,7 @@ class RealtimeMultiplayerService {
     
     const unsubscribe = onValue(presenceRef, (snapshot) => {
       const presence = snapshot.val() || {};
-      const onlineCount = Object.values(presence).filter((p: any) => p.online).length;
+      const onlineCount = Object.values(presence).filter((p: any) => p.isOnline).length;
       
       logger.debug('Presence updated:', { 
         roomId, 
@@ -88,12 +88,11 @@ class RealtimeMultiplayerService {
    */
   async updatePlayerStatus(roomId: string, userId: string, isReady: boolean) {
     try {
-      const statusRef = ref(rtdb, `rooms/${roomId}/players/${userId}`);
+      const statusRef = ref(rtdb, `rooms/${roomId}/playerStatuses/${userId}`);
       
       await set(statusRef, {
-        userId,
-        ready: isReady,
-        updatedAt: serverTimestamp(),
+        isReady: isReady,
+        updatedAt: Date.now(),
       });
 
       logger.info(`Player ${userId} ready status: ${isReady}`);
@@ -107,11 +106,11 @@ class RealtimeMultiplayerService {
    * Listen to all players' ready status
    */
   listenToPlayerStatuses(roomId: string, callback: (players: Record<string, any>) => void) {
-    const playersRef = ref(rtdb, `rooms/${roomId}/players`);
+    const playersRef = ref(rtdb, `rooms/${roomId}/playerStatuses`);
     
     const unsubscribe = onValue(playersRef, (snapshot) => {
       const players = snapshot.val() || {};
-      const readyCount = Object.values(players).filter((p: any) => p.ready).length;
+      const readyCount = Object.values(players).filter((p: any) => p.isReady).length;
       const totalCount = Object.keys(players).length;
       
       logger.debug('Players status updated:', { 
@@ -143,9 +142,16 @@ class RealtimeMultiplayerService {
       const timerRef = ref(rtdb, `rooms/${roomId}/game/timer`);
       
       await set(timerRef, {
-        remaining: timeRemaining,
-        questionIndex,
-        updatedAt: serverTimestamp(),
+        timeLeft: timeRemaining,
+        isRunning: timeRemaining > 0,
+        updatedAt: Date.now(),
+      });
+      
+      // Also update current question
+      const gameRef = ref(rtdb, `rooms/${roomId}/game`);
+      await update(gameRef, {
+        currentQuestion: questionIndex,
+        updatedAt: Date.now(),
       });
     } catch (error) {
       logger.error('Failed to update game timer:', error);
@@ -184,12 +190,12 @@ class RealtimeMultiplayerService {
     try {
       const answerRef = ref(
         rtdb, 
-        `rooms/${roomId}/game/answers/${questionId}/${userId}`
+        `rooms/${roomId}/answerProgress/${userId}`
       );
       
       await set(answerRef, {
-        submitted: true,
-        timestamp: serverTimestamp(),
+        hasAnswered: true,
+        answeredAt: Date.now(),
       });
 
       logger.debug(`Answer progress: ${userId} answered question ${questionId}`);
@@ -199,26 +205,27 @@ class RealtimeMultiplayerService {
   }
 
   /**
-   * Listen to answer progress (how many players answered)
+   * Listen to answer progress (how many players answered for a specific question)
+   * Updated to support per-question tracking
    */
   listenToAnswerProgress(
     roomId: string, 
-    questionId: string, 
+    questionIndex: number, 
     callback: (count: number, answers: any) => void
   ) {
-    const answersRef = ref(rtdb, `rooms/${roomId}/game/answers/${questionId}`);
+    const answersRef = ref(rtdb, `rooms/${roomId}/answerProgress/${questionIndex}`);
     
     const unsubscribe = onValue(answersRef, (snapshot) => {
       const answers = snapshot.val() || {};
-      const count = Object.keys(answers).length;
+      const count = Object.values(answers).filter((a: any) => a.hasAnswered).length;
       
-      logger.debug(`Answer progress: ${count} players answered question ${questionId}`);
+      logger.debug(`Answer progress Q${questionIndex}: ${count} players answered`);
       callback(count, answers);
     }, (error) => {
       logger.error('Answer progress listener error:', error);
     });
 
-    const listenerKey = `answers_${roomId}_${questionId}`;
+    const listenerKey = `answers_${roomId}_${questionIndex}`;
     this.listeners.set(listenerKey, { ref: answersRef, unsubscribe });
     
     return () => {
@@ -284,7 +291,7 @@ class RealtimeMultiplayerService {
       
       await update(gameRef, {
         currentQuestion: questionIndex,
-        updatedAt: serverTimestamp(),
+        updatedAt: Date.now(),
       });
 
       logger.info(`Current question updated: ${questionIndex}`);
@@ -327,10 +334,124 @@ class RealtimeMultiplayerService {
       
       await set(roomRef, {
         active: isActive,
-        updatedAt: serverTimestamp(),
+        updatedAt: Date.now(),
       });
     } catch (error) {
       logger.error('Failed to set room active status:', error);
+    }
+  }
+
+  // ============================================================================
+  // SYNCHRONIZED GAME TIMER
+  // ============================================================================
+
+  /**
+   * Start synchronized game timer
+   * Server-authoritative: only the host (first player alphabetically) should call this
+   */
+  async startQuestionTimer(roomId: string, durationSeconds: number) {
+    try {
+      const timerRef = ref(rtdb, `rooms/${roomId}/game/timer`);
+      
+      await set(timerRef, {
+        startedAt: Date.now(),
+        duration: durationSeconds,
+        remaining: durationSeconds,
+        isActive: true,
+      });
+
+      logger.info(`Question timer started: ${durationSeconds}s`);
+    } catch (error) {
+      logger.error('Failed to start question timer:', error);
+    }
+  }
+
+  /**
+   * Listen to synchronized timer
+   */
+  listenToTimer(roomId: string, callback: (timerData: {
+    remaining: number;
+    isActive: boolean;
+    startedAt: number;
+    duration: number;
+  } | null) => void) {
+    const timerRef = ref(rtdb, `rooms/${roomId}/game/timer`);
+    
+    const unsubscribe = onValue(timerRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        // Calculate remaining time based on server time
+        const elapsed = Math.floor((Date.now() - data.startedAt) / 1000);
+        const remaining = Math.max(0, data.duration - elapsed);
+        
+        callback({
+          remaining,
+          isActive: data.isActive && remaining > 0,
+          startedAt: data.startedAt,
+          duration: data.duration,
+        });
+      } else {
+        callback(null);
+      }
+    }, (error) => {
+      logger.error('Timer listener error:', error);
+    });
+
+    const listenerKey = `timer_${roomId}`;
+    this.listeners.set(listenerKey, { ref: timerRef, unsubscribe });
+    
+    return () => {
+      off(timerRef);
+      this.listeners.delete(listenerKey);
+    };
+  }
+
+  /**
+   * Stop the question timer
+   */
+  async stopQuestionTimer(roomId: string) {
+    try {
+      const timerRef = ref(rtdb, `rooms/${roomId}/game/timer`);
+      
+      await update(timerRef, {
+        isActive: false,
+        remaining: 0,
+      });
+
+      logger.info('Question timer stopped');
+    } catch (error) {
+      logger.error('Failed to stop question timer:', error);
+    }
+  }
+
+  /**
+   * Track who has answered the current question
+   */
+  async markPlayerAnswered(roomId: string, userId: string, questionIndex: number) {
+    try {
+      const answerRef = ref(rtdb, `rooms/${roomId}/answerProgress/${questionIndex}/${userId}`);
+      
+      await set(answerRef, {
+        hasAnswered: true,
+        timestamp: Date.now(),
+      });
+
+      logger.info(`Player ${userId} marked as answered for Q${questionIndex}`);
+    } catch (error) {
+      logger.error('Failed to mark player as answered:', error);
+    }
+  }
+
+  /**
+   * Clear answer progress for next question
+   */
+  async clearAnswerProgress(roomId: string, questionIndex: number) {
+    try {
+      const progressRef = ref(rtdb, `rooms/${roomId}/answerProgress/${questionIndex}`);
+      await remove(progressRef);
+      logger.info(`Cleared answer progress for Q${questionIndex}`);
+    } catch (error) {
+      logger.error('Failed to clear answer progress:', error);
     }
   }
 
@@ -398,6 +519,109 @@ class RealtimeMultiplayerService {
     });
     
     this.listeners.clear();
+  }
+
+  /**
+   * Start countdown for game start (synchronized)
+   */
+  async startCountdown(roomId: string, seconds: number) {
+    try {
+      const countdownRef = ref(rtdb, `rooms/${roomId}/countdown`);
+      
+      await set(countdownRef, {
+        remaining: seconds,
+        startedAt: Date.now(),
+        isActive: true,
+      });
+
+      logger.info(`Countdown started: ${seconds} seconds`);
+    } catch (error) {
+      logger.error('Failed to start countdown:', error);
+    }
+  }
+
+  /**
+   * Listen to countdown (synchronized across all clients)
+   */
+  listenToCountdown(roomId: string, callback: (countdown: { remaining: number; isActive: boolean } | null) => void) {
+    const countdownRef = ref(rtdb, `rooms/${roomId}/countdown`);
+    
+    const unsubscribe = onValue(countdownRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        logger.debug('Countdown updated:', data);
+        callback(data);
+      } else {
+        callback(null);
+      }
+    }, (error) => {
+      logger.error('Countdown listener error:', error);
+    });
+
+    const listenerKey = `countdown_${roomId}`;
+    this.listeners.set(listenerKey, { ref: countdownRef, unsubscribe });
+    
+    return () => {
+      off(countdownRef);
+      this.listeners.delete(listenerKey);
+    };
+  }
+
+  /**
+   * Cancel countdown
+   */
+  async cancelCountdown(roomId: string) {
+    try {
+      const countdownRef = ref(rtdb, `rooms/${roomId}/countdown`);
+      await remove(countdownRef);
+      
+      logger.info('Countdown cancelled');
+    } catch (error) {
+      logger.error('Failed to cancel countdown:', error);
+    }
+  }
+
+  /**
+   * Set game status (waiting, starting, playing, finished)
+   */
+  async setGameStatus(roomId: string, status: 'waiting' | 'starting' | 'playing' | 'finished') {
+    try {
+      const statusRef = ref(rtdb, `rooms/${roomId}/gameStatus`);
+      
+      await set(statusRef, {
+        status,
+        updatedAt: Date.now(),
+      });
+
+      logger.info(`Game status updated: ${status}`);
+    } catch (error) {
+      logger.error('Failed to update game status:', error);
+    }
+  }
+
+  /**
+   * Listen to game status changes
+   */
+  listenToGameStatus(roomId: string, callback: (status: string) => void) {
+    const statusRef = ref(rtdb, `rooms/${roomId}/gameStatus/status`);
+    
+    const unsubscribe = onValue(statusRef, (snapshot) => {
+      const status = snapshot.val();
+      if (status) {
+        logger.debug(`Game status changed: ${status}`);
+        callback(status);
+      }
+    }, (error) => {
+      logger.error('Game status listener error:', error);
+    });
+
+    const listenerKey = `gameStatus_${roomId}`;
+    this.listeners.set(listenerKey, { ref: statusRef, unsubscribe });
+    
+    return () => {
+      off(statusRef);
+      this.listeners.delete(listenerKey);
+    };
   }
 }
 

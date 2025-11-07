@@ -16,11 +16,10 @@ import {
 } from '@dnd-kit/sortable';
 import { Sparkles } from 'lucide-react';
 import Button from '../../../../../shared/components/ui/Button';
-import { QuizFormData } from '../types';
-import { Question } from '../types';
+import { QuizFormData, Question } from '../types';
 import SortableItem from './SortableItem';
 import QuizBulkImport from './QuizBulkImport';
-import ClientSideAIGenerator from '../../../../../components/ClientSideAIGenerator';
+import { AdvancedAIGenerator } from './AdvancedAIGenerator';
 import { useTranslation } from 'react-i18next';
 
 interface QuestionsStepProps {
@@ -30,16 +29,6 @@ interface QuestionsStepProps {
   updateQuestion: (idx: number, question: Question) => void;
   deleteQuestion: (idx: number) => void;
   moveQuestion: (fromIndex: number, toIndex: number) => void;
-}
-
-interface AIAnswerPayload {
-  text: string;
-  isCorrect: boolean;
-}
-
-interface AIQuestionPayload {
-  text: string;
-  answers: AIAnswerPayload[];
 }
 
 const QuestionsStep: React.FC<QuestionsStepProps> = ({
@@ -81,23 +70,10 @@ const QuestionsStep: React.FC<QuestionsStepProps> = ({
     }));
   };
 
-  const handleAIQuestionsGenerated = (questions: AIQuestionPayload[]) => {
-    // Convert simple AI questions to full Question format
-    const convertedQuestions: Question[] = questions.map((q, index) => ({
-      id: `ai_question_${Date.now()}_${index}`,
-      text: q.text,
-      type: 'multiple' as const,
-      answers: q.answers.map((a, idx) => ({
-        id: `ai_answer_${Date.now()}_${index}_${idx}`,
-        text: a.text,
-        isCorrect: a.isCorrect
-      })),
-      points: 1
-    }));
-
+  const handleAIQuestionsGenerated = (questions: Question[]) => {
     setQuiz(prev => ({
       ...prev,
-      questions: [...prev.questions, ...convertedQuestions]
+      questions: [...prev.questions, ...questions]
     }));
     setShowGeminiAI(false);
   };
@@ -159,30 +135,12 @@ const QuestionsStep: React.FC<QuestionsStepProps> = ({
         </SortableContext>
       </DndContext>
 
-      {/* Gemini AI Generator Modal */}
-      {showGeminiAI && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-auto">
-            <div className="flex justify-between items-center p-6 border-b border-gray-200">
-              <h3 className="text-2xl font-bold text-gray-900">
-                {t('createQuiz.questions.aiModalTitle')}
-              </h3>
-              <button
-                onClick={() => setShowGeminiAI(false)}
-                className="text-gray-400 hover:text-gray-600 text-3xl font-bold transition-colors"
-                aria-label={t('createQuiz.questions.closeAIModal')}
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-6">
-              <ClientSideAIGenerator
-                onQuestionsGenerated={handleAIQuestionsGenerated}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Advanced AI Generator Modal */}
+      <AdvancedAIGenerator
+        isOpen={showGeminiAI}
+        onClose={() => setShowGeminiAI(false)}
+        onQuestionsGenerated={handleAIQuestionsGenerated}
+      />
     </div>
   );
 };

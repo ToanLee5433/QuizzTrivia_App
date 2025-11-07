@@ -801,13 +801,13 @@
   "cot8DiemMacDinh10": "• Cột 8: Điểm (mặc định 10)",
   "create": "Tạo mới",
   "createQuiz": {
-    "back": "Quay lại",
-    "backToCreator": "Quay lại Creator Dashboard",
-    "completeAllInfo": "Please complete all quiz information",
-    "completeInfoFirst": "Please complete information before continuing",
-    "continue": "Tiếp tục",
-    "createError": "Error occurred while creating quiz",
-    "createSuccess": "Quiz created successfully! Quiz is awaiting admin approval.",
+  "back": "Quay lại",
+  "backToCreator": "Quay lại bảng điều khiển Creator",
+  "completeAllInfo": "Vui lòng hoàn tất đầy đủ thông tin quiz",
+  "completeInfoFirst": "Vui lòng hoàn thiện thông tin trước khi tiếp tục",
+  "continue": "Tiếp tục",
+  "createError": "Có lỗi xảy ra khi tạo quiz",
+  "createSuccess": "Tạo quiz thành công! Quiz đang chờ quản trị viên phê duyệt.",
     "draft": {
       "button": "Lưu bản nháp",
       "success": "Đã lưu bản nháp thành công!",
@@ -821,24 +821,24 @@
       "cancel": "Ở lại"
     },
     "info": {
-      "basicInfo": "Basic Information",
-      "categoryLabel": "Category *",
-      "categoryPlaceholder": "Select category",
-      "descriptionLabel": "Quiz description * (Rich Text format supported)",
-      "descriptionPlaceholder": "Detailed description of your quiz... You can add text formatting, images, videos and more!",
-      "difficultyLabel": "Difficulty *",
-      "difficultyPlaceholder": "Select difficulty level",
-      "durationLabel": "Duration (minutes) *",
+      "basicInfo": "Thông tin cơ bản",
+      "categoryLabel": "Danh mục *",
+      "categoryPlaceholder": "Chọn danh mục",
+      "descriptionLabel": "Mô tả quiz * (hỗ trợ Rich Text)",
+      "descriptionPlaceholder": "Mô tả chi tiết về quiz của bạn... Bạn có thể thêm định dạng, hình ảnh, video và nhiều hơn nữa!",
+      "difficultyLabel": "Độ khó *",
+      "difficultyPlaceholder": "Chọn mức độ khó",
+      "durationLabel": "Thời lượng (phút) *",
       "durationPlaceholder": "15",
-      "fillInfo": "Fill in information to create your quiz",
-      "imageLabel": "Image (optional)",
-      "imagePlaceholder": "Image URL representing the quiz...",
-      "noCategory": "Not selected",
-      "noDescription": "No description yet",
-      "noDifficulty": "Not selected",
-      "noTitle": "No title yet",
-      "preview": "Preview quiz information",
-      "previewImage": "Image:",
+      "fillInfo": "Điền thông tin để tạo quiz của bạn",
+      "imageLabel": "Ảnh (không bắt buộc)",
+      "imagePlaceholder": "URL ảnh đại diện cho quiz...",
+      "noCategory": "Chưa chọn",
+      "noDescription": "Chưa có mô tả",
+      "noDifficulty": "Chưa chọn",
+      "noTitle": "Chưa có tiêu đề",
+      "preview": "Xem trước thông tin quiz",
+      "previewImage": "Ảnh:",
       "previewImageAlt": "Xem trước ảnh bìa quiz",
       "durationValue": "{{count}} phút",
       "categoryOptions": {
@@ -861,17 +861,61 @@
       },
       "retakeAllowed": "✅ Cho phép",
       "retakeDisabled": "❌ Không cho phép",
-      "titleLabel": "Quiz title *",
-      "titlePlaceholder": "Enter an attractive title for your quiz..."
+      "titleLabel": "Tiêu đề quiz *",
+      "titlePlaceholder": "Nhập tiêu đề hấp dẫn cho quiz của bạn..."
     },
-    "loginRequired": "You need to login to create quizzes",
-    "publish": "Publish Quiz",
+    "loginRequired": "Bạn cần đăng nhập để tạo quiz",
+    "publish": "Xuất bản quiz",
     "steps": {
       "selectType": "Loại quiz",
-      "info": "Quiz Information",
+      "info": "Thông tin quiz",
       "resources": "Tài liệu học tập",
       "questions": "Câu hỏi",
-      "review": "Review & Publish"
+      "review": "Xem lại & xuất bản"
+    },
+    "type": {
+      "headerTitle": "Chọn kiểu quiz phù hợp",
+      "headerSubtitle": "Quyết định quiz của bạn có kèm tài liệu học tập hay chỉ tập trung vào câu hỏi.",
+      "cards": {
+        "withMaterials": {
+          "title": "Quiz kèm tài liệu",
+          "subtitle": "Dẫn dắt người học trước khi trả lời",
+          "description": "Đính kèm video, PDF và ghi chú để học viên xem trước khi bắt đầu quiz.",
+          "features": {
+            "learning": "Lộ trình học tập rõ ràng",
+            "progress": "Theo dõi hoàn thành tài liệu",
+            "completion": "Đánh dấu tài liệu bắt buộc"
+          },
+          "badge": "Phù hợp cho khóa học"
+        },
+        "standard": {
+          "title": "Quiz tiêu chuẩn",
+          "subtitle": "Trải nghiệm kiểm tra nhanh",
+          "description": "Tạo quiz gọn nhẹ chỉ tập trung vào câu hỏi và điểm số.",
+          "features": {
+            "speed": "Tạo & xuất bản trong vài phút",
+            "focus": "Giữ sự tập trung vào câu hỏi",
+            "assessment": "Lý tưởng cho kiểm tra nhanh"
+          },
+          "badge": "Phổ biến nhất"
+        }
+      },
+      "selected": "Đang được chọn",
+      "tip": {
+        "title": "Chưa biết chọn gì?",
+        "withMaterialsTitle": "Quiz kèm tài liệu:",
+        "withMaterialsDescription": "Thêm tài nguyên hỗ trợ và yêu cầu học viên xem trước khi làm bài.",
+        "standardTitle": "Quiz tiêu chuẩn:",
+        "standardDescription": "Phù hợp để kiểm tra nhanh mà không cần nội dung bổ sung."
+      },
+      "stats": {
+        "completionLabel": "Tỷ lệ hoàn thành trung bình",
+        "ratingLabel": "Đánh giá trung bình",
+        "durationLabel": "Thời gian hoàn thành điển hình",
+        "completionValue": "{{value}}%",
+        "ratingValue": "{{value}}/5",
+        "durationValue": "{{value}} phút"
+      }
     },
     "review": {
       "sections": {
@@ -905,9 +949,63 @@
       "acceptedVariationsLabel": "📝 Các cách viết khác:",
       "explanationLabel": "💡 Giải thích:"
     },
-    "title": "Create New Quiz"
+    "ai": {
+      "title": "Tạo câu hỏi bằng AI",
+      "subtitle": "Tạo câu hỏi từ prompt của bạn bằng AI",
+      "steps": {
+        "input": "Nhập liệu",
+        "generating": "Đang tạo",
+        "preview": "Xem trước"
+      },
+      "inputMode": {
+        "prompt": "Nhập văn bản",
+        "file": "Tải file lên"
+      },
+      "promptLabel": "Nhập chủ đề hoặc nội dung",
+      "promptPlaceholder": "Ví dụ: \"Tạo câu hỏi về Chiến tranh thế giới thứ II, tập trung vào các trận đánh lớn và nhân vật chủ chốt\"",
+      "promptHint": "Hãy cụ thể để có kết quả tốt hơn. Tối thiểu 10 ký tự.",
+      "fileLabel": "Tải file lên để phân tích",
+      "fileHint": "Tải lên ảnh, PDF, hoặc tài liệu. AI sẽ phân tích và tạo câu hỏi.",
+      "typesLabel": "Loại câu hỏi",
+      "types": {
+        "multiple": "Trắc nghiệm",
+        "boolean": "Đúng/Sai",
+        "shortAnswer": "Trả lời ngắn",
+        "checkbox": "Chọn nhiều đáp án",
+        "ordering": "Sắp xếp thứ tự",
+        "matching": "Ghép cặp",
+        "fillBlanks": "Điền vào chỗ trống",
+        "audio": "Câu hỏi nghe"
+      },
+      "numQuestionsLabel": "Số lượng câu hỏi",
+      "difficultyLabel": "Độ khó",
+      "languageLabel": "Ngôn ngữ",
+      "generate": "Tạo câu hỏi",
+      "generating": "Đang tạo câu hỏi...",
+      "generatingHint": "AI đang phân tích prompt và tạo câu hỏi chất lượng cao. Vui lòng đợi một chút.",
+      "reviewTitle": "Xem lại câu hỏi đã tạo",
+      "selected": "đã chọn",
+      "addToQuiz": "Thêm vào Quiz",
+      "success": "Đã tạo {{count}} câu hỏi!",
+      "applied": "Đã thêm {{count}} câu hỏi vào quiz!",
+      "errors": {
+        "emptyPrompt": "Vui lòng nhập prompt",
+        "promptTooShort": "Prompt phải có ít nhất 10 ký tự",
+        "generationFailed": "Tạo câu hỏi thất bại",
+        "noQuestions": "Không tạo được câu hỏi nào",
+        "unexpected": "Đã xảy ra lỗi không mong muốn",
+        "noSelection": "Vui lòng chọn ít nhất một câu hỏi",
+        "noFile": "Vui lòng chọn file để tải lên"
+      }
+    },
+    "points": "điểm",
+    "title": "Tạo quiz mới"
   },
   "createdAt": "Tạo lúc",
+  "language": {
+    "vietnamese": "Tiếng Việt",
+    "english": "Tiếng Anh"
+  },
   "creator": {
     "createNewQuiz": "Tạo quiz mới",
     "loginMessage": "Bạn cần đăng nhập để truy cập trang Người tạo",
@@ -1032,7 +1130,8 @@
   "difficulty": {
     "easy": "Dễ",
     "hard": "Khó",
-    "medium": "Trung bình"
+    "medium": "Trung bình",
+    "mixed": "Hỗn hợp"
   },
   "dinhDangFile": "📋 Định dạng file:",
   "dinhDangFileKhongDuocHoTro": "Định dạng file không được hỗ trợ",
@@ -3015,6 +3114,15 @@
     "confirmDelete": "Xác nhận xóa người dùng?"
   },
   "fileUpload": {
+    "dragDrop": "Kéo & thả file vào đây, hoặc bấm để chọn",
+    "supportedFormats": "Hỗ trợ: Ảnh (PNG, JPG, GIF, WebP), PDF, Word (DOC, DOCX), Text (TXT)",
+    "maxSize": "Dung lượng tối đa: {{size}}",
+    "selectFile": "Chọn file",
+    "removeFile": "Xóa file",
+    "errors": {
+      "tooLarge": "Dung lượng file vượt quá {{max}}",
+      "invalidType": "Định dạng file không được hỗ trợ"
+    },
     "unsupportedFormat": "Định dạng file không được hỗ trợ",
     "processing": "Đang xử lý file: {{filename}}...",
     "cannotReadFile": "Không thể đọc file",
@@ -3303,13 +3411,19 @@
     "minPasswordLength": "Nhập mật khẩu (tối thiểu 6 ký tự)",
     "questionContent": "Nội dung câu hỏi",
     "enterCorrectAnswer": "Nhập đáp án chính xác...",
+    "correctAnswer": "Nhập đáp án đúng",
     "imageDescription": "Mô tả ảnh (tùy chọn)",
     "imageUrlOptional": "URL ảnh",
     "answerExplanation": "Giải thích đáp án (tùy chọn)",
     "shareExperience": "Chia sẻ trải nghiệm của bạn về quiz này...",
     "avatarUrl": "https://example.com/avatar.jpg",
     "enterQuestionHere": "Nhập câu hỏi của bạn tại đây...",
-    "explainAnswer": "Giải thích tại sao đây là câu trả lời đúng..."
+    "explainAnswer": "Giải thích tại sao đây là câu trả lời đúng...",
+    "audioUrl": "URL file âm thanh hoặc link upload",
+    "orderingItemText": "Nội dung mục {{number}}",
+    "leftItemText": "Mục bên trái {{number}}",
+    "rightItemText": "Mục bên phải {{number}}",
+    "textWithBlanks": "Nhập văn bản với cú pháp {{chỗ trống}}. VD: Thủ đô của Pháp là {{Paris}}"
   },
   "passwordModal": {
     "title": "Quiz được bảo vệ",
@@ -3368,7 +3482,95 @@
     "shareLinkAndPassword": "Chia sẻ link + mật khẩu",
     "setPassword": "Đặt mật khẩu",
     "userNeedPasswordToTake": "Người dùng cần nhập mật khẩu này để làm bài",
-    "shareLink": "📎 Link chia sẻ",
+  "shareLink": "📎 Link chia sẻ",
+  "shareLinkDescriptionPublic": "Sau khi xuất bản, bạn sẽ nhận được link để chia sẻ. Mọi người click vào link sẽ làm quiz ngay lập tức.",
+  "shareLinkDescriptionPassword": "Sau khi xuất bản, bạn sẽ nhận được link để chia sẻ. Người dùng cần nhập mật khẩu để bắt đầu làm bài.",
+    "bulkImport": {
+      "button": "Tải file",
+      "modalTitle": "📁 Tải file câu hỏi",
+      "instructionsTitle": "📋 Định dạng file:",
+      "instructions": {
+        "column1": "Cột 1: Câu hỏi",
+        "columns2To5": "Cột 2-5: Đáp án A, B, C, D",
+        "column6": "Cột 6: Đáp án đúng (A/B/C/D)",
+        "column7": "Cột 7: Giải thích (tùy chọn)",
+        "column8": "Cột 8: Điểm (mặc định 10)"
+      },
+      "downloadCsvTemplate": "📄 Tải mẫu CSV",
+      "downloadExcelTemplate": "📊 Tải mẫu Excel",
+      "selectCsv": "📄 Chọn file CSV:",
+      "selectExcel": "📊 Chọn file Excel:",
+      "tipTitle": "💡 Mẹo:",
+      "tipDescription": "Sử dụng template để đảm bảo định dạng đúng. File có thể chứa nhiều câu hỏi, mỗi câu hỏi trên một dòng.",
+      "uploading": "Đang xử lý file...",
+      "fileTypes": {
+        "csv": "CSV",
+        "excel": "Excel"
+      },
+      "toast": {
+        "invalidFile": "Vui lòng chọn file {{type}} hợp lệ.",
+        "noQuestions": "Không tìm thấy câu hỏi hợp lệ trong file.",
+        "success_one": "Đã import thành công {{count}} câu hỏi!",
+        "success_other": "Đã import thành công {{count}} câu hỏi!",
+        "parseError": "Có lỗi xảy ra khi đọc file. Vui lòng kiểm tra định dạng file."
+      },
+      "template": {
+        "headers": {
+          "question": "Câu hỏi",
+          "answerA": "Đáp án A",
+          "answerB": "Đáp án B",
+          "answerC": "Đáp án C",
+          "answerD": "Đáp án D",
+          "correctAnswer": "Đáp án đúng (A/B/C/D)",
+          "explanation": "Giải thích (tùy chọn)",
+          "points": "Điểm (mặc định 10)"
+        },
+        "sample": {
+          "question": "JavaScript là ngôn ngữ gì?",
+          "answerA": "Ngôn ngữ lập trình",
+          "answerB": "Ngôn ngữ đánh dấu",
+          "answerC": "Hệ quản trị cơ sở dữ liệu",
+          "answerD": "Hệ điều hành",
+          "correctAnswer": "A",
+          "explanation": "JavaScript là ngôn ngữ lập trình phổ biến",
+          "points": "10"
+        }
+      }
+    },
+    "simpleAI": {
+      "poweredBy": "Vận hành bởi Google Generative AI",
+      "bannerTitle": "Sử dụng AI miễn phí",
+      "bannerDescription": "Firebase Cloud Functions với Google Gemini 2.0 Flash - Tạo câu hỏi chất lượng cao từ nội dung của bạn.",
+      "fields": {
+        "numQuestions": "Số lượng câu hỏi",
+        "difficulty": "Độ khó",
+        "language": "Ngôn ngữ",
+        "temperature": "Mức sáng tạo (Temperature): {{value}}",
+        "content": "Nội dung ({{length}} ký tự)"
+      },
+      "difficultyOptions": {
+        "mixed": "🎯 Đa dạng"
+      },
+      "languages": {
+        "vi": "🇻🇳 Tiếng Việt",
+        "en": "🇬🇧 English"
+      },
+      "temperatureScale": {
+        "precise": "Chính xác",
+        "creative": "Sáng tạo"
+      },
+      "reviewTitle": "Đã tạo {{count}} câu hỏi",
+      "reviewTitle_one": "Đã tạo {{count}} câu hỏi",
+      "reviewTitle_other": "Đã tạo {{count}} câu hỏi",
+      "actions": {
+        "goBack": "← Tạo lại",
+        "deleteQuestion": "Xóa câu hỏi này",
+        "addToQuizButton": "Thêm {{count}} câu hỏi",
+        "addToQuizButton_one": "Thêm {{count}} câu hỏi",
+        "addToQuizButton_other": "Thêm {{count}} câu hỏi"
+      },
+      "explanationPrefix": "💡"
+    },
     "questions": "Câu hỏi",
     "addQuestion": "Thêm câu hỏi",
     "noQuestionsYet": "Chưa có câu hỏi nào",
@@ -3381,6 +3583,10 @@
     "trueFalse": "Đúng/Sai",
     "fillBlank": "Điền từ",
     "imageChoice": "Chọn ảnh",
+    "audioQuestion": "Câu hỏi nghe",
+    "orderingQuestion": "Sắp xếp thứ tự",
+    "matchingQuestion": "Ghép cặp",
+    "fillBlanksQuestion": "Điền chỗ trống",
     "multipleChoiceAnswers": "Đáp án trắc nghiệm",
     "addAnswer": "+ Thêm đáp án",
     "trueFalseQuestion": "Câu hỏi Đúng/Sai",
@@ -3392,6 +3598,23 @@
     "imageAnswers": "Chọn ảnh đáp án",
     "addImage": "+ Thêm ảnh",
     "correctAnswerLabel": "Đáp án đúng",
+    "audioFile": "File âm thanh",
+    "audioNotSupported": "Trình duyệt không hỗ trợ phát audio",
+    "orderingItems": "Các mục cần sắp xếp (Kéo để sắp xếp thứ tự đúng)",
+    "addItem": "+ Thêm mục",
+    "orderingHint": "Học viên sẽ kéo thả các mục để sắp xếp theo đúng thứ tự (1, 2, 3...)",
+    "matchingPairs": "Các cặp ghép",
+    "addPair": "+ Thêm cặp",
+    "leftColumn": "Cột trái",
+    "rightColumn": "Cột phải",
+    "matchingHint": "Học viên sẽ ghép các mục từ cột trái với cột phải",
+    "removePair": "Xóa cặp",
+    "fillBlanksText": "Đoạn văn có chỗ trống",
+    "parseBlanks": "Phân tích chỗ trống",
+    "detectedBlanks": "Các chỗ trống đã phát hiện",
+    "blankNumber": "Chỗ trống #{{number}}",
+    "caseSensitive": "Phân biệt hoa thường",
+    "fillBlanksHint": "Dùng cú pháp {{đáp án}} để đánh dấu chỗ trống. Ví dụ: Thủ đô của Pháp là {{Paris}}",
     "pending": "⏳ Chờ duyệt",
     "approved": "✅ Đã duyệt",
     "rejected": "❌ Từ chối",

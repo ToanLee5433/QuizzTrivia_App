@@ -1,23 +1,16 @@
 import { LearningResource } from '../../types/learning';
+import { Question as GlobalQuestion, QuestionType } from '../../types'; // 🔧 Import from global types
 
-// Kiểu dữ liệu cho câu hỏi
+// Re-export for backward compatibility
+export type Question = GlobalQuestion;
+export type { QuestionType };
+
+// Legacy Answer type (kept for compatibility)
 export interface Answer {
   id: string;
   text: string;
   isCorrect: boolean;
-  imageUrl?: string; // Cho dạng chọn ảnh
-}
-
-export interface Question {
-  id: string;
-  text: string;
-  type: 'multiple' | 'boolean' | 'short_answer' | 'image';
-  answers: Answer[];
-  explanation?: string;
-  points: number;
   imageUrl?: string;
-  correctAnswer?: string; // Cho dạng điền từ
-  acceptedAnswers?: string[]; // Cho dạng điền từ - các từ được chấp nhận
 }
 
 export interface QuizFormData {

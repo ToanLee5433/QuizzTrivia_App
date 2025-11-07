@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 interface PrivacyStepProps {
   privacy: 'public' | 'password';
   password?: string;
-  onChange: (field: string, value: any) => void;
+  onChange: (field: 'privacy' | 'password', value: string) => void;
 }
 
 const PrivacyStep: React.FC<PrivacyStepProps> = ({ privacy, password = '', onChange }) => {
@@ -36,20 +36,20 @@ const PrivacyStep: React.FC<PrivacyStepProps> = ({ privacy, password = '', onCha
           <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center mb-4 shadow-lg">
             <Globe className="w-7 h-7 text-white" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Công khai</h3>
-          <p className="text-sm text-gray-600 mb-4">Mọi người đều có thể xem và làm quiz ngay lập tức</p>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">{t('quizCreation.publicTitle')}</h3>
+          <p className="text-sm text-gray-600 mb-4">{t('quizCreation.publicDesc')}</p>
           <div className="space-y-2 text-sm text-gray-700">
             <div className="flex items-center gap-2">
               <Eye className="w-4 h-4 text-blue-600" />
-              <span>Hiển thị trong danh sách</span>
+              <span>{t('quizCreation.visibleInList')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Share2 className="w-4 h-4 text-blue-600" />
-              <span>Có link chia sẻ</span>
+              <span>{t('quizCreation.hasShareLink')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Globe className="w-4 h-4 text-blue-600" />
-              <span>Làm ngay không cần mật khẩu</span>
+              <span>{t('quizCreation.noPasswordNeeded')}</span>
             </div>
           </div>
         </div>
@@ -66,20 +66,20 @@ const PrivacyStep: React.FC<PrivacyStepProps> = ({ privacy, password = '', onCha
           <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center mb-4 shadow-lg">
             <Lock className="w-7 h-7 text-white" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Có mật khẩu</h3>
-          <p className="text-sm text-gray-600 mb-4">Mọi người thấy quiz nhưng cần mật khẩu để làm bài</p>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">{t('quizCreation.withPasswordTitle')}</h3>
+          <p className="text-sm text-gray-600 mb-4">{t('quizCreation.withPasswordDesc')}</p>
           <div className="space-y-2 text-sm text-gray-700">
             <div className="flex items-center gap-2">
               <Eye className="w-4 h-4 text-purple-600" />
-              <span>Hiển thị trong danh sách</span>
+              <span>{t('quizCreation.visibleInList')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Key className="w-4 h-4 text-purple-600" />
-              <span>Yêu cầu mật khẩu để làm bài</span>
+              <span>{t('quizCreation.requirePasswordToTake')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Share2 className="w-4 h-4 text-purple-600" />
-              <span>Chia sẻ link + mật khẩu</span>
+              <span>{t('quizCreation.shareLinkAndPassword')}</span>
             </div>
           </div>
         </div>
@@ -144,8 +144,8 @@ const PrivacyStep: React.FC<PrivacyStepProps> = ({ privacy, password = '', onCha
             <h4 className="font-bold text-blue-900 mb-1">{t('quizCreation.shareLink')}</h4>
             <p className="text-sm text-blue-800">
               {privacy === 'public' 
-                ? 'Sau khi xuất bản, bạn sẽ nhận được link để chia sẻ. Mọi người click vào link sẽ làm quiz ngay lập tức.'
-                : 'Sau khi xuất bản, bạn sẽ nhận được link để chia sẻ. Người dùng cần nhập mật khẩu để bắt đầu làm bài.'
+                ? t('quizCreation.shareLinkDescriptionPublic')
+                : t('quizCreation.shareLinkDescriptionPassword')
               }
             </p>
           </div>
