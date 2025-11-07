@@ -803,7 +803,12 @@
   "creator": {
     "createNewQuiz": "Tạo quiz mới",
     "loginMessage": "Bạn cần đăng nhập để truy cập trang Người tạo",
-    "roleRequired": "Bạn cần vai trò Creator hoặc Admin để truy cập trang này"
+    "roleRequired": "Bạn cần vai trò Creator hoặc Admin để truy cập trang này",
+    "nav": {
+      "backToHome": "Quay về Trang chủ",
+      "myQuizzes": "Quiz của tôi",
+      "createQuiz": "Tạo quiz mới"
+    }
   },
   "creatorNguoiTao": "Creator (Người tạo)",
   "cuNhat": "📅 Cũ nhất",

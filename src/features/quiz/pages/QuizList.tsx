@@ -2,6 +2,7 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { AppDispatch, RootState } from '../../../lib/store';
+import { ROUTES } from '../../../config/routes';
 import QuizCard, { QuizCardSkeleton } from '../components/QuizCard';
 import QuizStats from '../components/QuizStats';
 import { Quiz } from '../types';
@@ -273,7 +274,7 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
               </button>
               {(user?.role === 'creator' || user?.role === 'admin') && (
                 <button 
-                  onClick={() => navigate('/creator')}
+                  onClick={() => navigate(ROUTES.CREATOR_NEW_QUIZ)}
                   className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -520,7 +521,7 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
                   {(user?.role === 'creator' || user?.role === 'admin') && (
                     <button 
                       className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors" 
-                      onClick={()=>navigate('/creator')}
+                      onClick={()=>navigate(ROUTES.CREATOR_NEW_QUIZ)}
                     >
                       ➕ {t('quiz.createNew')}
                     </button>

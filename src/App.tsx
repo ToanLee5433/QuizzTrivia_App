@@ -36,7 +36,7 @@ const CreateQuizPage = React.lazy(() => import('./features/quiz/pages/CreateQuiz
 // const OfflineSettingsPage = React.lazy(() => import('./pages/OfflineSettingsPage'));
 // import { OfflineStatusIndicator } from './components/OfflineStatusIndicator';
 const EditQuizPageAdvanced = React.lazy(() => import('./features/quiz/pages/EditQuizPageAdvanced'));
-const Creator = React.lazy(() => import('./shared/pages/Creator'));
+const CreatorLayout = React.lazy(() => import('./features/creator/layouts/CreatorLayout'));
 
 // Stage 4: New Features - Offline & Multiplayer
 // const OfflineQuizManager = React.lazy(() => import('./features/offline/components/OfflineQuizManager'));
@@ -394,31 +394,34 @@ const AppContent: React.FC = () => {
           </ProtectedRoute>
         } />
         
-        {/* Stage 3: Creator Routes - REMOVED (Creator role eliminated) */}
+        {/* Stage 3: Creator Routes - NEW NESTED STRUCTURE */}
         
-        <Route path="/create-quiz" element={
-          <ProtectedRoute requiredRole={["admin", "creator"]}>
-            <Suspense fallback={<LoadingFallback />}>
-              <CreateQuizPage />
-            </Suspense>
-          </ProtectedRoute>
-        } />
-
         <Route path="/creator" element={
-          <ProtectedRoute>
-            <Suspense fallback={<LoadingFallback />}>
-              <Creator />
-            </Suspense>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/my-quizzes" element={
-          <ProtectedRoute>
+          <Suspense fallback={<LoadingFallback />}>
+            <CreatorLayout />
+          </Suspense>
+        }>
+          {/* Index route redirects to my-quizzes */}
+          <Route index element={<Navigate to="my" replace />} />
+          
+          {/* My Quizzes sub-route */}
+          <Route path="my" element={
             <Suspense fallback={<LoadingFallback />}>
               <MyQuizzesPage />
             </Suspense>
-          </ProtectedRoute>
-        } />
+          } />
+          
+          {/* Create New Quiz sub-route */}
+          <Route path="new" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <CreateQuizPage />
+            </Suspense>
+          } />
+        </Route>
+
+        {/* Legacy route redirects for backward compatibility */}
+        <Route path="/create-quiz" element={<Navigate to="/creator/new" replace />} />
+        <Route path="/my-quizzes" element={<Navigate to="/creator/my" replace />} />
 
         <Route path="/quiz-stats/:id" element={
           <ProtectedRoute>

@@ -803,7 +803,12 @@
   "creator": {
     "createNewQuiz": "Create New Quiz",
     "loginMessage": "You need to login to access the Creator page",
-    "roleRequired": "You need Creator or Admin role to access this page"
+    "roleRequired": "You need Creator or Admin role to access this page",
+    "nav": {
+      "backToHome": "Back to Home",
+      "myQuizzes": "My Quizzes",
+      "createQuiz": "Create New Quiz"
+    }
   },
   "creatorNguoiTao": "Creator (Người tạo)",
   "cuNhat": "📅 Cũ nhất",

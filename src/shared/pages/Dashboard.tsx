@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { RootState } from '../../lib/store';
+import { ROUTES } from '../../config/routes';
 
 // Dashboard card component giống style Admin
 const DashboardCard = React.memo(({ 
@@ -105,7 +106,7 @@ const Dashboard = React.memo(() => {
           
           {(user?.role === 'creator' || user?.role === 'admin') && (
             <DashboardCard
-              to="/creator"
+              to={ROUTES.CREATOR}
               emoji="✨"
               bgColor="bg-purple-100"
               title={t('nav.creator')}

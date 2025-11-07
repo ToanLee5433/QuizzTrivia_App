@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../lib/store';
+import { ROUTES } from '../../../../config/routes';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../../../lib/firebase/config';
 import { toast } from 'react-toastify';
@@ -79,13 +80,13 @@ const CreateQuizPage: React.FC = () => {
     if (hasUnsavedChanges) {
       setShowExitConfirm(true);
     } else {
-      navigate('/creator');
+      navigate(ROUTES.CREATOR_MY_QUIZZES);
     }
   };
 
   const confirmExit = () => {
     setShowExitConfirm(false);
-    navigate('/creator');
+    navigate(ROUTES.CREATOR_MY_QUIZZES);
   };
 
   // Kiểm tra quyền truy cập

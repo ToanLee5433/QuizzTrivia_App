@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ROUTES } from '../../config/routes';
 
 interface EmptyStateProps {
   type: 'quizzes' | 'reviews' | 'favorites';
@@ -25,7 +26,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
           title: 'Chưa có quiz nào',
           description: 'Hãy tạo quiz đầu tiên của bạn để bắt đầu!',
           actionLabel: 'Tạo Quiz Mới',
-          actionUrl: '/create-quiz'
+          actionUrl: ROUTES.CREATOR_NEW_QUIZ
         };
       case 'reviews':
         return {

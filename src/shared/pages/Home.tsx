@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../lib/store';
+import { ROUTES } from '../../config/routes';
 import { fetchQuizzes } from '../../features/quiz/store';
 import { Quiz } from '../../features/quiz/types';
 import QuizCard from '../../features/quiz/components/QuizCard';
@@ -143,7 +144,7 @@ const Home: React.FC = () => {
                 <span className="mr-2">🎮</span>Chơi Multiplayer
               </Button>
             </Link>
-            <Link to="/creator">
+            <Link to={ROUTES.CREATOR}>
               <Button className="w-full sm:w-auto border-2 border-white text-white hover:bg-white hover:text-blue-600 font-bold px-8 py-4 text-lg rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
                 <span className="mr-2">✨</span>{t("creator.createNewQuiz")}
               </Button>
@@ -262,7 +263,7 @@ const Home: React.FC = () => {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-3">{t('home.trending.noQuizzes')}</h3>
               <p className="text-gray-600 mb-6">{t('home.trending.createFirst')}</p>
-              <Link to="/creator">
+              <Link to={ROUTES.CREATOR}>
                 <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-2xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-300">
                   {t('home.trending.createNow')}
                 </Button>
@@ -286,7 +287,7 @@ const Home: React.FC = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Link 
-            to="/creator" 
+            to={ROUTES.CREATOR}
             className="group bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-2xl p-8 transition-all duration-300 transform hover:scale-105 hover:shadow-xl border border-blue-200"
           >
             <div className="text-blue-600 mb-6 group-hover:scale-110 transition-transform duration-300">
