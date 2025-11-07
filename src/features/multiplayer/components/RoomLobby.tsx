@@ -56,7 +56,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
   const [copySuccess, setCopySuccess] = useState(false);
   const [readyCountdown, setReadyCountdown] = useState<number | null>(null);
 
-  const players = roomData?.players || [];
+  const players = useMemo(() => roomData?.players || [], [roomData?.players]);
   const readyCount = useMemo(() => players.filter(p => p.isReady).length, [players]);
   const onlineCount = useMemo(() => players.filter(p => p.isOnline).length, [players]);
   const allReady = useMemo(() => players.length >= 2 && players.every(p => p.isReady), [players]);

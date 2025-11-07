@@ -29,8 +29,8 @@ import type { GameResults as GameResultsType } from '../types/index';
 export interface MultiplayerState {
   currentState: 'mode-selection' | 'create-room' | 'join-room' | 'lobby' | 'game' | 'results';
   roomId?: string;
-  roomData?: any; // Complex type, needs full refactor
-  gameData?: any; // Complex type, needs full refactor
+  roomData?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  gameData?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   results?: GameResultsType;
   error?: string;
   isConnecting: boolean;
@@ -55,7 +55,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
   initialRoomId
 }) => {
   const { t } = useTranslation();
-  const [selectedQuiz] = useState<any>(initialSelectedQuiz);
+  const [selectedQuiz] = useState<Quiz | undefined>(initialSelectedQuiz);
   const [state, setState] = useState<MultiplayerState>({
     currentState: 'mode-selection', // Luôn bắt đầu từ mode-selection vì quiz đã được chọn từ MultiplayerLobby
     isConnecting: false,
@@ -63,7 +63,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
   });
   
   const [multiplayerService, setMultiplayerService] = useState<MultiplayerServiceInterface | null>(null);
-  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatMessages, setChatMessages] = useState<any[]>([]); // eslint-disable-line @typescript-eslint/no-explicit-any
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
   const [readyCountdown, setReadyCountdown] = useState<number | null>(null);
   const [joinError, setJoinError] = useState<string | undefined>(undefined);
@@ -106,7 +106,8 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
     return () => {
       service.disconnect();
     };
-  }, [currentUserId, currentUserName, t]);
+  }, [currentUserId, currentUserName, t]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Handlers are intentionally omitted from dependencies to prevent infinite loop from re-subscription
 
   // Try resuming room from state (if page reload)
   useEffect(() => {
@@ -117,7 +118,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
     multiplayerService.resumeRoom(previousRoomId).catch(() => {});
     // Set UI state to lobby immediately while streams resume
     setState(prev => ({ ...prev, currentState: 'lobby', roomId: previousRoomId }));
-  }, [multiplayerService, connectionStatus]);
+  }, [multiplayerService, connectionStatus, initialRoomId, state.roomId, state.roomData?.id]);
 
   // Event handlers
   const handleRoomUpdate = useCallback((roomData: any) => {
@@ -204,7 +205,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
     }));
   }, []);
 
-  const handleGameFinish = useCallback((results: any) => {
+  const handleGameFinish = useCallback((results: GameResultsType) => {
     setState(prev => ({ 
       ...prev, 
       currentState: 'results', 
@@ -249,12 +250,12 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
   const handleConnectionLost = useCallback(() => {
     setConnectionStatus('disconnected');
     // toast.warning(t('multiplayer.errors.connectionLost'));
-  }, [t]);
+  }, []);
 
   const handleConnectionRestored = useCallback(() => {
     setConnectionStatus('connected');
     // toast.success(t('multiplayer.success.connectionRestored'));
-  }, [t]);
+  }, []);
 
   // Navigation handlers
   const handleModeSelection = (mode: 'create' | 'join') => {
@@ -366,22 +367,22 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
         return (
 				<CreateRoomModal
             isOpen={true}
-					onClose={handleBackToModeSelection}
+				onClose={handleBackToModeSelection}
             onCreateRoom={async (roomConfig) => {
-						try {
-							setCreateLoading(true);
-							if (!multiplayerService || connectionStatus !== 'connected') {
-								toast.info(t('multiplayer.errors.reconnecting'));
-								return;
-							}
-							const result = await multiplayerService.createRoom(roomConfig as any, selectedQuiz);
-							if (result) {
-								handleRoomCreated(result.room.id, result.room);
-							}
-						} catch (error: any) {
-							console.error('Failed to create room:', error);
-							const errorMessage = error.message || t('multiplayer.errors.createRoomFailed');
-							toast.error(errorMessage);
+					try {
+						setCreateLoading(true);
+						if (!multiplayerService || connectionStatus !== 'connected') {
+							toast.info(t('multiplayer.errors.reconnecting'));
+							return;
+						}
+						const result = await multiplayerService.createRoom(roomConfig as any, selectedQuiz?.id);
+						if (result) {
+							handleRoomCreated(result.room.id, result.room);
+						}
+					} catch (error: any) {
+						console.error('Failed to create room:', error);
+						const errorMessage = error.message || t('multiplayer.errors.createRoomFailed');
+						toast.error(errorMessage);
 						} finally {
 							setCreateLoading(false);
 						}
@@ -519,8 +520,8 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
             {/* Game Area - Full width on mobile */}
             <div className="flex-1 overflow-y-auto">
               <MultiplayerQuiz
-                gameData={state.gameData}
-                roomData={state.roomData}
+                gameData={state.gameData ?? null}
+                roomData={state.roomData ?? null}
                 currentUserId={currentUserId}
                 currentUserName={currentUserName}
                 multiplayerService={multiplayerService}
@@ -585,7 +586,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
             {state.roomData && (
               <div className="flex items-center gap-2 text-white">
                 <Users size={16} />
-                <span>{state.roomData.players?.length || 0}/{state.roomData.maxPlayers || 10}</span>
+                <span>{state.roomData.players?.length || 0}/{state.roomData.settings?.maxPlayers || 10}</span>
               </div>
             )}
           </div>

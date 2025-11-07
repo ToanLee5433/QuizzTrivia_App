@@ -1,8 +1,10 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { GripVertical, ChevronUp, ChevronDown } from 'lucide-react';
 import { SortableItemProps } from '../types';
 import QuestionEditor from './QuestionEditor';
+import { useTranslation } from 'react-i18next';
 
 const SortableItem: React.FC<SortableItemProps> = ({
   id,
@@ -13,6 +15,7 @@ const SortableItem: React.FC<SortableItemProps> = ({
   moveQuestion,
   totalQuestions,
 }) => {
+  const { t } = useTranslation();
   const {
     attributes,
     listeners,
@@ -39,27 +42,27 @@ const SortableItem: React.FC<SortableItemProps> = ({
           {...attributes}
           {...listeners}
           className="p-2 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
-          title="Kéo để sắp xếp"
+          title={t('createQuiz.questions.dragToReorder')}
         >
-          ⋮⋮
+          <GripVertical className="w-4 h-4" aria-hidden="true" />
         </div>
         <button
           type="button"
           onClick={() => moveQuestion(index, index - 1)}
           disabled={index === 0}
           className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
-          title="Di chuyển lên"
+          title={t('createQuiz.questions.moveUp')}
         >
-          ⬆️
+          <ChevronUp className="w-4 h-4" aria-hidden="true" />
         </button>
         <button
           type="button"
           onClick={() => moveQuestion(index, index + 1)}
           disabled={index === totalQuestions - 1}
           className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
-          title="Di chuyển xuống"
+          title={t('createQuiz.questions.moveDown')}
         >
-          ⬇️
+          <ChevronDown className="w-4 h-4" aria-hidden="true" />
         </button>
       </div>
       <QuestionEditor

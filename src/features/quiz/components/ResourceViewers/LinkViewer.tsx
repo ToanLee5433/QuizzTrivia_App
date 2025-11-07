@@ -41,7 +41,7 @@ export const LinkViewer: React.FC<LinkViewerProps> = ({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [timeSpent, confirmed]);
+  }, [timeSpent, confirmed, onProgressUpdate]);
 
   const handleConfirm = () => {
     setConfirmed(true);

@@ -82,6 +82,15 @@ export interface Quiz {
   // **PRIVACY SETTINGS**: Advanced privacy controls
   privacy?: 'public' | 'unlisted' | 'private' | 'password-protected';
   password?: string; // Encrypted password for password-protected quizzes
+  
+  // 🔒 Password Protection Data
+  pwd?: {
+    enabled: boolean;
+    algo: string;
+    salt: string;
+    hash: string;
+  };
+  
   allowedUsers?: string[]; // User IDs who can access private quiz
   shareToken?: string; // Unique token for sharing unlisted/private quizzes
   expiresAt?: Date; // Expiration date for shared links

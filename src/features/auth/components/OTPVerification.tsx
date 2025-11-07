@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { verifyOTP, generateAndSendOTP, getOTPExpiryTime } from '../services/otpService';
 import { toast } from 'react-toastify';
 import { Mail, RefreshCw, CheckCircle, Timer, ArrowLeft } from 'lucide-react';
@@ -86,7 +86,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
   };
 
   // Verify OTP
-  const handleVerifyOTP = async () => {
+  const handleVerifyOTP = useCallback(async () => {
     const otpCode = otp.join('');
     if (otpCode.length !== 6) {
       toast.error(t('auth.otp.errors.incomplete'));
@@ -127,7 +127,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [otp, email, onVerificationSuccess, t]);
 
   // Resend OTP
   const handleResendOTP = async () => {
@@ -161,7 +161,7 @@ const OTPVerification: React.FC<OTPVerificationProps> = ({
     if (otpCode.length === 6 && !loading) {
       handleVerifyOTP();
     }
-  }, [otp]);
+  }, [otp, loading, handleVerifyOTP]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">

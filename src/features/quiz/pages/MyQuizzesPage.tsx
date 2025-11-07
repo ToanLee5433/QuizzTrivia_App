@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
@@ -26,40 +26,19 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SafeHTML from '../../../shared/components/ui/SafeHTML';
+import { Quiz as BaseQuiz } from '../types';
 
-interface Quiz {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  difficulty: 'easy' | 'medium' | 'hard';
-  questions: any[];
-  createdAt: Date;
-  updatedAt: Date;
-  status: 'pending' | 'approved' | 'rejected' | 'draft';
-  createdBy: string;
-  isPublished: boolean;
+type CreatorQuiz = Omit<BaseQuiz, 'havePassword'> & {
+  havePassword?: 'public' | 'password';
+  editRequests?: EditRequest[];
+  plays?: number;
+  avgRating?: number;
+  isDraft?: boolean;
   views?: number;
   attempts?: number;
   completions?: number;
   averageScore?: number;
-  plays?: number;
-  avgRating?: number;
-  editRequests?: EditRequest[];
-  quizType?: 'with-materials' | 'standard'; // 🆕 Quiz type
-  havePassword?: 'public' | 'password'; // 🔒 Password protection
-  password?: string; // 🔒 Password value
-  isDraft?: boolean; // 📝 Draft flag
-  imageUrl?: string; // 🖼️ Cover image
-  resources?: Array<{
-    id: string;
-    type: 'video' | 'pdf' | 'image' | 'link' | 'slides';
-    title: string;
-    description?: string;
-    url: string;
-    required: boolean;
-  }>;
-}
+};
 
 interface EditRequest {
   id: string;
@@ -78,26 +57,20 @@ const MyQuizzesPage: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
   
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [quizzes, setQuizzes] = useState<CreatorQuiz[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all'); // New: Filter by quiz type
   const [showEditRequestModal, setShowEditRequestModal] = useState(false);
-  const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
+  const [selectedQuiz, setSelectedQuiz] = useState<CreatorQuiz | null>(null);
   const [editReason, setEditReason] = useState('');
   const [submittingRequest, setSubmittingRequest] = useState(false);
   
   // 🔗 Share Link functionality
   const [copiedQuizId, setCopiedQuizId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (user) {
-      loadMyQuizzes();
-    }
-  }, [user]);
-
-  const loadMyQuizzes = async () => {
+  const loadMyQuizzes = useCallback(async () => {
     if (!user) return;
     
     setLoading(true);
@@ -108,7 +81,7 @@ const MyQuizzesPage: React.FC = () => {
       );
       
       const snapshot = await getDocs(quizzesQuery);
-      const loadedQuizzes: Quiz[] = [];
+      const loadedQuizzes: CreatorQuiz[] = [];
       
       for (const docSnap of snapshot.docs) {
         const data = docSnap.data();
@@ -145,7 +118,7 @@ const MyQuizzesPage: React.FC = () => {
               ? data.updatedAt
               : new Date(),
           editRequests
-        } as Quiz);
+  } as CreatorQuiz);
       }
       
       // Sort in memory instead of using orderBy in query
@@ -158,7 +131,13 @@ const MyQuizzesPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, t]);
+
+  useEffect(() => {
+    if (user) {
+      loadMyQuizzes();
+    }
+  }, [user, loadMyQuizzes]);
 
   const handleEditRequest = async () => {
     if (!selectedQuiz || !editReason.trim()) {
@@ -176,7 +155,7 @@ const MyQuizzesPage: React.FC = () => {
         status: 'pending'
       });
 
-      toast.success(t('myQuizzes.editRequestSuccess'));
+  toast.success(t('quiz.myQuizzes.editRequestSuccess'));
       setShowEditRequestModal(false);
       setEditReason('');
       setSelectedQuiz(null);
@@ -195,19 +174,19 @@ const MyQuizzesPage: React.FC = () => {
     try {
       await navigator.clipboard.writeText(link);
       setCopiedQuizId(quizId);
-      toast.success(t('myQuizzes.copyLinkSuccess'));
+  toast.success(t('quiz.myQuizzes.copyLinkSuccess'));
       setTimeout(() => setCopiedQuizId(null), 2000);
     } catch (error) {
       console.error('Error copying link:', error);
-      toast.error(t('myQuizzes.copyLinkError'));
+  toast.error(t('quiz.myQuizzes.copyLinkError'));
     }
   };
   
   // 📤 Publish draft quiz (send to admin for approval)
-  const handlePublishDraft = async (quiz: Quiz) => {
+  const handlePublishDraft = async (quiz: CreatorQuiz) => {
     // Validate quiz has questions
     if (!quiz.questions || !Array.isArray(quiz.questions) || quiz.questions.length === 0) {
-      toast.error(t('myQuizzes.requireQuestion'));
+  toast.error(t('quiz.myQuizzes.requireQuestion'));
       return;
     }
     
@@ -216,18 +195,18 @@ const MyQuizzesPage: React.FC = () => {
       if (q.type === 'multiple' && (!q.answers || q.answers.length < 2)) {
         return true;
       }
-      if (q.type === 'multiple' && !q.answers.some((a: any) => a.isCorrect)) {
+  if (q.type === 'multiple' && !q.answers.some((a) => a.isCorrect)) {
         return true;
       }
       return false;
     });
     
     if (invalidQuestions.length > 0) {
-      toast.error(t('myQuizzes.invalidQuestions', { count: invalidQuestions.length }));
+  toast.error(t('quiz.myQuizzes.invalidQuestions', { count: invalidQuestions.length }));
       return;
     }
     
-    if (window.confirm(t('myQuizzes.confirmPublish', { title: quiz.title }))) {
+  if (window.confirm(t('quiz.myQuizzes.confirmPublish', { title: quiz.title }))) {
       try {
         const quizRef = doc(db, 'quizzes', quiz.id);
         await updateDoc(quizRef, {
@@ -237,28 +216,28 @@ const MyQuizzesPage: React.FC = () => {
           updatedAt: serverTimestamp()
         });
         
-        toast.success(t('myQuizzes.publishSuccess'));
+  toast.success(t('quiz.myQuizzes.publishSuccess'));
         loadMyQuizzes(); // Reload to see updated status
       } catch (error) {
         console.error('Error publishing draft:', error);
-        toast.error(t('myQuizzes.publishError'));
+  toast.error(t('quiz.myQuizzes.publishError'));
       }
     }
   };
 
   // 🔗 Copy quiz info (link + password if exists)
-  const handleCopyQuizInfo = async (quiz: Quiz) => {
+  const handleCopyQuizInfo = async (quiz: CreatorQuiz) => {
     const link = `${window.location.origin}/quiz/${quiz.id}/preview`;
     const textToCopy = quiz.havePassword === 'password' && quiz.password
-      ? t('myQuizzes.copyInfoTemplateWithPassword', { title: quiz.title, link, password: quiz.password })
-      : t('myQuizzes.copyInfoTemplate', { title: quiz.title, link });
+  ? t('quiz.myQuizzes.copyInfoTemplateWithPassword', { title: quiz.title, link, password: quiz.password })
+  : t('quiz.myQuizzes.copyInfoTemplate', { title: quiz.title, link });
     
     try {
       await navigator.clipboard.writeText(textToCopy);
-      toast.success(t('myQuizzes.copyInfoSuccess'));
+  toast.success(t('quiz.myQuizzes.copyInfoSuccess'));
     } catch (error) {
       console.error('Failed to copy:', error);
-      toast.error(t('myQuizzes.copyInfoError'));
+  toast.error(t('quiz.myQuizzes.copyInfoError'));
     }
   };
 
@@ -329,7 +308,7 @@ const MyQuizzesPage: React.FC = () => {
     );
   };
 
-  const canEdit = (quiz: Quiz): { allowed: boolean; reason?: string } => {
+  const canEdit = (quiz: CreatorQuiz): { allowed: boolean; reason?: string } => {
     // Check if there's a pending edit request
     const pendingRequest = quiz.editRequests?.find(req => req.status === 'pending');
     if (pendingRequest) {
@@ -345,7 +324,7 @@ const MyQuizzesPage: React.FC = () => {
     return { allowed: true };
   };
 
-  const handleEditQuiz = (quiz: Quiz) => {
+  const handleEditQuiz = (quiz: CreatorQuiz) => {
     const editPermission = canEdit(quiz);
     
     if (!editPermission.allowed) {
@@ -407,8 +386,8 @@ const MyQuizzesPage: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{t("myQuizzes.title")}</h1>
-            <p className="text-gray-600 mt-2">{t("myQuizzesDescription")}</p>
+            <h1 className="text-3xl font-bold text-gray-900">{t('quiz.myQuizzes.title')}</h1>
+            <p className="text-gray-600 mt-2">{t('quiz.myQuizzesDescription')}</p>
           </div>
         </div>
 
@@ -435,9 +414,15 @@ const MyQuizzesPage: React.FC = () => {
                 onChange={(e) => setTypeFilter(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="all">📚 {t("quiz.typeFilter.all")}</option>
-                <option value="with-materials">📖 {t("quiz.typeFilter.withMaterials")}</option>
-                <option value="no-materials">✏️ {t("quiz.typeFilter.noMaterials")}</option>
+                <option value="all">
+                  {t('emoji.books')} {t('quiz.typeFilter.all')}
+                </option>
+                <option value="with-materials">
+                  {t('emoji.openBook')} {t('quiz.typeFilter.withMaterials')}
+                </option>
+                <option value="no-materials">
+                  {t('emoji.pencil')} {t('quiz.typeFilter.noMaterials')}
+                </option>
               </select>
             </div>
             
@@ -468,7 +453,7 @@ const MyQuizzesPage: React.FC = () => {
                 <p className="text-sm text-gray-600">{t("quiz.stats.totalQuizzes")}</p>
                 <p className="text-2xl font-bold text-gray-900">{quizzes.length}</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {t('myQuizzes.stats.typeBreakdown', {
+                  {t('quiz.myQuizzes.stats.typeBreakdown', {
                     with: totalWithMaterials,
                     without: totalStandard
                   })}
@@ -488,7 +473,7 @@ const MyQuizzesPage: React.FC = () => {
                   {formatNumber(totalApproved)}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {t('myQuizzes.stats.approvedWithPassword', { count: approvedWithPasswordCount })}
+                  {t('quiz.myQuizzes.stats.approvedWithPassword', { count: approvedWithPasswordCount })}
                 </p>
               </div>
             </div>
@@ -587,9 +572,9 @@ const MyQuizzesPage: React.FC = () => {
                 <BarChart3 className="w-6 h-6 text-indigo-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm text-gray-600">{t('myQuizzes.stats.avgScoreLabel')}</p>
+                <p className="text-sm text-gray-600">{t('quiz.myQuizzes.stats.avgScoreLabel')}</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {t('myQuizzes.stats.averageScoreValue', { value: averageScore.toFixed(1) })}
+                  {t('quiz.myQuizzes.stats.averageScoreValue', { value: averageScore.toFixed(1) })}
                 </p>
               </div>
             </div>
@@ -654,18 +639,18 @@ const MyQuizzesPage: React.FC = () => {
                           {/* Quiz Type Badge - prefer quizType field, fallback to checking resources */}
                           {(quiz.quizType === 'with-materials' || (quiz.quizType === undefined && quiz.resources && quiz.resources.length > 0)) ? (
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 mr-2">
-                              📖 {t("quiz.withMaterials")}
+                              {t('emoji.openBook')} {t('quiz.withMaterials')}
                             </span>
                           ) : (
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mr-2">
-                              ✏️ {t("quiz.standardQuiz")}
+                              {t('emoji.pencil')} {t('quiz.standardQuiz')}
                             </span>
                           )}
                           {/* 🔒 Password Badge */}
                           {quiz.havePassword === 'password' && (
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 mr-2">
                               <Lock className="w-3 h-3 mr-1" />
-                              {t('myQuizzes.badge.password')}
+                              {t('quiz.myQuizzes.badge.password')}
                             </span>
                           )}
                           {/* Render rich-text description safely (support HTML without showing tags) */}
@@ -690,7 +675,7 @@ const MyQuizzesPage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="space-y-2">
-                          {getStatusBadge(quiz.status)}
+                          {getStatusBadge(quiz.status || 'draft')}
                           {quiz.editRequests && quiz.editRequests.length > 0 && (
                             <div className="text-xs text-gray-500">
                               {quiz.editRequests.filter(req => req.status === 'pending').length > 0 && (
@@ -702,14 +687,14 @@ const MyQuizzesPage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900">
                         <div className="space-y-1">
-                          <div>{t('myQuizzes.stats.views', { count: quiz.views || 0 })}</div>
-                          <div>{t('myQuizzes.stats.attempts', { count: quiz.attempts || 0 })}</div>
-                          <div>{t('myQuizzes.stats.completions', { count: quiz.completions || 0 })}</div>
+                          <div>{t('quiz.myQuizzes.stats.views', { count: quiz.views || 0 })}</div>
+                          <div>{t('quiz.myQuizzes.stats.attempts', { count: quiz.attempts || 0 })}</div>
+                          <div>{t('quiz.myQuizzes.stats.completions', { count: quiz.completions || 0 })}</div>
                           {quiz.averageScore !== undefined && (
-                            <div>{t('myQuizzes.stats.averageScoreValue', { value: Number(quiz.averageScore).toFixed(1) })}</div>
+                            <div>{t('quiz.myQuizzes.stats.averageScoreValue', { value: Number(quiz.averageScore).toFixed(1) })}</div>
                           )}
                           {typeof quiz.avgRating === 'number' && (
-                            <div>{t('myQuizzes.stats.avgRating', { rating: quiz.avgRating.toFixed(1) })}</div>
+                            <div>{t('quiz.myQuizzes.stats.avgRating', { rating: quiz.avgRating.toFixed(1) })}</div>
                           )}
                         </div>
                       </td>
@@ -721,7 +706,7 @@ const MyQuizzesPage: React.FC = () => {
                           <button
                             onClick={() => navigate(`/quiz/${quiz.id}/preview`)}
                             className="text-blue-600 hover:text-blue-900 p-1.5 hover:bg-blue-50 rounded transition-colors"
-                            title={t('myQuizzes.actions.preview')}
+                            title={t('quiz.myQuizzes.actions.preview')}
                           >
                             <Eye className="w-4 h-4" />
                           </button>
@@ -735,7 +720,7 @@ const MyQuizzesPage: React.FC = () => {
                                   ? 'text-green-600 bg-green-50'
                                   : 'text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50'
                               }`}
-                              title={t('myQuizzes.actions.copyLinkTitle')}
+                              title={t('quiz.myQuizzes.actions.copyLinkTitle')}
                             >
                               {copiedQuizId === quiz.id ? (
                                 <CheckCircle className="w-4 h-4" />
@@ -750,7 +735,7 @@ const MyQuizzesPage: React.FC = () => {
                             <button
                               onClick={() => navigate(`/quiz-stats/${quiz.id}`)}
                               className="text-purple-600 hover:text-purple-900 p-1.5 hover:bg-purple-50 rounded transition-colors"
-                              title={t('myQuizzes.actions.viewStatsTitle')}
+                              title={t('quiz.myQuizzes.actions.viewStatsTitle')}
                             >
                               <BarChart3 className="w-4 h-4" />
                             </button>
@@ -761,7 +746,7 @@ const MyQuizzesPage: React.FC = () => {
                             <button
                               onClick={() => handleCopyQuizInfo(quiz)}
                               className="text-green-600 hover:text-green-900 p-1.5 hover:bg-green-50 rounded transition-colors"
-                              title={t('myQuizzes.actions.copyInfoTitle')}
+                              title={t('quiz.myQuizzes.actions.copyInfoTitle')}
                             >
                               <Share2 className="w-4 h-4" />
                             </button>
@@ -780,7 +765,7 @@ const MyQuizzesPage: React.FC = () => {
                             <button
                               onClick={() => handlePublishDraft(quiz)}
                               className="text-blue-600 hover:text-blue-900 p-1.5 hover:bg-blue-50 rounded transition-colors"
-                              title={t('myQuizzes.actions.publishDraftTitle')}
+                              title={t('quiz.myQuizzes.actions.publishDraftTitle')}
                             >
                               <Send className="w-4 h-4" />
                             </button>
@@ -790,9 +775,9 @@ const MyQuizzesPage: React.FC = () => {
                             <button
                               onClick={() => {
                                 // Handle delete
-                                if (window.confirm(t('myQuizzes.actions.deleteDraftConfirm', { title: quiz.title }))) {
+                                if (window.confirm(t('quiz.myQuizzes.actions.deleteDraftConfirm', { title: quiz.title }))) {
                                   // Delete logic here
-                                  toast.info(t('myQuizzes.actions.deleteDraftInfo'));
+                                  toast.info(t('quiz.myQuizzes.actions.deleteDraftInfo'));
                                 }
                               }}
                               className="text-red-600 hover:text-red-900 p-1.5 hover:bg-red-50 rounded transition-colors"
@@ -840,7 +825,7 @@ const MyQuizzesPage: React.FC = () => {
                 
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                   <p className="text-sm text-yellow-800">
-                    ⚠️ {t('quiz.editRequest.warning')}
+                    {t('emoji.warning')} {t('quiz.editRequest.warning')}
                   </p>
                 </div>
               </div>

@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import Button from '../../../../../shared/components/ui/Button';
 import { Question, Answer } from '../types';
 import { generateId } from '../utils';
-
+import { Trash2, Check, X as XIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 interface QuestionEditorProps {
   question: Question;
@@ -31,8 +31,8 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
       case 'boolean':
         // Đúng/Sai: tạo 2 đáp án với isCorrect logic
         newAnswers = [
-          { id: generateId(), text: 'Đúng', isCorrect: true },
-          { id: generateId(), text: 'Sai', isCorrect: false }
+          { id: generateId(), text: t('createQuiz.questions.booleanTrueDefault'), isCorrect: true },
+          { id: generateId(), text: t('createQuiz.questions.booleanFalseDefault'), isCorrect: false }
         ];
         break;
       case 'short_answer':
@@ -45,7 +45,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
         // Chọn ảnh: tạo 4 đáp án có imageUrl
         newAnswers = Array.from({ length: 4 }, (_, i) => ({
           id: generateId(),
-          text: `Ảnh ${i + 1}`,
+          text: t('createQuiz.questions.defaultImageLabel', { index: i + 1 }),
           isCorrect: i === 0,
           imageUrl: '',
         }));
@@ -55,7 +55,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
     onChange({ ...newQuestion, answers: newAnswers });
   };
 
-  const handleAnswerChange = (idx: number, field: keyof Answer, value: any) => {
+  const handleAnswerChange = (idx: number, field: keyof Answer, value: string | boolean | undefined) => {
     const newAnswers = question.answers.map((a, i) =>
       i === idx ? { ...a, [field]: value } : a
     );
@@ -66,7 +66,10 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
     if (question.type === 'multiple' || question.type === 'image') {
       const newAnswer: Answer = {
         id: generateId(),
-        text: question.type === 'image' ? `Ảnh ${question.answers.length + 1}` : '',
+        text:
+          question.type === 'image'
+            ? t('createQuiz.questions.defaultImageLabel', { index: question.answers.length + 1 })
+            : '',
         isCorrect: false,
         ...(question.type === 'image' && { imageUrl: '' }),
       };
@@ -88,22 +91,10 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
   };
 
   const handleSetCorrect = (idx: number) => {
-    if (question.type === 'boolean') {
-      // Với Boolean: nếu chọn "Đúng" (idx=0) thì đáp án đúng là true, ngược lại false  
-      onChange({
-        ...question,
-        answers: question.answers.map((a, i) => ({ 
-          ...a, 
-          isCorrect: i === 0 ? idx === 0 : idx === 1 
-        })),
-      });
-    } else {
-      // Với Multiple Choice: chỉ có 1 đáp án đúng
-      onChange({
-        ...question,
-        answers: question.answers.map((a, i) => ({ ...a, isCorrect: i === idx })),
-      });
-    }
+    onChange({
+      ...question,
+      answers: question.answers.map((a, i) => ({ ...a, isCorrect: i === idx })),
+    });
   };
 
   // Xử lý điền từ
@@ -124,7 +115,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
   };
 
   const addAcceptedAnswer = () => {
-    const newAnswer = prompt('Nhập từ đồng nghĩa hoặc cách viết khác:');
+    const newAnswer = window.prompt(t('createQuiz.questions.acceptedAnswerPrompt'));
     if (newAnswer && newAnswer.trim()) {
       onChange({
         ...question,
@@ -139,6 +130,14 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
       acceptedAnswers: question.acceptedAnswers?.filter((_, i) => i !== idx) || [],
     });
   };
+
+  const booleanLabels = useMemo(
+    () => ({
+      true: t('createQuiz.questions.booleanTrueLabel'),
+      false: t('createQuiz.questions.booleanFalseLabel'),
+    }),
+    [t]
+  );
 
   return (
     <div className="border rounded-lg p-4 mb-4 bg-gray-50">
@@ -184,7 +183,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
               <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">{String.fromCharCode(65 + idx)}</span>
               <input
                 className="flex-1 border p-2 rounded"
-                placeholder={`Đáp án ${String.fromCharCode(65 + idx)}`}
+                placeholder={t('createQuiz.questions.answerPlaceholder', { label: String.fromCharCode(65 + idx) })}
                 value={a.text}
                 onChange={e => handleAnswerChange(idx, 'text', e.target.value)}
               />
@@ -202,8 +201,9 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
                   variant="outline" 
                   onClick={() => handleRemoveAnswer(idx)} 
                   className="text-red-600 border-red-300 px-2"
+                  aria-label={t('createQuiz.questions.removeAnswer')}
                 >
-                  X
+                  <Trash2 className="w-4 h-4" aria-hidden="true" />
                 </Button>
               )}
             </div>
@@ -226,10 +226,17 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
                     onChange={() => handleSetCorrect(idx)}
                     className="w-4 h-4"
                   />
-                  <span className={`font-medium ${
-                    answer.text === 'Đúng' ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {answer.text === 'Đúng' ? '✓' : '✗'} {answer.text}
+                  <span
+                    className={`flex items-center gap-2 font-medium ${
+                      idx === 0 ? 'text-green-600' : 'text-red-600'
+                    }`}
+                  >
+                    {idx === 0 ? (
+                      <Check className="w-4 h-4" aria-hidden="true" />
+                    ) : (
+                      <XIcon className="w-4 h-4" aria-hidden="true" />
+                    )}
+                    {answer.text || booleanLabels[idx === 0 ? 'true' : 'false']}
                   </span>
                 </label>
               ))}
@@ -263,8 +270,9 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
                         variant="outline" 
                         onClick={() => removeAcceptedAnswer(idx)}
                         className="text-red-600 border-red-300 px-2 text-xs"
+                        aria-label={t('createQuiz.questions.removeAcceptedAnswer')}
                       >
-                        X
+                        <Trash2 className="w-3 h-3" aria-hidden="true" />
                       </Button>
                     </div>
                   ))}
@@ -295,8 +303,9 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
                       variant="outline" 
                       onClick={() => handleRemoveAnswer(idx)}
                       className="text-red-600 border-red-300 px-2 text-xs"
+                      aria-label={t('createQuiz.questions.removeAnswer')}
                     >
-                      X
+                      <Trash2 className="w-3 h-3" aria-hidden="true" />
                     </Button>
                   )}
                 </div>

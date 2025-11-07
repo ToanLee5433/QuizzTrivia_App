@@ -47,7 +47,7 @@ const FavoritesPage: React.FC = () => {
       setLoading(false);
     };
     fetchFavorites();
-  }, [user, allQuizzes, quizLoading, dispatch]);
+  }, [user, allQuizzes, quizLoading, dispatch, t]);
 
   if (!user) return <div className="p-8 text-center">{t('favorites.loginRequired')}</div>;
   if (error) return <div className="p-8 text-center text-red-600">{error}</div>;

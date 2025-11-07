@@ -49,7 +49,7 @@ export const VideoViewer: React.FC<VideoViewerProps> = ({
     if (videoRef.current && initialProgress?.lastWatchPosition) {
       videoRef.current.currentTime = initialProgress.lastWatchPosition;
     }
-  }, []);
+  }, [initialProgress?.lastWatchPosition]);
 
   useEffect(() => {
     // Track progress every second when playing
@@ -81,7 +81,7 @@ export const VideoViewer: React.FC<VideoViewerProps> = ({
         clearInterval(progressIntervalRef.current);
       }
     };
-  }, [isPlaying, totalWatchedSeconds]);
+  }, [isPlaying, totalWatchedSeconds, onProgressUpdate]);
 
   const handlePlayPause = () => {
     if (videoRef.current) {

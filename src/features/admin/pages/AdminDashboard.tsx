@@ -120,15 +120,32 @@ const AdminDashboard: React.FC = () => {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
   useEffect(() => {
-    loadData();
-    
-    // Set up auto-refresh every 30 seconds
-    const interval = setInterval(() => {
-      loadData();
-    }, 30000);
-    
+    const loadRealData = async () => {
+      setLoading(true);
+      try {
+        const [usersData, quizzesData, categoriesData] = await Promise.all([
+          loadUsersData(),
+          loadQuizzesData(),
+          loadCategoriesData(),
+        ]);
+        setUsers(usersData);
+        setQuizzes(quizzesData);
+        setCategories(categoriesData);
+        updateStatsFromData(usersData, quizzesData);
+        setLastUpdate(new Date());
+      } catch (error) {
+        console.error('Error loading data:', error);
+        toast.error(t('admin.dataLoadError'));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadRealData();
+
+    const interval = setInterval(loadRealData, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [t]);
 
   // Data loading functions that return data instead of updating state
   const loadUsersData = async (): Promise<User[]> => {

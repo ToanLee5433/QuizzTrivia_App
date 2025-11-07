@@ -35,6 +35,13 @@
     "action": "Action"
   },
   "actions": "Actions",
+  "emoji": {
+    "books": "📚",
+    "openBook": "📖",
+    "pencil": "✏️",
+    "warning": "⚠️",
+    "floppyDisk": "💾"
+  },
   "admin": {
     "activated": "activated",
     "categoryManagement": "Category Management",
@@ -61,7 +68,8 @@
       },
       "filter": {
         "pending": "Pending",
-        "approved": "Approved"
+        "approved": "Approved",
+        "rejected": "Rejected"
       },
       "cards": {
         "totalQuizzes": "Total Quizzes"
@@ -686,11 +694,24 @@
   "create": "Create",
   "createQuiz": {
     "back": "Back",
+    "backToCreator": "Back to Creator Dashboard",
     "completeAllInfo": "Please complete all quiz information",
     "completeInfoFirst": "Please complete information before continuing",
     "continue": "Continue",
     "createError": "Error occurred while creating quiz",
     "createSuccess": "Quiz created successfully! Quiz is awaiting admin approval.",
+    "draft": {
+      "button": "Save Draft",
+      "success": "Draft saved successfully!",
+      "error": "Error saving draft.",
+      "validationError": "Please enter at least a title and select a quiz type to save as draft."
+    },
+    "exitConfirm": {
+      "title": "Leave quiz creation?",
+      "message": "You have unsaved changes. Leaving now will discard them. Are you sure you want to continue?",
+      "confirm": "Leave",
+      "cancel": "Stay"
+    },
     "info": {
       "basicInfo": "Basic Information",
       "categoryLabel": "Category *",
@@ -700,6 +721,7 @@
       "difficultyLabel": "Difficulty *",
       "difficultyPlaceholder": "Select difficulty level",
       "durationLabel": "Duration (minutes) *",
+      "durationPlaceholder": "15",
       "fillInfo": "Fill in information to create your quiz",
       "imageLabel": "Image (optional)",
       "imagePlaceholder": "Image URL representing the quiz...",
@@ -709,15 +731,71 @@
       "noTitle": "No title yet",
       "preview": "Preview quiz information",
       "previewImage": "Image:",
+      "previewImageAlt": "Quiz cover preview",
+      "durationValue": "{{count}} minutes",
+      "categoryOptions": {
+        "programming": "Programming",
+        "math": "Mathematics",
+        "science": "Science",
+        "history": "History",
+        "language": "Languages",
+        "general": "General"
+      },
+      "previewLabels": {
+        "title": "Title",
+        "description": "Description",
+        "category": "Category",
+        "difficulty": "Difficulty",
+        "duration": "Duration",
+        "privacy": "Privacy",
+        "retake": "Retake",
+        "tags": "Tags"
+      },
+      "retakeAllowed": "✅ Allowed",
+      "retakeDisabled": "❌ Not allowed",
       "titleLabel": "Quiz title *",
       "titlePlaceholder": "Enter an attractive title for your quiz..."
     },
     "loginRequired": "You need to login to create quizzes",
     "publish": "Publish Quiz",
     "steps": {
+      "selectType": "Quiz Type",
       "info": "Quiz Information",
+      "resources": "Learning Resources",
       "questions": "Questions",
       "review": "Review & Publish"
+    },
+    "review": {
+      "sections": {
+        "overview": "✅ Quiz Overview",
+        "resources": "📚 Learning Resources",
+        "questions": "📝 Question List ({{count}})"
+      },
+      "fields": {
+        "title": "📝 Title",
+        "category": "📂 Category",
+        "difficulty": "⚡ Difficulty",
+        "duration": "⏱️ Duration",
+        "questionCount": "❓ Questions",
+        "totalPoints": "🎯 Total Points",
+        "privacy": "🔐 Privacy",
+        "retake": "🔄 Retake",
+        "description": "📄 Description"
+      },
+      "questionCountValue": "{{count}} questions",
+      "totalPointsValue": "{{count}} points",
+      "resourceCountBadge": "{{count}} resources",
+      "hasRequiredResources": "Contains required materials",
+      "requiredBadge": "Required",
+      "optionalBadge": "Recommended",
+      "viewResource": "View resource",
+      "requiredNotice": "Note: Learners must review {{count}} required resource(s) before taking the quiz.",
+      "emptyQuestionText": "Untitled question",
+      "pointsBadge": "{{count}} points",
+      "correctBadge": "✓ Correct",
+      "correctAnswerLabel": "✅ Correct answer:",
+      "acceptedVariationsLabel": "📝 Accepted variations:",
+      "explanationLabel": "💡 Explanation:"
     },
     "title": "Create New Quiz"
   },
@@ -3132,7 +3210,10 @@
     "attempts": "Attempts: {{current}}/{{max}}",
     "cancel": "Cancel",
     "confirm": "Confirm",
-    "maxAttemptsReached": "⚠️ You have exceeded the maximum number of attempts. Please contact the quiz creator for assistance."
+    "verifying": "Verifying...",
+    "maxAttemptsReached": "⚠️ You have exceeded the maximum number of attempts. Please contact the quiz creator for assistance.",
+    "configError": "Password configuration error. Please contact the quiz creator.",
+    "verificationError": "An error occurred during verification. Please try again."
   },
   "quizCreation": {
     "editQuizInfo": "Edit your quiz information",
@@ -3160,6 +3241,7 @@
     "allowRetakeDesc": "Learners can retake quiz multiple times to improve score",
     "privacy": "Privacy:",
     "public": "🌍 Public",
+  "private": "🔒 Private",
     "accessSettings": "Access Settings",
     "chooseAccessMethod": "Choose how people access your quiz",
     "publicTitle": "Public",

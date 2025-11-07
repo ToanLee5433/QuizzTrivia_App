@@ -8,6 +8,7 @@ import { Quiz } from '../types';
 import { fetchQuizzes } from '../store';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import PasswordModal from '../../../shared/components/ui/PasswordModal';
 
 const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: propQuizzes, title }) => {
   // Always call hooks at the top - Fix React Hooks rules
@@ -110,9 +111,38 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
   const [showCompleted, setShowCompleted] = useState(true);
   const [showStats, setShowStats] = useState(false);
   const [resourceFilter, setResourceFilter] = useState<'all' | 'with-resources' | 'no-resources'>('all'); // 🆕 Filter for resources
+  
+  // 🔒 Password modal state
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
 
   const handleQuizStart = (quiz: Quiz) => {
-    navigate(`/quiz/${quiz.id}`);
+    // 🔒 Check if quiz requires password
+    const requiresPassword = quiz.visibility === 'password' || quiz.havePassword === 'password';
+    
+    if (requiresPassword) {
+      // Show password modal immediately
+      setSelectedQuiz(quiz);
+      setShowPasswordModal(true);
+    } else {
+      // Navigate to preview page for public quizzes
+      navigate(`/quiz/${quiz.id}/preview`);
+    }
+  };
+  
+  // 🔒 Handle successful password verification
+  const handlePasswordSuccess = () => {
+    if (selectedQuiz) {
+      setShowPasswordModal(false);
+      // Navigate to preview page after successful password entry
+      navigate(`/quiz/${selectedQuiz.id}/preview`);
+    }
+  };
+  
+  // 🔒 Handle password modal close
+  const handlePasswordClose = () => {
+    setShowPasswordModal(false);
+    setSelectedQuiz(null);
   };
   
   const categories = Array.from(new Set(quizzes.map(q => q.category)));
@@ -510,10 +540,23 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
           )}
         </div>
       </div>
+      
+      {/* 🔒 Password Modal */}
+      {selectedQuiz && showPasswordModal && (
+        <PasswordModal
+          isOpen={showPasswordModal}
+          onClose={handlePasswordClose}
+          onSuccess={handlePasswordSuccess}
+          passwordData={selectedQuiz.pwd}
+          quizTitle={selectedQuiz.title}
+        />
+      )}
     </div>
   );
 };
 
 export default QuizList;
+
+
 
 

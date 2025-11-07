@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { Lock, X, Eye, EyeOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { generateProofHash } from '../../../lib/utils/passwordHash';
 
 interface PasswordModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  correctPassword: string;
+  passwordData?: {
+    salt: string;
+    hash: string;
+  } | null;
   quizTitle: string;
 }
 
@@ -14,7 +18,7 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
-  correctPassword,
+  passwordData,
   quizTitle,
 }) => {
   const { t } = useTranslation();
@@ -22,9 +26,10 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [attempts, setAttempts] = useState(0);
+  const [verifying, setVerifying] = useState(false);
   const maxAttempts = 5;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (attempts >= maxAttempts) {
@@ -32,20 +37,47 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
       return;
     }
 
-    if (password === correctPassword) {
-      setError('');
-      setPassword('');
-      setAttempts(0);
-      onSuccess();
-    } else {
-      const remainingAttempts = maxAttempts - attempts - 1;
-      setAttempts(prev => prev + 1);
-      setError(
-        remainingAttempts > 0
-          ? t('passwordModal.incorrectRemaining', { remaining: remainingAttempts })
-          : t('passwordModal.incorrectFinal')
-      );
-      setPassword('');
+    if (!passwordData) {
+      setError(t('passwordModal.configError'));
+      return;
+    }
+
+    setVerifying(true);
+    
+    try {
+      // 🐛 Debug logging
+      console.log('🔍 Password Verification Debug:');
+      console.log('   Salt:', passwordData.salt);
+      console.log('   Stored Hash:', passwordData.hash);
+      console.log('   Entered Password:', password);
+      
+      // Generate hash from entered password
+      const proofHash = await generateProofHash(passwordData.salt, password);
+      console.log('   Generated Hash:', proofHash);
+      console.log('   Match:', proofHash === passwordData.hash);
+      
+      // Compare with stored hash
+      if (proofHash === passwordData.hash) {
+        setError('');
+        setPassword('');
+        setAttempts(0);
+        setVerifying(false);
+        onSuccess();
+      } else {
+        const remainingAttempts = maxAttempts - attempts - 1;
+        setAttempts(prev => prev + 1);
+        setError(
+          remainingAttempts > 0
+            ? t('passwordModal.incorrectRemaining', { remaining: remainingAttempts })
+            : t('passwordModal.incorrectFinal')
+        );
+        setPassword('');
+        setVerifying(false);
+      }
+    } catch (error) {
+      console.error('Password verification error:', error);
+      setError(t('passwordModal.verificationError'));
+      setVerifying(false);
     }
   };
 
@@ -157,10 +189,10 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
               </button>
               <button
                 type="submit"
-                disabled={!password || attempts >= maxAttempts}
+                disabled={!password || attempts >= maxAttempts || verifying}
                 className="flex-1 h-11 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
-                {t('passwordModal.confirm')}
+                {verifying ? t('passwordModal.verifying') : t('passwordModal.confirm')}
               </button>
             </div>
           </form>

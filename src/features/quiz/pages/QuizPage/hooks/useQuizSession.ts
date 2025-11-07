@@ -194,7 +194,7 @@ export const useQuizSession = ({ quiz }: UseQuizSessionProps) => {
       toast.error('Không thể lưu kết quả quiz. Vui lòng thử lại!');
       navigate('/quizzes');
     }
-  }, [session, quiz, navigate, calculateScore, user]);
+  }, [session, quiz, navigate, calculateScore, user, isAnswerCorrect]);
 
   const getAnsweredQuestions = useCallback(() => {
     return Object.entries(session.answers)

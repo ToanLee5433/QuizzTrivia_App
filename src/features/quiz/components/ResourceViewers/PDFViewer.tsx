@@ -50,13 +50,13 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [currentPage, pageStartTime]);
+  }, [currentPage, pageStartTime, onProgressUpdate, pageViewTimes, pagesViewed]);
 
   useEffect(() => {
     // Mark page as viewed
     const newPagesViewed = new Set(pagesViewed).add(currentPage);
     setPagesViewed(newPagesViewed);
-  }, [currentPage]);
+  }, [currentPage, pagesViewed]);
 
   const handlePrevPage = () => {
     if (currentPage > 1) {

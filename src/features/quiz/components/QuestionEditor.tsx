@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Question } from '../types';
 import { 
@@ -31,6 +31,10 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
 }) => {
   const { t } = useTranslation();
   const [localQuestion, setLocalQuestion] = useState<Question>(question);
+
+  useEffect(() => {
+    setLocalQuestion(question);
+  }, [question]);
 
   const handleSave = () => {
     onUpdate(question.id, localQuestion);

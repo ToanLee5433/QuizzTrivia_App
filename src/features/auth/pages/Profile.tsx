@@ -149,7 +149,7 @@ const Profile: React.FC = () => {
     });
     
     // setLoading(false);
-  }, [userResults, user]);
+  }, [userResults, user, t]);
 
   // Filter and sort results
   const filteredResults = results

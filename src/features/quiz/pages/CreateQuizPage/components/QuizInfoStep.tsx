@@ -70,7 +70,7 @@ const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
             >
               <option value="">{t('createQuiz.info.categoryPlaceholder')}</option>
               {categories.map(c => (
-                <option key={c.value} value={c.value}>{c.label}</option>
+                <option key={c.value} value={c.value}>{t(c.labelKey)}</option>
               ))}
             </select>
           </div>
@@ -87,7 +87,7 @@ const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
             >
               <option value="">{t('createQuiz.info.difficultyPlaceholder')}</option>
               {difficulties.map(d => (
-                <option key={d.value} value={d.value}>{d.label}</option>
+                <option key={d.value} value={d.value}>{t(d.labelKey)}</option>
               ))}
             </select>
           </div>
@@ -106,7 +106,7 @@ const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
             max={120}
             value={quiz.duration}
             onChange={e => setQuiz(q => ({ ...q, duration: parseInt(e.target.value) || 15 }))}
-            placeholder="15"
+            placeholder={t('createQuiz.info.durationPlaceholder')}
           />
           <p className="text-sm text-gray-500">{t('quizCreation.from5to120minutes')}</p>
         </div>
@@ -208,7 +208,7 @@ const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
                 <p className="text-sm font-medium text-gray-700 mb-2">Preview:</p>
                 <img 
                   src={quiz.imageUrl} 
-                  alt="Cover preview" 
+                  alt={t('createQuiz.info.previewImageAlt')} 
                   className="w-full h-48 object-cover rounded-lg border-2 border-gray-200"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x200?text=Invalid+Image+URL';
@@ -286,11 +286,11 @@ const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
               {quiz.password && quiz.password.length < 6 && (
                 <p className="text-sm text-red-600 flex items-center gap-2">
                   <span className="w-1 h-1 bg-red-600 rounded-full" />
-                  Mật khẩu phải có ít nhất 6 ký tự
+                  {t('quizCreation.passwordMinLength')}
                 </p>
               )}
               <p className="text-xs text-gray-600">
-                💡 Chia sẻ mật khẩu này với người cần làm quiz
+                {t('quizCreation.passwordHint')}
               </p>
             </div>
           )}
@@ -314,9 +314,9 @@ const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
                 className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
               />
               <label htmlFor="allowRetake" className="flex-1 cursor-pointer">
-                <div className="font-medium text-gray-900">🔄 Cho phép làm lại</div>
+                <div className="font-medium text-gray-900">{t('quizCreation.allowRetake')}</div>
                 <p className="text-sm text-gray-600 mt-0.5">
-                  Học viên có thể làm quiz nhiều lần để cải thiện điểm
+                  {t('quizCreation.allowRetakeDesc')}
                 </p>
               </label>
             </div>
@@ -328,20 +328,20 @@ const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
       <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-200">
         <h3 className="font-semibold text-blue-900 mb-3">📋 {t('createQuiz.info.preview')}</h3>
         <div className="space-y-2 text-sm">
-          <p><strong>{t('quiz.title')}:</strong> {quiz.title || t('createQuiz.info.noTitle')}</p>
+          <p><strong>{t('createQuiz.info.previewLabels.title')}:</strong> {quiz.title || t('createQuiz.info.noTitle')}</p>
           <div>
-            <strong>{t('quiz.description')}:</strong>{' '}
+            <strong>{t('createQuiz.info.previewLabels.description')}:</strong>{' '}
             {quiz.description ? (
               <RichTextViewer content={quiz.description} />
             ) : (
               <span>{t('createQuiz.info.noDescription')}</span>
             )}
           </div>
-          <p><strong>{t('quiz.category')}:</strong> {quiz.category || t('createQuiz.info.noCategory')}</p>
-          <p><strong>{t('quiz.difficulty')}:</strong> {quiz.difficulty || t('createQuiz.info.noDifficulty')}</p>
-          <p><strong>{t('quiz.duration')}:</strong> {quiz.duration} {t('minutes')}</p>
+          <p><strong>{t('createQuiz.info.previewLabels.category')}:</strong> {quiz.category ? t(`createQuiz.info.categoryOptions.${quiz.category}`) : t('createQuiz.info.noCategory')}</p>
+          <p><strong>{t('createQuiz.info.previewLabels.difficulty')}:</strong> {quiz.difficulty ? t(`difficulty.${quiz.difficulty as 'easy' | 'medium' | 'hard'}`) : t('createQuiz.info.noDifficulty')}</p>
+          <p><strong>{t('createQuiz.info.previewLabels.duration')}:</strong> {t('createQuiz.info.durationValue', { count: quiz.duration })}</p>
           <p>
-            <strong>{t('quizCreation.privacy')}</strong>{' '}
+            <strong>{t('createQuiz.info.previewLabels.privacy')}</strong>{' '}
             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded ${
               quiz.isPublic === true 
                 ? 'bg-blue-100 text-blue-700' 
@@ -349,24 +349,24 @@ const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
             }`}>
               {quiz.isPublic === true ? (
                 <>
-                {t('quizCreation.public')}
-              </>
+                  {t('quizCreation.public')}
+                </>
               ) : (
-                <>🔒 Riêng tư</>
+                <>{t('quizCreation.private')}</>
               )}
             </span>
           </p>
           <p>
-            <strong>Làm lại:</strong>{' '}
-            {quiz.allowRetake !== false ? '✅ Cho phép' : '❌ Không cho phép'}
+            <strong>{t('createQuiz.info.previewLabels.retake')}:</strong>{' '}
+            {quiz.allowRetake !== false ? t('createQuiz.info.retakeAllowed') : t('createQuiz.info.retakeDisabled')}
           </p>
           {quiz.tags && quiz.tags.length > 0 && (
-            <p><strong>Tags:</strong> {quiz.tags.join(', ')}</p>
+            <p><strong>{t('createQuiz.info.previewLabels.tags')}:</strong> {quiz.tags.join(', ')}</p>
           )}
           {quiz.imageUrl && (
             <div className="mt-3">
               <p><strong>{t('createQuiz.info.previewImage')}</strong></p>
-              <img src={quiz.imageUrl} alt="Preview" className="mt-2 w-32 h-20 object-cover rounded-lg" />
+              <img src={quiz.imageUrl} alt={t('createQuiz.info.previewImageAlt')} className="mt-2 w-32 h-20 object-cover rounded-lg" />
             </div>
           )}
         </div>

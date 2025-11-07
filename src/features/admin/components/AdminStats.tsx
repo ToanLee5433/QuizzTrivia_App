@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, 
@@ -20,11 +20,7 @@ const AdminStats: React.FC = () => {
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadRealData();
-  }, []);
-
-  const loadRealData = async () => {
+  const loadRealData = useCallback(async () => {
     setLoading(true);
     try {
       const [quizzes, users, reviews, categories] = await Promise.all([
@@ -48,7 +44,11 @@ const AdminStats: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    loadRealData();
+  }, [loadRealData]);
 
   const refreshData = () => {
     loadRealData();

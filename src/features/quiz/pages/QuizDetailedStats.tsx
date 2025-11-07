@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
@@ -116,13 +116,7 @@ const QuizDetailedStats: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<'7days' | '30days' | 'all'>('30days');
 
-  useEffect(() => {
-    if (id && user) {
-      fetchQuizAndStats();
-    }
-  }, [id, user, timeRange]);
-
-  const fetchQuizAndStats = async () => {
+  const fetchQuizAndStats = useCallback(async () => {
     if (!id || !user) return;
     
     setLoading(true);
@@ -217,7 +211,14 @@ const QuizDetailedStats: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, user, timeRange, navigate]); // eslint-disable-line react-hooks/exhaustive-deps
+  // calculateStats is a stable function defined below, doesn't need to be in dependencies
+
+  useEffect(() => {
+    if (id && user) {
+      fetchQuizAndStats();
+    }
+  }, [id, user, timeRange, fetchQuizAndStats]);
 
   const calculateStats = (results: QuizResult[], quizData: Quiz): Stats => {
     // Default score ranges

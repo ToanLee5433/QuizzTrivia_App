@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Clock, Star, Play, Eye, BookOpen, Target, FileText, Video, Image as ImageIcon, Music, Link as LinkIcon, Presentation, ExternalLink } from 'lucide-react';
+import { Clock, Star, Play, Eye, BookOpen, Target, FileText, Video, Image as ImageIcon, Music, Link as LinkIcon, Presentation, ExternalLink, Users } from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 import { Quiz } from '../types';
@@ -68,13 +68,31 @@ const QuizPreviewPage: React.FC = () => {
   }, [location.state]);
 
   // 🔒 Handle start quiz with password check
+  const requiresPassword = useMemo(() => {
+    if (!quiz) {
+      return false;
+    }
+
+    return (
+      quiz.visibility === 'password' ||
+      quiz.havePassword === 'password' ||
+      quiz.havePassword === true
+    );
+  }, [quiz]);
+
+  const quizId = quiz?.id;
+
+  useEffect(() => {
+    setPasswordVerified(false);
+    setPendingAction(null);
+    setShowPasswordModal(false);
+  }, [quizId]);
+
   const handleStartQuiz = (mode: 'single' | 'multi') => {
     if (!quiz) return;
-    
-    const havePassword = (quiz as any).havePassword || 'public';
-    
+
     // If password-protected and not verified yet, show password modal
-    if (havePassword === 'password' && !passwordVerified) {
+    if (requiresPassword && !passwordVerified) {
       setPendingAction(mode);
       setShowPasswordModal(true);
       return;
@@ -232,11 +250,19 @@ const QuizPreviewPage: React.FC = () => {
 
               <div className="flex flex-wrap gap-4">
                 <button
-                  onClick={() => setShowGameModeSelector(true)}
+                  onClick={() => handleStartQuiz('single')}
                   className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg"
                 >
                   <Play className="w-6 h-6 mr-2" />
                   {t('quiz.startQuizButton')}
+                </button>
+                
+                <button
+                  onClick={() => setShowGameModeSelector(true)}
+                  className="inline-flex items-center px-6 py-3 bg-purple-500 text-white font-semibold rounded-lg hover:bg-purple-600 transition-colors border border-purple-400"
+                >
+                  <Users className="w-5 h-5 mr-2" />
+                  {t('multiplayer.title')}
                 </button>
                 
                 <Link
@@ -484,7 +510,7 @@ const QuizPreviewPage: React.FC = () => {
       />
 
       {/* 🔒 Password Modal for password-protected quizzes */}
-      {quiz && (quiz as any).havePassword === 'password' && (
+      {quiz && requiresPassword && (
         <PasswordModal
           isOpen={showPasswordModal}
           onClose={() => {
@@ -492,7 +518,7 @@ const QuizPreviewPage: React.FC = () => {
             setPendingAction(null);
           }}
           onSuccess={handlePasswordSuccess}
-          correctPassword={(quiz as any).password || ''}
+          passwordData={(quiz as any).pwd || null}
           quizTitle={quiz.title}
         />
       )}

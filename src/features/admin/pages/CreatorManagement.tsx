@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
 import { toast } from 'react-toastify';
@@ -72,12 +72,7 @@ const CreatorManagement: React.FC = () => {
   const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
   const [showCreatorModal, setShowCreatorModal] = useState(false);
 
-  useEffect(() => {
-    loadCreators();
-    loadStats();
-  }, []);
-
-  const loadCreators = async () => {
+  const loadCreators = useCallback(async () => {
     setLoading(true);
     try {
       console.log('Loading creators...');
@@ -177,7 +172,7 @@ const CreatorManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
   const getQuizIdsByCreator = async (creatorId: string): Promise<string[]> => {
     try {
@@ -192,7 +187,7 @@ const CreatorManagement: React.FC = () => {
     }
   };
 
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
       const usersQuery = query(
         collection(db, 'users'),
@@ -230,7 +225,12 @@ const CreatorManagement: React.FC = () => {
         thisMonth: 0
       });
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadCreators();
+    loadStats();
+  }, [loadCreators, loadStats]);
 
   const handleStatusChange = async (creatorId: string, newStatus: 'active' | 'suspended' | 'banned') => {
     try {
@@ -376,12 +376,12 @@ const CreatorManagement: React.FC = () => {
               
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
+                onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'suspended' | 'banned')}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="all">Tất cả trạng thái</option>
+                <option value="all">{t('creatorManagement.status.all')}</option>
                 <option value="active">{t("leaderboard.activity")}</option>
-                <option value="suspended">Tạm khóa</option>
+                <option value="suspended">{t('creatorManagement.status.suspended')}</option>
                 <option value="banned">{t('creatorManagement.status.banned')}</option>
               </select>
             </div>

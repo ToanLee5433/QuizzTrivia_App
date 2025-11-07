@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -112,12 +112,7 @@ const AdminQuizManagement: React.FC = () => {
     return new Date();
   };
 
-  useEffect(() => {
-    loadQuizzes();
-    loadEditRequests();
-  }, []);
-
-  const loadQuizzes = async () => {
+  const loadQuizzes = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -184,9 +179,9 @@ const AdminQuizManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
-  const loadEditRequests = async () => {
+  const loadEditRequests = useCallback(async () => {
     try {
       console.log('🔍 Loading edit requests...');
       
@@ -253,7 +248,12 @@ const AdminQuizManagement: React.FC = () => {
         setEditRequests([]);
       }
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadQuizzes();
+    loadEditRequests();
+  }, [loadQuizzes, loadEditRequests]);
 
   const handleEdit = (quizId: string) => {
     navigate(`/admin/edit-quiz/${quizId}`);

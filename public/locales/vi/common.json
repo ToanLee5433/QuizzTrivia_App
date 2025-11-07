@@ -35,6 +35,13 @@
     "action": "Hành động"
   },
   "actions": "Hành động",
+  "emoji": {
+    "books": "📚",
+    "openBook": "📖",
+    "pencil": "✏️",
+    "warning": "⚠️",
+    "floppyDisk": "💾"
+  },
   "admin": {
     "activated": "activated",
     "categoryManagement": "Quản lý chủ đề",
@@ -61,7 +68,8 @@
       },
       "filter": {
         "pending": "Chờ duyệt",
-        "approved": "Đã duyệt"
+        "approved": "Đã duyệt",
+        "rejected": "Bị từ chối"
       },
       "cards": {
         "totalQuizzes": "Tổng số Quiz"
@@ -686,11 +694,24 @@
   "create": "Tạo mới",
   "createQuiz": {
     "back": "Quay lại",
+    "backToCreator": "Quay lại Creator Dashboard",
     "completeAllInfo": "Please complete all quiz information",
     "completeInfoFirst": "Please complete information before continuing",
     "continue": "Tiếp tục",
     "createError": "Error occurred while creating quiz",
     "createSuccess": "Quiz created successfully! Quiz is awaiting admin approval.",
+    "draft": {
+      "button": "Lưu bản nháp",
+      "success": "Đã lưu bản nháp thành công!",
+      "error": "Lỗi khi lưu bản nháp.",
+      "validationError": "Vui lòng nhập ít nhất tiêu đề và chọn loại quiz để lưu nháp."
+    },
+    "exitConfirm": {
+      "title": "Rời khỏi trang tạo Quiz?",
+      "message": "Bạn có những thay đổi chưa được lưu. Nếu rời đi, tất cả thay đổi sẽ bị mất. Bạn có chắc chắn muốn tiếp tục?",
+      "confirm": "Rời khỏi",
+      "cancel": "Ở lại"
+    },
     "info": {
       "basicInfo": "Basic Information",
       "categoryLabel": "Category *",
@@ -700,6 +721,7 @@
       "difficultyLabel": "Difficulty *",
       "difficultyPlaceholder": "Select difficulty level",
       "durationLabel": "Duration (minutes) *",
+      "durationPlaceholder": "15",
       "fillInfo": "Fill in information to create your quiz",
       "imageLabel": "Image (optional)",
       "imagePlaceholder": "Image URL representing the quiz...",
@@ -709,15 +731,71 @@
       "noTitle": "No title yet",
       "preview": "Preview quiz information",
       "previewImage": "Image:",
+      "previewImageAlt": "Xem trước ảnh bìa quiz",
+      "durationValue": "{{count}} phút",
+      "categoryOptions": {
+        "programming": "Lập trình",
+        "math": "Toán học",
+        "science": "Khoa học",
+        "history": "Lịch sử",
+        "language": "Ngôn ngữ",
+        "general": "Tổng hợp"
+      },
+      "previewLabels": {
+        "title": "Tiêu đề",
+        "description": "Mô tả",
+        "category": "Danh mục",
+        "difficulty": "Độ khó",
+        "duration": "Thời lượng",
+        "privacy": "Quyền riêng tư",
+        "retake": "Làm lại",
+        "tags": "Thẻ"
+      },
+      "retakeAllowed": "✅ Cho phép",
+      "retakeDisabled": "❌ Không cho phép",
       "titleLabel": "Quiz title *",
       "titlePlaceholder": "Enter an attractive title for your quiz..."
     },
     "loginRequired": "You need to login to create quizzes",
     "publish": "Publish Quiz",
     "steps": {
+      "selectType": "Loại quiz",
       "info": "Quiz Information",
+      "resources": "Tài liệu học tập",
       "questions": "Câu hỏi",
       "review": "Review & Publish"
+    },
+    "review": {
+      "sections": {
+        "overview": "✅ Tổng quan Quiz",
+        "resources": "📚 Tài liệu học tập",
+        "questions": "📝 Danh sách câu hỏi ({{count}})"
+      },
+      "fields": {
+        "title": "📝 Tiêu đề",
+        "category": "📂 Danh mục",
+        "difficulty": "⚡ Độ khó",
+        "duration": "⏱️ Thời lượng",
+        "questionCount": "❓ Số câu hỏi",
+        "totalPoints": "🎯 Tổng điểm",
+        "privacy": "🔐 Quyền riêng tư",
+        "retake": "🔄 Làm lại",
+        "description": "📄 Mô tả"
+      },
+      "questionCountValue": "{{count}} câu hỏi",
+      "totalPointsValue": "{{count}} điểm",
+      "resourceCountBadge": "{{count}} tài liệu",
+      "hasRequiredResources": "Có tài liệu bắt buộc",
+      "requiredBadge": "BẮT BUỘC",
+      "optionalBadge": "Khuyến khích",
+      "viewResource": "Xem tài liệu",
+      "requiredNotice": "Lưu ý: Cần xem {{count}} tài liệu bắt buộc trước khi làm bài.",
+      "emptyQuestionText": "Câu hỏi chưa có nội dung",
+      "pointsBadge": "{{count}} điểm",
+      "correctBadge": "✓ Đúng",
+      "correctAnswerLabel": "✅ Đáp án:",
+      "acceptedVariationsLabel": "📝 Các cách viết khác:",
+      "explanationLabel": "💡 Giải thích:"
     },
     "title": "Create New Quiz"
   },
@@ -1363,7 +1441,7 @@
     "profileUpdateSuccess": "Profile updated successfully!",
     "recentActivity": "Recent Activity",
     "requiresRecentLogin": "Login session has expired. Please logout and login again",
-    "searchPlaceholder": "Search quizzes...",
+  "searchPlaceholder": "Tìm kiếm quiz...",
     "settings": {
       "title": "Personal information"
     },
@@ -1414,21 +1492,21 @@
   "quenMatKhau": "Quên mật khẩu",
   "quiz": {
     "answer": "Đáp án",
-    "author": "Author",
-    "averageScore": "Average Score",
-    "backToQuizList": "Back to quiz list",
+  "author": "Tác giả",
+  "averageScore": "Điểm trung bình",
+  "backToQuizList": "Quay lại danh sách quiz",
     "category": "Chủ đề",
     "categoryAndDifficulty": "Category & Difficulty",
     "completed": "Completed",
     "correctAnswer": "Correct Answer",
     "create": "Tạo Quiz",
-    "createFirstQuiz": "Create First Quiz",
-    "createLoginRequired": "You need to login to create quizzes",
-    "createQuizzesToTest": "Create some quizzes to test the review system",
-    "createSuccess": "Quiz created successfully",
-    "deleteSuccess": "Quiz deleted successfully",
-    "description": "Description",
-    "detailedInfo": "Detailed Information",
+  "createFirstQuiz": "Tạo quiz đầu tiên",
+  "createLoginRequired": "Bạn cần đăng nhập để tạo quiz",
+  "createQuizzesToTest": "Tạo vài quiz để thử hệ thống đánh giá",
+  "createSuccess": "Tạo quiz thành công",
+  "deleteSuccess": "Xóa quiz thành công",
+  "description": "Mô tả",
+  "detailedInfo": "Thông tin chi tiết",
     "difficulty": {
       "easy": "Dễ",
       "medium": "Trung bình",
@@ -1437,7 +1515,11 @@
     "card": {
       "duration": {
         "minutes": "{{count}} phút",
+        "minutes_one": "{{count}} phút",
+        "minutes_other": "{{count}} phút",
         "hours": "{{count}} giờ",
+        "hours_one": "{{count}} giờ",
+        "hours_other": "{{count}} giờ",
         "hoursAndMinutes": "{{hours}} giờ {{minutes}} phút"
       },
       "difficultyBadge": {
@@ -1445,9 +1527,15 @@
         "medium": "🟡 Trung bình",
         "hard": "🔴 Khó"
       },
-      "resources": "📚 {{count}} tài liệu học tập",
-      "questions": "{{count}} câu hỏi",
-      "players": "{{count}} lượt chơi",
+  "resources": "📚 {{count}} tài liệu học tập",
+  "resources_one": "📚 {{count}} tài liệu học tập",
+  "resources_other": "📚 {{count}} tài liệu học tập",
+  "questions": "{{count}} câu hỏi",
+  "questions_one": "{{count}} câu hỏi",
+  "questions_other": "{{count}} câu hỏi",
+  "players": "{{count}} lượt chơi",
+  "players_one": "{{count}} lượt chơi",
+  "players_other": "{{count}} lượt chơi",
       "tagsRemaining": "+{{count}}",
       "completedWithScore": "Đã hoàn thành: {{score}}%",
       "favoriteTooltipAdd": "Yêu thích quiz này",
@@ -1465,22 +1553,22 @@
     },
     "draft": "Bản nháp",
     "duration": "Duration",
-    "editReasonRequired": "Please enter edit reason",
+  "editReasonRequired": "Vui lòng nhập lý do chỉnh sửa",
     "editRequest": {
-      "needPermission": "Quiz is approved, need admin permission to edit",
-      "pendingExists": "There is a pending edit request",
-      "placeholder": "Please describe why you want to edit this quiz...",
-      "reason": "Edit reason",
-      "submit": "Send request",
-      "title": "Edit Quiz Request",
-      "warning": "Quiz has been approved. Edit request will be sent to admin for review. After getting permission to edit, you need to resubmit for admin approval of new content."
+      "needPermission": "Quiz đã được duyệt, cần xin phép admin trước khi chỉnh sửa",
+      "pendingExists": "Đang có yêu cầu chỉnh sửa chờ duyệt",
+      "placeholder": "Hãy mô tả lý do bạn muốn chỉnh sửa quiz...",
+      "reason": "Lý do chỉnh sửa",
+      "submit": "Gửi yêu cầu",
+      "title": "Yêu cầu chỉnh sửa quiz",
+      "warning": "Quiz đã được duyệt. Yêu cầu chỉnh sửa sẽ gửi đến admin xem xét. Sau khi được phép chỉnh sửa, bạn cần gửi lại quiz để admin phê duyệt nội dung mới."
     },
-    "editRequestError": "Error sending edit request",
-    "exploreDescription": "Discover new knowledge through exciting quizzes",
-    "exploreQuizzes": "Explore Quizzes",
-    "loadError": "Error loading quiz list",
-    "loading": "Loading quiz...",
-    "loadingRealQuizzes": "Loading real quizzes list...",
+    "editRequestError": "Gửi yêu cầu chỉnh sửa thất bại",
+    "exploreDescription": "Khám phá kiến thức mới qua các quiz thú vị",
+    "exploreQuizzes": "Khám phá quiz",
+    "loadError": "Không thể tải danh sách quiz",
+    "loading": "Đang tải quiz...",
+    "loadingRealQuizzes": "Đang tải danh sách quiz thật...",
     "myQuizzes": {
       "title": "Quiz của tôi",
       "copyLinkSuccess": "📋 Đã copy link quiz!",
@@ -1518,18 +1606,18 @@
         "deleteDraftInfo": "Tính năng xóa đang được phát triển"
       }
     },
-    "myQuizzesDescription": "Manage and track quizzes you've created",
-    "noDescription": "No description",
-    "noMatchFound": "No quizzes match the filter",
-    "noQuizzesInDatabase": "No quizzes in database",
-    "noQuizzesYet": "You haven't created any quizzes yet. Create your first quiz!",
-    "noTimeLimit": "No time limit",
-    "noTitle": "No title",
-    "notFound": "Quiz not found",
-    "playNow": "Play Now",
+  "myQuizzesDescription": "Quản lý và theo dõi các quiz bạn đã tạo",
+  "noDescription": "Chưa có mô tả",
+  "noMatchFound": "Không có quiz nào khớp bộ lọc",
+  "noQuizzesInDatabase": "Chưa có quiz nào trong hệ thống",
+  "noQuizzesYet": "Bạn chưa tạo quiz nào. Hãy tạo quiz đầu tiên!",
+  "noTimeLimit": "Không giới hạn thời gian",
+  "noTitle": "Chưa có tiêu đề",
+  "notFound": "Không tìm thấy quiz",
+  "playNow": "Chơi ngay",
     "players": "Người chơi",
     "popularQuizzes": "Quiz phổ biến",
-    "preview": "Preview",
+  "preview": "Xem trước",
     "previewPage": {
       "backToList": "Back to quiz list",
       "loadingQuiz": "Loading quiz...",
@@ -1672,10 +1760,10 @@
     },
     "retryConnection": "Thử lại kết nối",
     "status": {
-      "hasEditRequests": "Has edit requests"
+      "hasEditRequests": "Có yêu cầu chỉnh sửa"
     },
     "statusFilter": {
-      "all": "All statuses",
+      "all": "Tất cả trạng thái",
       "draft": "Bản nháp"
     },
     "typeFilter": {
@@ -1687,13 +1775,13 @@
     "standardQuiz": "Quiz thường",
     "materials": "tài liệu",
     "submitQuiz": "Nộp bài",
-    "submitReview": "Submit Review",
-    "tags": "Tags",
-    "takeQuiz": "Làm Quiz",
-    "title": "Title",
-    "topics": "Topics",
-    "updateSuccess": "Quiz updated successfully",
-    "viewReviews": "View Reviews",
+  "submitReview": "Gửi đánh giá",
+  "tags": "Thẻ",
+  "takeQuiz": "Làm quiz",
+  "title": "Tiêu đề",
+  "topics": "Chủ đề",
+  "updateSuccess": "Cập nhật quiz thành công",
+  "viewReviews": "Xem đánh giá",
     "questionsCount": "câu hỏi",
     "timeLimit": "Thời gian",
     "ratingCount": "đánh giá",
@@ -3122,7 +3210,10 @@
     "attempts": "Lần thử: {{current}}/{{max}}",
     "cancel": "Hủy",
     "confirm": "Xác nhận",
-    "maxAttemptsReached": "⚠️ Bạn đã vượt quá số lần thử cho phép. Vui lòng liên hệ người tạo quiz để được hỗ trợ."
+    "verifying": "Đang xác minh...",
+    "maxAttemptsReached": "⚠️ Bạn đã vượt quá số lần thử cho phép. Vui lòng liên hệ người tạo quiz để được hỗ trợ.",
+    "configError": "Lỗi cấu hình mật khẩu. Vui lòng liên hệ người tạo quiz.",
+    "verificationError": "Đã xảy ra lỗi trong quá trình xác minh. Vui lòng thử lại."
   },
   "quizCreation": {
     "editQuizInfo": "Chỉnh sửa thông tin quiz của bạn",
@@ -3150,6 +3241,7 @@
     "allowRetakeDesc": "Học viên có thể làm quiz nhiều lần để cải thiện điểm",
     "privacy": "Quyền riêng tư:",
     "public": "🌍 Công khai",
+  "private": "🔒 Riêng tư",
     "accessSettings": "Cài đặt quyền truy cập",
     "chooseAccessMethod": "Chọn cách mọi người truy cập quiz của bạn",
     "publicTitle": "Công khai",

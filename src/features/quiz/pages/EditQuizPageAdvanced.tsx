@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getQuizById, updateQuiz } from '../api';
 import { Quiz, Question } from '../types';
@@ -61,11 +61,7 @@ const EditQuizPageAdvanced: React.FC = () => {
 
   const [questions, setQuestions] = useState<Question[]>([]);
 
-  useEffect(() => {
-    if (id) loadQuiz();
-  }, [id]);
-
-  const loadQuiz = async () => {
+  const loadQuiz = useCallback(async () => {
     if (!id) return;
     
     setLoading(true);
@@ -95,7 +91,11 @@ const EditQuizPageAdvanced: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, t, navigate]);
+
+  useEffect(() => {
+    if (id) loadQuiz();
+  }, [id, loadQuiz]);
 
   const handleSave = async () => {
     if (!id || !quiz) return;

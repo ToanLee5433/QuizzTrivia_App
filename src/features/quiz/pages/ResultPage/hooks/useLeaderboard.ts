@@ -87,7 +87,7 @@ export const useLeaderboard = (quizId: string | null, currentResult?: any) => {
     };
 
     fetchLeaderboard();
-  }, [quizId, user]);
+  }, [quizId, user, currentResult]);
 
   return {
     leaderboard,

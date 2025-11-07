@@ -2,7 +2,7 @@
  * AudioPlayer - Component phát âm thanh fullscreen với waveform UI
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Play, Pause, Volume2, VolumeX, Download, SkipBack, SkipForward } from 'lucide-react';
 
 interface AudioPlayerProps {
@@ -19,6 +19,18 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, title, onClose }) =
   const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  const togglePlayPause = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (isPlaying) {
+      audio.pause();
+    } else {
+      audio.play();
+    }
+    setIsPlaying(!isPlaying);
+  }, [isPlaying]);
+
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -32,7 +44,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, title, onClose }) =
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [onClose]);
+  }, [onClose, togglePlayPause]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -52,18 +64,6 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, title, onClose }) =
       audio.removeEventListener('ended', handleEnded);
     };
   }, []);
-
-  const togglePlayPause = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    if (isPlaying) {
-      audio.pause();
-    } else {
-      audio.play();
-    }
-    setIsPlaying(!isPlaying);
-  };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     const audio = audioRef.current;
