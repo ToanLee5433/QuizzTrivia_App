@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
-  Clock, Star, Play, BookOpen, Target, FileText, Video, 
+  Clock, Star, Play, Eye, BookOpen, Target, FileText, Video, 
   Image as ImageIcon, Music, Link as LinkIcon, Presentation, 
-  ExternalLink, Users, Lock, Trophy, Brain, X,
-  ChevronRight, TrendingUp
+  ExternalLink, Users, Lock, Trophy, Brain, Check, X,
+  ChevronRight, Calendar, Award, TrendingUp, Heart
 } from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
@@ -13,12 +13,16 @@ import { Quiz } from '../types';
 import RichTextViewer from '../../../shared/components/ui/RichTextViewer';
 import { reviewService } from '../services/reviewService';
 import { QuizReviewStats } from '../types/review';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../lib/store';
 import PasswordModal from '../../../shared/components/ui/PasswordModal';
 
 const QuizPreviewPage: React.FC = () => {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const user = useSelector((state: RootState) => state.auth.user);
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [loading, setLoading] = useState(true);
   const [reviewStats, setReviewStats] = useState<QuizReviewStats | null>(null);

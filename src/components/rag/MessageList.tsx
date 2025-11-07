@@ -23,9 +23,10 @@ interface Message {
 
 interface MessageListProps {
   messages: Message[];
+  onQuizClick?: () => void;
 }
 
-export function MessageList({ messages }: MessageListProps) {
+export function MessageList({ messages, onQuizClick }: MessageListProps) {
   return (
     <>
       {messages.map((message, index) => (
@@ -122,7 +123,12 @@ export function MessageList({ messages }: MessageListProps) {
                 </p>
                 <div className="space-y-3">
                   {message.quizRecommendations.map((quiz, i) => (
-                    <QuizRecommendationCard key={quiz.quizId} quiz={quiz} index={i} />
+                    <QuizRecommendationCard 
+                      key={quiz.quizId} 
+                      quiz={quiz} 
+                      index={i} 
+                      onNavigate={onQuizClick}
+                    />
                   ))}
                 </div>
               </div>

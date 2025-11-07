@@ -7,15 +7,18 @@
 import { motion } from 'framer-motion';
 import { Star, Users, ArrowRight, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import type { QuizRecommendation } from '../../lib/genkit/types';
 
 interface QuizRecommendationCardProps {
   quiz: QuizRecommendation;
   index: number;
+  onNavigate?: () => void;
 }
 
-export function QuizRecommendationCard({ quiz, index }: QuizRecommendationCardProps) {
+export function QuizRecommendationCard({ quiz, index, onNavigate }: QuizRecommendationCardProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const getDifficultyColor = (difficulty?: string) => {
     switch (difficulty?.toLowerCase()) {
@@ -44,7 +47,8 @@ export function QuizRecommendationCard({ quiz, index }: QuizRecommendationCardPr
   };
 
   const handleClick = () => {
-    navigate(`/quiz/${quiz.quizId}/preview`);
+    onNavigate?.(); // Call onNavigate callback if provided
+    navigate(`/quizzes/${quiz.quizId}`);
   };
 
   return (
@@ -101,7 +105,7 @@ export function QuizRecommendationCard({ quiz, index }: QuizRecommendationCardPr
             {quiz.questionCount && quiz.questionCount > 0 && (
               <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-lg">
                 <BookOpen className="w-3 h-3" />
-                <span className="font-medium">{quiz.questionCount} câu</span>
+                <span className="font-medium">{quiz.questionCount} {t('chatbot.quizRecommendation.questions')}</span>
               </div>
             )}
 
@@ -141,7 +145,7 @@ export function QuizRecommendationCard({ quiz, index }: QuizRecommendationCardPr
             📂 {quiz.category}
           </span>
           <span className="text-blue-800 dark:text-blue-200 font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
-            Làm quiz ngay
+            {t('chatbot.quizRecommendation.startQuiz')}
             <ArrowRight className="w-3 h-3" />
           </span>
         </div>

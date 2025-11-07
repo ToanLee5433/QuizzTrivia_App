@@ -307,13 +307,55 @@
     },
     "preview": {
       "title": "Xem trước Quiz",
+      "loading": "Đang tải quiz...",
+      "notFound": "Không tìm thấy Quiz",
+      "notFoundDesc": "Quiz bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.",
+      "backToQuizzes": "Quay lại danh sách Quiz",
+      "quizzes": "Các Quiz",
+      "passwordProtected": "Yêu cầu mật khẩu",
       "category": "Chủ đề",
       "difficulty": "Độ khó",
       "description": "Mô tả",
       "status": "Trạng thái",
-      "questions": "Số câu hỏi",
+      "questions": "{{count}} câu hỏi",
+      "minutes": "{{count}} phút",
+      "players": "{{count}} người chơi",
+      "playSolo": "Chơi Đơn",
+      "playMultiplayer": "Chơi Nhiều Người",
+      "reviews": "{{count}} đánh giá",
+      "about": "Về Quiz này",
+      "learningMaterials": "Tài liệu học tập",
+      "resources": "{{count}} tài liệu",
+      "tip": "Mẹo: Xem tài liệu học tập trước khi làm quiz!",
+      "withMaterialsTip": "Quiz này có {{count}} tài liệu học tập để giúp bạn chuẩn bị.",
+      "questionsPreview": "Xem trước các câu hỏi",
+      "totalQuestions": "Tổng số câu hỏi",
+      "points": "{{count}} điểm",
+      "andMore": "và thêm {{count}} câu nữa...",
+      "quickInfo": "Thông tin nhanh",
+      "duration": "Thời lượng",
+      "avgScore": "Điểm TB",
+      "startQuiz": "Bắt đầu Quiz",
+      "playWithFriends": "Chơi cùng bạn bè ở chế độ nhiều người",
+      "stats": "Thống kê",
+      "totalPlayers": "Tổng người chơi",
+      "min": "phút",
+      "required": "Bắt buộc",
       "questionList": "Danh sách câu hỏi",
-      "learningResourcesTitle": "Tài liệu học tập ({{count}})"
+      "learningResourcesTitle": "Tài liệu học tập ({{count}})",
+      "resourceTypes": {
+        "video": "Video",
+        "pdf": "Tài liệu PDF",
+        "image": "Hình ảnh",
+        "audio": "Âm thanh",
+        "link": "Liên kết",
+        "slides": "Slide thuyết trình"
+      },
+      "difficulties": {
+        "easy": "Dễ",
+        "medium": "Trung bình",
+        "hard": "Khó"
+      }
     },
     "categories": {
       "headerDesc": "Quản lý chủ đề quiz",
@@ -322,6 +364,12 @@
       "addError": "Lỗi khi thêm chủ đề",
       "deleteSuccess": "Xóa chủ đề thành công",
       "deleteError": "Lỗi khi xóa chủ đề"
+    },
+    "chatbot": {
+      "quizRecommendation": {
+        "questions": "câu",
+        "startQuiz": "Làm quiz ngay"
+      }
     },
     "users": {
       "cannotChangeSelfRole": "Không thể thay đổi quyền của chính mình",

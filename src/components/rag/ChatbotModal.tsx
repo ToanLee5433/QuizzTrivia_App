@@ -283,7 +283,7 @@ export function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
               </div>
             )}
 
-            <MessageList messages={messages} />
+            <MessageList messages={messages} onQuizClick={onClose} />
 
             {isLoading && <TypingIndicator />}
 

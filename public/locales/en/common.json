@@ -307,13 +307,55 @@
     },
     "preview": {
       "title": "Quiz Preview",
+      "loading": "Loading quiz...",
+      "notFound": "Quiz Not Found",
+      "notFoundDesc": "The quiz you're looking for doesn't exist or has been removed.",
+      "backToQuizzes": "Back to Quizzes",
+      "quizzes": "Quizzes",
+      "passwordProtected": "Password Protected",
       "category": "Category",
       "difficulty": "Difficulty",
       "description": "Description",
       "status": "Status",
-      "questions": "Questions",
+      "questions": "{{count}} Questions",
+      "minutes": "{{count}} minutes",
+      "players": "{{count}} players",
+      "playSolo": "Play Solo",
+      "playMultiplayer": "Play Multiplayer",
+      "reviews": "{{count}} Reviews",
+      "about": "About This Quiz",
+      "learningMaterials": "Learning Materials",
+      "resources": "{{count}} Resources",
+      "tip": "Tip: Review learning materials before taking the quiz!",
+      "withMaterialsTip": "This quiz includes {{count}} learning resources to help you prepare.",
+      "questionsPreview": "Questions Preview",
+      "totalQuestions": "Total Questions",
+      "points": "{{count}} points",
+      "andMore": "and {{count}} more...",
+      "quickInfo": "Quick Info",
+      "duration": "Duration",
+      "avgScore": "Avg Score",
+      "startQuiz": "Start Quiz",
+      "playWithFriends": "Play with friends in multiplayer mode",
+      "stats": "Stats",
+      "totalPlayers": "Total Players",
+      "min": "min",
+      "required": "Required",
       "questionList": "Question List",
-      "learningResourcesTitle": "Learning Resources ({{count}})"
+      "learningResourcesTitle": "Learning Resources ({{count}})",
+      "resourceTypes": {
+        "video": "Video",
+        "pdf": "PDF Document",
+        "image": "Image",
+        "audio": "Audio",
+        "link": "External Link",
+        "slides": "Presentation"
+      },
+      "difficulties": {
+        "easy": "Easy",
+        "medium": "Medium",
+        "hard": "Hard"
+      }
     },
     "categories": {
       "headerDesc": "Manage quiz categories",
@@ -322,6 +364,12 @@
       "addError": "Error adding category",
       "deleteSuccess": "Category deleted successfully",
       "deleteError": "Error deleting category"
+    },
+    "chatbot": {
+      "quizRecommendation": {
+        "questions": "questions",
+        "startQuiz": "Start quiz now"
+      }
     },
     "users": {
       "cannotChangeSelfRole": "Cannot change your own role",
