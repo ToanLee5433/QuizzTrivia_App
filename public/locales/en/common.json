@@ -357,6 +357,66 @@
         "hard": "Hard"
       }
     },
+    "quizOverview": {
+      "breadcrumb": {
+        "quizzes": "Quizzes"
+      },
+      "difficulty": {
+        "easy": "Easy",
+        "medium": "Medium",
+        "hard": "Hard"
+      },
+      "status": {
+        "locked": "Password Protected"
+      },
+      "stats": {
+        "reviews": "{{count}} reviews",
+        "players": "{{count}} players",
+        "totalPlayers": "Total Players",
+        "avgScore": "Average Score",
+        "title": "Statistics"
+      },
+      "sections": {
+        "overview": "Quiz Overview",
+        "questionsPreview": "Questions Preview",
+        "moreQuestions": "and {{count}} more questions..."
+      },
+      "facts": {
+        "minutes": "minutes",
+        "questions": "questions",
+        "players": "players",
+        "points": "pts",
+        "total": "total"
+      },
+      "resources": {
+        "title": "Learning Materials",
+        "items": "items",
+        "minutes": "min",
+        "required": "Required",
+        "tip": "Review these materials before taking the quiz for better results."
+      },
+      "cta": {
+        "title": "Ready to Start?",
+        "start": "Start Quiz",
+        "unlock": "Unlock Quiz",
+        "retake": "Retake Quiz"
+      },
+      "access": {
+        "locked": "This quiz is password protected",
+        "unlockRequired": "Enter password to start",
+        "ready": "Ready to start",
+        "noRestrictions": "No restrictions"
+      },
+      "errors": {
+        "title": "Quiz Not Found",
+        "description": "The quiz you are looking for does not exist or has been removed.",
+        "notFound": "Quiz not found",
+        "loadFailed": "Failed to load quiz"
+      },
+      "actions": {
+        "backToQuizzes": "Back to Quizzes"
+      }
+    },
     "categories": {
       "headerDesc": "Manage quiz categories",
       "enterName": "Enter category name",

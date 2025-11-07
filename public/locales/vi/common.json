@@ -357,6 +357,66 @@
         "hard": "Khó"
       }
     },
+    "quizOverview": {
+      "breadcrumb": {
+        "quizzes": "Các Quiz"
+      },
+      "difficulty": {
+        "easy": "Dễ",
+        "medium": "Trung bình",
+        "hard": "Khó"
+      },
+      "status": {
+        "locked": "Yêu cầu mật khẩu"
+      },
+      "stats": {
+        "reviews": "{{count}} đánh giá",
+        "players": "{{count}} người chơi",
+        "totalPlayers": "Tổng người chơi",
+        "avgScore": "Điểm trung bình",
+        "title": "Thống kê"
+      },
+      "sections": {
+        "overview": "Tổng quan Quiz",
+        "questionsPreview": "Xem trước câu hỏi",
+        "moreQuestions": "và {{count}} câu hỏi nữa..."
+      },
+      "facts": {
+        "minutes": "phút",
+        "questions": "câu hỏi",
+        "players": "người chơi",
+        "points": "điểm",
+        "total": "tổng cộng"
+      },
+      "resources": {
+        "title": "Tài liệu học tập",
+        "items": "mục",
+        "minutes": "phút",
+        "required": "Bắt buộc",
+        "tip": "Xem tài liệu này trước khi làm quiz để đạt kết quả tốt hơn."
+      },
+      "cta": {
+        "title": "Sẵn sàng bắt đầu?",
+        "start": "Bắt đầu Quiz",
+        "unlock": "Mở khóa Quiz",
+        "retake": "Làm lại Quiz"
+      },
+      "access": {
+        "locked": "Quiz này được bảo vệ bằng mật khẩu",
+        "unlockRequired": "Nhập mật khẩu để bắt đầu",
+        "ready": "Sẵn sàng bắt đầu",
+        "noRestrictions": "Không có hạn chế"
+      },
+      "errors": {
+        "title": "Không tìm thấy Quiz",
+        "description": "Quiz bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.",
+        "notFound": "Không tìm thấy quiz",
+        "loadFailed": "Không thể tải quiz"
+      },
+      "actions": {
+        "backToQuizzes": "Quay lại danh sách Quiz"
+      }
+    },
     "categories": {
       "headerDesc": "Quản lý chủ đề quiz",
       "enterName": "Nhập tên chủ đề",

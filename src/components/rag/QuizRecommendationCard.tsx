@@ -48,7 +48,7 @@ export function QuizRecommendationCard({ quiz, index, onNavigate }: QuizRecommen
 
   const handleClick = () => {
     onNavigate?.(); // Call onNavigate callback if provided
-    navigate(`/quizzes/${quiz.quizId}`);
+    navigate(`/quiz/${quiz.quizId}/preview`);
   };
 
   return (
