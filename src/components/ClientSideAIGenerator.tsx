@@ -282,7 +282,10 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
                   <div>
                     <p className="text-sm font-medium text-green-800">{uploadedFile.name}</p>
                     <p className="text-xs text-green-600">
-                      {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB - {t('aiGenerator.processedSuccess')}
+                      {t('aiGenerator.fileSizeDisplay', { 
+                        size: (uploadedFile.size / 1024 / 1024).toFixed(2),
+                        status: t('aiGenerator.processedSuccess')
+                      })}
                     </p>
                   </div>
                 </div>
@@ -352,26 +355,34 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
           {isGenerating ? (
             <>
               <RefreshCw className="w-5 h-5 animate-spin" />
-              Đang tạo câu hỏi...
+              {t('aiGenerator.generating')}
             </>
           ) : (
             <>
               <Wand2 className="w-5 h-5" />
-              Tạo {formData.numQuestions} câu hỏi {getDifficultyLabel(formData.difficulty)}
-              {formData.useFileContent && ' từ file'}
+              {formData.useFileContent 
+                ? t('aiGenerator.generateButtonWithFile', { 
+                    count: formData.numQuestions,
+                    difficulty: getDifficultyLabel(formData.difficulty)
+                  })
+                : t('aiGenerator.generateButton', {
+                    count: formData.numQuestions,
+                    difficulty: getDifficultyLabel(formData.difficulty)
+                  })
+              }
             </>
           )}
         </button>
 
         {/* Info */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-blue-800 mb-2">💡 Thông tin:</h4>
+          <h4 className="text-sm font-medium text-blue-800 mb-2">{t('aiGenerator.infoTitle')}</h4>
           <ul className="text-sm text-blue-700 space-y-1">
-            <li>• Sử dụng Firebase Cloud Functions + Google Gemini AI</li>
-            <li>• Model: gemini-2.0-flash-exp (mới nhất)</li>
-            <li>• Xử lý thông qua server (bảo mật API key)</li>
-            <li>• <strong>Mới:</strong> Hỗ trợ đọc file ảnh, PDF, Word, Text</li>
-            <li>• Không giới hạn quota client-side</li>
+            <li>• {t('aiGenerator.infoCloudFunctions')}</li>
+            <li>• {t('aiGenerator.infoModel')}</li>
+            <li>• {t('aiGenerator.infoSecurity')}</li>
+            <li>• <strong>{t('aiGenerator.infoNew')}</strong> {t('aiGenerator.infoFileSupport')}</li>
+            <li>• {t('aiGenerator.infoNoQuota')}</li>
           </ul>
         </div>
       </div>

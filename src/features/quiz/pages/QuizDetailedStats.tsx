@@ -212,7 +212,7 @@ const QuizDetailedStats: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [id, user, timeRange, navigate]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [id, user, timeRange, navigate]);
   // calculateStats is a stable function defined below, doesn't need to be in dependencies
 
   useEffect(() => {

@@ -1,7 +1,8 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { WithTranslation, withTranslation } from 'react-i18next';
 
-interface Props {
+interface Props extends WithTranslation {
   children: ReactNode;
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
@@ -76,12 +77,12 @@ class MultiplayerErrorBoundary extends Component<Props, State> {
 
               {/* Error Title */}
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                Oops! Something went wrong
+                {this.props.t('multiplayer.errorBoundary.title')}
               </h1>
 
               {/* Error Message */}
               <p className="text-gray-600 mb-6">
-                The multiplayer game encountered an unexpected error. Don't worry, your progress might be saved.
+                {this.props.t('multiplayer.errorBoundary.message')}
               </p>
 
               {/* Error Details (Development only) */}
@@ -93,7 +94,7 @@ class MultiplayerErrorBoundary extends Component<Props, State> {
                   {this.state.errorInfo && (
                     <details className="mt-2">
                       <summary className="text-xs text-gray-600 cursor-pointer hover:text-gray-900">
-                        Component Stack
+                        {this.props.t('multiplayer.errorBoundary.componentStack')}
                       </summary>
                       <pre className="text-xs text-gray-600 mt-2 overflow-auto max-h-40">
                         {this.state.errorInfo.componentStack}
@@ -110,19 +111,19 @@ class MultiplayerErrorBoundary extends Component<Props, State> {
                   className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2"
                 >
                   <RefreshCw className="w-4 h-4" />
-                  Try Again
+                  {this.props.t('multiplayer.errorBoundary.tryAgain')}
                 </button>
                 <button
                   onClick={this.handleReload}
                   className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
                 >
-                  Reload Page
+                  {this.props.t('multiplayer.errorBoundary.reloadPage')}
                 </button>
               </div>
 
               {/* Help Text */}
               <p className="text-xs text-gray-500 mt-4">
-                If the problem persists, please contact support or try again later.
+                {this.props.t('multiplayer.errorBoundary.helpText')}
               </p>
             </div>
           </div>
@@ -134,4 +135,4 @@ class MultiplayerErrorBoundary extends Component<Props, State> {
   }
 }
 
-export default MultiplayerErrorBoundary;
+export default withTranslation()(MultiplayerErrorBoundary);

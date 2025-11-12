@@ -21,7 +21,7 @@ const FavoritesPage: React.FC = () => {
   useEffect(() => {
     if (!user) return;
     if (allQuizzes.length === 0 && !quizLoading) {
-      dispatch(fetchQuizzes({ user }) as any)
+      dispatch(fetchQuizzes({}) as any)
         .unwrap()
         .catch(() => {
           setError(t('favorites.loadError'));

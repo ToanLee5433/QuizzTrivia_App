@@ -29,8 +29,8 @@ import type { GameResults as GameResultsType } from '../types/index';
 export interface MultiplayerState {
   currentState: 'mode-selection' | 'create-room' | 'join-room' | 'lobby' | 'game' | 'results';
   roomId?: string;
-  roomData?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
-  gameData?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  roomData?: any;
+  gameData?: any;
   results?: GameResultsType;
   error?: string;
   isConnecting: boolean;
@@ -64,11 +64,11 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
   
   const [multiplayerService, setMultiplayerService] = useState<MultiplayerServiceInterface | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
-  const [readyCountdown, setReadyCountdown] = useState<number | null>(null);
   const [joinError, setJoinError] = useState<string | undefined>(undefined);
 	const [createLoading, setCreateLoading] = useState<boolean>(false);
 	const [joinLoading, setJoinLoading] = useState<boolean>(false);
   const [isMobileChatOpen, setIsMobileChatOpen] = useState<boolean>(false);
+  const [isReconnecting, setIsReconnecting] = useState<boolean>(false);
 
   // Initialize multiplayer service
   useEffect(() => {
@@ -105,7 +105,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
     return () => {
       service.disconnect();
     };
-  }, [currentUserId, currentUserName, t]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentUserId, currentUserName, t]);
   // Handlers are intentionally omitted from dependencies to prevent infinite loop from re-subscription
 
   // Try resuming room from state (if page reload)
@@ -134,56 +134,37 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
         players: roomData.players || prev.roomData?.players || []
       };
       
+      // Auto-transition to game state when room status changes
+      if (roomData?.status === 'playing' && prev.currentState === 'lobby') {
+        logger.info('Room status changed to playing, transitioning to game');
+        return { ...prev, roomData: updatedRoomData, currentState: 'game' };
+      }
+      
       return { ...prev, roomData: updatedRoomData };
     });
-    
-    // Auto-start countdown when all players ready (no host restriction)
-    try {
-      const players = roomData?.players || [];
-      const total = players.length;
-      const ready = players.filter((p: any) => p.isReady).length;
-      const allReady = total >= 2 && ready === total;
-      
-      if (allReady && state.currentState === 'lobby') {
-        if (readyCountdown === null) {
-          setReadyCountdown(5);
-          logger.info('All players ready - starting countdown', { total, ready });
-        }
-      } else {
-        if (readyCountdown !== null) {
-          setReadyCountdown(null);
-          logger.debug('Countdown cancelled', { total, ready, allReady });
-        }
-      }
-    } catch (error) {
-      logger.error('Error in handleRoomUpdate', error);
-    }
-  }, [state.currentState, readyCountdown]);
+  }, []);
 
+  // Auto-reconnect on disconnect
   useEffect(() => {
-    if (readyCountdown === null) return;
-    
-    if (readyCountdown <= 0) {
-      // Start game when countdown reaches 0 (any player can trigger)
-      if (multiplayerService && state.roomId) {
-        logger.info('Starting game from countdown...');
-        multiplayerService.startGame(state.roomId).then(() => {
-          logger.success('Game started successfully');
-        }).catch((error) => {
-          logger.error('Failed to start game', error);
-          toast.error('Failed to start game');
-        });
-      }
-      setReadyCountdown(null);
-      return;
+    if (connectionStatus === 'error' && !isReconnecting && multiplayerService) {
+      setIsReconnecting(true);
+      const timer = setTimeout(async () => {
+        logger.info('Attempting to reconnect...');
+        try {
+          setConnectionStatus('connecting');
+          await multiplayerService.connect(currentUserId, currentUserName);
+          setConnectionStatus('connected');
+          toast.success(t('multiplayer.success.connectionRestored'));
+        } catch (error) {
+          logger.error('Reconnection failed:', error);
+          setConnectionStatus('error');
+        } finally {
+          setIsReconnecting(false);
+        }
+      }, 3000);
+      return () => clearTimeout(timer);
     }
-    
-    const timer = setTimeout(() => {
-      setReadyCountdown(prev => prev !== null ? prev - 1 : null);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, [readyCountdown, multiplayerService, state.roomId]);
+  }, [connectionStatus, isReconnecting, multiplayerService, currentUserId, currentUserName, t]);
 
   const handleGameStart = useCallback((gameData: any) => {
     logger.debug('Game Start Event Received', {
@@ -461,16 +442,6 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
                 onLeaveRoom={handleLeaveRoom}
                 multiplayerService={multiplayerService ?? undefined}
               />
-              {readyCountdown !== null && (
-                <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
-                  <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-pulse">
-                    <div className="w-3 h-3 bg-white rounded-full animate-ping"></div>
-                    <span className="font-bold text-lg">
-                      {t('common.start')}: {readyCountdown}s
-                    </span>
-                  </div>
-                </div>
-              )}
             </div>
             
             {/* Chat Sidebar - Hidden on mobile, show on lg+ */}

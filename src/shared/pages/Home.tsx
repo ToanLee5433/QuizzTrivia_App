@@ -40,7 +40,7 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     if (quizzes.length === 0) {
-      dispatch(fetchQuizzes({ user }) as any);
+      dispatch(fetchQuizzes({}) as any);
     }
     loadRealStats();
   }, [dispatch, user, quizzes.length]);

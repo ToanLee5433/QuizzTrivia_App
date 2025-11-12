@@ -165,12 +165,12 @@ export function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
               </motion.div>
               <div>
                 <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  AI Learning Assistant
+                  {t('chatbot.title')}
                   <span className="px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded-full text-xs font-normal border border-white/30">
-                    Beta
+                    {t('chatbot.beta')}
                   </span>
                 </h2>
-                <p className="text-xs text-white/90">Trợ lý học tập thông minh được hỗ trợ bởi Google AI</p>
+                <p className="text-xs text-white/90">{t('chatbot.subtitle')}</p>
               </div>
             </div>
             <button
@@ -199,11 +199,10 @@ export function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
                   transition={{ delay: 0.2 }}
                 >
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                    Chào mừng đến với AI Learning Assistant! 👋
+                    {t('chatbot.welcome')}
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400 max-w-md mb-6">
-                    Hỏi tôi bất cứ điều gì về các quiz bạn đã học.
-                    Tôi sẽ trả lời chi tiết và gợi ý quiz phù hợp cho bạn.
+                    {t('chatbot.welcomeMessage')}
                   </p>
                 </motion.div>
                 <motion.div
@@ -220,10 +219,10 @@ export function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
                       <div className="text-2xl">💡</div>
                       <div>
                         <div className="font-medium text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400">
-                          Giải thích khái niệm
+                          {t('chatbot.suggestions.explain.title')}
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Tìm hiểu chi tiết về chủ đề bạn quan tâm
+                          {t('chatbot.suggestions.explain.description')}
                         </div>
                       </div>
                     </div>
@@ -237,10 +236,10 @@ export function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
                       <div className="text-2xl">📝</div>
                       <div>
                         <div className="font-medium text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                          Tóm tắt nội dung
+                          {t('chatbot.suggestions.summarize.title')}
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Xem tổng quan kiến thức quan trọng
+                          {t('chatbot.suggestions.summarize.description')}
                         </div>
                       </div>
                     </div>
@@ -254,10 +253,10 @@ export function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
                       <div className="text-2xl">🎯</div>
                       <div>
                         <div className="font-medium text-gray-900 dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400">
-                          Ví dụ thực tế
+                          {t('chatbot.suggestions.examples.title')}
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Học qua các trường hợp cụ thể
+                          {t('chatbot.suggestions.examples.description')}
                         </div>
                       </div>
                     </div>
@@ -271,10 +270,10 @@ export function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
                       <div className="text-2xl">🎓</div>
                       <div>
                         <div className="font-medium text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
-                          Gợi ý quiz
+                          {t('chatbot.suggestions.recommend.title')}
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Tìm quiz phù hợp để thực hành
+                          {t('chatbot.suggestions.recommend.description')}
                         </div>
                       </div>
                     </div>
@@ -292,7 +291,7 @@ export function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
                 <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-red-900 dark:text-red-200">
-                    Đã xảy ra lỗi
+                    {t('chatbot.error')}
                   </p>
                   <p className="text-sm text-red-700 dark:text-red-300 mt-1">
                     {error}
@@ -323,11 +322,11 @@ export function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
                 className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
               >
                 <Send className="w-5 h-5" />
-                Gửi
+                {t('common.send')}
               </button>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              💡 Tip: Hỏi về nội dung bạn đã học trong các quiz đã mở khóa
+              {t('chatbot.tip')}
             </p>
           </div>
         </motion.div>

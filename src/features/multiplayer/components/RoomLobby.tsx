@@ -10,7 +10,9 @@ import {
   Trophy,
   Zap,
   Shield,
-  Star
+  Star,
+  Settings,
+  X
 } from 'lucide-react';
 import type { MultiplayerServiceInterface } from '../services/enhancedMultiplayerService';
 import realtimeService from '../services/realtimeMultiplayerService';
@@ -56,6 +58,12 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
   const { t } = useTranslation();
   const [copySuccess, setCopySuccess] = useState(false);
   const [countdownData, setCountdownData] = useState<{ remaining: number; isActive: boolean } | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [roomSettings, setRoomSettings] = useState({
+    timeLimit: roomData?.settings?.timeLimit || 30,
+    showLeaderboard: roomData?.settings?.showLeaderboard ?? true,
+    allowLateJoin: roomData?.settings?.allowLateJoin ?? true
+  });
 
   const players = useMemo(() => roomData?.players || [], [roomData?.players]);
   const readyCount = useMemo(() => players.filter(p => p.isReady).length, [players]);
@@ -149,8 +157,18 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
     );
   }
 
+  const handleUpdateSettings = async () => {
+    if (!multiplayerService || !roomData?.id) return;
+    try {
+      await multiplayerService.updateRoomSettings(roomData.id, roomSettings);
+      setShowSettings(false);
+    } catch (error) {
+      console.error('Failed to update settings:', error);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden">
+    <div className="h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden flex flex-col">
       {/* Subtle Background Pattern */}
       <div className="absolute inset-0 opacity-30" style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
@@ -163,10 +181,12 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
         <div className="absolute -bottom-20 left-1/2 w-64 h-64 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
       </div>
 
-      <div className="relative z-10 p-3 sm:p-4 lg:p-6 xl:p-8">
-        <div className="max-w-7xl mx-auto">
+      <div className="relative z-10 flex-1 flex overflow-hidden">
+        {/* Main Content */}
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
+          <div className="max-w-5xl mx-auto">
           {/* Header Card */}
-          <div className="bg-white rounded-2xl lg:rounded-3xl shadow-xl border border-gray-100 p-4 sm:p-5 lg:p-8 mb-4 lg:mb-6">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl lg:rounded-3xl shadow-xl border border-gray-100 p-4 sm:p-5 lg:p-6 mb-4">
             {/* Room Title Section */}
             <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 lg:gap-6 mb-4 lg:mb-6">
               <div className="flex-1">
@@ -180,7 +200,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                     </h1>
                     <p className="text-gray-500 text-xs sm:text-sm font-medium flex items-center gap-1 sm:gap-2">
                       <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-indigo-500 flex-shrink-0" />
-                      <span className="truncate">Multiplayer Quiz Room</span>
+                      <span className="truncate">{t('multiplayer.roomTitle')}</span>
                     </p>
                   </div>
                 </div>
@@ -191,10 +211,10 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                   <div className="bg-gradient-to-r from-blue-500 to-indigo-500 px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg sm:rounded-xl flex items-center gap-1.5 sm:gap-2 shadow-md hover:shadow-lg transition-shadow">
                     <Users className="w-4 h-4 sm:w-5 sm:h-5 text-white flex-shrink-0" />
                     <span className="text-white font-bold text-sm sm:text-base">{players.length}/{roomData.maxPlayers}</span>
-                    <span className="text-blue-50 text-xs sm:text-sm font-medium hidden sm:inline">Players</span>
+                    <span className="text-blue-50 text-xs sm:text-sm font-medium hidden sm:inline">{t('multiplayer.players')}</span>
                     <div className="hidden md:flex items-center gap-1 ml-1 pl-1 border-l border-blue-300">
                       <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                      <span className="text-blue-50 text-xs font-medium">{onlineCount} online</span>
+                      <span className="text-blue-50 text-xs font-medium">{onlineCount} {t('multiplayer.online')}</span>
                     </div>
                   </div>
 
@@ -202,7 +222,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                   <div className="bg-gradient-to-r from-green-500 to-emerald-500 px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg sm:rounded-xl flex items-center gap-1.5 sm:gap-2 shadow-md hover:shadow-lg transition-shadow">
                     <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white flex-shrink-0" />
                     <span className="text-white font-bold text-sm sm:text-base">{readyCount}</span>
-                    <span className="text-green-50 text-xs sm:text-sm font-medium hidden sm:inline">Ready</span>
+                    <span className="text-green-50 text-xs sm:text-sm font-medium hidden sm:inline">{t('multiplayer.ready')}</span>
                   </div>
 
                   {/* Room Code */}
@@ -217,7 +237,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                     <Copy className="w-4 h-4 sm:w-5 sm:h-5 text-white flex-shrink-0" />
                     <span className="text-white font-mono font-bold text-sm sm:text-base lg:text-lg">{roomData.code}</span>
                     {copySuccess && (
-                      <span className="text-white text-xs font-semibold">✓</span>
+                      <span className="text-white text-xs font-semibold">{t('multiplayer.checkmark')}</span>
                     )}
                   </button>
                 </div>
@@ -225,25 +245,43 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
               
               {/* Action Buttons */}
               <div className="flex flex-col gap-2 sm:gap-3 w-full lg:w-auto">
-                {/* Countdown Timer - Synced via RTDB */}
+                {/* Countdown Timer - Enhanced Visual */}
                 {countdownData && countdownData.isActive && countdownData.remaining > 0 && (
-                  <div className="bg-gradient-to-r from-orange-500 to-red-500 px-4 py-3 sm:px-6 sm:py-4 rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 sm:gap-3 shadow-lg animate-pulse">
-                    <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0" />
-                    <div className="text-center">
-                      <div className="text-2xl sm:text-3xl font-black text-white">{countdownData.remaining}</div>
-                      <div className="text-xs text-orange-50 font-semibold">{t('multiplayer.starting')}</div>
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 blur-xl opacity-50 animate-pulse"></div>
+                    <div className="relative bg-gradient-to-r from-orange-500 to-red-500 px-6 py-4 rounded-2xl flex items-center justify-center gap-3 shadow-2xl transform hover:scale-105 transition-transform">
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-white rounded-full blur animate-ping"></div>
+                        <Clock className="relative w-6 h-6 text-white" />
+                      </div>
+                      <div className="text-center">
+                        <div className="text-4xl font-black text-white tabular-nums">
+                          {countdownData.remaining}
+                        </div>
+                        <div className="text-sm text-orange-50 font-bold uppercase tracking-wider">
+                          {t('multiplayer.starting')}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
                 
                 <div className="flex gap-2 sm:gap-3">
+                  {/* Settings Button */}
+                  <button
+                    onClick={() => setShowSettings(!showSettings)}
+                    className="px-4 py-2.5 bg-gradient-to-r from-gray-100 to-slate-100 hover:from-gray-200 hover:to-slate-200 text-gray-700 rounded-xl font-semibold transition-all hover:scale-105 flex items-center gap-2 shadow-md text-sm"
+                  >
+                    <Settings className="w-4 h-4" />
+                  </button>
+                  
                   {/* Leave Button */}
                   <button
                     onClick={onLeaveRoom}
-                    className="flex-1 lg:flex-none px-4 py-2.5 sm:px-5 sm:py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all hover:scale-105 flex items-center justify-center gap-2 shadow-md text-sm sm:text-base"
+                    className="px-4 py-2.5 bg-gradient-to-r from-red-100 to-pink-100 hover:from-red-200 hover:to-pink-200 text-red-700 rounded-xl font-semibold transition-all hover:scale-105 flex items-center gap-2 shadow-md text-sm"
                   >
-                    <LogOut className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                    <span>Leave</span>
+                    <LogOut className="w-4 h-4" />
+                    <span>{t('multiplayer.leave')}</span>
                   </button>
                   
                   {/* Ready Button */}
@@ -258,12 +296,12 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                     {currentPlayer?.isReady ? (
                       <>
                         <Shield className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                        <span className="whitespace-nowrap">Not Ready</span>
+                        <span className="whitespace-nowrap">{t('multiplayer.notReady')}</span>
                       </>
                     ) : (
                       <>
                         <Zap className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                        <span className="whitespace-nowrap">I'm Ready!</span>
+                        <span className="whitespace-nowrap">{t('multiplayer.ready')}</span>
                       </>
                     )}
                   </button>
@@ -278,7 +316,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                 <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-2">
                   <div className="text-center sm:text-left">
                     <div className="text-2xl sm:text-3xl font-bold text-blue-600 mb-0.5 sm:mb-1">{players.length}</div>
-                    <div className="text-blue-600 text-xs sm:text-sm font-semibold">Total</div>
+                    <div className="text-blue-600 text-xs sm:text-sm font-semibold">{t('multiplayer.total')}</div>
                   </div>
                   <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
                     <Users className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-white" />
@@ -291,7 +329,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                 <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-2">
                   <div className="text-center sm:text-left">
                     <div className="text-2xl sm:text-3xl font-bold text-green-600 mb-0.5 sm:mb-1">{readyCount}</div>
-                    <div className="text-green-600 text-xs sm:text-sm font-semibold">Ready</div>
+                    <div className="text-green-600 text-xs sm:text-sm font-semibold">{t('multiplayer.ready')}</div>
                   </div>
                   <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
                     <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-white" />
@@ -303,8 +341,8 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
               <div className="group bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-5 border border-purple-100 hover:border-purple-200 transition-all hover:shadow-md">
                 <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-2">
                   <div className="text-center sm:text-left">
-                    <div className="text-2xl sm:text-3xl font-bold text-purple-600 mb-0.5 sm:mb-1">{roomData.settings.timeLimit}s</div>
-                    <div className="text-purple-600 text-xs sm:text-sm font-semibold">Time</div>
+                    <div className="text-2xl sm:text-3xl font-bold text-purple-600 mb-0.5 sm:mb-1">{t('multiplayer.secondsShort', { value: roomData.settings.timeLimit })}</div>
+                    <div className="text-purple-600 text-xs sm:text-sm font-semibold">{t('multiplayer.time')}</div>
                   </div>
                   <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
                     <Clock className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-white" />
@@ -314,13 +352,86 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
             </div>
           </div>
 
+          {/* Settings Panel */}
+          {showSettings && (
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-5 lg:p-6 mb-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                  <Settings className="w-5 h-5" />
+                  {t('multiplayer.roomSettings')}
+                </h3>
+                <button
+                  onClick={() => setShowSettings(false)}
+                  className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                {/* Time Limit */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('multiplayer.timeLimit')}
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="5"
+                      max="300"
+                      step="5"
+                      value={roomSettings.timeLimit}
+                      onChange={(e) => setRoomSettings({ ...roomSettings, timeLimit: parseInt(e.target.value) })}
+                      className="flex-1"
+                    />
+                    <span className="text-lg font-bold text-purple-600 min-w-[60px] text-right">{t('multiplayer.secondsShort', { value: roomSettings.timeLimit })}</span>
+                  </div>
+                </div>
+                
+                {/* Show Leaderboard */}
+                <label className="flex items-center gap-3 cursor-pointer p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={roomSettings.showLeaderboard}
+                    onChange={(e) => setRoomSettings({ ...roomSettings, showLeaderboard: e.target.checked })}
+                    className="w-5 h-5 text-blue-600 rounded"
+                  />
+                  <span className="flex-1 text-sm font-medium text-gray-700">
+                    {t('multiplayer.showLeaderboard')}
+                  </span>
+                </label>
+                
+                {/* Allow Late Join */}
+                <label className="flex items-center gap-3 cursor-pointer p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={roomSettings.allowLateJoin}
+                    onChange={(e) => setRoomSettings({ ...roomSettings, allowLateJoin: e.target.checked })}
+                    className="w-5 h-5 text-blue-600 rounded"
+                  />
+                  <span className="flex-1 text-sm font-medium text-gray-700">
+                    {t('multiplayer.allowLateJoin')}
+                  </span>
+                </label>
+                
+                <button
+                  onClick={handleUpdateSettings}
+                  className="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg"
+                >
+                  <Settings className="w-5 h-5" />
+                  {t('multiplayer.updateSettings')}
+                </button>
+              </div>
+            </div>
+          )}
+          
           {/* Players Grid */}
-          <div className="bg-white rounded-2xl lg:rounded-3xl shadow-xl border border-gray-100 p-4 sm:p-5 lg:p-8">
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl lg:rounded-3xl shadow-xl border border-gray-100 p-4 sm:p-5 lg:p-6">
             <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
                 <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
-              <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800">Players</h2>
+              <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800">{t('multiplayer.players')}</h2>
               <div className="ml-auto bg-gradient-to-r from-blue-100 to-indigo-100 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full">
                 <span className="text-blue-700 font-bold text-xs sm:text-sm">{players.length}/{roomData.maxPlayers}</span>
               </div>
@@ -330,8 +441,8 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
               {players.length === 0 ? (
                 <div className="col-span-full text-center py-12">
                   <div className="text-gray-400 text-lg mb-2">👥</div>
-                  <p className="text-gray-500 font-medium">No players yet...</p>
-                  <p className="text-gray-400 text-sm mt-1">Waiting for players to join</p>
+                  <p className="text-gray-500 font-medium">{t('multiplayer.noPlayers')}</p>
+                  <p className="text-gray-400 text-sm mt-1">{t('multiplayer.waitingForPlayers')}</p>
                 </div>
               ) : (
                 players.map((player, index) => {
@@ -356,7 +467,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                       <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 z-10">
                         <div className="bg-gradient-to-r from-yellow-400 to-orange-400 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full flex items-center gap-1 sm:gap-1.5 shadow-lg animate-pulse">
                           <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white fill-white flex-shrink-0" />
-                          <span className="text-xs font-black text-white">YOU</span>
+                          <span className="text-xs font-black text-white">{t('multiplayer.you')}</span>
                         </div>
                       </div>
                     )}
@@ -394,7 +505,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                           <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full flex-shrink-0 ${
                             player.isOnline ? 'bg-green-500' : 'bg-gray-400'
                           }`}></div>
-                          <span className="truncate">{player.isOnline ? 'Online' : 'Offline'}</span>
+                          <span className="truncate">{player.isOnline ? t('multiplayer.online') : t('multiplayer.offline')}</span>
                         </div>
                       </div>
                     </div>
@@ -404,12 +515,12 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                       {player.isReady ? (
                         <div className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg flex items-center justify-center gap-1 sm:gap-1.5 shadow-sm">
                           <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white animate-bounce flex-shrink-0" />
-                          <span className="text-xs font-bold text-white">Ready!</span>
+                          <span className="text-xs font-bold text-white">{t('multiplayer.ready')}</span>
                         </div>
                       ) : (
                         <div className="flex-1 bg-gradient-to-r from-gray-400 to-slate-400 px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg flex items-center justify-center gap-1 sm:gap-1.5 shadow-sm">
                           <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white flex-shrink-0" />
-                          <span className="text-xs font-bold text-white">Waiting</span>
+                          <span className="text-xs font-bold text-white">{t('multiplayer.waiting')}</span>
                         </div>
                       )}
                     </div>
@@ -441,7 +552,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                     </div>
                   </div>
                   <div className="text-center text-gray-400 text-xs sm:text-sm font-medium">
-                    Waiting for player...
+                    {t('multiplayer.waitingForPlayer')}
                     <span className="inline-flex ml-1">
                       <span className="animate-bounce" style={{ animationDelay: '0ms' }}>.</span>
                       <span className="animate-bounce" style={{ animationDelay: '150ms' }}>.</span>
@@ -452,6 +563,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
               ))}
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>

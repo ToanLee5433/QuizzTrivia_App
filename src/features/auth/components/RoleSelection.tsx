@@ -5,6 +5,7 @@ import { AuthUser } from '../../auth/types';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 
 interface RoleSelectionProps {
   user: AuthUser;
@@ -15,6 +16,7 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({ user, onRoleSelected }) =
   const [selectedRole, setSelectedRole] = useState<'user' | 'creator' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
+  const { t } = useTranslation();
 
   const handleRoleSelection = async (role: 'user' | 'creator') => {
     setIsLoading(true);
@@ -81,8 +83,8 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({ user, onRoleSelected }) =
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Chọn vai trò của bạn</h2>
-          <p className="text-gray-600">Hãy chọn vai trò phù hợp để bắt đầu sử dụng Quiz Trivia</p>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('roleSelection.title')}</h2>
+          <p className="text-gray-600">{t('roleSelection.subtitle')}</p>
         </div>
 
         <div className="space-y-4">
@@ -104,14 +106,14 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({ user, onRoleSelected }) =
                 </div>
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-gray-800 mb-1">User (Người dùng)</h3>
+                <h3 className="font-semibold text-gray-800 mb-1">{t('roleSelection.userRole.title')}</h3>
                 <p className="text-sm text-gray-600">
-                  Tham gia làm quiz, xem kết quả và theo dõi tiến độ học tập của bạn
+                  {t('roleSelection.userRole.description')}
                 </p>
                 <ul className="mt-2 text-xs text-gray-500 space-y-1">
-                  <li>• Làm các quiz có sẵn</li>
-                  <li>• Xem lịch sử kết quả</li>
-                  <li>• Theo dõi tiến độ học tập</li>
+                  <li>{t('roleSelection.userRole.features.takeQuizzes')}</li>
+                  <li>{t('roleSelection.userRole.features.viewHistory')}</li>
+                  <li>{t('roleSelection.userRole.features.trackProgress')}</li>
                 </ul>
               </div>
             </div>
@@ -135,15 +137,15 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({ user, onRoleSelected }) =
                 </div>
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-gray-800 mb-1">Creator (Người tạo)</h3>
+                <h3 className="font-semibold text-gray-800 mb-1">{t('roleSelection.creatorRole.title')}</h3>
                 <p className="text-sm text-gray-600">
-                  Tạo quiz cho cộng đồng, bao gồm tất cả quyền của User
+                  {t('roleSelection.creatorRole.description')}
                 </p>
                 <ul className="mt-2 text-xs text-gray-500 space-y-1">
-                  <li>• Tất cả quyền của User</li>
-                  <li>• Tạo quiz mới</li>
-                  <li>• Quản lý quiz đã tạo</li>
-                  <li>• Quiz cần admin phê duyệt</li>
+                  <li>{t('roleSelection.creatorRole.features.allUserRights')}</li>
+                  <li>{t('roleSelection.creatorRole.features.createQuizzes')}</li>
+                  <li>{t('roleSelection.creatorRole.features.manageQuizzes')}</li>
+                  <li>{t('roleSelection.creatorRole.features.needsApproval')}</li>
                 </ul>
               </div>
             </div>
@@ -173,7 +175,7 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({ user, onRoleSelected }) =
 
         <div className="mt-4 text-center">
           <p className="text-xs text-gray-500">
-            Bạn có thể thay đổi vai trò sau trong phần cài đặt tài khoản
+            {t('roleSelection.canChangeRoleLater')}
           </p>
         </div>
       </div>

@@ -9,6 +9,7 @@ import { User, Sparkles, BookOpen } from 'lucide-react';
 import { CitationBadge } from './CitationBadge';
 import { QuizRecommendationCard } from './QuizRecommendationCard';
 import type { Citation, QuizRecommendation } from '../../lib/genkit/types';
+import { useTranslation } from 'react-i18next';
 
 interface Message {
   id: string;
@@ -27,6 +28,8 @@ interface MessageListProps {
 }
 
 export function MessageList({ messages, onQuizClick }: MessageListProps) {
+  const { t } = useTranslation();
+  
   return (
     <>
       {messages.map((message, index) => (
@@ -68,7 +71,7 @@ export function MessageList({ messages, onQuizClick }: MessageListProps) {
                 {message.citations && message.citations.length > 0 && (
                   <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                     <p className="text-xs font-medium mb-2 text-gray-600 dark:text-gray-400">
-                      📚 Nguồn tham khảo:
+                      {t('chatbot.citations')}
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {message.citations.map((citation, i) => (
@@ -81,11 +84,11 @@ export function MessageList({ messages, onQuizClick }: MessageListProps) {
                 {/* Metadata */}
                 {message.processingTime && (
                   <div className="mt-2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                    <span>⚡ {message.processingTime}ms</span>
+                    <span>{t('chatbot.processingTime', { ms: message.processingTime })}</span>
                     {message.usedChunks && message.usedChunks > 0 && (
                       <>
                         <span>•</span>
-                        <span>📄 {message.usedChunks} chunks</span>
+                        <span>{t('chatbot.chunksUsed', { count: message.usedChunks })}</span>
                       </>
                     )}
                   </div>
@@ -115,11 +118,11 @@ export function MessageList({ messages, onQuizClick }: MessageListProps) {
                     <BookOpen className="w-5 h-5 text-white" />
                   </div>
                   <h4 className="font-bold text-purple-900 dark:text-purple-100">
-                    🎯 Quiz gợi ý cho bạn
+                    {t('chatbot.quizSuggestions')}
                   </h4>
                 </div>
                 <p className="text-sm text-purple-700 dark:text-purple-300 mb-4">
-                  Click vào quiz để bắt đầu làm bài ngay! 👇
+                  {t('chatbot.clickToStart')}
                 </p>
                 <div className="space-y-3">
                   {message.quizRecommendations.map((quiz, i) => (

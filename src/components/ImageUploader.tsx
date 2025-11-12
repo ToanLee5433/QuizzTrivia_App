@@ -250,7 +250,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                   <Loader className="w-8 h-8 animate-spin mx-auto mb-2" />
                   <p className="text-lg font-semibold">{progress.progress}%</p>
                   <p className="text-sm">
-                    {Math.round(progress.bytesTransferred / 1024)}KB / {Math.round(progress.totalBytes / 1024)}KB
+                    {t('imageUploader.uploadProgress', {
+                      transferred: Math.round(progress.bytesTransferred / 1024),
+                      total: Math.round(progress.totalBytes / 1024)
+                    })}
                   </p>
                 </div>
               </div>
@@ -260,9 +263,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           // Upload Prompt
           <div className="p-8 text-center">
             <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 mb-2">Kéo thả ảnh vào đây hoặc click để chọn</p>
+            <p className="text-gray-600 mb-2">{t('imageUploader.dragOrClick')}</p>
             <p className="text-sm text-gray-500">
-              Kích thước tối đa: {options.maxSizeKB || 5120}KB
+              {t('imageUploader.maxSize', { size: options.maxSizeKB || 5120 })}
             </p>
             <input
               ref={fileInputRef}
@@ -275,7 +278,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
               onClick={() => fileInputRef.current?.click()}
               className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Chọn ảnh
+              {t('imageUploader.selectImage')}
             </button>
           </div>
         )}
@@ -296,7 +299,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           ) : (
             <>
               <Upload className="w-5 h-5 mr-2" />
-              Upload ảnh
+              {t('imageUploader.uploadImage')}
             </>
           )}
         </button>
@@ -307,24 +310,27 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
           <div className="flex items-center mb-2">
             <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
-            <h4 className="font-semibold text-green-800">Thumbnails đã tạo</h4>
+            <h4 className="font-semibold text-green-800">{t('imageUploader.thumbnailsCreated')}</h4>
           </div>
           <div className="grid grid-cols-3 gap-2">
             {thumbnails.small && (
               <div className="text-center">
                 <img src={thumbnails.small} alt="Small" className="w-full h-20 object-cover rounded border" />
+                {/* eslint-disable-next-line i18next/no-literal-string */}
                 <p className="text-xs text-gray-600 mt-1">200x200</p>
               </div>
             )}
             {thumbnails.medium && (
               <div className="text-center">
                 <img src={thumbnails.medium} alt="Medium" className="w-full h-20 object-cover rounded border" />
+                {/* eslint-disable-next-line i18next/no-literal-string */}
                 <p className="text-xs text-gray-600 mt-1">400x400</p>
               </div>
             )}
             {thumbnails.large && (
               <div className="text-center">
                 <img src={thumbnails.large} alt="Large" className="w-full h-20 object-cover rounded border" />
+                {/* eslint-disable-next-line i18next/no-literal-string */}
                 <p className="text-xs text-gray-600 mt-1">800x800</p>
               </div>
             )}
@@ -335,9 +341,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       {/* File Info */}
       {selectedFile && (
         <div className="mt-2 text-sm text-gray-600">
-          <p>File: {selectedFile.name}</p>
-          <p>Kích thước: {Math.round(selectedFile.size / 1024)}KB</p>
-          <p>Loại: {selectedFile.type}</p>
+          <p>{t('imageUploader.fileName', { name: selectedFile.name })}</p>
+          <p>{t('imageUploader.fileSize', { size: Math.round(selectedFile.size / 1024) })}</p>
+          <p>{t('imageUploader.fileType', { type: selectedFile.type })}</p>
         </div>
       )}
     </div>

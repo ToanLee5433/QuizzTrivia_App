@@ -594,14 +594,14 @@ const Profile: React.FC = () => {
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-gray-600">
-                    Showing results
+                    {t('profile.showingResults')}
                   </p>
                   <div className="flex items-center space-x-2">
                     <button className="px-3 py-1 border border-gray-300 rounded text-sm">
-                      Previous
+                      {t('profile.previous')}
                     </button>
                     <span className="px-3 py-1 text-sm text-gray-600">
-                      Page info
+                      {t('profile.pageInfo')}
                     </span>
                   </div>
                 </div>
@@ -637,7 +637,7 @@ const Profile: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">Avatar</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">{t('profile.avatarLabel')}</label>
                   
                   {/* Current Avatar Preview */}
                   {avatarUrl && (
@@ -648,12 +648,12 @@ const Profile: React.FC = () => {
                         className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
                       />
                       <div className="text-sm text-gray-600">
-                        <p className="font-medium">Avatar hiện tại</p>
+                        <p className="font-medium">{t('profile.currentAvatar')}</p>
                         <button
                           onClick={() => setAvatarUrl('')}
                           className="text-red-600 hover:text-red-700 text-xs mt-1"
                         >
-                          Xóa avatar
+                          {t('profile.removeAvatar')}
                         </button>
                       </div>
                     </div>
@@ -686,7 +686,7 @@ const Profile: React.FC = () => {
                   {/* Fallback: Nhập URL thủ công */}
                   <details className="mt-2">
                     <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
-                      Hoặc nhập URL avatar thủ công
+                      {t('profile.enterUrlManually')}
                     </summary>
                     <input
                       type="url"
@@ -767,8 +767,11 @@ const Profile: React.FC = () => {
                   {saving ? t('profile.authenticating') : t('profile.changePassword')}
                 </button>
                   <div className="text-xs text-gray-500 space-y-1">
+                    {/* eslint-disable-next-line i18next/no-literal-string */}
                     <p>⚠️ {t('profile.currentPasswordRequired')}</p>
+                    {/* eslint-disable-next-line i18next/no-literal-string */}
                     <p>✓ {t('profile.passwordMinLength')}</p>
+                    {/* eslint-disable-next-line i18next/no-literal-string */}
                     <p>✓ {t('profile.passwordMustDiffer')}</p>
                   </div>
               </div>

@@ -6,7 +6,7 @@ import { getUserQuizResults } from './api/shared';
 // Async thunks
 export const fetchQuizzes = createAsyncThunk(
   'quiz/fetchQuizzes',
-  async (_: {}, { rejectWithValue }) => {
+  async (_: Record<string, never>, { rejectWithValue }) => {
     try {
       const result = await quizService.getQuizzes(undefined, undefined);
       return result.quizzes;

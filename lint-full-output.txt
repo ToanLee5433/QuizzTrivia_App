@@ -1,0 +1,1328 @@
+﻿
+> quiz-trivia-app@0.0.0 lint
+> eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0
+
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\App.tsx
+  533:20  warning  disallow literal string: <div>Offline feature coming soon</div>  i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\components\ClientSideAIGenerator.tsx
+  285:69  warning  disallow literal string: <p className="text-xs text-green-600">
+                      {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB - {t('aiGenerator.processedSuccess')}
+                    </p>                                       i18next/no-literal-string
+  359:44  warning  disallow literal string: <>
+              <Wand2 className="w-5 h-5" />
+              Tß║ío {formData.numQuestions} c├óu hß╗Åi {getDifficultyLabel(formData.difficulty)}
+              {formData.useFileContent && ' tß╗½ file'}
+            </>  i18next/no-literal-string
+  360:42  warning  disallow literal string: <>
+              <Wand2 className="w-5 h-5" />
+              Tß║ío {formData.numQuestions} c├óu hß╗Åi {getDifficultyLabel(formData.difficulty)}
+              {formData.useFileContent && ' tß╗½ file'}
+            </>  i18next/no-literal-string
+  368:66  warning  disallow literal string: <h4 className="text-sm font-medium text-blue-800 mb-2">≡ƒÆí Th├┤ng tin:</h4>                                                                                                                                             i18next/no-literal-string
+  370:17  warning  disallow literal string: <li>ΓÇó Sß╗¡ dß╗Ñng Firebase Cloud Functions + Google Gemini AI</li>                                                                                                                                                        i18next/no-literal-string
+  371:17  warning  disallow literal string: <li>ΓÇó Model: gemini-2.0-flash-exp (mß╗¢i nhß║Ñt)</li>                                                                                                                                                                     i18next/no-literal-string
+  372:17  warning  disallow literal string: <li>ΓÇó Xß╗¡ l├╜ th├┤ng qua server (bß║úo mß║¡t API key)</li>                                                                                                                                                                   i18next/no-literal-string
+  373:27  warning  disallow literal string: <strong>Mß╗¢i:</strong>                                                                                                                                                                                                 i18next/no-literal-string
+  373:40  warning  disallow literal string: <li>ΓÇó <strong>Mß╗¢i:</strong> Hß╗ù trß╗ú ─æß╗ìc file ß║únh, PDF, Word, Text</li>                                                                                                                                                 i18next/no-literal-string
+  374:17  warning  disallow literal string: <li>ΓÇó Kh├┤ng giß╗¢i hß║ín quota client-side</li>                                                                                                                                                                           i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\components\ImageUploader.tsx
+  253:67  warning  disallow literal string: <p className="text-sm">
+                    {Math.round(progress.bytesTransferred / 1024)}KB / {Math.round(progress.totalBytes / 1024)}KB
+                  </p>                                                                                  i18next/no-literal-string
+  263:47  warning  disallow literal string: <p className="text-gray-600 mb-2">K├⌐o thß║ú ß║únh v├áo ─æ├óy hoß║╖c click ─æß╗â chß╗ìn</p>                                                                                                                                                                        i18next/no-literal-string
+  264:50  warning  disallow literal string: <p className="text-sm text-gray-500">
+              K├¡ch th╞░ß╗¢c tß╗æi ─æa: {options.maxSizeKB || 5120}KB
+            </p>                                                                                                                             i18next/no-literal-string
+  277:14  warning  disallow literal string: <button
+              onClick={() => fileInputRef.current?.click()}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Chß╗ìn ß║únh
+            </button>  i18next/no-literal-string
+  298:50  warning  disallow literal string: <>
+              <Upload className="w-5 h-5 mr-2" />
+              Upload ß║únh
+            </>                                                                                                                                                    i18next/no-literal-string
+  310:58  warning  disallow literal string: <h4 className="font-semibold text-green-800">Thumbnails ─æ├ú tß║ío</h4>                                                                                                                                                                                 i18next/no-literal-string
+  316:59  warning  disallow literal string: <p className="text-xs text-gray-600 mt-1">200x200</p>                                                                                                                                                                                               i18next/no-literal-string
+  322:59  warning  disallow literal string: <p className="text-xs text-gray-600 mt-1">400x400</p>                                                                                                                                                                                               i18next/no-literal-string
+  328:59  warning  disallow literal string: <p className="text-xs text-gray-600 mt-1">800x800</p>                                                                                                                                                                                               i18next/no-literal-string
+  338:14  warning  disallow literal string: <p>File: {selectedFile.name}</p>                                                                                                                                                                                                                    i18next/no-literal-string
+  339:14  warning  disallow literal string: <p>K├¡ch th╞░ß╗¢c: {Math.round(selectedFile.size / 1024)}KB</p>                                                                                                                                                                                         i18next/no-literal-string
+  340:14  warning  disallow literal string: <p>Loß║íi: {selectedFile.type}</p>                                                                                                                                                                                                                    i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\components\rag\ChatbotButton.tsx
+  84:10  warning  disallow literal string: <motion.div
+          initial={{ opacity: 0, x: 10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="fixed bottom-6 z-40 px-4 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg whitespace-nowrap"
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '168px', // 96px (button right) + 56px (button width) + 16px (gap)
+          }}
+        >
+          Hß╗Åi AI Learning Assistant
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 rotate-45 w-2 h-2 bg-gray-900" />
+        </motion.div>  i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\components\rag\ChatbotModal.tsx
+  167:86   warning  disallow literal string: <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  AI Learning Assistant
+                  <span className="px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded-full text-xs font-normal border border-white/30">
+                    Beta
+                  </span>
+                </h2>                                                                                                                      i18next/no-literal-string
+  169:134  warning  disallow literal string: <span className="px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded-full text-xs font-normal border border-white/30">
+                    Beta
+                  </span>                                                                                                                                                                                                                                                                               i18next/no-literal-string
+  173:54   warning  disallow literal string: <p className="text-xs text-white/90">Trß╗ú l├╜ hß╗ìc tß║¡p th├┤ng minh ─æ╞░ß╗úc hß╗ù trß╗ú bß╗ƒi Google AI</p>                                                                                                                                                                                                                                                                                                                                                           i18next/no-literal-string
+  201:89   warning  disallow literal string: <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                    Ch├áo mß╗½ng ─æß║┐n vß╗¢i AI Learning Assistant! ≡ƒæï
+                  </h3>                                                                                                                                                                                                                                                                                       i18next/no-literal-string
+  204:81   warning  disallow literal string: <p className="text-gray-600 dark:text-gray-400 max-w-md mb-6">
+                    Hß╗Åi t├┤i bß║Ñt cß╗⌐ ─æiß╗üu g├¼ vß╗ü c├íc quiz bß║ín ─æ├ú hß╗ìc.
+                    T├┤i sß║╜ trß║ú lß╗¥i chi tiß║┐t v├á gß╗úi ├╜ quiz ph├╣ hß╗úp cho bß║ín.
+                  </p>                                                                                                                                                                                                                 i18next/no-literal-string
+  222:145  warning  disallow literal string: <div className="font-medium text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400">
+                          Giß║úi th├¡ch kh├íi niß╗çm
+                        </div>                                                                                                                                                                                                                                               i18next/no-literal-string
+  225:88   warning  disallow literal string: <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          T├¼m hiß╗âu chi tiß║┐t vß╗ü chß╗º ─æß╗ü bß║ín quan t├óm
+                        </div>                                                                                                                                                                                                                                                                                    i18next/no-literal-string
+  239:141  warning  disallow literal string: <div className="font-medium text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                          T├│m tß║»t nß╗Öi dung
+                        </div>                                                                                                                                                                                                                                                       i18next/no-literal-string
+  242:88   warning  disallow literal string: <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          Xem tß╗òng quan kiß║┐n thß╗⌐c quan trß╗ìng
+                        </div>                                                                                                                                                                                                                                                                                          i18next/no-literal-string
+  256:143  warning  disallow literal string: <div className="font-medium text-gray-900 dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400">
+                          V├¡ dß╗Ñ thß╗▒c tß║┐
+                        </div>                                                                                                                                                                                                                                                        i18next/no-literal-string
+  259:88   warning  disallow literal string: <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          Hß╗ìc qua c├íc tr╞░ß╗¥ng hß╗úp cß╗Ñ thß╗â
+                        </div>                                                                                                                                                                                                                                                                                               i18next/no-literal-string
+  273:145  warning  disallow literal string: <div className="font-medium text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+                          Gß╗úi ├╜ quiz
+                        </div>                                                                                                                                                                                                                                                         i18next/no-literal-string
+  276:88   warning  disallow literal string: <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          T├¼m quiz ph├╣ hß╗úp ─æß╗â thß╗▒c h├ánh
+                        </div>                                                                                                                                                                                                                                                                                               i18next/no-literal-string
+  294:85   warning  disallow literal string: <p className="text-sm font-medium text-red-900 dark:text-red-200">
+                    ─É├ú xß║úy ra lß╗ùi
+                  </p>                                                                                                                                                                                                                                                                                                                          i18next/no-literal-string
+  325:45   warning  disallow literal string: <button
+                onClick={handleSendMessage}
+                disabled={!input.trim() || isLoading}
+                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
+              >
+                <Send className="w-5 h-5" />
+                Gß╗¡i
+              </button>  i18next/no-literal-string
+  329:74   warning  disallow literal string: <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              ≡ƒÆí Tip: Hß╗Åi vß╗ü nß╗Öi dung bß║ín ─æ├ú hß╗ìc trong c├íc quiz ─æ├ú mß╗ƒ kh├│a
+            </p>                                                                                                                                                                                                                                                                                            i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\components\rag\MessageList.tsx
+   70:94  warning  disallow literal string: <p className="text-xs font-medium mb-2 text-gray-600 dark:text-gray-400">
+                      ≡ƒôÜ Nguß╗ôn tham khß║úo:
+                    </p>         i18next/no-literal-string
+   84:53  warning  disallow literal string: <span>ΓÜí {message.processingTime}ms</span>                                                                                                              i18next/no-literal-string
+   88:54  warning  disallow literal string: <span>≡ƒôä {message.usedChunks} chunks</span>                                                                                                            i18next/no-literal-string
+  117:82  warning  disallow literal string: <h4 className="font-bold text-purple-900 dark:text-purple-100">
+                    ≡ƒÄ» Quiz gß╗úi ├╜ cho bß║ín
+                  </h4>                    i18next/no-literal-string
+  121:82  warning  disallow literal string: <p className="text-sm text-purple-700 dark:text-purple-300 mb-4">
+                  Click v├áo quiz ─æß╗â bß║»t ─æß║ºu l├ám b├ái ngay! ≡ƒæç
+                </p>  i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\auth\components\ForgotPassword.tsx
+   56:60  warning  disallow literal string: <h2 className="text-2xl font-bold text-gray-800">Qu├¬n mß║¡t khß║⌐u</h2>                                                                                                                                                                                                                                                                i18next/no-literal-string
+   76:57  warning  disallow literal string: <p className="text-sm text-gray-500 mt-2">
+                Ch├║ng t├┤i sß║╜ gß╗¡i link ─æß║╖t lß║íi mß║¡t khß║⌐u ─æß║┐n email n├áy.
+              </p>                                                                                                                                                                                              i18next/no-literal-string
+  106:65  warning  disallow literal string: <h3 className="text-lg font-semibold text-gray-800">Email ─æ├ú ─æ╞░ß╗úc gß╗¡i!</h3>                                                                                                                                                                                                                                                        i18next/no-literal-string
+  107:50  warning  disallow literal string: <p className="text-sm text-gray-600">
+              Ch├║ng t├┤i ─æ├ú gß╗¡i link ─æß║╖t lß║íi mß║¡t khß║⌐u ─æß║┐n<br />
+              <strong>{email}</strong>
+            </p>                                                                                                                                                                    i18next/no-literal-string
+  111:50  warning  disallow literal string: <p className="text-sm text-gray-500">
+              Kiß╗âm tra hß╗Öp th╞░ cß╗ºa bß║ín v├á click v├áo link ─æß╗â ─æß║╖t lß║íi mß║¡t khß║⌐u.
+            </p>                                                                                                                                                                                             i18next/no-literal-string
+  118:14  warning  disallow literal string: <button
+              type="button"
+              onClick={onBack}
+              className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg font-medium transition-colors"
+            >
+              Quay lß║íi ─æ─âng nhß║¡p
+            </button>  i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\auth\components\ProtectedRoute.tsx
+  54:55  warning  disallow literal string: <p className="mt-1 text-sm text-gray-500">
+              Bß║ín cß║ºn c├│ vai tr├▓ Creator hoß║╖c Admin ─æß╗â truy cß║¡p trang n├áy.
+            </p>  i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\auth\components\RoleSelection.tsx
+   84:65  warning  disallow literal string: <h2 className="text-2xl font-bold text-gray-800 mb-2">Chß╗ìn vai tr├▓ cß╗ºa bß║ín</h2>                                                                    i18next/no-literal-string
+   85:40  warning  disallow literal string: <p className="text-gray-600">H├úy chß╗ìn vai tr├▓ ph├╣ hß╗úp ─æß╗â bß║»t ─æß║ºu sß╗¡ dß╗Ñng Quiz Trivia</p>                                                           i18next/no-literal-string
+  107:66  warning  disallow literal string: <h3 className="font-semibold text-gray-800 mb-1">User (Ng╞░ß╗¥i d├╣ng)</h3>                                                                            i18next/no-literal-string
+  108:54  warning  disallow literal string: <p className="text-sm text-gray-600">
+                  Tham gia l├ám quiz, xem kß║┐t quß║ú v├á theo d├╡i tiß║┐n ─æß╗Ö hß╗ìc tß║¡p cß╗ºa bß║ín
+                </p>  i18next/no-literal-string
+  112:23  warning  disallow literal string: <li>ΓÇó L├ám c├íc quiz c├│ sß║╡n</li>                                                                                                                     i18next/no-literal-string
+  113:23  warning  disallow literal string: <li>ΓÇó Xem lß╗ïch sß╗¡ kß║┐t quß║ú</li>                                                                                                                     i18next/no-literal-string
+  114:23  warning  disallow literal string: <li>ΓÇó Theo d├╡i tiß║┐n ─æß╗Ö hß╗ìc tß║¡p</li>                                                                                                                i18next/no-literal-string
+  138:66  warning  disallow literal string: <h3 className="font-semibold text-gray-800 mb-1">Creator (Ng╞░ß╗¥i tß║ío)</h3>                                                                          i18next/no-literal-string
+  139:54  warning  disallow literal string: <p className="text-sm text-gray-600">
+                  Tß║ío quiz cho cß╗Öng ─æß╗ông, bao gß╗ôm tß║Ñt cß║ú quyß╗ün cß╗ºa User
+                </p>               i18next/no-literal-string
+  143:23  warning  disallow literal string: <li>ΓÇó Tß║Ñt cß║ú quyß╗ün cß╗ºa User</li>                                                                                                                   i18next/no-literal-string
+  144:23  warning  disallow literal string: <li>ΓÇó Tß║ío quiz mß╗¢i</li>                                                                                                                            i18next/no-literal-string
+  145:23  warning  disallow literal string: <li>ΓÇó Quß║ún l├╜ quiz ─æ├ú tß║ío</li>                                                                                                                     i18next/no-literal-string
+  146:23  warning  disallow literal string: <li>ΓÇó Quiz cß║ºn admin ph├¬ duyß╗çt</li>                                                                                                                i18next/no-literal-string
+  175:48  warning  disallow literal string: <p className="text-xs text-gray-500">
+            Bß║ín c├│ thß╗â thay ─æß╗òi vai tr├▓ sau trong phß║ºn c├ái ─æß║╖t t├ái khoß║ún
+          </p>                    i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\auth\pages\Profile.tsx
+  596:56  warning  disallow literal string: <p className="text-sm text-gray-600">
+                    Showing results
+                  </p>                                                                                                                                                           i18next/no-literal-string
+  600:90  warning  disallow literal string: <button className="px-3 py-1 border border-gray-300 rounded text-sm">
+                      Previous
+                    </button>                                                                                                                         i18next/no-literal-string
+  603:71  warning  disallow literal string: <span className="px-3 py-1 text-sm text-gray-600">
+                      Page info
+                    </span>                                                                                                                                             i18next/no-literal-string
+  640:83  warning  disallow literal string: <label className="block text-sm font-medium text-gray-700 mb-3">Avatar</label>                                                                                                                                                                               i18next/no-literal-string
+  651:52  warning  disallow literal string: <p className="font-medium">Avatar hiß╗çn tß║íi</p>                                                                                                                                                                                                               i18next/no-literal-string
+  655:26  warning  disallow literal string: <button
+                          onClick={() => setAvatarUrl('')}
+                          className="text-red-600 hover:text-red-700 text-xs mt-1"
+                        >
+                          X├│a avatar
+                        </button>  i18next/no-literal-string
+  688:99  warning  disallow literal string: <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
+                      Hoß║╖c nhß║¡p URL avatar thß╗º c├┤ng
+                    </summary>                                                                                          i18next/no-literal-string
+  770:24  warning  disallow literal string: <p>ΓÜá∩╕Å {t('profile.currentPasswordRequired')}</p>                                                                                                                                                                                                             i18next/no-literal-string
+  771:24  warning  disallow literal string: <p>Γ£ô {t('profile.passwordMinLength')}</p>                                                                                                                                                                                                                    i18next/no-literal-string
+  772:24  warning  disallow literal string: <p>Γ£ô {t('profile.passwordMustDiffer')}</p>                                                                                                                                                                                                                   i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\multiplayer\components\CreateRoomModal.tsx
+  133:78  warning  disallow literal string: <label className="block text-sm font-medium text-gray-700 mb-2">
+              <Clock className="w-4 h-4 inline mr-2" />
+              {t('multiplayer.timeLimit')} ({MIN_TIME_LIMIT}-{MAX_TIME_LIMIT} gi├óy)
+            </label>  i18next/no-literal-string
+  151:55  warning  disallow literal string: <p className="text-xs text-gray-500 mt-1">
+              Tß╗½ {MIN_TIME_LIMIT} ─æß║┐n {MAX_TIME_LIMIT} gi├óy cho mß╗ùi c├óu hß╗Åi (tß╗æi ─æa 5 ph├║t)
+            </p>                                                                             i18next/no-literal-string
+  152:34  warning  disallow literal string: <p className="text-xs text-gray-500 mt-1">
+              Tß╗½ {MIN_TIME_LIMIT} ─æß║┐n {MAX_TIME_LIMIT} gi├óy cho mß╗ùi c├óu hß╗Åi (tß╗æi ─æa 5 ph├║t)
+            </p>                                                                             i18next/no-literal-string
+  152:55  warning  disallow literal string: <p className="text-xs text-gray-500 mt-1">
+              Tß╗½ {MIN_TIME_LIMIT} ─æß║┐n {MAX_TIME_LIMIT} gi├óy cho mß╗ùi c├óu hß╗Åi (tß╗æi ─æa 5 ph├║t)
+            </p>                                                                             i18next/no-literal-string
+  222:56  warning  disallow literal string: <div className="text-blue-600">
+                  {selectedQuiz.questions?.length || 0} c├óu hß╗Åi
+                </div>                                                                                                              i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\multiplayer\components\GameResults.tsx
+  145:51  warning  disallow literal string: <div className="text-sm text-gray-600">
+                  {player.correctAnswers}/{player.totalAnswers} {t('common.correct')} ΓÇó 
+                  {Math.round(player.averageTime)}s {t('common.avgTime')}
+                </div>  i18next/no-literal-string
+  188:51  warning  disallow literal string: <div className="text-2xl font-bold text-gray-900">
+            {Math.round(gameStats.totalTime / 60)}m
+          </div>                                                                                                             i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\multiplayer\components\MultiplayerChat.tsx
+  66:30  warning  disallow literal string: <span className="text-xs text-blue-100">
+            {messages.length} messages
+          </span>               i18next/no-literal-string
+  81:55  warning  disallow literal string: <p className="text-gray-400 text-xs mt-1">
+              Start a conversation with your team!
+            </p>  i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\multiplayer\components\MultiplayerErrorBoundary.tsx
+   78:69   warning  disallow literal string: <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                Oops! Something went wrong
+              </h1>                                                                                                                                                                                                                                         i18next/no-literal-string
+   83:49   warning  disallow literal string: <p className="text-gray-600 mb-6">
+                The multiplayer game encountered an unexpected error. Don't worry, your progress might be saved.
+              </p>                                                                                                                                                                                        i18next/no-literal-string
+   95:101  warning  disallow literal string: <summary className="text-xs text-gray-600 cursor-pointer hover:text-gray-900">
+                        Component Stack
+                      </summary>                                                                                                                                                                                                       i18next/no-literal-string
+  112:52   warning  disallow literal string: <button
+                  onClick={this.handleReset}
+                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Try Again
+                </button>  i18next/no-literal-string
+  118:18   warning  disallow literal string: <button
+                  onClick={this.handleReload}
+                  className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                >
+                  Reload Page
+                </button>                                                                                        i18next/no-literal-string
+  124:57   warning  disallow literal string: <p className="text-xs text-gray-500 mt-4">
+                If the problem persists, please contact support or try again later.
+              </p>                                                                                                                                                                                                             i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\multiplayer\components\MultiplayerManager.tsx
+  540:82  warning  disallow literal string: <p className="text-sm text-purple-200">
+                  ≡ƒÄ» {selectedQuiz.title} ΓÇó {selectedQuiz.questions?.length || 0} c├óu hß╗Åi
+                </p>  i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\multiplayer\components\MultiplayerQuiz.tsx
+   587:67   warning  disallow literal string: <h2 className="text-2xl font-bold text-gray-800 mb-4">Game Starting Soon!</h2>                                                                                                                                                                                                                                                                                                                                                                                                                                        i18next/no-literal-string
+   589:42   warning  disallow literal string: <p className="text-gray-600">Get ready to answer questions!</p>                                                                                                                                                                                                                                                                                                                                                                                                                                                       i18next/no-literal-string
+   596:78   warning  disallow literal string: <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">Question Results</h3>                                                                                                                                                                                                                                                                                                                                                                                                                                i18next/no-literal-string
+   604:61   warning  disallow literal string: <div className="text-lg text-gray-700 mb-2">
+                  You earned <span className="font-bold text-blue-600">+{questionResults.points}</span> points
+                </div>                                                                                                                                                                                                                                                                                                                                  i18next/no-literal-string
+   605:104  warning  disallow literal string: <div className="text-lg text-gray-700 mb-2">
+                  You earned <span className="font-bold text-blue-600">+{questionResults.points}</span> points
+                </div>                                                                                                                                                                                                                                                                                                                                  i18next/no-literal-string
+   607:56   warning  disallow literal string: <div className="text-sm text-gray-600">
+                  Correct Answer: <span className="font-semibold">{finalQuestion.options?.[questionResults.correctAnswer] || 'N/A'}</span>
+                </div>                                                                                                                                                                                                                                                                                                           i18next/no-literal-string
+   618:76   warning  disallow literal string: <h4 className="font-semibold text-gray-700 mb-3 text-center">Current Standings</h4>                                                                                                                                                                                                                                                                                                                                                                                                                                   i18next/no-literal-string
+   648:80   warning  disallow literal string: <span className="ml-1 text-xs">(You)</span>                                                                                                                                                                                                                                                                                                                                                                                                                                                                           i18next/no-literal-string
+   651:52   warning  disallow literal string: <div className="text-xs text-gray-500">
+                              {correctAnswersCount} ─æ├║ng ΓÇó {player.score} ─æiß╗âm
+                              {currentAnswer && (
+                                <span className={`ml-2 ${currentAnswer.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                                  {currentAnswer.isCorrect ? 'Γ£ô' : 'Γ£ù'} +{currentAnswer.points}
+                                </span>
+                              )}
+                            </div>  i18next/no-literal-string
+   651:74   warning  disallow literal string: <div className="text-xs text-gray-500">
+                              {correctAnswersCount} ─æ├║ng ΓÇó {player.score} ─æiß╗âm
+                              {currentAnswer && (
+                                <span className={`ml-2 ${currentAnswer.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                                  {currentAnswer.isCorrect ? 'Γ£ô' : 'Γ£ù'} +{currentAnswer.points}
+                                </span>
+                              )}
+                            </div>  i18next/no-literal-string
+   662:66   warning  disallow literal string: <div className="text-xs text-gray-500">pts</div>                                                                                                                                                                                                                                                                                                                                                                                                                                                                      i18next/no-literal-string
+   673:48   warning  disallow literal string: <p className="text-gray-600">C├óu hß╗Åi tiß║┐p theo trong: <span className="font-bold text-blue-600">{nextQuestionCountdown}s</span></p>                                                                                                                                                                                                                                                                                                                                                                                   i18next/no-literal-string
+   673:138  warning  disallow literal string: <span className="font-bold text-blue-600">{nextQuestionCountdown}s</span>                                                                                                                                                                                                                                                                                                                                                                                                                                             i18next/no-literal-string
+   692:146  warning  disallow literal string: <h1 className="text-5xl font-black text-white mb-2 bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+                  GAME COMPLETE!
+                </h1>                                                                                                                                                                                                                                                                                                                            i18next/no-literal-string
+   695:54   warning  disallow literal string: <p className="text-xl text-blue-200">Amazing performance by all players</p>                                                                                                                                                                                                                                                                                                                                                                                                                                           i18next/no-literal-string
+   754:100  warning  disallow literal string: <div className="text-sm text-blue-600 font-medium">(You)</div>                                                                                                                                                                                                                                                                                                                                                                                                                                                        i18next/no-literal-string
+   767:64   warning  disallow literal string: <div className="text-gray-600">Correct</div>                                                                                                                                                                                                                                                                                                                                                                                                                                                                          i18next/no-literal-string
+   771:64   warning  disallow literal string: <div className="text-gray-600">Accuracy</div>                                                                                                                                                                                                                                                                                                                                                                                                                                                                         i18next/no-literal-string
+   783:84   warning  disallow literal string: <h2 className="text-3xl font-black text-gray-800 mb-6 text-center">
+                  ≡ƒÅà COMPLETE RANKINGS
+                </h2>                                                                                                                                                                                                                                                                                                                                                                                    i18next/no-literal-string
+   836:68   warning  disallow literal string: <div className="text-sm text-gray-600">
+                                  {correctAnswers}/{totalQuestions} correct ΓÇó {accuracy}% accuracy ΓÇó Avg: {avgTimePerQuestion}s
+                                </div>                                                                                                                                                                                                                                                                                                      i18next/no-literal-string
+   836:89   warning  disallow literal string: <div className="text-sm text-gray-600">
+                                  {correctAnswers}/{totalQuestions} correct ΓÇó {accuracy}% accuracy ΓÇó Avg: {avgTimePerQuestion}s
+                                </div>                                                                                                                                                                                                                                                                                                      i18next/no-literal-string
+   836:127  warning  disallow literal string: <div className="text-sm text-gray-600">
+                                  {correctAnswers}/{totalQuestions} correct ΓÇó {accuracy}% accuracy ΓÇó Avg: {avgTimePerQuestion}s
+                                </div>                                                                                                                                                                                                                                                                                                      i18next/no-literal-string
+   860:70   warning  disallow literal string: <div className="text-sm text-gray-600 font-medium">Total Questions</div>                                                                                                                                                                                                                                                                                                                                                                                                                                              i18next/no-literal-string
+   865:70   warning  disallow literal string: <div className="text-sm text-gray-600 font-medium">Players</div>                                                                                                                                                                                                                                                                                                                                                                                                                                                      i18next/no-literal-string
+   872:70   warning  disallow literal string: <div className="text-sm text-gray-600 font-medium">Your Correct</div>                                                                                                                                                                                                                                                                                                                                                                                                                                                 i18next/no-literal-string
+   879:70   warning  disallow literal string: <div className="text-sm text-gray-600 font-medium">Your Score</div>                                                                                                                                                                                                                                                                                                                                                                                                                                                   i18next/no-literal-string
+   885:59   warning  disallow literal string: <p className="text-xl text-blue-200 mb-6">Thanks for playing! ≡ƒÄë</p>                                                                                                                                                                                                                                                                                                                                                                                                                                                  i18next/no-literal-string
+   890:20   warning  disallow literal string: <button 
+                    onClick={() => window.location.href = '/multiplayer'}
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-purple-700 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 shadow-2xl hover:shadow-purple-500/25"
+                  >
+                    ≡ƒÄ« Play Again
+                  </button>                                                                         i18next/no-literal-string
+   896:20   warning  disallow literal string: <button 
+                    onClick={() => window.location.href = '/profile'}
+                    className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-gray-700 hover:to-gray-800 transform hover:scale-105 transition-all duration-200 shadow-2xl"
+                  >
+                    ≡ƒæñ View Profile
+                  </button>                                                                                                          i18next/no-literal-string
+   902:20   warning  disallow literal string: <button 
+                    onClick={() => window.location.href = '/leaderboard'}
+                    className="bg-gradient-to-r from-green-600 to-teal-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-green-700 hover:to-teal-700 transform hover:scale-105 transition-all duration-200 shadow-2xl"
+                  >
+                    ≡ƒÅå Global Leaderboard
+                  </button>                                                                                              i18next/no-literal-string
+   922:160  warning  disallow literal string: <div className="bg-gradient-to-r from-purple-500 to-blue-600 text-white px-3 sm:px-4 py-2 rounded-xl font-bold text-sm sm:text-base text-center">
+                Question {currentQuestionIndex + 1} of {processedQuestions.length}
+              </div>                                                                                                                                                                                                                                                           i18next/no-literal-string
+   923:52   warning  disallow literal string: <div className="bg-gradient-to-r from-purple-500 to-blue-600 text-white px-3 sm:px-4 py-2 rounded-xl font-bold text-sm sm:text-base text-center">
+                Question {currentQuestionIndex + 1} of {processedQuestions.length}
+              </div>                                                                                                                                                                                                                                                           i18next/no-literal-string
+   927:95   warning  disallow literal string: <span className="text-sm sm:text-base">{currentRoomData?.players?.length || 0} players</span>                                                                                                                                                                                                                                                                                                                                                                                                                         i18next/no-literal-string
+   935:25   warning  disallow literal string: <span>Submitted!</span>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               i18next/no-literal-string
+   944:35   warning  disallow literal string: <span>{timeLeft}s</span>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              i18next/no-literal-string
+   974:47   warning  disallow literal string: <span className="font-medium">Time is running out!</span>                                                                                                                                                                                                                                                                                                                                                                                                                                                             i18next/no-literal-string
+  1002:57   warning  disallow literal string: <p className="text-sm text-gray-500 mt-2">
+                Questions available: {processedQuestions.length} | Current index: {currentQuestionIndex}
+              </p>                                                                                                                                                                                                                                                                                                                                              i18next/no-literal-string
+  1003:65   warning  disallow literal string: <p className="text-sm text-gray-500 mt-2">
+                Questions available: {processedQuestions.length} | Current index: {currentQuestionIndex}
+              </p>                                                                                                                                                                                                                                                                                                                                              i18next/no-literal-string
+  1042:43   warning  disallow literal string: <p className="text-red-700">Γ¥î No options available for this question</p>                                                                                                                                                                                                                                                                                                                                                                                                                                              i18next/no-literal-string
+  1056:25   warning  disallow literal string: <span>Submitted!</span>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               i18next/no-literal-string
+  1086:44   warning  disallow literal string: <div className="text-3xl font-bold text-blue-600 mb-4">
+                  +{questionResults.points} points
+                </div>                                                                                                                                                                                                                                                                                                                                                                                   i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\multiplayer\components\QuizSelector.tsx
+  166:68   warning  disallow literal string: <h1 className="text-3xl font-bold text-white mb-2">
+                  ≡ƒÄ« Chß╗ìn Quiz ─æß╗â ch╞íi Multiplayer
+                </h1>                                                                                                                                                                                  i18next/no-literal-string
+  169:48   warning  disallow literal string: <p className="text-purple-200">
+                  Chß╗ìn mß╗Öt quiz ─æß╗â tß║ío ph├▓ng hoß║╖c tham gia ch╞íi vß╗¢i bß║ín b├¿
+                </p>                                                                                                                                                                               i18next/no-literal-string
+  176:16   warning  disallow literal string: <button
+                onClick={onBack}
+                className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors"
+              >
+                ΓåÉ Quay lß║íi
+              </button>                                                                                    i18next/no-literal-string
+  223:61   warning  disallow literal string: <h3 className="text-white font-bold mb-2">≡ƒöì Debug Information:</h3>                                                                                                                                                                                                                                            i18next/no-literal-string
+  225:24   warning  disallow literal string: <p>Γ£à Auth User: {debugInfo.authUser}</p>                                                                                                                                                                                                                                                                        i18next/no-literal-string
+  226:24   warning  disallow literal string: <p>≡ƒôè Total Quizzes in DB: {debugInfo.totalFromDb}</p>                                                                                                                                                                                                                                                          i18next/no-literal-string
+  227:24   warning  disallow literal string: <p>Γ£à Valid Quizzes (with questions): {debugInfo.validQuizzes}</p>                                                                                                                                                                                                                                               i18next/no-literal-string
+  228:24   warning  disallow literal string: <p>ΓÅ░ Last Fetch: {new Date(debugInfo.timestamp).toLocaleTimeString()}</p>                                                                                                                                                                                                                                       i18next/no-literal-string
+  249:22   warning  disallow literal string: <button
+                      onClick={onBack}
+                      className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg transition-all"
+                    >
+                      ΓåÉ Quay lß║íi
+                    </button>  i18next/no-literal-string
+  293:60   warning  disallow literal string: <span>{quiz.questions?.length || 0} c├óu</span>                                                                                                                                                                                                                                                                  i18next/no-literal-string
+  297:52   warning  disallow literal string: <span>{quiz.duration || 15} ph├║t</span>                                                                                                                                                                                                                                                                         i18next/no-literal-string
+  319:244  warning  disallow literal string: <button className="mt-4 w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 transform group-hover:scale-105">
+                      ≡ƒÄ« Chß╗ìn Quiz n├áy
+                    </button>          i18next/no-literal-string
+  333:46   warning  disallow literal string: <p className="text-purple-200">
+                Hiß╗ân thß╗ï {filteredQuizzes.length} quiz
+              </p>                                                                                                                                                                                                     i18next/no-literal-string
+  334:50   warning  disallow literal string: <p className="text-purple-200">
+                Hiß╗ân thß╗ï {filteredQuizzes.length} quiz
+              </p>                                                                                                                                                                                                     i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\multiplayer\components\RoomLobby.tsx
+  240:74   warning  disallow literal string: <span className="text-white text-xs font-semibold">Γ£ô</span>                                                          i18next/no-literal-string
+  344:129  warning  disallow literal string: <div className="text-2xl sm:text-3xl font-bold text-purple-600 mb-0.5 sm:mb-1">{roomData.settings.timeLimit}s</div>  i18next/no-literal-string
+  387:121  warning  disallow literal string: <span className="text-lg font-bold text-purple-600 min-w-[60px] text-right">{roomSettings.timeLimit}s</span>         i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\multiplayer\pages\MultiplayerLobby.tsx
+  136:47   warning  disallow literal string: <span className="font-medium">Quay lß║íi</span>                                                                                                                                                                                                                                                                                                                                                                                  i18next/no-literal-string
+  139:67   warning  disallow literal string: <h1 className="text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+                <Gamepad2 className="w-10 h-10 text-purple-600" />
+                Multiplayer - Ch╞íi vß╗¢i bß║ín b├¿
+              </h1>                                                                                                                                                                                                         i18next/no-literal-string
+  142:52   warning  disallow literal string: <p className="text-gray-600 text-lg">Chß╗ìn quiz v├á tß║ío ph├▓ng ─æß╗â cß║ính tranh trß╗▒c tiß║┐p!</p>                                                                                                                                                                                                                                                                                                                                       i18next/no-literal-string
+  153:61   warning  disallow literal string: <h3 className="font-bold text-red-900 mb-1">Lß╗ùi tß║úi dß╗» liß╗çu</h3>                                                                                                                                                                                                                                                                                                                                                               i18next/no-literal-string
+  158:18   warning  disallow literal string: <button
+                  onClick={fetchQuizzes}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  Thß╗¡ lß║íi
+                </button>                                                                                                                                                                    i18next/no-literal-string
+  172:66   warning  disallow literal string: <h3 className="font-bold text-gray-900 mb-2 text-lg">Real-time Competition</h3>                                                                                                                                                                                                                                                                                                                                                i18next/no-literal-string
+  173:66   warning  disallow literal string: <p className="text-sm text-gray-600 leading-relaxed">Cß║ính tranh trß╗▒c tiß║┐p vß╗¢i bß║ín b├¿ v├á xem kß║┐t quß║ú ngay lß║¡p tß╗⌐c</p>                                                                                                                                                                                                                                                                                                           i18next/no-literal-string
+  180:66   warning  disallow literal string: <h3 className="font-bold text-gray-900 mb-2 text-lg">Private Rooms</h3>                                                                                                                                                                                                                                                                                                                                                        i18next/no-literal-string
+  181:66   warning  disallow literal string: <p className="text-sm text-gray-600 leading-relaxed">Tß║ío ph├▓ng ri├¬ng vß╗¢i room code ─æß╗â ch╞íi vß╗¢i ng╞░ß╗¥i bß║ín muß╗æn</p>                                                                                                                                                                                                                                                                                                              i18next/no-literal-string
+  188:66   warning  disallow literal string: <h3 className="font-bold text-gray-900 mb-2 text-lg">Live Leaderboard</h3>                                                                                                                                                                                                                                                                                                                                                     i18next/no-literal-string
+  189:66   warning  disallow literal string: <p className="text-sm text-gray-600 leading-relaxed">Theo d├╡i bß║úng xß║┐p hß║íng trß╗▒c tiß║┐p trong khi ch╞íi</p>                                                                                                                                                                                                                                                                                                                       i18next/no-literal-string
+  228:35   warning  disallow literal string: <option value="all">≡ƒÅ╖∩╕Å Tß║Ñt cß║ú danh mß╗Ñc</option>                                                                                                                                                                                                                                                                                                                                                                               i18next/no-literal-string
+  238:35   warning  disallow literal string: <option value="all">≡ƒôè Tß║Ñt cß║ú ─æß╗Ö kh├│</option>                                                                                                                                                                                                                                                                                                                                                                                  i18next/no-literal-string
+  250:57   warning  disallow literal string: <span className="text-sm text-gray-600">Hiß╗ân thß╗ï:</span>                                                                                                                                                                                                                                                                                                                                                                       i18next/no-literal-string
+  276:55   warning  disallow literal string: <div className="mt-4 text-sm text-gray-600">
+            T├¼m thß║Ñy <span className="font-semibold text-purple-600">{filteredQuizzes.length}</span> quiz
+            {searchTerm && <span> cho "{searchTerm}"</span>}
+            {categoryFilter !== 'all' && <span> trong danh mß╗Ñc "{categoryFilter}"</span>}
+            {difficultyFilter !== 'all' && <span> vß╗¢i ─æß╗Ö kh├│ "{difficultyFilter}"</span>}
+          </div>  i18next/no-literal-string
+  277:101  warning  disallow literal string: <div className="mt-4 text-sm text-gray-600">
+            T├¼m thß║Ñy <span className="font-semibold text-purple-600">{filteredQuizzes.length}</span> quiz
+            {searchTerm && <span> cho "{searchTerm}"</span>}
+            {categoryFilter !== 'all' && <span> trong danh mß╗Ñc "{categoryFilter}"</span>}
+            {difficultyFilter !== 'all' && <span> vß╗¢i ─æß╗Ö kh├│ "{difficultyFilter}"</span>}
+          </div>  i18next/no-literal-string
+  278:34   warning  disallow literal string: <span> cho "{searchTerm}"</span>                                                                                                                                                                                                                                                                                                                                                                                               i18next/no-literal-string
+  279:48   warning  disallow literal string: <span> trong danh mß╗Ñc "{categoryFilter}"</span>                                                                                                                                                                                                                                                                                                                                                                                i18next/no-literal-string
+  280:50   warning  disallow literal string: <span> vß╗¢i ─æß╗Ö kh├│ "{difficultyFilter}"</span>                                                                                                                                                                                                                                                                                                                                                                                  i18next/no-literal-string
+  295:72   warning  disallow literal string: <h3 className="text-xl font-medium text-gray-900 mb-2">Kh├┤ng t├¼m thß║Ñy quiz</h3>                                                                                                                                                                                                                                                                                                                                                i18next/no-literal-string
+  296:51   warning  disallow literal string: <p className="text-gray-600 mb-6">Kh├┤ng c├│ quiz n├áo ph├╣ hß╗úp vß╗¢i bß╗Ö lß╗ìc hiß╗çn tß║íi.</p>                                                                                                                                                                                                                                                                                                                                           i18next/no-literal-string
+  304:18   warning  disallow literal string: <button 
+                  onClick={() => {
+                    setSearchTerm('');
+                    setCategoryFilter('all');
+                    setDifficultyFilter('all');
+                  }}
+                  className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  ≡ƒöä X├│a bß╗Ö lß╗ìc
+                </button>                   i18next/no-literal-string
+  350:52   warning  disallow literal string: <div className="text-sm text-gray-600">
+                    {selectedQuiz.questions.length} c├óu hß╗Åi ΓÇó {selectedQuiz.difficulty === 'easy' ? 'Dß╗à' : selectedQuiz.difficulty === 'medium' ? 'Trung b├¼nh' : 'Kh├│'}
+                  </div>                                                                                                                                                                                     i18next/no-literal-string
+  358:49   warning  disallow literal string: <button
+                onClick={handleStartMultiplayer}
+                className="flex items-center gap-2 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 text-white px-8 py-3 rounded-xl hover:shadow-xl hover:scale-105 transition-all duration-300 font-bold"
+              >
+                <Gamepad2 className="w-5 h-5" />
+                Bß║»t ─æß║ºu Multiplayer
+              </button>              i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\components\QuestionEditor.tsx
+  140:46  warning  disallow literal string: <button
+                onClick={handleSave}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors shadow-sm"
+              >
+                <Check className="w-4 h-4" />
+                Save
+              </button>                                                                                                                    i18next/no-literal-string
+  147:42  warning  disallow literal string: <button
+                onClick={handleCancel}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors shadow-sm"
+              >
+                <X className="w-4 h-4" />
+                Cancel
+              </button>                                                                                                                      i18next/no-literal-string
+  179:45  warning  disallow literal string: <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <Type className="w-4 h-4" />
+                Question Text *
+              </label>                                                                                                                                                                                                                                           i18next/no-literal-string
+  195:47  warning  disallow literal string: <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <List className="w-4 h-4" />
+                  Question Type
+                </label>                                                                                                                                                                                                                                       i18next/no-literal-string
+  203:44  warning  disallow literal string: <option value="multiple">Multiple Choice</option>                                                                                                                                                                                                                                                                                                                                                                                i18next/no-literal-string
+  204:43  warning  disallow literal string: <option value="boolean">True/False</option>                                                                                                                                                                                                                                                                                                                                                                                      i18next/no-literal-string
+  205:44  warning  disallow literal string: <option value="checkbox">Checkbox</option>                                                                                                                                                                                                                                                                                                                                                                                       i18next/no-literal-string
+  206:48  warning  disallow literal string: <option value="short_answer">Short Answer</option>                                                                                                                                                                                                                                                                                                                                                                               i18next/no-literal-string
+  207:41  warning  disallow literal string: <option value="image">Image Choice</option>                                                                                                                                                                                                                                                                                                                                                                                      i18next/no-literal-string
+  213:49  warning  disallow literal string: <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <Target className="w-4 h-4" />
+                  Points
+                </label>                                                                                                                                                                                                                                            i18next/no-literal-string
+  227:72  warning  disallow literal string: <label className="text-sm font-semibold text-gray-700">Difficulty</label>                                                                                                                                                                                                                                                                                                                                                        i18next/no-literal-string
+  233:40  warning  disallow literal string: <option value="easy">≡ƒƒó Easy</option>                                                                                                                                                                                                                                                                                                                                                                                            i18next/no-literal-string
+  234:42  warning  disallow literal string: <option value="medium">≡ƒƒí Medium</option>                                                                                                                                                                                                                                                                                                                                                                                        i18next/no-literal-string
+  235:40  warning  disallow literal string: <option value="hard">≡ƒö┤ Hard</option>                                                                                                                                                                                                                                                                                                                                                                                            i18next/no-literal-string
+  244:47  warning  disallow literal string: <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <List className="w-4 h-4" />
+                  Answer Options *
+                </label>                                                                                                                                                                                                                                    i18next/no-literal-string
+  252:47  warning  disallow literal string: <button
+                  onClick={addAnswer}
+                  disabled={localQuestion.answers.length >= 6}
+                  className="flex items-center gap-2 px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium disabled:opacity-50"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Answer
+                </button>  i18next/no-literal-string
+  277:56  warning  disallow literal string: <span className="text-green-700">Correct</span>                                                                                                                                                                                                                                                                                                                                                                                  i18next/no-literal-string
+  295:50  warning  disallow literal string: <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <Lightbulb className="w-4 h-4" />
+                Explanation (Optional)
+              </label>                                                                                                                                                                                                                               i18next/no-literal-string
+  341:51  warning  disallow literal string: <span className="flex items-center gap-1">
+                <Target className="w-4 h-4" />
+                <strong>{question.points}</strong> points
+              </span>                                                                                                                                                                                                                                                     i18next/no-literal-string
+  352:52  warning  disallow literal string: <span className="flex items-center gap-1">
+                  <Lightbulb className="w-4 h-4" />
+                  Has explanation
+                </span>                                                                                                                                                                                                                                                                      i18next/no-literal-string
+  362:52  warning  disallow literal string: <h5 className="flex items-center gap-2 font-semibold text-blue-800 mb-2">
+                  <Lightbulb className="w-4 h-4" />
+                  Explanation
+                </h5>                                                                                                                                                                                                                                             i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\components\QuizFilters.tsx
+   71:169  warning  disallow literal string: <div className="text-sm text-gray-600">{t("profile.pagination.showing")} <span className="font-semibold text-blue-600">{filteredCount}</span> / {totalQuizzes} quiz
+          </div>  i18next/no-literal-string
+   85:47   warning  disallow literal string: <span>{showAdvanced ? 'ß║¿n' : 'Hiß╗çn'} t├╣y chß╗ìn n├óng cao</span>                                                                                                                          i18next/no-literal-string
+  145:39   warning  disallow literal string: <option value="popular">≡ƒöÑ Phß╗ò biß║┐n nhß║Ñt</option>                                                                                                                                      i18next/no-literal-string
+  147:41   warning  disallow literal string: <option value="questions">≡ƒöó Theo sß╗æ c├óu hß╗Åi</option>                                                                                                                                  i18next/no-literal-string
+  148:40   warning  disallow literal string: <option value="duration">ΓÅ▒∩╕Å Theo thß╗¥i l╞░ß╗úng</option>                                                                                                                                   i18next/no-literal-string
+  153:67   warning  disallow literal string: <label className="block text-sm text-gray-600 mb-1">Sß╗æ c├óu hß╗Åi tß╗æi thiß╗âu: {filters.minQuestions}</label>                                                                               i18next/no-literal-string
+  166:67   warning  disallow literal string: <label className="block text-sm text-gray-600 mb-1">Thß╗¥i l╞░ß╗úng tß╗æi ─æa: {filters.maxDuration} ph├║t</label>                                                                              i18next/no-literal-string
+  166:107  warning  disallow literal string: <label className="block text-sm text-gray-600 mb-1">Thß╗¥i l╞░ß╗úng tß╗æi ─æa: {filters.maxDuration} ph├║t</label>                                                                              i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\components\QuizPreviewModal.tsx
+   33:74  warning  disallow literal string: <h2 className="text-2xl font-bold flex items-center gap-2">
+                ≡ƒæü∩╕Å {t('quiz.preview.title') || 'Preview Quiz'}
+              </h2>                                                                                                                      i18next/no-literal-string
+   43:14  warning  disallow literal string: <button
+              onClick={onClose}
+              className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-colors"
+            >
+              Γ£ò
+            </button>                                                            i18next/no-literal-string
+   82:80  warning  disallow literal string: <p className="text-lg font-bold text-orange-900">~{estimatedTime} min</p>                                                                                                                                                                                              i18next/no-literal-string
+   88:62  warning  disallow literal string: <h4 className="font-semibold text-gray-900 mb-3">
+              ΓÜÖ∩╕Å {t('quiz.settings') || 'Settings'}
+            </h4>                                                                                                                                              i18next/no-literal-string
+  170:70  warning  disallow literal string: <p className="text-yellow-800 flex items-center gap-2">
+                ΓÜá∩╕Å <span className="font-medium">
+                  {t('quiz.validation.minQuestions') || 'Recommended: At least 3 questions for a good quiz'}
+                </span>
+              </p>  i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\components\QuizPublishModal.tsx
+  150:58  warning  disallow literal string: <p className="font-medium text-blue-900">
+                  ≡ƒæ¿ΓÇì≡ƒÆ╝ {t('quiz.publish.requireReview') || 'Submit for Admin Review'}
+                </p>  i18next/no-literal-string
+  199:45  warning  disallow literal string: <span className="font-medium">Γä╣∩╕Å {t('quiz.publish.info') || 'What happens next'}:</span>                                                                 i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\components\QuizStats.tsx
+   54:35  warning  disallow literal string: <span>{averageQuestions} c├óu hß╗Åi trung b├¼nh</span>                                                                       i18next/no-literal-string
+   73:19  warning  disallow literal string: <span>Tiß║┐n ─æß╗Ö</span>                                                                                                     i18next/no-literal-string
+  100:77  warning  disallow literal string: <span>
+            {totalQuizzes > 0 ? Math.round(totalPlayers / totalQuizzes) : 0} trung b├¼nh/quiz
+          </span>  i18next/no-literal-string
+  119:17  warning  disallow literal string: <span>Chß║Ñt l╞░ß╗úng tß╗æt</span>                                                                                              i18next/no-literal-string
+  125:66  warning  disallow literal string: <h3 className="text-lg font-semibold text-gray-900 mb-4">Ph├ón bß╗æ ─æß╗Ö kh├│</h3>                                             i18next/no-literal-string
+  177:66  warning  disallow literal string: <h3 className="text-lg font-semibold text-gray-900 mb-4">Danh mß╗Ñc phß╗ò biß║┐n</h3>                                          i18next/no-literal-string
+  188:64  warning  disallow literal string: <span className="text-sm text-gray-600">{count} quiz</span>                                                              i18next/no-literal-string
+  199:61  warning  disallow literal string: <div className="text-center text-gray-500 py-4">
+              Ch╞░a c├│ dß╗» liß╗çu danh mß╗Ñc
+            </div>             i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\components\ResourceViewers\ImageSlidesViewer.tsx
+   98:48  warning  disallow literal string: <p className="text-sm text-gray-400">
+            Slide {currentIndex + 1} / {urls.length}
+          </p>                    i18next/no-literal-string
+  124:17  warning  disallow literal string: <span>
+            ≡ƒôè ─É├ú xem: {imagesViewed.size}/{urls.length} slides ({progressPercent}%)
+          </span>                i18next/no-literal-string
+  125:57  warning  disallow literal string: <span>
+            ≡ƒôè ─É├ú xem: {imagesViewed.size}/{urls.length} slides ({progressPercent}%)
+          </span>                i18next/no-literal-string
+  127:43  warning  disallow literal string: <span className="text-gray-400">
+            ΓÅ▒∩╕Å Thß╗¥i gian slide n├áy: {imageViewTimes[currentIndex] || 0}s
+          </span>  i18next/no-literal-string
+  128:72  warning  disallow literal string: <span className="text-gray-400">
+            ΓÅ▒∩╕Å Thß╗¥i gian slide n├áy: {imageViewTimes[currentIndex] || 0}s
+          </span>  i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\components\ResourceViewers\LinkViewer.tsx
+   77:21  warning  disallow literal string: <span>Thß╗¥i gian ─æß╗ìc: ~{estimatedTime} ph├║t</span>                                                                                                                                                                                                                                                                        i18next/no-literal-string
+   77:52  warning  disallow literal string: <span>Thß╗¥i gian ─æß╗ìc: ~{estimatedTime} ph├║t</span>                                                                                                                                                                                                                                                                        i18next/no-literal-string
+   82:19  warning  disallow literal string: <span>─É├ú xem: {formatTime(timeSpent)}</span>                                                                                                                                                                                                                                                                             i18next/no-literal-string
+  100:70  warning  disallow literal string: <h4 className="text-lg font-semibold text-gray-900 mb-2">
+              Kh├┤ng thß╗â xem trß╗▒c tiß║┐p
+            </h4>                                                                                                                                                                                                      i18next/no-literal-string
+  103:56  warning  disallow literal string: <p className="text-gray-600 mb-6 max-w-md">
+              Trang web n├áy kh├┤ng hß╗ù trß╗ú xem nh├║ng. Vui l├▓ng nhß║Ñn n├║t b├¬n d╞░ß╗¢i ─æß╗â mß╗ƒ trong tab mß╗¢i.
+            </p>                                                                                                                                                       i18next/no-literal-string
+  110:51  warning  disallow literal string: <button
+              onClick={handleOpenExternal}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <ExternalLink className="w-5 h-5" />
+              Mß╗ƒ trong tab mß╗¢i
+            </button>  i18next/no-literal-string
+  122:57  warning  disallow literal string: <p className="text-sm text-gray-700 mb-1">
+                ≡ƒôû ─É├ú ─æß╗ìc xong t├ái liß╗çu n├áy?
+              </p>                                                                                                                                                                                                             i18next/no-literal-string
+  125:52  warning  disallow literal string: <p className="text-xs text-gray-500">
+                X├íc nhß║¡n ─æß╗â tiß║┐p tß╗Ñc (hoß║╖c mß╗ƒ trong tab mß╗¢i ─æß╗â ─æß╗ìc)
+              </p>                                                                                                                                                                                           i18next/no-literal-string
+  133:16  warning  disallow literal string: <button
+                onClick={handleOpenExternal}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm"
+              >
+                Mß╗ƒ tab mß╗¢i
+              </button>                                                                      i18next/no-literal-string
+  139:16  warning  disallow literal string: <button
+                onClick={handleConfirm}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+              >
+                Γ£ô ─É├ú ─æß╗ìc xong
+              </button>                                                             i18next/no-literal-string
+  147:43  warning  disallow literal string: <span className="font-medium">─É├ú x├íc nhß║¡n ho├án th├ánh</span>                                                                                                                                                                                                                                                              i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\components\ResourceViewers\PDFViewer.tsx
+  164:43  warning  disallow literal string: <span className="text-gray-700">
+            ≡ƒôû ─É├ú xem: {pagesViewed.size}/{totalPages} trang ({progressPercent}%)
+          </span>  i18next/no-literal-string
+  165:55  warning  disallow literal string: <span className="text-gray-700">
+            ≡ƒôû ─É├ú xem: {pagesViewed.size}/{totalPages} trang ({progressPercent}%)
+          </span>  i18next/no-literal-string
+  167:43  warning  disallow literal string: <span className="text-gray-600">
+            ΓÅ▒∩╕Å Thß╗¥i gian trang n├áy: {pageViewTimes[currentPage] || 0}s
+          </span>             i18next/no-literal-string
+  168:70  warning  disallow literal string: <span className="text-gray-600">
+            ΓÅ▒∩╕Å Thß╗¥i gian trang n├áy: {pageViewTimes[currentPage] || 0}s
+          </span>             i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\components\ResourceViewers\VideoViewer.tsx
+  153:108  warning  disallow literal string: <div className="absolute bottom-4 left-4 right-4 bg-black/70 text-white text-sm px-3 py-2 rounded">
+          ΓÅ▒∩╕Å ─É├ú xem: {formatTime(totalWatchedSeconds)} | 
+          ≡ƒôè Tiß║┐n ─æß╗Ö: {Math.round((totalWatchedSeconds / (duration || 1)) * 100)}%
+        </div>                                                                                                                              i18next/no-literal-string
+  154:55   warning  disallow literal string: <div className="absolute bottom-4 left-4 right-4 bg-black/70 text-white text-sm px-3 py-2 rounded">
+          ΓÅ▒∩╕Å ─É├ú xem: {formatTime(totalWatchedSeconds)} | 
+          ≡ƒôè Tiß║┐n ─æß╗Ö: {Math.round((totalWatchedSeconds / (duration || 1)) * 100)}%
+        </div>                                                                                                                              i18next/no-literal-string
+  237:57   warning  disallow literal string: <span className="text-sm">{playbackRate}x</span>                                                                                                                                                                                                                                                                                                                                                i18next/no-literal-string
+  248:27   warning  disallow literal string: <button
+                    key={rate}
+                    onClick={() => handlePlaybackRateChange(rate)}
+                    className={`block w-full text-left px-3 py-1 rounded hover:bg-gray-700 text-sm ${
+                      rate === playbackRate ? 'text-blue-400' : ''
+                    }`}
+                  >
+                    {rate}x
+                  </button>  i18next/no-literal-string
+  265:53   warning  disallow literal string: <div className="mt-2 text-xs text-gray-300">
+          ΓÅ▒∩╕Å Tß╗òng thß╗¥i gian xem: {formatTime(totalWatchedSeconds)} | 
+          ≡ƒôè Tiß║┐n ─æß╗Ö: {Math.round((currentTime / duration) * 100)}%
+        </div>                                                                                                                                                                                        i18next/no-literal-string
+  266:67   warning  disallow literal string: <div className="mt-2 text-xs text-gray-300">
+          ΓÅ▒∩╕Å Tß╗òng thß╗¥i gian xem: {formatTime(totalWatchedSeconds)} | 
+          ≡ƒôè Tiß║┐n ─æß╗Ö: {Math.round((currentTime / duration) * 100)}%
+        </div>                                                                                                                                                                                        i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\components\ReviewList.tsx
+   96:64  warning  disallow literal string: <h3 className="text-lg font-medium text-gray-900 mb-2">Ch╞░a c├│ ─æ├ính gi├í n├áo</h3>                                                  i18next/no-literal-string
+   97:38  warning  disallow literal string: <p className="text-gray-600">H├úy l├á ng╞░ß╗¥i ─æß║ºu ti├¬n ─æ├ính gi├í quiz n├áy!</p>                                                         i18next/no-literal-string
+  150:33  warning  disallow literal string: <span className="text-sm text-gray-500">
+                ({review.rating}/5 sao)
+              </span>                          i18next/no-literal-string
+  179:25  warning  disallow literal string: <span>Hß╗»u ├¡ch ({review.helpful?.length || 0})</span>                                                                              i18next/no-literal-string
+  187:25  warning  disallow literal string: <span>B├ío c├ío</span>                                                                                                              i18next/no-literal-string
+  192:57  warning  disallow literal string: <span className="text-xs text-gray-500">
+                  ─É├ú chß╗ënh sß╗¡a {formatDate(review.updatedAt)}
+                </span>  i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\pages\CreateQuizPage\components\QuizInfoStep.tsx
+  208:71  warning  disallow literal string: <p className="text-sm font-medium text-gray-700 mb-2">Preview:</p>  i18next/no-literal-string
+  280:54  warning  disallow literal string: <span className="text-green-600">Γ£ô</span>                           i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\pages\CreateQuizPage\components\ResourcesStep.tsx
+  346:33  warning  disallow literal string: <span>ΓÅ▒∩╕Å {resource.estimatedTime} ph├║t</span>  i18next/no-literal-string
+  346:60  warning  disallow literal string: <span>ΓÅ▒∩╕Å {resource.estimatedTime} ph├║t</span>  i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\pages\EditQuizPage.tsx
+  124:51  warning  disallow literal string: <button
+            onClick={() => navigate('/admin')}
+            className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Quay lß║íi Admin
+          </button>  i18next/no-literal-string
+  129:67  warning  disallow literal string: <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              Γ£Å∩╕Å Chß╗ënh sß╗¡a Quiz
+            </h1>                                                                                                                                                          i18next/no-literal-string
+  132:42  warning  disallow literal string: <p className="text-gray-600">
+              ID: <code className="bg-gray-100 px-2 py-1 rounded">{id}</code>
+            </p>                                                                                                                                      i18next/no-literal-string
+  143:79  warning  disallow literal string: <label className="block text-sm font-medium text-gray-700 mb-2">
+                Ti├¬u ─æß╗ü Quiz
+              </label>                                                                                                                                              i18next/no-literal-string
+  238:68  warning  disallow literal string: <h3 className="text-lg font-semibold text-gray-900 mb-4">≡ƒôè Th├┤ng tin Quiz</h3>                                                                                                                                                                                     i18next/no-literal-string
+  242:59  warning  disallow literal string: <span className="font-medium text-gray-700">Sß╗æ c├óu hß╗Åi:</span>                                                                                                                                                                                                      i18next/no-literal-string
+  247:59  warning  disallow literal string: <span className="font-medium text-gray-700">Ng╞░ß╗¥i tß║ío:</span>                                                                                                                                                                                                       i18next/no-literal-string
+  252:59  warning  disallow literal string: <span className="font-medium text-gray-700">Ng├áy tß║ío:</span>                                                                                                                                                                                                        i18next/no-literal-string
+  259:59  warning  disallow literal string: <span className="font-medium text-gray-700">Lß║ºn sß╗¡a cuß╗æi:</span>                                                                                                                                                                                                    i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\pages\EditQuizPageAdvanced.tsx
+  313:48  warning  disallow literal string: <p className="text-gray-600">Chß╗ënh sß╗¡a th├┤ng tin quiz cß╗ºa bß║ín</p>                                                                                                                                                                                                                                                                                                                                                   i18next/no-literal-string
+  334:55  warning  disallow literal string: <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                      <FileText className="w-4 h-4" />
+                      M├┤ tß║ú quiz *
+                    </label>                                                                                                                                                                                                           i18next/no-literal-string
+  421:68  warning  disallow literal string: <h2 className="text-3xl font-bold text-gray-900">Questions ({questions.length})</h2>                                                                                                                                                                                                                                                                                                                                i18next/no-literal-string
+  426:49  warning  disallow literal string: <button
+                    onClick={addQuestion}
+                    className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-2xl hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg font-semibold"
+                  >
+                    <Plus className="w-6 h-6" />
+                    Add Question
+                  </button>  i18next/no-literal-string
+  433:75  warning  disallow literal string: <h3 className="text-2xl font-bold text-gray-900 mb-4">No Questions Yet</h3>                                                                                                                                                                                                                                                                                                                                         i18next/no-literal-string
+  434:63  warning  disallow literal string: <p className="text-gray-600 mb-8 text-lg">Start building your quiz by adding questions.</p>                                                                                                                                                                                                                                                                                                                         i18next/no-literal-string
+  438:22  warning  disallow literal string: <button
+                      onClick={addQuestion}
+                      className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all font-semibold"
+                    >
+                      Add First Question
+                    </button>                                                                          i18next/no-literal-string
+  463:69  warning  disallow literal string: <h2 className="text-3xl font-bold text-gray-900 mb-8">Quiz Settings</h2>                                                                                                                                                                                                                                                                                                                                            i18next/no-literal-string
+  466:80  warning  disallow literal string: <label className="block text-sm font-semibold text-gray-700">Time Limit (minutes)</label>                                                                                                                                                                                                                                                                                                                           i18next/no-literal-string
+  477:80  warning  disallow literal string: <label className="block text-sm font-semibold text-gray-700">Passing Score (%)</label>                                                                                                                                                                                                                                                                                                                              i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\pages\QuizDetailedStats.tsx
+  382:45  warning  disallow literal string: <p className="text-gray-600 mb-4">Kh├┤ng t├¼m thß║Ñy quiz</p>                                                                                                                                                                                                                                                                                        i18next/no-literal-string
+  386:12  warning  disallow literal string: <button
+            onClick={() => navigate(ROUTES.CREATOR_MY_QUIZZES)}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Quay lß║íi
+          </button>                                                                                                                          i18next/no-literal-string
+  459:43  warning  disallow literal string: <span className="font-medium">Quay lß║íi My Quizzes</span>                                                                                                                                                                                                                                                                                         i18next/no-literal-string
+  469:51  warning  disallow literal string: <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium flex items-center gap-1">
+                      <Lock className="w-4 h-4" />
+                      Password
+                    </span>                                                                                                             i18next/no-literal-string
+  475:55  warning  disallow literal string: <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium flex items-center gap-1">
+                      <BookOpen className="w-4 h-4" />
+                      With Materials
+                    </span>                                                                                                       i18next/no-literal-string
+  494:44  warning  disallow literal string: <span className="text-gray-600">
+                    <Brain className="w-4 h-4 inline mr-1" />
+                    {quiz.questions.length} c├óu hß╗Åi
+                  </span>                                                                                                                                                                  i18next/no-literal-string
+  513:44  warning  disallow literal string: <button
+                onClick={() => navigate(`/quiz-preview/${quiz.id}`)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium"
+              >
+                <Eye className="w-4 h-4" />
+                Xem Quiz
+              </button>  i18next/no-literal-string
+  520:49  warning  disallow literal string: <button
+                onClick={handleExport}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 font-medium"
+              >
+                <Download className="w-4 h-4" />
+                Xuß║Ñt b├ío c├ío
+              </button>                     i18next/no-literal-string
+  528:39  warning  disallow literal string: <option value="7days">7 ng├áy qua</option>                                                                                                                                                                                                                                                                                                        i18next/no-literal-string
+  529:40  warning  disallow literal string: <option value="30days">30 ng├áy qua</option>                                                                                                                                                                                                                                                                                                      i18next/no-literal-string
+  530:37  warning  disallow literal string: <option value="all">Tß║Ñt cß║ú thß╗¥i gian</option>                                                                                                                                                                                                                                                                                                    i18next/no-literal-string
+  545:62  warning  disallow literal string: <p className="text-blue-100 text-sm font-medium">L╞░ß╗út xem</p>                                                                                                                                                                                                                                                                                    i18next/no-literal-string
+  555:64  warning  disallow literal string: <p className="text-purple-100 text-sm font-medium">L╞░ß╗út l├ám b├ái</p>                                                                                                                                                                                                                                                                              i18next/no-literal-string
+  565:63  warning  disallow literal string: <p className="text-green-100 text-sm font-medium">Tß╗╖ lß╗ç ho├án th├ánh</p>                                                                                                                                                                                                                                                                           i18next/no-literal-string
+  575:64  warning  disallow literal string: <p className="text-orange-100 text-sm font-medium">─Éiß╗âm trung b├¼nh</p>                                                                                                                                                                                                                                                                           i18next/no-literal-string
+  585:62  warning  disallow literal string: <p className="text-teal-100 text-sm font-medium">Tß╗╖ lß╗ç ─æß║ít (ΓëÑ60%)</p>                                                                                                                                                                                                                                                                            i18next/no-literal-string
+  595:62  warning  disallow literal string: <p className="text-pink-100 text-sm font-medium">─Éiß╗âm cao nhß║Ñt</p>                                                                                                                                                                                                                                                                               i18next/no-literal-string
+  605:64  warning  disallow literal string: <p className="text-indigo-100 text-sm font-medium">Thß╗¥i gian TB</p>                                                                                                                                                                                                                                                                              i18next/no-literal-string
+  615:62  warning  disallow literal string: <p className="text-cyan-100 text-sm font-medium">Ho├án th├ánh</p>                                                                                                                                                                                                                                                                                  i18next/no-literal-string
+  624:63  warning  disallow literal string: <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <TrendingUp className="w-6 h-6 text-blue-600" />
+              Xu h╞░ß╗¢ng l├ám b├ái theo ng├áy
+            </h3>                                                                                                                                       i18next/no-literal-string
+  652:63  warning  disallow literal string: <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <PieChart className="w-6 h-6 text-purple-600" />
+              Ph├ón bß╗æ ─æiß╗âm sß╗æ
+            </h3>                                                                                                                                                  i18next/no-literal-string
+  695:63  warning  disallow literal string: <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <BarChart3 className="w-6 h-6 text-green-600" />
+              ─Éß╗Ö kh├│ c├óu hß╗Åi (Top 10 kh├│ nhß║Ñt)
+            </h3>                                                                                                                                 i18next/no-literal-string
+  704:67  warning  disallow literal string: <span className="text-blue-600 font-bold">C├óu {index + 1}:</span>                                                                                                                                                                                                                                                                                i18next/no-literal-string
+  731:22  warning  disallow literal string: <p>Ch╞░a c├│ dß╗» liß╗çu ph├ón t├¡ch c├óu hß╗Åi</p>                                                                                                                                                                                                                                                                                                         i18next/no-literal-string
+  740:61  warning  disallow literal string: <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <Trophy className="w-6 h-6 text-yellow-600" />
+              Top 10 hß╗ìc vi├¬n xuß║Ñt sß║»c
+            </h3>                                                                                                                                           i18next/no-literal-string
+  770:63  warning  disallow literal string: <p className="text-center text-gray-500 py-8">Ch╞░a c├│ dß╗» liß╗çu</p>                                                                                                                                                                                                                                                                                i18next/no-literal-string
+  779:59  warning  disallow literal string: <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <Calendar className="w-6 h-6 text-blue-600" />
+            20 kß║┐t quß║ú gß║ºn nhß║Ñt
+          </h3>                                                                                                                                                      i18next/no-literal-string
+  786:91  warning  disallow literal string: <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Hß╗ìc vi├¬n</th>                                                                                                                                                                                                                                                            i18next/no-literal-string
+  787:93  warning  disallow literal string: <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">─Éiß╗âm</th>                                                                                                                                                                                                                                                              i18next/no-literal-string
+  788:93  warning  disallow literal string: <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">─É├║ng/Tß╗òng</th>                                                                                                                                                                                                                                                         i18next/no-literal-string
+  789:93  warning  disallow literal string: <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Thß╗¥i gian</th>                                                                                                                                                                                                                                                         i18next/no-literal-string
+  790:93  warning  disallow literal string: <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Ng├áy l├ám</th>                                                                                                                                                                                                                                                          i18next/no-literal-string
+  791:93  warning  disallow literal string: <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Kß║┐t quß║ú</th>                                                                                                                                                                                                                                                           i18next/no-literal-string
+  827:70  warning  disallow literal string: <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                              <CheckCircle className="w-3.5 h-3.5" />
+                              ─Éß║ít
+                            </span>                                                                        i18next/no-literal-string
+  832:66  warning  disallow literal string: <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
+                              <XCircle className="w-3.5 h-3.5" />
+                              Ch╞░a ─æß║ít
+                            </span>                                                                           i18next/no-literal-string
+  842:85  warning  disallow literal string: <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                      Ch╞░a c├│ kß║┐t quß║ú n├áo
+                    </td>                                                                                                                                                                                                           i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\pages\QuizPage\components\ConfirmationModals.tsx
+  60:70  warning  disallow literal string: <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              C├▓n c├óu hß╗Åi ch╞░a trß║ú lß╗¥i
+            </h3>                                                                                                                                                                                                                                                                                                                                          i18next/no-literal-string
+  63:47  warning  disallow literal string: <p className="text-gray-600 mb-4">
+              Bß║ín c├▓n {unansweredQuestions.length} c├óu hß╗Åi ch╞░a trß║ú lß╗¥i:
+            </p>                                                                                                                                                                                                                                                                                                                                i18next/no-literal-string
+  64:51  warning  disallow literal string: <p className="text-gray-600 mb-4">
+              Bß║ín c├▓n {unansweredQuestions.length} c├óu hß╗Åi ch╞░a trß║ú lß╗¥i:
+            </p>                                                                                                                                                                                                                                                                                                                                i18next/no-literal-string
+  75:18  warning  disallow literal string: <button
+                  key={question.id}
+                  onClick={() => {
+                    modalControls.setShowUnansweredModal(false);
+                    onGoToQuestion(index);
+                  }}
+                  className="block w-full text-left p-2 hover:bg-gray-100 rounded text-blue-600 hover:text-blue-800"
+                >
+                  C├óu {index + 1}: {question.text.slice(0, 50)}...
+                </button>  i18next/no-literal-string
+  84:16  warning  disallow literal string: <button
+                onClick={() => modalControls.setShowUnansweredModal(false)}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Tiß║┐p tß╗Ñc l├ám b├ái
+              </button>                                                                                                                                                                       i18next/no-literal-string
+  90:16  warning  disallow literal string: <button
+                onClick={onConfirmSubmit}
+                className="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+              >
+                Nß╗Öp b├ái lu├┤n
+              </button>                                                                                                                                                                                                            i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\pages\QuizPage\components\ProgressIndicator.tsx
+  17:61  warning  disallow literal string: <span className="text-sm font-medium text-gray-600">Tiß║┐n ─æß╗Ö</span>  i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\pages\QuizPage\components\Timer.tsx
+  35:17  warning  disallow literal string: <span className="text-xs font-medium text-gray-600 flex items-center">
+          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0:0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12:8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Thß╗¥i gian c├▓n lß║íi
+        </span>                                                                                                                                i18next/no-literal-string
+  56:17  warning  disallow literal string: <div className="text-xs text-red-600 font-medium mt-1 flex items-center">
+          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0:0 20 20">
+            <path fillRule="evenodd" d="M8.257:3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+          Sß║»p hß║┐t giß╗¥!
+        </div>  i18next/no-literal-string
+  65:17  warning  disallow literal string: <div className="text-xs text-amber-600 font-medium mt-1 flex items-center">
+          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0:0 20 20">
+            <path fillRule="evenodd" d="M18:10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+          </svg>
+          C├▓n ├¡t thß╗¥i gian
+        </div>                                                                             i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\pages\QuizPage\index.tsx
+   81:55  warning  disallow literal string: <div className="text-red-500 text-6xl mb-4">ΓÜá∩╕Å</div>                           i18next/no-literal-string
+   82:65  warning  disallow literal string: <h2 className="text-2xl font-bold text-gray-800 mb-2">Kh├┤ng thß╗â tß║úi quiz</h2>  i18next/no-literal-string
+  180:23  warning  disallow literal string: <span>Tho├ít</span>                                                             i18next/no-literal-string
+  240:25  warning  disallow literal string: <span>C├óu tr╞░ß╗¢c</span>                                                         i18next/no-literal-string
+  252:29  warning  disallow literal string: <span>Nß╗Öp b├ái</span>                                                           i18next/no-literal-string
+  259:29  warning  disallow literal string: <span>C├óu tiß║┐p</span>                                                          i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\pages\QuizResultViewer\index.tsx
+  127:65  warning  disallow literal string: <h2 className="text-2xl font-bold text-gray-900 mb-4">Kh├┤ng t├¼m thß║Ñy kß║┐t quß║ú</h2>                                                                                                                                 i18next/no-literal-string
+  131:12  warning  disallow literal string: <button
+            onClick={() => navigate('/profile')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Quay lß║íi Profile
+          </button>  i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\pages\RealQuizListPage.tsx
+  103:65  warning  disallow literal string: <span className="flex items-center gap-1">ID: <code className="bg-gray-100 px-2 py-0.5 rounded">{quiz.id}</code></span>  i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\pages\ResultPage.tsx
+  305:58   warning  disallow literal string: <Button onClick={() => navigate('/quiz-list')}>
+            Back to Quiz List
+          </Button>                                                                                                                                                                                                                                                                                         i18next/no-literal-string
+  328:113  warning  disallow literal string: <div className="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-lg mb-6">
+                ΓÅ░ Time's up! Quiz was automatically submitted.
+              </div>                                                                                                                                                                                                    i18next/no-literal-string
+  334:74   warning  disallow literal string: <h1 className="text-3xl font-bold text-gray-900 mt-4 mb-2">
+                Quiz Completed!
+              </h1>                                                                                                                                                                                                                                                                           i18next/no-literal-string
+  345:59   warning  disallow literal string: <div className="text-lg text-gray-700 mb-2">
+                You got <span className="font-bold text-blue-600">{correct}</span> out of{' '}
+                <span className="font-bold">{total}</span> questions correct
+              </div>                                                                                                                                            i18next/no-literal-string
+  346:83   warning  disallow literal string: <div className="text-lg text-gray-700 mb-2">
+                You got <span className="font-bold text-blue-600">{correct}</span> out of{' '}
+                <span className="font-bold">{total}</span> questions correct
+              </div>                                                                                                                                            i18next/no-literal-string
+  347:59   warning  disallow literal string: <div className="text-lg text-gray-700 mb-2">
+                You got <span className="font-bold text-blue-600">{correct}</span> out of{' '}
+                <span className="font-bold">{total}</span> questions correct
+              </div>                                                                                                                                            i18next/no-literal-string
+  351:61   warning  disallow literal string: <div className="text-md text-gray-500 mt-2">
+                  ΓÅ▒∩╕Å Time taken: <span className="font-semibold text-blue-700">{formatTime(safeNumber(result.timeSpent))}</span>
+                </div>                                                                                                                                                                                      i18next/no-literal-string
+  363:44   warning  disallow literal string: <div className="text-gray-600">Correct Answers</div>                                                                                                                                                                                                                                                                                                                                        i18next/no-literal-string
+  368:44   warning  disallow literal string: <div className="text-gray-600">Incorrect Answers</div>                                                                                                                                                                                                                                                                                                                                      i18next/no-literal-string
+  373:44   warning  disallow literal string: <div className="text-gray-600">Final Score</div>                                                                                                                                                                                                                                                                                                                                            i18next/no-literal-string
+  379:64   warning  disallow literal string: <h2 className="text-xl font-bold text-gray-900 mb-4">Performance Analysis</h2>                                                                                                                                                                                                                                                                                                              i18next/no-literal-string
+  383:47   warning  disallow literal string: <span className="text-gray-600">Accuracy Rate</span>                                                                                                                                                                                                                                                                                                                                        i18next/no-literal-string
+  396:47   warning  disallow literal string: <span className="text-gray-600">Quiz Difficulty</span>                                                                                                                                                                                                                                                                                                                                      i18next/no-literal-string
+  407:47   warning  disallow literal string: <span className="text-gray-600">Time Management</span>                                                                                                                                                                                                                                                                                                                                      i18next/no-literal-string
+  418:61   warning  disallow literal string: <h2 className="text-xl font-bold text-gray-900">Review Answers</h2>                                                                                                                                                                                                                                                                                                                         i18next/no-literal-string
+  423:46   warning  disallow literal string: <Button
+              variant="outline"
+              onClick={() => setShowAnswers(!showAnswers)}
+            >
+              {showAnswers ? 'Hide' : 'Show'} Detailed Review
+            </Button>                                                                                                                                                                                   i18next/no-literal-string
+  465:84   warning  disallow literal string: <span className="ml-auto text-green-600 font-medium">
+                                Γ£ô Correct Answer
+                              </span>                                                                                                                                                                                                                                              i18next/no-literal-string
+  470:82   warning  disallow literal string: <span className="ml-auto text-red-600 font-medium">
+                                Your Answer
+                              </span>                                                                                                                                                                                                                                                     i18next/no-literal-string
+  481:69   warning  disallow literal string: <span className="font-medium text-blue-800">Explanation: </span>                                                                                                                                                                                                                                                                                                                            i18next/no-literal-string
+  494:65   warning  disallow literal string: <h2 className="text-2xl font-bold text-gray-900 mb-6">≡ƒÅå Leaderboard</h2>                                                                                                                                                                                                                                                                                                                   i18next/no-literal-string
+  523:93   warning  disallow literal string: <span className="text-blue-600 ml-2">(You)</span>                                                                                                                                                                                                                                                                                                                                           i18next/no-literal-string
+  526:70   warning  disallow literal string: <div className="text-sm text-gray-500">
+                        {entry.correctAnswers}/{entry.totalQuestions} correct
+                      </div>                                                                                                                                                                                                                                        i18next/no-literal-string
+  532:60   warning  disallow literal string: <div className="text-sm text-gray-500">
+                      ΓÅ▒∩╕Å {formatTime(safeNumber(entry.timeSpent))}
+                    </div>                                                                                                                                                                                                                                                     i18next/no-literal-string
+  544:67   warning  disallow literal string: <span className="text-blue-800 font-medium">Your Rank: #{userRank}</span>                                                                                                                                                                                                                                                                                                                   i18next/no-literal-string
+  553:38   warning  disallow literal string: <p className="text-lg">No results yet!</p>                                                                                                                                                                                                                                                                                                                                                  i18next/no-literal-string
+  554:18   warning  disallow literal string: <p>Be the first to complete this quiz and claim the top spot!</p>                                                                                                                                                                                                                                                                                                                           i18next/no-literal-string
+  574:12   warning  disallow literal string: <Button
+            onClick={() => navigate(`/quiz/${quiz.id}`)}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            Retake Quiz
+          </Button>                                                                                                                                                                                                         i18next/no-literal-string
+  581:12   warning  disallow literal string: <Button
+            onClick={() => navigate('/quizzes')}
+            variant="outline"
+          >
+            More Quizzes
+          </Button>                                                                                                                                                                                                                                        i18next/no-literal-string
+  594:12   warning  disallow literal string: <Button
+            variant="outline"
+            onClick={() => {
+              // Share functionality
+              navigator.clipboard.writeText(
+                `I scored ${percentage}% on "${quiz.title}" quiz! ≡ƒÄ»`
+              );
+              toast.success('Result copied to clipboard!');
+            }}
+          >
+            Share Result
+          </Button>  i18next/no-literal-string
+  601:12   warning  disallow literal string: <Button
+            onClick={() => navigate('/profile')}
+            variant="outline"
+          >
+            View All Results
+          </Button>                                                                                                                                                                                                                                    i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\pages\ResultPage\components\ActionButtons.tsx
+  27:8  warning  disallow literal string: <Button
+        onClick={() => navigate(`/quiz/${quiz.id}`)}
+        className="bg-blue-600 hover:bg-blue-700"
+      >
+        ≡ƒöä L├ám lß║íi Quiz
+      </Button>                                                    i18next/no-literal-string
+  38:8  warning  disallow literal string: <Button
+        onClick={() => {
+          console.log('≡ƒôÜ Navigating to /quizzes...');
+          navigate('/quizzes');
+        }}
+        variant="outline"
+      >
+        ≡ƒôÜ Xem th├¬m Quiz
+      </Button>  i18next/no-literal-string
+  45:8  warning  disallow literal string: <Button
+        onClick={() => navigate('/dashboard')}
+        variant="outline"
+      >
+        ≡ƒÅá Vß╗ü Dashboard
+      </Button>                                                                                  i18next/no-literal-string
+  52:8  warning  disallow literal string: <Button
+        variant="outline"
+        onClick={handleShareResult}
+      >
+        ≡ƒôñ Chia sß║╗ kß║┐t quß║ú
+      </Button>                                                                                          i18next/no-literal-string
+  59:8  warning  disallow literal string: <Button
+        onClick={() => navigate('/profile')}
+        variant="outline"
+      >
+        ≡ƒæñ Xem tß║Ñt cß║ú kß║┐t quß║ú
+      </Button>                                                                              i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\pages\ResultPage\components\AnswerReview.tsx
+   19:57  warning  disallow literal string: <h2 className="text-xl font-bold text-gray-900">Review Answers</h2>                                                                                                                    i18next/no-literal-string
+   24:42  warning  disallow literal string: <Button
+          variant="outline"
+          onClick={() => setShowAnswers(!showAnswers)}
+        >
+          {showAnswers ? 'Hide' : 'Show'} Detailed Review
+        </Button>  i18next/no-literal-string
+   90:63  warning  disallow literal string: <span className="font-medium text-blue-800">C├óu trß║ú lß╗¥i cß╗ºa bß║ín: </span>                                                                                                               i18next/no-literal-string
+  114:82  warning  disallow literal string: <span className="ml-auto text-green-600 font-medium">
+                              Γ£ô Correct Answer
+                            </span>                                             i18next/no-literal-string
+  119:80  warning  disallow literal string: <span className="ml-auto text-red-600 font-medium">
+                              Your Answer
+                            </span>                                                    i18next/no-literal-string
+  152:84  warning  disallow literal string: <span className="ml-auto text-green-600 font-medium">
+                                Γ£ô Should Select
+                              </span>                                          i18next/no-literal-string
+  157:82  warning  disallow literal string: <span className="ml-auto text-red-600 font-medium">
+                                Wrong Selection
+                              </span>                                            i18next/no-literal-string
+  162:84  warning  disallow literal string: <span className="ml-auto text-green-600 font-medium">
+                                Γ£ô Correct Selection
+                              </span>                                      i18next/no-literal-string
+  177:68  warning  disallow literal string: <span className="font-medium text-green-800">─É├íp ├ín ─æ├║ng: </span>                                                                                                                      i18next/no-literal-string
+  181:53  warning  disallow literal string: <span className="text-sm"> (hoß║╖c: {question.acceptedAnswers.join(', ')})</span>                                                                                                        i18next/no-literal-string
+  190:65  warning  disallow literal string: <span className="font-medium text-blue-800">Explanation: </span>                                                                                                                       i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\pages\ResultPage\components\Leaderboard.tsx
+   31:61   warning  disallow literal string: <h2 className="text-2xl font-bold text-gray-900 mb-6">≡ƒÅå Leaderboard</h2>                                                                                                                                                                               i18next/no-literal-string
+   63:171  warning  disallow literal string: <span className="text-white ml-2 font-bold bg-gradient-to-r from-green-500 to-emerald-600 px-3 py-1 rounded-full text-sm shadow-lg animate-pulse">
+                          ∩┐╜ L╞»ß╗óT Mß╗ÜI NHß║ñT - Xß║╛P Hß║áNG #{index + 1}
+                        </span>  i18next/no-literal-string
+   69:68   warning  disallow literal string: <span className="text-gray-500 ml-2 text-sm">(L╞░ß╗út tr╞░ß╗¢c ─æ├│)</span>                                                                                                                                                                                     i18next/no-literal-string
+   73:66   warning  disallow literal string: <div className="text-sm text-gray-500">
+                    {entry.correctAnswers}/{entry.totalQuestions} correct
+                  </div>                                                                                                            i18next/no-literal-string
+   82:56   warning  disallow literal string: <div className="text-sm text-gray-500">
+                  ΓÅ▒∩╕Å {formatDetailedTime(safeNumber(entry.timeSpent))}
+                </div>                                                                                                                 i18next/no-literal-string
+   94:63   warning  disallow literal string: <span className="text-blue-800 font-medium">Your Rank: #{userRank}</span>                                                                                                                                                                               i18next/no-literal-string
+  103:34   warning  disallow literal string: <p className="text-lg">No results yet!</p>                                                                                                                                                                                                              i18next/no-literal-string
+  104:14   warning  disallow literal string: <p>Be the first to complete this quiz and claim the top spot!</p>                                                                                                                                                                                       i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\pages\ResultPage\components\LoadingSpinner.tsx
+  13:56  warning  disallow literal string: <Button onClick={() => navigate('/quiz-list')}>
+          Back to Quiz List
+        </Button>  i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\pages\ResultPage\components\PerformanceAnalysis.tsx
+  18:60  warning  disallow literal string: <h2 className="text-xl font-bold text-gray-900 mb-4">Performance Analysis</h2>  i18next/no-literal-string
+  22:43  warning  disallow literal string: <span className="text-gray-600">Accuracy Rate</span>                            i18next/no-literal-string
+  35:43  warning  disallow literal string: <span className="text-gray-600">Quiz Difficulty</span>                          i18next/no-literal-string
+  46:43  warning  disallow literal string: <span className="text-gray-600">Time Management</span>                          i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\pages\ResultPage\components\ResultSummary.tsx
+  23:109  warning  disallow literal string: <div className="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-lg mb-6">
+            ΓÅ░ Time's up! Quiz was automatically submitted.
+          </div>                                                      i18next/no-literal-string
+  29:70   warning  disallow literal string: <h1 className="text-3xl font-bold text-gray-900 mt-4 mb-2">
+            Quiz Completed!
+          </h1>                                                                                                                             i18next/no-literal-string
+  35:55   warning  disallow literal string: <div className="text-lg text-gray-700 mb-2">
+            You got <span className="font-bold text-blue-600">{correct}</span> out of{' '}
+            <span className="font-bold">{total}</span> questions correct
+          </div>  i18next/no-literal-string
+  36:79   warning  disallow literal string: <div className="text-lg text-gray-700 mb-2">
+            You got <span className="font-bold text-blue-600">{correct}</span> out of{' '}
+            <span className="font-bold">{total}</span> questions correct
+          </div>  i18next/no-literal-string
+  37:55   warning  disallow literal string: <div className="text-lg text-gray-700 mb-2">
+            You got <span className="font-bold text-blue-600">{correct}</span> out of{' '}
+            <span className="font-bold">{total}</span> questions correct
+          </div>  i18next/no-literal-string
+  41:57   warning  disallow literal string: <div className="text-md text-gray-500 mt-2">
+              ΓÅ▒∩╕Å Time taken: <span className="font-semibold text-blue-700">{formatDetailedTime(safeNumber(result.timeSpent))}</span>
+            </div>                                i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\features\quiz\pages\ResultPage\components\StatsGrid.tsx
+  14:40  warning  disallow literal string: <div className="text-gray-600">Correct Answers</div>    i18next/no-literal-string
+  19:40  warning  disallow literal string: <div className="text-gray-600">Incorrect Answers</div>  i18next/no-literal-string
+  24:40  warning  disallow literal string: <div className="text-gray-600">Final Score</div>        i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\shared\components\AchievementSystem.tsx
+  303:60  warning  disallow literal string: <h2 className="text-2xl font-bold text-gray-900">≡ƒÅå Th├ánh t├¡ch</h2>                                             i18next/no-literal-string
+  305:41  warning  disallow literal string: <div className="text-sm text-gray-600">
+            {unlockedCount}/{totalCount} ─æ├ú mß╗ƒ kh├│a
+          </div>  i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\shared\components\ErrorBoundary.tsx
+  53:67  warning  disallow literal string: <h2 className="text-2xl font-bold text-gray-800 mb-2">─É├ú xß║úy ra lß╗ùi</h2>                                                                                                                                                                                                  i18next/no-literal-string
+  60:14  warning  disallow literal string: <button
+              onClick={() => window.location.reload()}
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200"
+            >
+              Tß║úi lß║íi trang
+            </button>  i18next/no-literal-string
+  66:65  warning  disallow literal string: <summary className="cursor-pointer font-medium">Chi tiß║┐t lß╗ùi (Development only)</summary>                                                                                                                                                                                 i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\shared\components\Header.tsx
+  129:21  warning  disallow literal string: <h1 className={`text-base sm:text-lg lg:text-xl font-bold transition-all duration-300 leading-tight ${
+                  scrolled 
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent' 
+                    : 'text-white'
+                }`}>
+                  Quiz Trivia
+                </h1>  i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\shared\components\LanguageSwitcher.tsx
+  98:57  warning  disallow literal string: <span className="text-blue-600 font-bold">Γ£ô</span>  i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\shared\components\NotificationCenter.tsx
+   91:43  warning  disallow literal string: <span className="text-lg">Γ£ò</span>                                                                                                                                                                                                                                                            i18next/no-literal-string
+  144:30  warning  disallow literal string: <button
+                              onClick={() => markAsRead(notification.id)}
+                              className="text-xs text-blue-600 hover:text-blue-800"
+                            >
+                              ─É├ính dß║Ñu ─æ├ú ─æß╗ìc
+                            </button>  i18next/no-literal-string
+  174:77  warning  disallow literal string: <button className="text-sm text-blue-600 hover:text-blue-800">
+                Xem tß║Ñt cß║ú th├┤ng b├ío
+              </button>                                                                                                                                                                 i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\shared\components\PopularQuizzesRanking.tsx
+   58:66  warning  disallow literal string: <h3 className="text-lg font-semibold text-gray-900 mb-4">≡ƒÅå Quiz Phß╗ò Biß║┐n</h3>        i18next/no-literal-string
+   77:61  warning  disallow literal string: <h3 className="text-lg font-semibold text-gray-900">≡ƒÅå Quiz Phß╗ò Biß║┐n</h3>             i18next/no-literal-string
+   86:14  warning  disallow literal string: <p>Ch╞░a c├│ dß╗» liß╗çu quiz phß╗ò biß║┐n</p>                                                  i18next/no-literal-string
+   87:34  warning  disallow literal string: <p className="text-sm">Dß╗» liß╗çu sß║╜ xuß║Ñt hiß╗çn khi c├│ nhiß╗üu ng╞░ß╗¥i tham gia quiz h╞ín</p>  i18next/no-literal-string
+  114:46  warning  disallow literal string: <span>{quiz.totalPlayers} ng╞░ß╗¥i ch╞íi</span>                                           i18next/no-literal-string
+  118:42  warning  disallow literal string: <span>{quiz.attempts} l╞░ß╗út ch╞íi</span>                                                i18next/no-literal-string
+  122:57  warning  disallow literal string: <span>{quiz.averageScore.toFixed(1)}% ─æiß╗âm TB</span>                                  i18next/no-literal-string
+  126:42  warning  disallow literal string: <span>{quiz.duration}p</span>                                                         i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\shared\components\QuickReviewSection.tsx
+  33:62  warning  disallow literal string: <h3 className="text-xl font-bold text-gray-900 mb-2">
+          Bß║ín thß║Ñy quiz n├áy nh╞░ thß║┐ n├áo?
+        </h3>                                                                                                                                                                                                                                                          i18next/no-literal-string
+  37:43  warning  disallow literal string: <p className="text-gray-600 mb-6">
+          Chia sß║╗ cß║úm nhß║¡n cß╗ºa bß║ín ─æß╗â gi├║p nhß╗»ng ng╞░ß╗¥i kh├íc c├│ trß║úi nghiß╗çm tß╗æt h╞ín
+        </p>                                                                                                                                                                                                                                    i18next/no-literal-string
+  48:59  warning  disallow literal string: <button
+                onClick={() => setShowReviewForm(true)}
+                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-md"
+              >
+                <MessageSquare className="w-5 h-5 mr-2" />
+                Viß║┐t ─æ├ính gi├í
+              </button>       i18next/no-literal-string
+  56:49  warning  disallow literal string: <Link
+                to={`/quiz/${quizId}/reviews`}
+                className="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors border border-gray-300 shadow-sm"
+              >
+                <Eye className="w-5 h-5 mr-2" />
+                Xem tß║Ñt cß║ú ─æ├ính gi├í
+              </Link>  i18next/no-literal-string
+  62:49  warning  disallow literal string: <p className="text-gray-600 mb-4">─É─âng nhß║¡p ─æß╗â ─æ├ính gi├í v├á xem c├íc ─æ├ính gi├í kh├íc</p>                                                                                                                                                                                                                                                                                    i18next/no-literal-string
+  78:63  warning  disallow literal string: <h3 className="text-xl font-bold text-gray-900">─É├ính gi├í: {quizTitle}</h3>                                                                                                                                                                                                                                                                                              i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\shared\components\ui\AudioPlayer.tsx
+  140:50  warning  disallow literal string: <p className="text-blue-200 text-sm">Audio Player</p>                                                                                                                                                                                                        i18next/no-literal-string
+  268:74  warning  disallow literal string: <kbd className="px-2 py-1 bg-white bg-opacity-10 rounded">Space</kbd>                                                                                                                                                                                        i18next/no-literal-string
+  268:85  warning  disallow literal string: <p className="text-white text-sm opacity-75">
+            ≡ƒÆí <kbd className="px-2 py-1 bg-white bg-opacity-10 rounded">Space</kbd> ─æß╗â ph├ít/dß╗½ng
+            ΓÇó <kbd className="px-2 py-1 bg-white bg-opacity-10 rounded">ESC</kbd> ─æß╗â ─æ├│ng
+          </p>  i18next/no-literal-string
+  269:82  warning  disallow literal string: <p className="text-white text-sm opacity-75">
+            ≡ƒÆí <kbd className="px-2 py-1 bg-white bg-opacity-10 rounded">Space</kbd> ─æß╗â ph├ít/dß╗½ng
+            ΓÇó <kbd className="px-2 py-1 bg-white bg-opacity-10 rounded">ESC</kbd> ─æß╗â ─æ├│ng
+          </p>  i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\shared\components\ui\ImageViewer.tsx
+  165:54  warning  disallow literal string: <p className="text-white text-sm opacity-75">
+          ≡ƒÆí Nhß║Ñn <kbd className="px-2 py-1 bg-white bg-opacity-20 rounded">ESC</kbd> hoß║╖c click b├¬n ngo├ái ─æß╗â ─æ├│ng
+          ΓÇó Cuß╗Ön chuß╗Öt ─æß╗â zoom ΓÇó Click v├á k├⌐o ─æß╗â di chuyß╗ân
+        </p>  i18next/no-literal-string
+  166:86  warning  disallow literal string: <p className="text-white text-sm opacity-75">
+          ≡ƒÆí Nhß║Ñn <kbd className="px-2 py-1 bg-white bg-opacity-20 rounded">ESC</kbd> hoß║╖c click b├¬n ngo├ái ─æß╗â ─æ├│ng
+          ΓÇó Cuß╗Ön chuß╗Öt ─æß╗â zoom ΓÇó Click v├á k├⌐o ─æß╗â di chuyß╗ân
+        </p>  i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\shared\components\ui\PDFViewer.tsx
+   87:39  warning  disallow literal string: <span className="text-sm">Mß╗ƒ tab mß╗¢i</span>                                                                                                                                                                                                i18next/no-literal-string
+  135:54  warning  disallow literal string: <p className="text-white text-sm opacity-75">
+          ≡ƒÆí Nhß║Ñn <kbd className="px-2 py-1 bg-white bg-opacity-20 rounded">ESC</kbd> hoß║╖c click b├¬n ngo├ái ─æß╗â ─æ├│ng
+          ΓÇó Sß╗¡ dß╗Ñng toolbar PDF ─æß╗â zoom, t├¼m kiß║┐m, in ß║Ñn
+        </p>  i18next/no-literal-string
+  136:86  warning  disallow literal string: <p className="text-white text-sm opacity-75">
+          ≡ƒÆí Nhß║Ñn <kbd className="px-2 py-1 bg-white bg-opacity-20 rounded">ESC</kbd> hoß║╖c click b├¬n ngo├ái ─æß╗â ─æ├│ng
+          ΓÇó Sß╗¡ dß╗Ñng toolbar PDF ─æß╗â zoom, t├¼m kiß║┐m, in ß║Ñn
+        </p>  i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\shared\components\ui\ShareLinkModal.tsx
+   86:51  warning  disallow literal string: <h3 className="text-xl font-bold">≡ƒÄë Quiz ─æ├ú ─æ╞░ß╗úc xuß║Ñt bß║ún!</h3>                                                                                                                                                                                                                                  i18next/no-literal-string
+   87:59  warning  disallow literal string: <p className="text-sm text-white/80 mt-1">Chia sß║╗ quiz vß╗¢i hß╗ìc vi├¬n cß╗ºa bß║ín</p>                                                                                                                                                                                                                   i18next/no-literal-string
+  103:55  warning  disallow literal string: <p className="text-sm text-gray-600 mb-1">Ti├¬u ─æß╗ü Quiz</p>                                                                                                                                                                                                                                        i18next/no-literal-string
+  110:44  warning  disallow literal string: <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+              <Link2 className="w-4 h-4" />
+              Link chia sß║╗
+            </label>                                                                                                                    i18next/no-literal-string
+  130:50  warning  disallow literal string: <>
+                    <Check className="w-4 h-4" />
+                    ─É├ú copy
+                  </>                                                                                                                                                                                         i18next/no-literal-string
+  135:49  warning  disallow literal string: <>
+                    <Copy className="w-4 h-4" />
+                    Copy
+                  </>                                                                                                                                                                                             i18next/no-literal-string
+  147:45  warning  disallow literal string: <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <Lock className="w-4 h-4" />
+                Mß║¡t khß║⌐u quiz
+              </label>                                                                                                              i18next/no-literal-string
+  175:52  warning  disallow literal string: <>
+                      <Check className="w-4 h-4" />
+                      ─É├ú copy
+                    </>                                                                                                                                                                                   i18next/no-literal-string
+  180:51  warning  disallow literal string: <>
+                      <Copy className="w-4 h-4" />
+                      Copy
+                    </>                                                                                                                                                                                       i18next/no-literal-string
+  187:49  warning  disallow literal string: <p className="text-sm text-gray-600 flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5" />
+                Hß╗ìc vi├¬n cß║ºn nhß║¡p mß║¡t khß║⌐u n├áy ─æß╗â l├ám b├ái quiz
+              </p>                                                                                             i18next/no-literal-string
+  195:86  warning  disallow literal string: <h5 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+              ≡ƒÆí H╞░ß╗¢ng dß║½n
+            </h5>                                                                                                                                                                          i18next/no-literal-string
+  201:23  warning  disallow literal string: <span>Quiz ─æang chß╗¥ admin ph├¬ duyß╗çt. Sau khi ─æ╞░ß╗úc duyß╗çt, quiz sß║╜ hiß╗ân thß╗ï c├┤ng khai.</span>                                                                                                                                                                                                       i18next/no-literal-string
+  205:23  warning  disallow literal string: <span>Bß║ín c├│ thß╗â chia sß║╗ link n├áy vß╗¢i hß╗ìc vi├¬n. {hasPassword ? 'Hß╗ì cß║ºn nhß║¡p mß║¡t khß║⌐u ─æß╗â truy cß║¡p.' : 'Hß╗ì c├│ thß╗â truy cß║¡p ngay.'}</span>                                                                                                                                                           i18next/no-literal-string
+  209:23  warning  disallow literal string: <span>Quß║ún l├╜ quiz cß╗ºa bß║ín tß║íi trang "My Quizzes" trong Creator Dashboard.</span>                                                                                                                                                                                                                 i18next/no-literal-string
+  221:41  warning  disallow literal string: <button
+            onClick={handleCopyAll}
+            className="px-4 py-2 text-sm font-semibold text-blue-700 hover:text-blue-900 transition-colors flex items-center gap-2"
+          >
+            <Copy className="w-4 h-4" />
+            Copy tß║Ñt cß║ú th├┤ng tin
+          </button>  i18next/no-literal-string
+  227:12  warning  disallow literal string: <button
+            onClick={onClose}
+            className="px-6 py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-semibold transition-colors"
+          >
+            ─É├│ng
+          </button>                                                                               i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\shared\components\ui\YouTubePlayer.tsx
+   91:64  warning  disallow literal string: <h3 className="text-xl font-bold text-gray-900 mb-2">Link YouTube kh├┤ng hß╗úp lß╗ç</h3>                                                                                                                  i18next/no-literal-string
+   92:45  warning  disallow literal string: <p className="text-gray-600 mb-4">Vui l├▓ng kiß╗âm tra lß║íi URL video</p>                                                                                                                                i18next/no-literal-string
+   96:12  warning  disallow literal string: <button
+node.exe : ESLint found too many warnings (maximum: 0).
+At C:\nvm4w\nodejs\npm.ps1:29 char:3
++   & $NODE_EXE $NPM_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ESLint found to...s (maximum: 0).:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+            onClick={onClose}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            ─É├│ng
+          </button>  i18next/no-literal-string
+  167:56  warning  disallow literal string: <p className="text-white text-sm opacity-75">
+            ≡ƒÆí Nhß║Ñn <kbd className="px-2 py-1 bg-white bg-opacity-20 rounded">ESC</kbd> hoß║╖c click b├¬n ngo├ái ─æß╗â ─æ├│ng
+          </p>                  i18next/no-literal-string
+  168:88  warning  disallow literal string: <p className="text-white text-sm opacity-75">
+            ≡ƒÆí Nhß║Ñn <kbd className="px-2 py-1 bg-white bg-opacity-20 rounded">ESC</kbd> hoß║╖c click b├¬n ngo├ái ─æß╗â ─æ├│ng
+          </p>                  i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\shared\pages\Home.tsx
+  144:49  warning  disallow literal string: <Button className="w-full sm:w-auto bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 font-bold px-8 py-4 text-lg rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 ring-2 ring-white/50">
+                <span className="mr-2">≡ƒÄ«</span>Ch╞íi Multiplayer
+              </Button>  i18next/no-literal-string
+
+D:\Thuctap_WebQuiz\QuizTrivia-App\src\shared\pages\LandingPage.tsx
+   17:69   warning  disallow literal string: <span className="text-white text-lg sm:text-xl font-bold">Quiz Trivia</span>                         i18next/no-literal-string
+   60:66   warning  disallow literal string: <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">ΓÅ▒∩╕Å</div>                                          i18next/no-literal-string
+   95:104  warning  disallow literal string: <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-purple-300 mb-1 sm:mb-2">10K+</div>  i18next/no-literal-string
+   99:104  warning  disallow literal string: <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-indigo-300 mb-1 sm:mb-2">50K+</div>  i18next/no-literal-string
+  112:12   warning  disallow literal string: <p>&copy; 2025 Quiz Trivia. {t('landing.footer.rights')}</p>                                         i18next/no-literal-string
+
+Γ£û 456 problems (0 errors, 456 warnings)
+

@@ -127,7 +127,7 @@ const Header: React.FC<HeaderProps> = () => {
                     ? 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent' 
                     : 'text-white'
                 }`}>
-                  Quiz Trivia
+                  {t('appName')}
                 </h1>
                 <p className={`text-xs hidden lg:block transition-colors duration-300 ${
                   scrolled ? 'text-gray-600' : 'text-blue-100/90'

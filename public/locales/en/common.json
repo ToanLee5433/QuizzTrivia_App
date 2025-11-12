@@ -1,4 +1,5 @@
 {
+  "appName": "Quiz Trivia",
   "10Cau": "10 câu",
   "10Phut": "10 Minute",
   "15Cau": "15 câu",
@@ -429,7 +430,38 @@
       "quizRecommendation": {
         "questions": "questions",
         "startQuiz": "Start quiz now"
-      }
+      },
+      "askAssistant": "Ask AI Learning Assistant",
+      "title": "AI Learning Assistant",
+      "beta": "Beta",
+      "subtitle": "Smart learning assistant powered by Google AI",
+      "welcome": "Welcome to AI Learning Assistant! 👋",
+      "welcomeMessage": "Ask me anything about the quizzes you've learned. I'll provide detailed answers and suggest suitable quizzes for you.",
+      "suggestions": {
+        "explain": {
+          "title": "Explain concepts",
+          "description": "Learn details about topics you're interested in"
+        },
+        "summarize": {
+          "title": "Summarize content",
+          "description": "Get an overview of important knowledge"
+        },
+        "examples": {
+          "title": "Real examples",
+          "description": "Learn through specific cases"
+        },
+        "recommend": {
+          "title": "Suggest quizzes",
+          "description": "Find suitable quizzes to practice"
+        }
+      },
+      "error": "An error occurred",
+      "tip": "💡 Tip: Ask about content you've learned in unlocked quizzes",
+      "citations": "📚 References:",
+      "processingTime": "⚡ {{ms}}ms",
+      "chunksUsed": "📄 {{count}} chunks",
+      "quizSuggestions": "🎯 Suggested quizzes for you",
+      "clickToStart": "Click on a quiz to start right away! 👇"
     },
     "users": {
       "cannotChangeSelfRole": "Cannot change your own role",
@@ -494,6 +526,7 @@
     "confirmPassword": "Confirm Password",
     "confirmPasswordPlaceholder": "Confirm password",
     "createNewAccount": "Create new account",
+    "creatorOrAdminRequired": "You need Creator or Admin role to access this page.",
     "displayName": "Display Name",
     "displayNamePlaceholder": "Enter display name",
     "email": "Email",
@@ -517,6 +550,11 @@
       "genericError": "Something went wrong. Please try again."
     },
     "forgotPassword": "Forgot password?",
+    "resetPasswordHint": "We will send a password reset link to this email.",
+    "emailSent": "Email sent!",
+    "resetEmailSentTo": "We have sent a password reset link to",
+    "checkInboxAndClick": "Check your inbox and click the link to reset your password.",
+    "backToLogin": "Back to login",
     "googleLoginSuccess": "Google login successful!",
     "hasAccount": "Already have an account? Login",
     "login": "Login",
@@ -564,6 +602,30 @@
       "passwordMismatch": "Passwords don't match",
       "passwordTooShort": "Password too short (min 6 characters)",
       "termsRequired": "You must agree to terms"
+    },
+    "roleSelection": {
+      "title": "Choose your role",
+      "subtitle": "Select the appropriate role to start using Quiz Trivia",
+      "userRole": {
+        "title": "User",
+        "description": "Take quizzes, view results and track your learning progress",
+        "features": {
+          "takeQuizzes": "• Take available quizzes",
+          "viewHistory": "• View result history",
+          "trackProgress": "• Track learning progress"
+        }
+      },
+      "creatorRole": {
+        "title": "Creator",
+        "description": "Create quizzes for the community, including all User rights",
+        "features": {
+          "allUserRights": "• All User rights",
+          "createQuizzes": "• Create new quizzes",
+          "manageQuizzes": "• Manage created quizzes",
+          "needsApproval": "• Quizzes need admin approval"
+        }
+      },
+      "canChangeRoleLater": "You can change your role later in account settings"
     },
     "ban_can_dang_nhap_de_upload_anh": "Bạn cần đăng nhập để upload ảnh",
     "ban_can_dang_nhap": "Bạn cần đăng nhập",
@@ -1432,7 +1494,8 @@
       "multiplayer": {
         "title": "Multiplayer",
         "description": "Play with friends and compete in real-time"
-      }
+      },
+      "offlineComingSoon": "Offline feature coming soon"
     },
     "footer": {
       "rights": "All rights reserved."
@@ -1546,7 +1609,77 @@
   "moKhoa": "Mở khóa",
   "moTa": "Description",
   "moTaAnhTuyChon": "Description ảnh (tùy chọn)",
-  "moTaNganGonNoiDungTaiLieu": "Description ngắn gọn nội dung Resources...",
+  "multiplayer": {
+    "title": "Multiplayer Mode",
+    "subtitle": "Create or join a room to play with friends!",
+    "createRoom": "Create Room",
+    "joinRoom": "Join Room",
+    "roomName": "Room Name",
+    "enterRoomName": "Enter room name",
+    "maxPlayers": "Max Players (2-20)",
+    "timeLimit": "Time per question (5-300 seconds)",
+    "roomSettings": "Room Settings",
+    "showLeaderboard": "Show leaderboard",
+    "private": "Private Room",
+    "roomCode": "Room Code",
+    "enterRoomCode": "Enter room code",
+    "roomCodeHint": "Enter 6-character code from room creator",
+    "chat": "Chat",
+    "starting": "Starting",
+    "joining": "Joining...",
+    "password": "Password",
+    "enterPassword": "Enter password",
+    "passwordRequired": "This room requires a password to join",
+    "roomCreated": "Room created successfully!",
+    "roomError": "Error creating room",
+    "joinSuccess": "Joined room successfully!",
+    "joinError": "Error joining room",
+    "leaveSuccess": "Left room successfully",
+    "waitingForPlayers": "Waiting for other players...",
+    "gameStarting": "Game is starting...",
+    "connecting": "Connecting...",
+    "disconnected": "Disconnected from server",
+    "errors": {
+      "connectionLost": "Connection lost",
+      "reconnecting": "Reconnecting...",
+      "connectionFailed": "Connection failed"
+    },
+    "success": {
+      "connectionRestored": "Connection restored",
+      "leftRoom": "Left room"
+    },
+    "players": "Players",
+    "ready": "Ready",
+    "notReady": "Not Ready",
+    "online": "online",
+    "offline": "offline",
+    "leave": "Leave",
+    "roomTitle": "Multiplayer Quiz Room",
+    "total": "Total",
+    "time": "Time",
+    "allowLateJoin": "Allow players to join during game",
+    "updateSettings": "Update Settings",
+    "noPlayers": "No players yet...",
+    "you": "YOU",
+    "waiting": "Waiting",
+    "waitingForPlayer": "Waiting for player...",
+    "errorBoundary": {
+      "title": "Oops! Something went wrong",
+      "message": "The multiplayer game encountered an unexpected error. Don't worry, your progress might be saved.",
+      "componentStack": "Component Stack",
+      "tryAgain": "Try Again",
+      "reloadPage": "Reload Page",
+      "helpText": "If the problem persists, please contact support or try again later.",
+      "errorOccurred": "An error occurred",
+      "reloadPageButton": "Reload page",
+      "errorDetailsDevOnly": "Error details (Development only)"
+    },
+    "timeLimitRange": "{{min}}-{{max}} seconds",
+    "timeLimitHint": "From {{min}} to {{max}} seconds per question (max 5 minutes)",
+    "questionsCount": "{{count}} questions",
+    "checkmark": "✓",
+    "secondsShort": "{{value}}s"
+  },
   "moTaNganGonVeNoiDungQuiz": "Description ngắn gọn về nội dung Quiz...",
   "moTaQuiz": "Description Quiz *",
   "moTabMoi": "Mở tab mới",
@@ -1554,17 +1687,6 @@
   "moi": "Mới:",
   "moiNguoiDeuCoTheTimKiemVaLamQuizNay": "Mọi người đều Yes thể Search và Take quiz này",
   "moiNhat": "🆕 Mới nhất",
-  "multiplayer": {
-    "roomCreated": "Room created successfully!",
-    "roomError": "Error creating room",
-    "joinSuccess": "Joined room!",
-    "joinError": "Error joining room",
-    "leaveSuccess": "Left room",
-    "waitingForPlayers": "Waiting for other players...",
-    "gameStarting": "Game starting...",
-    "connecting": "Connecting...",
-    "disconnected": "Disconnected from server"
-  },
   "nPermissionDeniedStorageRulesChuaDeployHoacChuaDun": "\\n⚠️ PERMISSION DENIED - Storage Rules chưa deploy hoặc chưa đúng!",
   "nav": {
     "admin": "Admin",
@@ -1737,7 +1859,79 @@
     "wrongPassword": "Old password is incorrect",
     "viewAllCount": "View All",
     "passwordMinLength": "Password min 6 characters",
-    "displayName": "Display Name"
+    "displayName": "Display Name",
+    "showingResults": "Showing results",
+    "previous": "Previous",
+    "pageInfo": "Page info",
+    "avatarLabel": "Avatar",
+    "currentAvatar": "Current avatar",
+    "removeAvatar": "Remove avatar",
+    "enterUrlManually": "Or enter avatar URL manually"
+  },
+  "shareLinkModal": {
+    "title": "🎉 Quiz Published Successfully!",
+    "subtitle": "Share your quiz with students",
+    "quizTitleLabel": "Quiz Title",
+    "shareLinkLabel": "Share Link",
+    "copied": "Copied",
+    "copy": "Copy",
+    "passwordLabel": "Quiz Password",
+    "passwordHint": "Students need to enter this password to access the quiz",
+    "guideTitle": "💡 Guide",
+    "guide1": "Quiz is awaiting admin approval. Once approved, it will be publicly visible.",
+    "guide2WithPassword": "You can share this link with students. They will need to enter the password to access.",
+    "guide2WithoutPassword": "You can share this link with students. They can access it immediately.",
+    "guide3": "Manage your quiz at \"My Quizzes\" page in Creator Dashboard.",
+    "copyAllInfo": "Copy all information",
+    "close": "Close"
+  },
+  "quickReview": {
+    "title": "How do you like this quiz?",
+    "subtitle": "Share your thoughts to help others have a better experience",
+    "writeReview": "Write a review",
+    "viewAllReviews": "View all reviews",
+    "loginToReview": "Login to review and see other reviews",
+    "reviewTitle": "Review: {{quizTitle}}"
+  },
+  "resultPage": {
+    "loading": "Loading results...",
+    "backToQuizList": "Back to Quiz List",
+    "timeUpAlert": "⏰ Time's up! Quiz was automatically submitted.",
+    "quizCompleted": "Quiz Completed!",
+    "outstanding": "Outstanding! 🏆",
+    "excellent": "Excellent! 🌟",
+    "greatJob": "Great Job! 👏",
+    "goodWork": "Good Work! 👍",
+    "notBad": "Not Bad! 📚",
+    "keepPracticing": "Keep Practicing! 💪",
+    "youGot": "You got",
+    "outOf": "out of",
+    "questionsCorrect": "questions correct",
+    "timeTaken": "⏱️ Time taken:",
+    "correctAnswers": "Correct Answers",
+    "incorrectAnswers": "Incorrect Answers",
+    "finalScore": "Final Score",
+    "performanceAnalysis": "Performance Analysis",
+    "accuracyRate": "Accuracy Rate",
+    "quizDifficulty": "Quiz Difficulty",
+    "timeManagement": "Time Management",
+    "reviewAnswers": "Review Answers",
+    "showDetailedReview": "Show Detailed Review",
+    "hideDetailedReview": "Hide Detailed Review",
+    "correctAnswer": "✓ Correct Answer",
+    "yourAnswer": "Your Answer",
+    "explanation": "Explanation:",
+    "leaderboard": "🏆 Leaderboard",
+    "you": "(You)",
+    "yourRank": "Your Rank: #{{rank}}",
+    "noResultsYet": "No results yet!",
+    "beFirst": "Be the first to complete this quiz and claim the top spot!",
+    "tryAgain": "Try Again",
+    "reviewQuiz": "Review Quiz",
+    "backToQuiz": "Back to Quiz",
+    "nextQuiz": "Next Quiz",
+    "shareResult": "Share Result",
+    "viewAllResults": "View All Results"
   },
   "promptTuyChinhTuyChon": "Prompt tùy chỉnh (tùy chọn)",
   "publicCongKhai": "🌍 Public (Công khai)",
@@ -1879,12 +2073,25 @@
     "playNow": "Play Now",
     "players": "Players",
     "popularQuizzes": "Popular Quizzes",
+    "popularQuizzesRanking": {
+      "title": "🏆 Popular Quizzes",
+      "noData": "No popular quiz data yet",
+      "noDataDesc": "Data will appear when more people participate in quizzes",
+      "players": "{{count}} players",
+      "attempts": "{{count}} attempts",
+      "averageScore": "{{score}}% avg",
+      "duration": "{{minutes}}m"
+    },
     "preview": "Preview",
     "previewPage": {
       "backToList": "Back to quiz list",
       "loadingQuiz": "Loading quiz...",
       "quizNotFound": "Quiz not found",
-      "title": "Quiz Preview"
+      "title": "Quiz Preview",
+      "closeButton": "✕",
+      "estimatedTimeUnit": "min",
+      "settingsEmoji": "⚙️",
+      "warningEmoji": "⚠️"
     },
     "published": "Published",
     "question": "Question",
@@ -1917,7 +2124,9 @@
       "submitting": "Submitting...",
       "title": "Quiz Reviews",
       "yourRating": "Your Rating",
-      "reviewQuiz": "Review Quiz"
+      "reviewQuiz": "Review Quiz",
+      "commentOptional": "Comment (optional)",
+      "characterCount": "{{count}}/{{max}} characters"
     },
     "reviewsTitle": "Reviews",
     "score": "Score",
@@ -2529,6 +2738,10 @@
     "start": "Start",
     "messages": "Messages",
     "submit": "Submit",
+    "send": "Send",
+    "retry": "Retry",
+    "dismiss": "Dismiss",
+    "checking": "Checking...",
     "rank": "Rank",
     "accuracy": "Accuracy",
     "avgTime": "Avg Time",
@@ -3107,11 +3320,42 @@
     "sort": {
       "newest": "Newest",
       "oldest": "Oldest",
-      "difficulty": "Difficulty"
+      "difficulty": "Difficulty",
+      "popular": "🔥 Most Popular",
+      "questions": "🔢 By Question Count",
+      "duration": "⏱️ By Duration"
     },
     "options": {
       "showCompleted": "Show completed"
+    },
+    "filter": {
+      "showAdvanced": "Show advanced options",
+      "hideAdvanced": "Hide advanced options",
+      "minQuestions": "Minimum questions: {{count}}",
+      "maxDuration": "Maximum duration: {{duration}} minutes",
+      "minutes": "minutes"
     }
+  },
+  "questionEditor": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "questionText": "Question Text *",
+    "questionType": "Question Type",
+    "types": {
+      "multiple": "Multiple Choice",
+      "boolean": "True/False",
+      "checkbox": "Checkbox",
+      "shortAnswer": "Short Answer",
+      "image": "Image Choice"
+    },
+    "points": "Points",
+    "difficulty": "Difficulty",
+    "answerOptions": "Answer Options *",
+    "addAnswer": "Add Answer",
+    "correct": "Correct",
+    "explanation": "Explanation (Optional)",
+    "pointsDisplay": "points",
+    "hasExplanation": "Has explanation"
   },
   "gameMode": {
     "singlePlayer": "Single Player",
@@ -3397,7 +3641,17 @@
     "topicPlaceholder": "Enter topic or content...",
     "numQuestions": "Number of Questions",
     "questions": "questions",
-    "useFileContent": "Use file content"
+    "useFileContent": "Use file content",
+    "fileSizeDisplay": "{{size}} MB - {{status}}",
+    "generateButton": "Generate {{count}} questions {{difficulty}}",
+    "generateButtonWithFile": "Generate {{count}} questions {{difficulty}} from file",
+    "infoTitle": "💡 Information:",
+    "infoCloudFunctions": "Using Firebase Cloud Functions + Google Gemini AI",
+    "infoModel": "Model: gemini-2.0-flash-exp (latest)",
+    "infoSecurity": "Processed via server (API key secured)",
+    "infoFileSupport": "Supports reading image, PDF, Word, Text files",
+    "infoNoQuota": "No client-side quota limits",
+    "infoNew": "New:"
   },
   "placeholders": {
     "searchQuiz": "🔍 Search quizzes...",
@@ -3649,6 +3903,15 @@
     "characterCount": "{{current}}/{{max}} characters"
   },
   "imageUploader": {
+    "uploadProgress": "{{transferred}}KB / {{total}}KB",
+    "dragOrClick": "Drag and drop image here or click to select",
+    "maxSize": "Maximum size: {{size}}KB",
+    "selectImage": "Select image",
+    "uploadImage": "Upload image",
+    "thumbnailsCreated": "Thumbnails created",
+    "fileName": "File: {{name}}",
+    "fileSize": "Size: {{size}}KB",
+    "fileType": "Type: {{type}}",
     "uploading": "⚡ Uploading super fast (1-3s)...",
     "uploadFast": "✅ Upload lightning fast!",
     "thumbnailsReady": "🖼️ Thumbnails are ready",

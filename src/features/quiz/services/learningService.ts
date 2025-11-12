@@ -170,7 +170,7 @@ export const validateResourceCompletion = (
       }
       return { completed: true };
 
-    case 'pdf':
+    case 'pdf': {
       const minTimePerPage = threshold.minTimePerPage || 1.5; // Default 1.5s per page
       
       if (threshold.mustReachLastPage) {
@@ -207,6 +207,7 @@ export const validateResourceCompletion = (
         }
       }
       return { completed: true };
+    }
 
     case 'image':
     case 'slides':

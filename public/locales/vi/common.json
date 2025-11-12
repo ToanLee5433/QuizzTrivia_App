@@ -1,4 +1,5 @@
 {
+  "appName": "Quiz Trivia",
   "10Cau": "10 câu",
   "10Phut": "10 phút",
   "15Cau": "15 câu",
@@ -429,7 +430,38 @@
       "quizRecommendation": {
         "questions": "câu",
         "startQuiz": "Làm quiz ngay"
-      }
+      },
+      "askAssistant": "Hỏi AI Learning Assistant",
+      "title": "AI Learning Assistant",
+      "beta": "Beta",
+      "subtitle": "Trợ lý học tập thông minh được hỗ trợ bởi Google AI",
+      "welcome": "Chào mừng đến với AI Learning Assistant! 👋",
+      "welcomeMessage": "Hỏi tôi bất cứ điều gì về các quiz bạn đã học. Tôi sẽ trả lời chi tiết và gợi ý quiz phù hợp cho bạn.",
+      "suggestions": {
+        "explain": {
+          "title": "Giải thích khái niệm",
+          "description": "Tìm hiểu chi tiết về chủ đề bạn quan tâm"
+        },
+        "summarize": {
+          "title": "Tóm tắt nội dung",
+          "description": "Xem tổng quan kiến thức quan trọng"
+        },
+        "examples": {
+          "title": "Ví dụ thực tế",
+          "description": "Học qua các trường hợp cụ thể"
+        },
+        "recommend": {
+          "title": "Gợi ý quiz",
+          "description": "Tìm quiz phù hợp để thực hành"
+        }
+      },
+      "error": "Đã xảy ra lỗi",
+      "tip": "💡 Tip: Hỏi về nội dung bạn đã học trong các quiz đã mở khóa",
+      "citations": "📚 Nguồn tham khảo:",
+      "processingTime": "⚡ {{ms}}ms",
+      "chunksUsed": "📄 {{count}} chunks",
+      "quizSuggestions": "🎯 Quiz gợi ý cho bạn",
+      "clickToStart": "Click vào quiz để bắt đầu làm bài ngay! 👇"
     },
     "users": {
       "cannotChangeSelfRole": "Không thể thay đổi quyền của chính mình",
@@ -494,6 +526,7 @@
     "confirmPassword": "Xác nhận mật khẩu",
   "confirmPasswordPlaceholder": "Xác nhận mật khẩu",
   "createNewAccount": "Tạo tài khoản mới",
+  "creatorOrAdminRequired": "Bạn cần có vai trò Creator hoặc Admin để truy cập trang này.",
     "displayName": "Tên hiển thị",
   "displayNamePlaceholder": "Nhập tên hiển thị",
     "email": "Email",
@@ -517,6 +550,11 @@
       "genericError": "Có lỗi xảy ra. Vui lòng thử lại."
     },
   "forgotPassword": "Quên mật khẩu?",
+  "resetPasswordHint": "Chúng tôi sẽ gửi link đặt lại mật khẩu đến email này.",
+  "emailSent": "Email đã được gửi!",
+  "resetEmailSentTo": "Chúng tôi đã gửi link đặt lại mật khẩu đến",
+  "checkInboxAndClick": "Kiểm tra hộp thư của bạn và click vào link để đặt lại mật khẩu.",
+  "backToLogin": "Quay lại đăng nhập",
   "googleLoginSuccess": "Đăng nhập Google thành công!",
   "hasAccount": "Đã có tài khoản? Đăng nhập",
     "login": "Đăng nhập",
@@ -564,6 +602,30 @@
       "passwordMismatch": "Mật khẩu không khớp",
       "passwordTooShort": "Mật khẩu quá ngắn (tối thiểu 6 ký tự)",
       "termsRequired": "Bạn phải đồng ý với điều khoản"
+    },
+    "roleSelection": {
+      "title": "Chọn vai trò của bạn",
+      "subtitle": "Hãy chọn vai trò phù hợp để bắt đầu sử dụng Quiz Trivia",
+      "userRole": {
+        "title": "User (Người dùng)",
+        "description": "Tham gia làm quiz, xem kết quả và theo dõi tiến độ học tập của bạn",
+        "features": {
+          "takeQuizzes": "• Làm các quiz có sẵn",
+          "viewHistory": "• Xem lịch sử kết quả",
+          "trackProgress": "• Theo dõi tiến độ học tập"
+        }
+      },
+      "creatorRole": {
+        "title": "Creator (Người tạo)",
+        "description": "Tạo quiz cho cộng đồng, bao gồm tất cả quyền của User",
+        "features": {
+          "allUserRights": "• Tất cả quyền của User",
+          "createQuizzes": "• Tạo quiz mới",
+          "manageQuizzes": "• Quản lý quiz đã tạo",
+          "needsApproval": "• Quiz cần admin phê duyệt"
+        }
+      },
+      "canChangeRoleLater": "Bạn có thể thay đổi vai trò sau trong phần cài đặt tài khoản"
     },
     "ban_can_dang_nhap_de_upload_anh": "Bạn cần đăng nhập để upload ảnh",
     "ban_can_dang_nhap": "Bạn cần đăng nhập",
@@ -1382,7 +1444,8 @@
       "multiplayer": {
         "title": "Chơi nhiều người",
         "description": "Chơi cùng bạn bè và cạnh tranh trực tiếp"
-      }
+      },
+      "offlineComingSoon": "Tính năng offline sắp ra mắt"
     },
     "footer": {
       "rights": "Mọi quyền được bảo lưu."
@@ -1503,8 +1566,28 @@
   "moTrongTabMoi": "Mở trong tab mới",
   "moi": "Mới:",
   "moiNguoiDeuCoTheTimKiemVaLamQuizNay": "Mọi người đều có thể tìm kiếm và làm quiz này",
-  "moiNhat": "🆕 Mới nhất",
+  "moiNhat": "Mới nhất",
   "multiplayer": {
+    "title": "Chế độ nhiều người chơi",
+    "subtitle": "Tạo hoặc tham gia phòng để chơi cùng bạn bè!",
+    "createRoom": "Tạo phòng",
+    "joinRoom": "Tham gia phòng",
+    "roomName": "Tên phòng",
+    "enterRoomName": "Nhập tên phòng",
+    "maxPlayers": "Số người chơi tối đa (2-20)",
+    "timeLimit": "Thời gian mỗi câu (5-300 giây)",
+    "roomSettings": "Cài đặt phòng",
+    "showLeaderboard": "Hiển thị bảng xếp hạng",
+    "private": "Phòng riêng tư",
+    "roomCode": "Mã phòng",
+    "enterRoomCode": "Nhập mã phòng",
+    "roomCodeHint": "Nhập mã 6 ký tự từ người tạo phòng",
+    "chat": "Trò chuyện",
+    "starting": "Đang bắt đầu",
+    "joining": "Đang tham gia...",
+    "password": "Mật khẩu",
+    "enterPassword": "Nhập mật khẩu",
+    "passwordRequired": "Phòng này yêu cầu mật khẩu để tham gia",
     "roomCreated": "Đã tạo phòng thành công!",
     "roomError": "Lỗi khi tạo phòng",
     "joinSuccess": "Đã tham gia phòng!",
@@ -1513,9 +1596,49 @@
     "waitingForPlayers": "Đang chờ người chơi khác...",
     "gameStarting": "Game đang bắt đầu...",
     "connecting": "Đang kết nối...",
-    "disconnected": "Mất kết nối với server"
+    "disconnected": "Mất kết nối với server",
+    "errors": {
+      "connectionLost": "Mất kết nối",
+      "reconnecting": "Đang kết nối lại...",
+      "connectionFailed": "Kết nối thất bại"
+    },
+    "success": {
+      "connectionRestored": "Đã khôi phục kết nối",
+      "leftRoom": "Đã rời phòng"
+    },
+    "players": "Người chơi",
+    "ready": "Sẵn sàng",
+    "notReady": "Chưa sẵn sàng",
+    "online": "trực tuyến",
+    "offline": "ngoại tuyến",
+    "leave": "Rời phòng",
+    "roomTitle": "Phòng Quiz Nhiều người chơi",
+    "total": "Tổng",
+    "time": "Thời gian",
+    "allowLateJoin": "Cho phép người chơi tham gia trong lúc chơi",
+    "updateSettings": "Cập nhật cài đặt",
+    "noPlayers": "Chưa có người chơi...",
+    "you": "BẠN",
+    "waiting": "Đang chờ",
+    "waitingForPlayer": "Đang chờ người chơi...",
+    "errorBoundary": {
+      "title": "Oops! Something went wrong",
+      "message": "The multiplayer game encountered an unexpected error. Don't worry, your progress might be saved.",
+      "componentStack": "Component Stack",
+      "tryAgain": "Try Again",
+      "reloadPage": "Reload Page",
+      "helpText": "If the problem persists, please contact support or try again later.",
+      "errorOccurred": "Đã xảy ra lỗi",
+      "reloadPageButton": "Tải lại trang",
+      "errorDetailsDevOnly": "Chi tiết lỗi (Development only)"
+    },
+    "timeLimitRange": "{{min}}-{{max}} giây",
+    "timeLimitHint": "Từ {{min}} đến {{max}} giây cho mỗi câu hỏi (tối đa 5 phút)",
+    "questionsCount": "{{count}} câu hỏi",
+    "checkmark": "✓",
+    "secondsShort": "{{value}}s"
   },
-  "nPermissionDeniedStorageRulesChuaDeployHoacChuaDun": "\\n⚠️ PERMISSION DENIED - Storage Rules chưa deploy hoặc chưa đúng!",
+  "nPermissionDeniedStorageRulesChuaDeployHoacChuaDun": "PERMISSION DENIED - Storage Rules chưa deploy hoặc chưa đúng!",
   "nav": {
     "admin": "Quản trị viên",
     "creator": "Người tạo",
@@ -1687,7 +1810,79 @@
     "wrongPassword": "Old password is incorrect",
     "viewAllCount": "Xem tất cả",
     "passwordMinLength": "Mật khẩu tối thiểu 6 ký tự",
-    "displayName": "Tên hiển thị"
+    "displayName": "Tên hiển thị",
+    "showingResults": "Đang hiển thị kết quả",
+    "previous": "Trước",
+    "pageInfo": "Thông tin trang",
+    "avatarLabel": "Avatar",
+    "currentAvatar": "Avatar hiện tại",
+    "removeAvatar": "Xóa avatar",
+    "enterUrlManually": "Hoặc nhập URL avatar thủ công"
+  },
+  "shareLinkModal": {
+    "title": "🎉 Quiz đã được xuất bản!",
+    "subtitle": "Chia sẻ quiz với học viên của bạn",
+    "quizTitleLabel": "Tiêu đề Quiz",
+    "shareLinkLabel": "Link chia sẻ",
+    "copied": "Đã copy",
+    "copy": "Copy",
+    "passwordLabel": "Mật khẩu quiz",
+    "passwordHint": "Học viên cần nhập mật khẩu này để làm bài quiz",
+    "guideTitle": "💡 Hướng dẫn",
+    "guide1": "Quiz đang chờ admin phê duyệt. Sau khi được duyệt, quiz sẽ hiển thị công khai.",
+    "guide2WithPassword": "Bạn có thể chia sẻ link này với học viên. Họ cần nhập mật khẩu để truy cập.",
+    "guide2WithoutPassword": "Bạn có thể chia sẻ link này với học viên. Họ có thể truy cập ngay.",
+    "guide3": "Quản lý quiz của bạn tại trang \"My Quizzes\" trong Creator Dashboard.",
+    "copyAllInfo": "Copy tất cả thông tin",
+    "close": "Đóng"
+  },
+  "quickReview": {
+    "title": "Bạn thấy quiz này như thế nào?",
+    "subtitle": "Chia sẻ cảm nhận của bạn để giúp những người khác có trải nghiệm tốt hơn",
+    "writeReview": "Viết đánh giá",
+    "viewAllReviews": "Xem tất cả đánh giá",
+    "loginToReview": "Đăng nhập để đánh giá và xem các đánh giá khác",
+    "reviewTitle": "Đánh giá: {{quizTitle}}"
+  },
+  "resultPage": {
+    "loading": "Loading results...",
+    "backToQuizList": "Back to Quiz List",
+    "timeUpAlert": "⏰ Time's up! Quiz was automatically submitted.",
+    "quizCompleted": "Quiz Completed!",
+    "outstanding": "Outstanding! 🏆",
+    "excellent": "Excellent! 🌟",
+    "greatJob": "Great Job! 👏",
+    "goodWork": "Good Work! 👍",
+    "notBad": "Not Bad! 📚",
+    "keepPracticing": "Keep Practicing! 💪",
+    "youGot": "You got",
+    "outOf": "out of",
+    "questionsCorrect": "questions correct",
+    "timeTaken": "⏱️ Time taken:",
+    "correctAnswers": "Correct Answers",
+    "incorrectAnswers": "Incorrect Answers",
+    "finalScore": "Final Score",
+    "performanceAnalysis": "Performance Analysis",
+    "accuracyRate": "Accuracy Rate",
+    "quizDifficulty": "Quiz Difficulty",
+    "timeManagement": "Time Management",
+    "reviewAnswers": "Review Answers",
+    "showDetailedReview": "Show Detailed Review",
+    "hideDetailedReview": "Hide Detailed Review",
+    "correctAnswer": "✓ Correct Answer",
+    "yourAnswer": "Your Answer",
+    "explanation": "Explanation:",
+    "leaderboard": "🏆 Leaderboard",
+    "you": "(You)",
+    "yourRank": "Your Rank: #{{rank}}",
+    "noResultsYet": "No results yet!",
+    "beFirst": "Be the first to complete this quiz and claim the top spot!",
+    "tryAgain": "Try Again",
+    "reviewQuiz": "Review Quiz",
+    "backToQuiz": "Back to Quiz",
+    "nextQuiz": "Next Quiz",
+    "shareResult": "Share Result",
+    "viewAllResults": "View All Results"
   },
   "promptTuyChinhTuyChon": "Prompt tùy chỉnh (tùy chọn)",
   "publicCongKhai": "🌍 Public (Công khai)",
@@ -1829,12 +2024,25 @@
   "playNow": "Chơi ngay",
     "players": "Người chơi",
     "popularQuizzes": "Quiz phổ biến",
+    "popularQuizzesRanking": {
+      "title": "🏆 Quiz Phổ Biến",
+      "noData": "Chưa có dữ liệu quiz phổ biến",
+      "noDataDesc": "Dữ liệu sẽ xuất hiện khi có nhiều người tham gia quiz hơn",
+      "players": "{{count}} người chơi",
+      "attempts": "{{count}} lượt chơi",
+      "averageScore": "{{score}}% điểm TB",
+      "duration": "{{minutes}}p"
+    },
   "preview": "Xem trước",
     "previewPage": {
       "backToList": "Back to quiz list",
       "loadingQuiz": "Loading quiz...",
       "quizNotFound": "Quiz not found",
-      "title": "Quiz Preview"
+      "title": "Quiz Preview",
+      "closeButton": "✕",
+      "estimatedTimeUnit": "min",
+      "settingsEmoji": "⚙️",
+      "warningEmoji": "⚠️"
     },
     "published": "Published",
     "question": "Câu hỏi",
@@ -1867,7 +2075,9 @@
       "submitting": "Submitting...",
       "title": "Quiz Reviews",
       "yourRating": "Your Rating",
-      "reviewQuiz": "Đánh giá Quiz"
+      "reviewQuiz": "Đánh giá Quiz",
+      "commentOptional": "Nhận xét (tùy chọn)",
+      "characterCount": "{{count}}/{{max}} ký tự"
     },
     "reviewsTitle": "Reviews",
     "score": "Điểm",
@@ -2479,6 +2689,10 @@
     "start": "Bắt đầu",
     "messages": "Tin nhắn",
     "submit": "Gửi",
+    "send": "Gửi",
+    "retry": "Thử lại",
+    "dismiss": "Đóng",
+    "checking": "Đang kiểm tra...",
     "rank": "Xếp hạng",
     "accuracy": "Độ chính xác",
     "avgTime": "Thời gian TB",
@@ -3057,11 +3271,42 @@
     "sort": {
       "newest": "Mới nhất",
       "oldest": "Cũ nhất",
-      "difficulty": "Độ khó"
+      "difficulty": "Độ khó",
+      "popular": "🔥 Phổ biến nhất",
+      "questions": "🔢 Theo số câu hỏi",
+      "duration": "⏱️ Theo thời lượng"
     },
     "options": {
       "showCompleted": "Hiện quiz đã hoàn thành"
+    },
+    "filter": {
+      "showAdvanced": "Hiện tùy chọn nâng cao",
+      "hideAdvanced": "Ẩn tùy chọn nâng cao",
+      "minQuestions": "Số câu hỏi tối thiểu: {{count}}",
+      "maxDuration": "Thời lượng tối đa: {{duration}} phút",
+      "minutes": "phút"
     }
+  },
+  "questionEditor": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "questionText": "Question Text *",
+    "questionType": "Question Type",
+    "types": {
+      "multiple": "Multiple Choice",
+      "boolean": "True/False",
+      "checkbox": "Checkbox",
+      "shortAnswer": "Short Answer",
+      "image": "Image Choice"
+    },
+    "points": "Points",
+    "difficulty": "Difficulty",
+    "answerOptions": "Answer Options *",
+    "addAnswer": "Add Answer",
+    "correct": "Correct",
+    "explanation": "Explanation (Optional)",
+    "pointsDisplay": "points",
+    "hasExplanation": "Has explanation"
   },
   "gameMode": {
     "singlePlayer": "Chơi đơn",
@@ -3397,7 +3642,17 @@
     "topicPlaceholder": "Nhập chủ đề hoặc nội dung...",
     "numQuestions": "Số câu hỏi",
     "questions": "câu hỏi",
-    "useFileContent": "Sử dụng nội dung file"
+    "useFileContent": "Sử dụng nội dung file",
+    "fileSizeDisplay": "{{size}} MB - {{status}}",
+    "generateButton": "Tạo {{count}} câu hỏi {{difficulty}}",
+    "generateButtonWithFile": "Tạo {{count}} câu hỏi {{difficulty}} từ file",
+    "infoTitle": "💡 Thông tin:",
+    "infoCloudFunctions": "Sử dụng Firebase Cloud Functions + Google Gemini AI",
+    "infoModel": "Model: gemini-2.0-flash-exp (mới nhất)",
+    "infoSecurity": "Xử lý thông qua server (bảo mật API key)",
+    "infoFileSupport": "Hỗ trợ đọc file ảnh, PDF, Word, Text",
+    "infoNoQuota": "Không giới hạn quota client-side",
+    "infoNew": "Mới:"
   },
   "placeholders": {
     "searchQuiz": "🔍 Tìm kiếm quiz...",
@@ -3424,6 +3679,27 @@
     "leftItemText": "Mục bên trái {{number}}",
     "rightItemText": "Mục bên phải {{number}}",
     "textWithBlanks": "Nhập văn bản với cú pháp {{chỗ trống}}. VD: Thủ đô của Pháp là {{Paris}}"
+  },
+  "imageUploader": {
+    "uploadProgress": "{{transferred}}KB / {{total}}KB",
+    "dragOrClick": "Kéo thả ảnh vào đây hoặc click để chọn",
+    "maxSize": "Kích thước tối đa: {{size}}KB",
+    "selectImage": "Chọn ảnh",
+    "uploadImage": "Upload ảnh",
+    "thumbnailsCreated": "Thumbnails đã tạo",
+    "fileName": "File: {{name}}",
+    "fileSize": "Kích thước: {{size}}KB",
+    "fileType": "Loại: {{type}}",
+    "uploading": "⚡ Đang upload siêu nhanh (1-3s)...",
+    "uploadFast": "✅ Upload nhanh như chớp!",
+    "thumbnailsReady": "🖼️ Thumbnails đã sẵn sàng",
+    "uploadError": "Có lỗi xảy ra",
+    "selectImageFirst": "Vui lòng chọn ảnh trước",
+    "compressing": "Đang nén ảnh...",
+    "uploadSuccess": "Upload ảnh thành công! ✨",
+    "thumbnailsGenerated": "Thumbnails đã được tạo tự động",
+    "uploadErrorDetailed": "Có lỗi xảy ra khi upload",
+    "selectImageFile": "Vui lòng chọn file ảnh"
   },
   "passwordModal": {
     "title": "Quiz được bảo vệ",
@@ -3647,18 +3923,6 @@
     "yourRating": "Đánh giá của bạn",
     "commentOptional": "Nhận xét (tùy chọn)",
     "characterCount": "{{current}}/{{max}} ký tự"
-  },
-  "imageUploader": {
-    "uploading": "⚡ Đang upload siêu nhanh (1-3s)...",
-    "uploadFast": "✅ Upload nhanh như chớp!",
-    "thumbnailsReady": "🖼️ Thumbnails đã sẵn sàng",
-    "uploadError": "Có lỗi xảy ra",
-    "selectImageFirst": "Vui lòng chọn ảnh trước",
-    "compressing": "Đang nén ảnh...",
-    "uploadSuccess": "Upload ảnh thành công! ✨",
-    "thumbnailsGenerated": "Thumbnails đã được tạo tự động",
-    "uploadErrorDetailed": "Có lỗi xảy ra khi upload",
-    "selectImageFile": "Vui lòng chọn file ảnh"
   },
   "_cacheBuster": 1762360624403,
   "_lastUpdate": "2025-11-05T16:37:04.416Z"

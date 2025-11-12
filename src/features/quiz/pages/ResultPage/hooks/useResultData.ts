@@ -137,7 +137,9 @@ export const useResultData = () => {
               const userIds = [...parsed].sort();
               if (JSON.stringify(correctIds) === JSON.stringify(userIds)) computedCorrect++;
             }
-          } catch {}
+          } catch {
+            // Ignore JSON parse errors for malformed answers
+          }
           break;
         }
         case 'short_answer': {

@@ -530,7 +530,7 @@ const AppContent: React.FC = () => {
           <ProtectedRoute>
             <Suspense fallback={<LoadingFallback />}>
               {/* <OfflineQuizManager /> */}
-              <div>Offline feature coming soon</div>
+              <div>{t('features.offlineComingSoon')}</div>
             </Suspense>
           </ProtectedRoute>
         } />

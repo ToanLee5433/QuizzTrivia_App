@@ -147,6 +147,7 @@ export const QuizPublishModal: React.FC<QuizPublishModalProps> = ({
                 className="mt-1"
               />
               <div>
+                {/* eslint-disable-next-line i18next/no-literal-string */}
                 <p className="font-medium text-blue-900">
                   👨‍💼 {t('quiz.publish.requireReview') || 'Submit for Admin Review'}
                 </p>
@@ -196,6 +197,7 @@ export const QuizPublishModal: React.FC<QuizPublishModalProps> = ({
           {/* Info Box */}
           <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-4">
             <p className="text-sm text-gray-700">
+              {/* eslint-disable-next-line i18next/no-literal-string */}
               <span className="font-medium">ℹ️ {t('quiz.publish.info') || 'What happens next'}:</span>
             </p>
             <ul className="text-sm text-gray-600 mt-2 space-y-1 ml-4">

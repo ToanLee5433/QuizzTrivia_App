@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { X, Lock, AlertCircle } from 'lucide-react';
 import { collection, query, where, limit, getDocs } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
+import ErrorDisplay from './ErrorDisplay';
 
 interface JoinRoomModalProps {
   isOpen: boolean;
@@ -109,14 +110,13 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({
     // Add small delay to avoid checking on every keystroke
     const timer = setTimeout(check, 500);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomCode, loading]);
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full relative">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-xl font-bold text-gray-900">
@@ -171,16 +171,13 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({
             </div>
           )}
 
-          {/* Error Display */}
-          {error && step !== 'password' && (
-            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-              <span className="text-red-700 text-sm">
-                {error}
-              </span>
-            </div>
-          )}
-          
+          {/* Error Message */}
+          <ErrorDisplay
+            error={error}
+            type="error"
+            onDismiss={() => {}}
+          />
+
           {/* Wrong Password Error (only shown in password step) */}
           {error && step === 'password' && error.toLowerCase().includes('sai') && (
             <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -245,6 +242,18 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({
             </button>
           </div>
         </form>
+        
+        {/* Loading Overlay */}
+        {(loading || checkingCode) && (
+          <div className="absolute inset-0 bg-white/90 backdrop-blur-sm rounded-xl flex items-center justify-center z-10">
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
+              <p className="text-gray-700 font-medium">
+                {loading ? t('multiplayer.joining') : t('common.checking')}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

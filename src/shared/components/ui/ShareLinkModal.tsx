@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link2, Copy, Check, X, Lock, Eye, EyeOff, Share2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface ShareLinkModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
   hasPassword,
   password,
 }) => {
+  const { t } = useTranslation();
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedPassword, setCopiedPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -83,8 +85,9 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
                 <Share2 className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-xl font-bold">🎉 Quiz đã được xuất bản!</h3>
-                <p className="text-sm text-white/80 mt-1">Chia sẻ quiz với học viên của bạn</p>
+                {/* eslint-disable-next-line i18next/no-literal-string */}
+                <h3 className="text-xl font-bold">{t('shareLinkModal.title')}</h3>
+                <p className="text-sm text-white/80 mt-1">{t('shareLinkModal.subtitle')}</p>
               </div>
             </div>
             <button
@@ -100,7 +103,7 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
         <div className="p-6 space-y-6">
           {/* Quiz Title */}
           <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 border border-blue-200">
-            <p className="text-sm text-gray-600 mb-1">Tiêu đề Quiz</p>
+            <p className="text-sm text-gray-600 mb-1">{t('shareLinkModal.quizTitleLabel')}</p>
             <h4 className="text-lg font-bold text-gray-900">{quizTitle}</h4>
           </div>
 
@@ -108,7 +111,7 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
               <Link2 className="w-4 h-4" />
-              Link chia sẻ
+              {t('shareLinkModal.shareLinkLabel')}
             </label>
             <div className="flex gap-2">
               <input
@@ -128,12 +131,12 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
                 {copiedLink ? (
                   <>
                     <Check className="w-4 h-4" />
-                    Đã copy
+                    {t('shareLinkModal.copied')}
                   </>
                 ) : (
                   <>
                     <Copy className="w-4 h-4" />
-                    Copy
+                    {t('shareLinkModal.copy')}
                   </>
                 )}
               </button>
@@ -145,7 +148,7 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                 <Lock className="w-4 h-4" />
-                Mật khẩu quiz
+                {t('shareLinkModal.passwordLabel')}
               </label>
               <div className="flex gap-2">
                 <div className="flex-1 relative">
@@ -173,40 +176,41 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
                   {copiedPassword ? (
                     <>
                       <Check className="w-4 h-4" />
-                      Đã copy
+                      {t('shareLinkModal.copied')}
                     </>
                   ) : (
                     <>
                       <Copy className="w-4 h-4" />
-                      Copy
+                      {t('shareLinkModal.copy')}
                     </>
                   )}
                 </button>
               </div>
               <p className="text-sm text-gray-600 flex items-center gap-1.5">
                 <Lock className="w-3.5 h-3.5" />
-                Học viên cần nhập mật khẩu này để làm bài quiz
+                {t('shareLinkModal.passwordHint')}
               </p>
             </div>
           )}
 
           {/* Info Box */}
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            {/* eslint-disable-next-line i18next/no-literal-string */}
             <h5 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
-              💡 Hướng dẫn
+              {t('shareLinkModal.guideTitle')}
             </h5>
             <ul className="text-sm text-blue-800 space-y-1.5">
               <li className="flex items-start gap-2">
                 <span className="text-blue-600 mt-0.5">•</span>
-                <span>Quiz đang chờ admin phê duyệt. Sau khi được duyệt, quiz sẽ hiển thị công khai.</span>
+                <span>{t('shareLinkModal.guide1')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-blue-600 mt-0.5">•</span>
-                <span>Bạn có thể chia sẻ link này với học viên. {hasPassword ? 'Họ cần nhập mật khẩu để truy cập.' : 'Họ có thể truy cập ngay.'}</span>
+                <span>{hasPassword ? t('shareLinkModal.guide2WithPassword') : t('shareLinkModal.guide2WithoutPassword')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-blue-600 mt-0.5">•</span>
-                <span>Quản lý quiz của bạn tại trang "My Quizzes" trong Creator Dashboard.</span>
+                <span>{t('shareLinkModal.guide3')}</span>
               </li>
             </ul>
           </div>
@@ -219,13 +223,13 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
             className="px-4 py-2 text-sm font-semibold text-blue-700 hover:text-blue-900 transition-colors flex items-center gap-2"
           >
             <Copy className="w-4 h-4" />
-            Copy tất cả thông tin
+            {t('shareLinkModal.copyAllInfo')}
           </button>
           <button
             onClick={onClose}
             className="px-6 py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-semibold transition-colors"
           >
-            Đóng
+            {t('shareLinkModal.close')}
           </button>
         </div>
       </div>

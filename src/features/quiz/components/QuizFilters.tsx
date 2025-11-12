@@ -68,7 +68,7 @@ const QuizFilters: React.FC<QuizFiltersProps> = ({
       {/* Quick Stats */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-6">
-          <div className="text-sm text-gray-600">{t("profile.pagination.showing")} <span className="font-semibold text-blue-600">{filteredCount}</span> / {totalQuizzes} quiz
+          <div className="text-sm text-gray-600">{t("profile.pagination.showing")} <span className="font-semibold text-blue-600">{filteredCount}</span> / {totalQuizzes} {t("quizList.results.quizzes")}
           </div>
           {filteredCount !== totalQuizzes && (
             <button
@@ -82,7 +82,7 @@ const QuizFilters: React.FC<QuizFiltersProps> = ({
           onClick={() => setShowAdvanced(!showAdvanced)}
           className="text-sm text-gray-600 hover:text-gray-700 flex items-center gap-1"
         >
-          <span>{showAdvanced ? 'Ẩn' : 'Hiện'} tùy chọn nâng cao</span>
+          <span>{t(showAdvanced ? 'quizList.filter.hideAdvanced' : 'quizList.filter.showAdvanced')}</span>
           <svg 
             className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} 
             fill="none" 
@@ -142,15 +142,15 @@ const QuizFilters: React.FC<QuizFiltersProps> = ({
             >
               <option value="newest">{t("quizList.sort.newest")}</option>
               <option value="oldest">{t("quizList.sort.oldest")}</option>
-              <option value="popular">🔥 Phổ biến nhất</option>
+              <option value="popular">{t("quizList.sort.popular")}</option>
               <option value="difficulty">{t("quizList.sort.difficulty")}</option>
-              <option value="questions">🔢 Theo số câu hỏi</option>
-              <option value="duration">⏱️ Theo thời lượng</option>
+              <option value="questions">{t("quizList.sort.questions")}</option>
+              <option value="duration">{t("quizList.sort.duration")}</option>
             </select>
 
             {/* Min Questions */}
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Số câu hỏi tối thiểu: {filters.minQuestions}</label>
+              <label className="block text-sm text-gray-600 mb-1">{t('quizList.filter.minQuestions', { count: filters.minQuestions })}</label>
               <input
                 type="range"
                 min="0"
@@ -163,7 +163,7 @@ const QuizFilters: React.FC<QuizFiltersProps> = ({
 
             {/* Max Duration */}
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Thời lượng tối đa: {filters.maxDuration} phút</label>
+              <label className="block text-sm text-gray-600 mb-1">{t('quizList.filter.maxDuration', { duration: filters.maxDuration })}</label>
               <input
                 type="range"
                 min="5"
