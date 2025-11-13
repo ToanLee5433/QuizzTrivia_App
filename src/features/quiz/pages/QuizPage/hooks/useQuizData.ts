@@ -153,16 +153,74 @@ export const useQuizData = () => {
           setQuizMetadata(enrichedMetadata);
 
           try {
-            const questionsRef = collection(db, 'quizzes', id, 'questions');
-            await getDocs(questionsRef);
+            let questions: Question[] = [];
 
-            console.log('✅ User has access to password-protected quiz');
+            // Try subcollection first, fallback to parent doc
+            console.log('🔐 Step 1: Loading questions for password-protected quiz...');
+            const questionsRef = collection(db, 'quizzes', id, 'questions');
+            const questionsSnap = await getDocs(questionsRef);
+
+            console.log('📊 Password quiz subcollection result:', {
+              size: questionsSnap.size,
+              empty: questionsSnap.empty,
+              docsLength: questionsSnap.docs.length
+            });
+
+            if (!questionsSnap.empty) {
+              // NEW structure
+              questions = questionsSnap.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+              })) as Question[];
+              console.log('✅ [NEW] Password quiz from subcollection:', questions.length);
+            } else {
+              // OLD structure - check parent doc
+              console.log('🔐 Step 2: Checking parent document...');
+              if (foundQuiz.questions && Array.isArray(foundQuiz.questions)) {
+                questions = foundQuiz.questions.map((q: any, index: number) => ({
+                  id: q.id || `q${index}`,
+                  text: q.text || q.questionText || '',
+                  questionText: q.text || q.questionText || '',
+                  type: q.type || 'multiple-choice',
+                  answers: q.answers || [],
+                  correctAnswer: q.correctAnswer || null,
+                  acceptedAnswers: q.acceptedAnswers || [],
+                  explanation: q.explanation || '',
+                  points: q.points || 1,
+                  imageUrl: q.imageUrl || null
+                })) as Question[];
+                console.log('✅ [OLD] Password quiz from parent doc:', questions.length);
+              }
+            }
+
+            console.log('✅ User has access to password-protected quiz, questions:', questions.length);
+            
+            // Serialize timestamps
+            const serializeQuiz = (quiz: any): Quiz => {
+              const serialized = { ...quiz };
+              if (serialized.stats?.lastUpdated?.toDate) {
+                serialized.stats.lastUpdated = serialized.stats.lastUpdated.toDate().toISOString();
+              }
+              if (serialized.createdAt?.toDate) {
+                serialized.createdAt = serialized.createdAt.toDate().toISOString();
+              }
+              if (serialized.updatedAt?.toDate) {
+                serialized.updatedAt = serialized.updatedAt.toDate().toISOString();
+              }
+              if (serialized.approvedAt?.toDate) {
+                serialized.approvedAt = serialized.approvedAt.toDate().toISOString();
+              }
+              return serialized;
+            };
+            
             setNeedsPassword(false);
             const quizWithResources: Quiz = enrichedMetadata.resources
-              ? { ...foundQuiz, resources: enrichedMetadata.resources }
-              : foundQuiz;
-            setQuiz(quizWithResources);
-            dispatch(setCurrentQuiz(quizWithResources));
+              ? { ...foundQuiz, resources: enrichedMetadata.resources, questions }
+              : { ...foundQuiz, questions };
+            
+            const serializedQuiz = serializeQuiz(quizWithResources);
+            setQuiz(serializedQuiz);
+            dispatch(setCurrentQuiz(serializedQuiz));
 
             if (user) {
               quizStatsService.trackView(id, user.uid);
@@ -185,18 +243,103 @@ export const useQuizData = () => {
           return;
         }
 
-        setNeedsPassword(false);
-        setQuiz(foundQuiz);
-        dispatch(setCurrentQuiz(foundQuiz));
+        // ⚠️ Load questions for quiz from store (it only has metadata)
+        console.log('📝 Loading questions for public quiz from store:', foundQuiz.title);
+        console.log('🔍 Quiz metadata:', {
+          id: foundQuiz.id,
+          status: foundQuiz.status,
+          visibility: foundQuiz.visibility,
+          createdBy: foundQuiz.createdBy,
+          currentUser: user?.uid
+        });
+        
+        try {
+          let questions: Question[] = [];
 
-        if (user) {
-          quizStatsService.trackView(id, user.uid);
-        } else {
-          quizStatsService.trackView(id);
+          // Try subcollection first, fallback to parent doc
+          console.log('📡 Step 1: Querying subcollection at:', `quizzes/${id}/questions`);
+          const questionsRef = collection(db, 'quizzes', id, 'questions');
+          const questionsSnap = await getDocs(questionsRef);
+          
+          console.log('📊 Subcollection result:', {
+            size: questionsSnap.size,
+            empty: questionsSnap.empty,
+            docsLength: questionsSnap.docs.length
+          });
+          
+          if (!questionsSnap.empty) {
+            // NEW structure
+            questions = questionsSnap.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            })) as Question[];
+            console.log('✅ [NEW] Store quiz from subcollection:', questions.length);
+          } else {
+            // OLD structure - check parent doc
+            console.log('📡 Step 2: Checking parent document...');
+            if (foundQuiz.questions && Array.isArray(foundQuiz.questions)) {
+              questions = foundQuiz.questions.map((q: any, index: number) => ({
+                id: q.id || `q${index}`,
+                text: q.text || q.questionText || '',
+                questionText: q.text || q.questionText || '',
+                type: q.type || 'multiple-choice',
+                answers: q.answers || [],
+                correctAnswer: q.correctAnswer || null,
+                acceptedAnswers: q.acceptedAnswers || [],
+                explanation: q.explanation || '',
+                points: q.points || 1,
+                imageUrl: q.imageUrl || null
+              })) as Question[];
+              console.log('✅ [OLD] Store quiz from parent doc:', questions.length);
+            } else {
+              console.error('⚠️ WARNING: No questions found in either location!');
+            }
+          }
+          
+          console.log('✅ Final loaded questions for stored quiz:', questions.length);
+          
+          // Serialize timestamps
+          const serializeQuiz = (quiz: any): Quiz => {
+            const serialized = { ...quiz };
+            if (serialized.stats?.lastUpdated?.toDate) {
+              serialized.stats.lastUpdated = serialized.stats.lastUpdated.toDate().toISOString();
+            }
+            if (serialized.createdAt?.toDate) {
+              serialized.createdAt = serialized.createdAt.toDate().toISOString();
+            }
+            if (serialized.updatedAt?.toDate) {
+              serialized.updatedAt = serialized.updatedAt.toDate().toISOString();
+            }
+            if (serialized.approvedAt?.toDate) {
+              serialized.approvedAt = serialized.approvedAt.toDate().toISOString();
+            }
+            return serialized;
+          };
+          
+          const completeQuiz = serializeQuiz({
+            ...foundQuiz,
+            questions
+          }) as Quiz;
+          
+          setNeedsPassword(false);
+          setQuiz(completeQuiz);
+          dispatch(setCurrentQuiz(completeQuiz));
+
+          if (user) {
+            quizStatsService.trackView(id, user.uid);
+          } else {
+            quizStatsService.trackView(id);
+          }
+
+          setLoading(false);
+          return;
+          
+        } catch (questionsError) {
+          console.error('❌ Error loading questions for stored quiz:', questionsError);
+          setError('Lỗi khi tải câu hỏi');
+          setLoading(false);
+          return;
         }
-
-        setLoading(false);
-        return;
       }
 
       console.log('🔍 Quiz not in store, loading from Firestore...');
@@ -210,24 +353,96 @@ export const useQuizData = () => {
       }
 
       console.log('✅ Loaded metadata:', metadata.title, 'visibility:', metadata.visibility);
+      console.log('🔍 Metadata details:', {
+        id: metadata.id,
+        status: metadata.status,
+        visibility: metadata.visibility,
+        createdBy: metadata.createdBy,
+        currentUser: user?.uid
+      });
       const enrichedMetadata = enhanceMetadata(metadata);
       setQuizMetadata(enrichedMetadata);
 
       try {
+        let questions: Question[] = [];
+
+        // STRATEGY: Try subcollection first (NEW structure), fallback to parent doc (OLD structure)
+        console.log('📡 Step 1: Checking subcollection at:', `quizzes/${id}/questions`);
         const questionsRef = collection(db, 'quizzes', id, 'questions');
         const questionsSnap = await getDocs(questionsRef);
 
-        const questions = questionsSnap.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Question[];
+        console.log('📊 Subcollection result:', {
+          size: questionsSnap.size,
+          empty: questionsSnap.empty,
+          docsLength: questionsSnap.docs.length
+        });
 
-        console.log('✅ Loaded questions:', questions.length);
+        if (!questionsSnap.empty) {
+          // NEW structure - questions in subcollection
+          questions = questionsSnap.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          })) as Question[];
+          console.log('✅ [NEW] Loaded from subcollection:', questions.length, 'questions');
+        } else {
+          // OLD structure - questions in parent document
+          console.log('📡 Step 2: Subcollection empty, checking parent document...');
+          if (metadata.questions && Array.isArray(metadata.questions)) {
+            questions = metadata.questions.map((q: any, index: number) => ({
+              id: q.id || `q${index}`,
+              text: q.text || q.questionText || '',
+              questionText: q.text || q.questionText || '',
+              type: q.type || 'multiple-choice',
+              answers: q.answers || [],
+              correctAnswer: q.correctAnswer || null,
+              acceptedAnswers: q.acceptedAnswers || [],
+              explanation: q.explanation || '',
+              points: q.points || 1,
+              imageUrl: q.imageUrl || null
+            })) as Question[];
+            console.log('✅ [OLD] Loaded from parent doc:', questions.length, 'questions');
+          } else {
+            console.error('⚠️ CRITICAL: No questions found in either location!');
+            console.log('Quiz metadata status:', metadata.status);
+            console.log('User is owner?', user?.uid === metadata.createdBy);
+          }
+        }
 
-        const completeQuiz = {
+        console.log('✅ Final questions count:', questions.length);
+
+        console.log('✅ Final questions count:', questions.length);
+        
+        // Serialize Firestore Timestamps before Redux
+        const serializeQuiz = (quiz: any): Quiz => {
+          const serialized = { ...quiz };
+          
+          // Convert Timestamp in stats.lastUpdated
+          if (serialized.stats?.lastUpdated?.toDate) {
+            serialized.stats.lastUpdated = serialized.stats.lastUpdated.toDate().toISOString();
+          }
+          
+          // Convert Timestamp in createdAt
+          if (serialized.createdAt?.toDate) {
+            serialized.createdAt = serialized.createdAt.toDate().toISOString();
+          }
+          
+          // Convert Timestamp in updatedAt
+          if (serialized.updatedAt?.toDate) {
+            serialized.updatedAt = serialized.updatedAt.toDate().toISOString();
+          }
+          
+          // Convert Timestamp in approvedAt
+          if (serialized.approvedAt?.toDate) {
+            serialized.approvedAt = serialized.approvedAt.toDate().toISOString();
+          }
+          
+          return serialized;
+        };
+
+        const completeQuiz = serializeQuiz({
           ...enrichedMetadata,
           questions
-        } as Quiz;
+        }) as Quiz;
 
         setNeedsPassword(false);
         setQuiz(completeQuiz);

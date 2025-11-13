@@ -45,6 +45,9 @@ const MultiplayerPage = React.lazy(() => import('./features/multiplayer/pages/Mu
 const MyQuizzesPage = React.lazy(() => import('./features/quiz/pages/MyQuizzesPage'));
 const QuizDetailedStats = React.lazy(() => import('./features/quiz/pages/QuizDetailedStats'));
 
+// Flashcard Feature
+const FlashcardPage = React.lazy(() => import('./features/flashcard/pages/FlashcardPage'));
+
 // Stage 4: Admin Features - All lazy loaded for better performance
 const Admin = React.lazy(() => import('./features/admin/pages/Admin'));
 const AdminQuizManagement = React.lazy(() => import('./features/admin/pages/AdminQuizManagement'));
@@ -358,6 +361,14 @@ const AppContent: React.FC = () => {
           <ProtectedRoute>
             <Suspense fallback={<LoadingFallback />}>
               <QuizPreviewPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/quiz/:id/flashcards" element={
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingFallback />}>
+              <FlashcardPage />
             </Suspense>
           </ProtectedRoute>
         } />

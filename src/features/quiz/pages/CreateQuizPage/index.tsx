@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../lib/store';
 import { ROUTES } from '../../../../config/routes';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, writeBatch, doc } from 'firebase/firestore';
 import { db } from '../../../../lib/firebase/config';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
@@ -293,21 +293,9 @@ const CreateQuizPage: React.FC = () => {
         visibility: quiz.havePassword === 'password' ? 'password' : 'public',
         ...(pwdData ? { pwd: pwdData } : {}), // Only add pwd if it exists
         
-        questions: (quiz.questions || []).map(q => ({
-          id: q.id || '',
-          text: q.text || '',
-          type: q.type || 'multiple',
-          answers: (q.answers || []).map(a => ({
-            id: a.id || '',
-            text: a.text || '',
-            isCorrect: a.isCorrect !== undefined ? a.isCorrect : false
-          })),
-          explanation: q.explanation || '',
-          points: q.points !== undefined ? q.points : 1,
-          imageUrl: q.imageUrl || null,
-          correctAnswer: q.correctAnswer || null,
-          acceptedAnswers: q.acceptedAnswers || []
-        })),
+        // ❌ DO NOT store questions in parent doc anymore (old structure)
+        // ✅ Will store in subcollection below (new structure)
+        
         resources: (quiz.resources || []).map(r => ({
           id: r.id || '',
           type: r.type || 'video',
@@ -337,14 +325,52 @@ const CreateQuizPage: React.FC = () => {
 
       const cleanQuizData = deepCleanValue(baseQuizData) as Record<string, unknown>;
 
-      console.log('🔍 [PUBLISH] Clean quiz data:', {
+      console.log('🔍 [PUBLISH] Clean quiz data (without questions):', {
         ...cleanQuizData,
         pwd: cleanQuizData.pwd || 'NOT SET',
         visibility: cleanQuizData.visibility,
-        havePassword: cleanQuizData.havePassword
+        questionsCount: quiz.questions?.length || 0
       });
 
+      // Step 1: Create quiz document (metadata only)
       const docRef = await addDoc(collection(db, 'quizzes'), cleanQuizData);
+      console.log('✅ Created quiz document:', docRef.id);
+
+      // Step 2: Save questions to subcollection (NEW structure)
+      if (quiz.questions && quiz.questions.length > 0) {
+        console.log('📝 Saving', quiz.questions.length, 'questions to subcollection...');
+        
+        const questionsRef = collection(db, 'quizzes', docRef.id, 'questions');
+        const batch = writeBatch(db);
+        
+        quiz.questions.forEach((q, index) => {
+          const questionId = q.id || `q${index}`;
+          const questionRef = doc(questionsRef, questionId);
+          
+          const questionData = {
+            id: questionId,
+            text: q.text || '',
+            type: q.type || 'multiple-choice',
+            answers: (q.answers || []).map(a => ({
+              id: a.id || '',
+              text: a.text || '',
+              isCorrect: a.isCorrect !== undefined ? a.isCorrect : false
+            })),
+            explanation: q.explanation || '',
+            points: q.points !== undefined ? q.points : 1,
+            imageUrl: q.imageUrl || null,
+            correctAnswer: q.correctAnswer || null,
+            acceptedAnswers: q.acceptedAnswers || [],
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          };
+          
+          batch.set(questionRef, deepCleanValue(questionData));
+        });
+        
+        await batch.commit();
+        console.log('✅ Saved all questions to subcollection');
+      }
 
       toast.success(t('createQuiz.createSuccess'));
       
@@ -411,21 +437,9 @@ const CreateQuizPage: React.FC = () => {
         visibility: quiz.havePassword === 'password' ? 'password' : 'public',
         ...(pwdData ? { pwd: pwdData } : {}), // Only add pwd if it exists
         
-        questions: (quiz.questions || []).map(q => ({
-          id: q.id || '',
-          text: q.text || '',
-          type: q.type || 'multiple',
-          answers: (q.answers || []).map(a => ({
-            id: a.id || '',
-            text: a.text || '',
-            isCorrect: a.isCorrect !== undefined ? a.isCorrect : false
-          })),
-          explanation: q.explanation || '',
-          points: q.points !== undefined ? q.points : 1,
-          imageUrl: q.imageUrl || null,
-          correctAnswer: q.correctAnswer || null,
-          acceptedAnswers: q.acceptedAnswers || []
-        })),
+        // ❌ DO NOT store questions in parent doc (old structure)
+        // ✅ Will store in subcollection below (new structure)
+        
         resources: (quiz.resources || []).map(r => ({
           id: r.id || '',
           type: r.type || 'video',
@@ -456,9 +470,50 @@ const CreateQuizPage: React.FC = () => {
 
       const draftQuizData = deepCleanValue(baseDraftData) as Record<string, unknown>;
 
-      console.log('📝 Saving draft:', draftQuizData);
+      console.log('📝 Saving draft (without questions):', {
+        ...draftQuizData,
+        questionsCount: quiz.questions?.length || 0
+      });
 
-      await addDoc(collection(db, 'quizzes'), draftQuizData);
+      // Step 1: Create draft quiz document
+      const docRef = await addDoc(collection(db, 'quizzes'), draftQuizData);
+      console.log('✅ Created draft quiz:', docRef.id);
+
+      // Step 2: Save questions to subcollection (NEW structure)
+      if (quiz.questions && quiz.questions.length > 0) {
+        console.log('📝 Saving', quiz.questions.length, 'draft questions to subcollection...');
+        
+        const questionsRef = collection(db, 'quizzes', docRef.id, 'questions');
+        const batch = writeBatch(db);
+        
+        quiz.questions.forEach((q, index) => {
+          const questionId = q.id || `q${index}`;
+          const questionRef = doc(questionsRef, questionId);
+          
+          const questionData = {
+            id: questionId,
+            text: q.text || '',
+            type: q.type || 'multiple-choice',
+            answers: (q.answers || []).map(a => ({
+              id: a.id || '',
+              text: a.text || '',
+              isCorrect: a.isCorrect !== undefined ? a.isCorrect : false
+            })),
+            explanation: q.explanation || '',
+            points: q.points !== undefined ? q.points : 1,
+            imageUrl: q.imageUrl || null,
+            correctAnswer: q.correctAnswer || null,
+            acceptedAnswers: q.acceptedAnswers || [],
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          };
+          
+          batch.set(questionRef, deepCleanValue(questionData));
+        });
+        
+        await batch.commit();
+        console.log('✅ Saved all draft questions to subcollection');
+      }
 
       toast.success(`${t('emoji.floppyDisk')} ${t('createQuiz.draft.success')}`);
       setQuiz(defaultQuiz);

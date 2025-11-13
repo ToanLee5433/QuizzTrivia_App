@@ -19,10 +19,10 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { 
   Clock, Target, Users, Lock, Unlock,
-  BookOpen, Play, RotateCcw, AlertCircle, CheckCircle,
+  BookOpen, Play, AlertCircle, CheckCircle,
   FileText, Video, Image as ImageIcon, Music, Link as LinkIcon,
   Presentation, ChevronRight, Star, Trophy, Brain, TrendingUp,
-  Info, ArrowLeft
+  Info, ArrowLeft, Settings, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
@@ -31,6 +31,7 @@ import { reviewService } from '../services/reviewService';
 import { QuizReviewStats } from '../types/review';
 import PasswordModal from '../../../shared/components/ui/PasswordModal';
 import RichTextViewer from '../../../shared/components/ui/RichTextViewer';
+import QuizSettingsModal, { QuizSettings } from '../components/QuizSettingsModal';
 
 // 📌 Type for resource
 type QuizResource = NonNullable<Quiz['resources']>[number];
@@ -69,6 +70,9 @@ const QuizPreviewPage: React.FC = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordVerified, setPasswordVerified] = useState(false);
   const [pendingAction, setPendingAction] = useState<'start' | 'resume' | null>(null);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [quizSettings, setQuizSettings] = useState<QuizSettings | null>(null);
+  const [showAllQuestions, setShowAllQuestions] = useState(false);
 
   // 🔐 Password check
   const isLocked = useMemo(() => {
@@ -126,8 +130,22 @@ const QuizPreviewPage: React.FC = () => {
       return;
     }
 
-    // Navigate to quiz page
+    // Save settings to pass to quiz page
+    if (quizSettings && quiz.id) {
+      localStorage.setItem(`quiz_settings_${quiz.id}`, JSON.stringify(quizSettings));
+    }
+
+    // Navigate directly without mode selection
     navigate(`/quiz/${quiz.id}`);
+    setPendingAction(null);
+  };
+
+  // ⚙️ Handle settings save
+  const handleSettingsSave = (settings: QuizSettings) => {
+    setQuizSettings(settings);
+    if (quiz?.id) {
+      localStorage.setItem(`quiz_settings_${quiz.id}`, JSON.stringify(settings));
+    }
   };
 
   // 🔓 Handle password success
@@ -136,6 +154,7 @@ const QuizPreviewPage: React.FC = () => {
     setPasswordVerified(true);
     
     if (pendingAction && quiz) {
+      // Navigate after password verification
       navigate(`/quiz/${quiz.id}`);
       setPendingAction(null);
     }
@@ -472,7 +491,7 @@ const QuizPreviewPage: React.FC = () => {
                 </h2>
 
                 <div className="space-y-3">
-                  {quiz.questions.slice(0, 3).map((question: Question, index: number) => (
+                  {quiz.questions.slice(0, showAllQuestions ? quiz.questions.length : 3).map((question: Question, index: number) => (
                     <div
                       key={question.id || index}
                       className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700"
@@ -498,12 +517,27 @@ const QuizPreviewPage: React.FC = () => {
                       </div>
                     </div>
                   ))}
+                  
+                  {/* Show More/Less Button */}
                   {quiz.questions.length > 3 && (
-                    <div className="text-center py-3 text-sm text-slate-500 dark:text-slate-400">
-                      {t('quizOverview.sections.moreQuestions', 'and {{count}} more questions...', {
-                        count: quiz.questions.length - 3
-                      })}
-                    </div>
+                    <button
+                      onClick={() => setShowAllQuestions(!showAllQuestions)}
+                      className="w-full flex items-center justify-center gap-2 py-3 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg font-medium transition-colors"
+                    >
+                      {showAllQuestions ? (
+                        <>
+                          <ChevronUp className="w-4 h-4" />
+                          {t('quizOverview.sections.showLess', 'Thu gọn')}
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="w-4 h-4" />
+                          {t('quizOverview.sections.showMore', 'Xem thêm {{count}} câu hỏi', {
+                            count: quiz.questions.length - 3
+                          })}
+                        </>
+                      )}
+                    </button>
                   )}
                 </div>
               </motion.div>
@@ -578,14 +612,25 @@ const QuizPreviewPage: React.FC = () => {
                 )}
               </motion.button>
 
-              {/* Retake Button (if applicable) */}
-              {!isLocked && quiz.allowRetake && (
+              {/* Settings Button */}
+              {!isLocked && (
                 <button
-                  onClick={() => handleStartQuiz('resume')}
-                  className="w-full mt-3 flex items-center justify-center gap-2 px-6 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-all"
+                  onClick={() => setShowSettingsModal(true)}
+                  className="w-full mt-3 flex items-center justify-center gap-2 px-6 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-500 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-all"
                 >
-                  <RotateCcw className="w-5 h-5" />
-                  {t('quizOverview.cta.retake', 'Retake Quiz')}
+                  <Settings className="w-5 h-5" />
+                  {t('quizOverview.cta.settings', 'Cài đặt Quiz')}
+                </button>
+              )}
+
+              {/* Flashcard Mode Button */}
+              {!isLocked && (
+                <button
+                  onClick={() => navigate(`/quiz/${quiz.id}/flashcards`)}
+                  className="w-full mt-3 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-semibold transition-all shadow-sm"
+                >
+                  <Brain className="w-5 h-5" />
+                  {t('quizOverview.cta.flashcards', 'Study with Flashcards')}
                 </button>
               )}
             </motion.div>
@@ -653,6 +698,17 @@ const QuizPreviewPage: React.FC = () => {
           onSuccess={handlePasswordSuccess}
           passwordData={quiz.pwd}
           quizTitle={quiz.title}
+        />
+      )}
+
+      {/* ⚙️ Settings Modal */}
+      {quiz && showSettingsModal && (
+        <QuizSettingsModal
+          isOpen={showSettingsModal}
+          onClose={() => setShowSettingsModal(false)}
+          onSave={handleSettingsSave}
+          currentSettings={quizSettings || undefined}
+          quizId={quiz.id}
         />
       )}
     </div>

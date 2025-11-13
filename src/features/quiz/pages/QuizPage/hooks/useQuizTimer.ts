@@ -6,17 +6,21 @@ import { updateTimeLeft } from '../../../store';
 interface UseQuizTimerProps {
   onTimeUp: () => void;
   isActive?: boolean;
+  customDuration?: number; // Custom duration in seconds (from settings)
 }
 
-export const useQuizTimer = ({ onTimeUp, isActive = true }: UseQuizTimerProps) => {
+export const useQuizTimer = ({ onTimeUp, isActive = true, customDuration }: UseQuizTimerProps) => {
   const dispatch = useDispatch();
   const { timeLeft, totalTime, quizStartTime, isTimeWarning } = useSelector((state: RootState) => state.quiz);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [hasTriggeredTimeUp, setHasTriggeredTimeUp] = useState(false);
 
+  // Use custom duration if provided, otherwise use Redux totalTime
+  const effectiveTotalTime = customDuration || totalTime;
+
   // Start timer when quiz is active
   useEffect(() => {
-    if (isActive && quizStartTime && totalTime > 0) {
+    if (isActive && quizStartTime && effectiveTotalTime > 0) {
       // Update timer every second
       intervalRef.current = setInterval(() => {
         dispatch(updateTimeLeft());
@@ -38,7 +42,7 @@ export const useQuizTimer = ({ onTimeUp, isActive = true }: UseQuizTimerProps) =
         intervalRef.current = null;
       }
     };
-  }, [isActive, quizStartTime, totalTime, dispatch]);
+  }, [isActive, quizStartTime, effectiveTotalTime, dispatch]);
 
   // Trigger time up callback when time reaches 0
   useEffect(() => {
@@ -57,12 +61,12 @@ export const useQuizTimer = ({ onTimeUp, isActive = true }: UseQuizTimerProps) =
 
   // Calculate progress and warnings
   const formattedTime = formatTime(timeLeft);
-  const percentage = totalTime > 0 ? ((totalTime - timeLeft) / totalTime) * 100 : 0;
+  const percentage = effectiveTotalTime > 0 ? ((effectiveTotalTime - timeLeft) / effectiveTotalTime) * 100 : 0;
   
   // Modern quiz timer logic - only warn when under 10% of total time
-  const timeWarningThreshold = Math.ceil(totalTime * 0.1); // 10% of total time
+  const timeWarningThreshold = Math.ceil(effectiveTotalTime * 0.1); // 10% of total time
   const isTimeRunningOut = timeLeft <= timeWarningThreshold;
-  const isTimeCritical = timeLeft <= Math.ceil(totalTime * 0.05); // Last 5% is critical
+  const isTimeCritical = timeLeft <= Math.ceil(effectiveTotalTime * 0.05); // Last 5% is critical
   
   // Calculate time taken - based on actual elapsed time, not timer countdown
   const timeTaken = quizStartTime ? Math.floor((Date.now() - quizStartTime) / 1000) : 0;
