@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -16,17 +16,17 @@ import {
 } from '@dnd-kit/sortable';
 import { Sparkles } from 'lucide-react';
 import Button from '../../../../../shared/components/ui/Button';
-import { QuizFormData } from '../types';
-import { Question } from '../types';
+import { QuizFormData, Question } from '../types';
 import SortableItem from './SortableItem';
 import QuizBulkImport from './QuizBulkImport';
-import ClientSideAIGenerator from '../../../../../components/ClientSideAIGenerator';
+import { AdvancedAIGenerator } from './AdvancedAIGenerator';
+import { useTranslation } from 'react-i18next';
 
 interface QuestionsStepProps {
   quiz: QuizFormData;
   setQuiz: React.Dispatch<React.SetStateAction<QuizFormData>>;
   addQuestion: () => void;
-  updateQuestion: (idx: number, question: any) => void;
+  updateQuestion: (idx: number, question: Question) => void;
   deleteQuestion: (idx: number) => void;
   moveQuestion: (fromIndex: number, toIndex: number) => void;
 }
@@ -39,6 +39,7 @@ const QuestionsStep: React.FC<QuestionsStepProps> = ({
   deleteQuestion,
   moveQuestion,
 }) => {
+  const { t } = useTranslation();
   const [showGeminiAI, setShowGeminiAI] = useState(false);
 
   const sensors = useSensors(
@@ -69,34 +70,29 @@ const QuestionsStep: React.FC<QuestionsStepProps> = ({
     }));
   };
 
-  const handleAIQuestionsGenerated = (questions: any[]) => {
-    // Convert simple AI questions to full Question format
-    const convertedQuestions: Question[] = questions.map((q, index) => ({
-      id: `ai_question_${Date.now()}_${index}`,
-      text: q.text,
-      type: 'multiple' as const,
-      answers: q.answers.map((a: any, idx: number) => ({
-        id: `ai_answer_${Date.now()}_${index}_${idx}`,
-        text: a.text,
-        isCorrect: a.isCorrect
-      })),
-      points: 1
-    }));
-
+  const handleAIQuestionsGenerated = (questions: Question[]) => {
     setQuiz(prev => ({
       ...prev,
-      questions: [...prev.questions, ...convertedQuestions]
+      questions: [...prev.questions, ...questions]
     }));
     setShowGeminiAI(false);
   };
 
+  const aiButtonContent = useMemo(
+    () => ({
+      iconLabel: t('createQuiz.questions.aiButtonIconLabel'),
+      text: t('createQuiz.questions.aiButtonText')
+    }),
+    [t]
+  );
+
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-bold">Danh sách câu hỏi</h2>
+        <h2 className="text-lg font-bold">{t('createQuiz.questions.title')}</h2>
         <div className="flex space-x-3">
           <Button onClick={addQuestion} className="bg-blue-600 hover:bg-blue-700 text-white">
-            + Thêm câu hỏi
+            {t('createQuiz.questions.addQuestion')}
           </Button>
           <QuizBulkImport onQuestionsImported={handleBulkImport} />
           <Button
@@ -104,11 +100,15 @@ const QuestionsStep: React.FC<QuestionsStepProps> = ({
             className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white flex items-center space-x-2"
           >
             <Sparkles className="w-4 h-4" />
-            <span>🤖 Gemini AI</span>
+            <span>
+              {aiButtonContent.iconLabel} {aiButtonContent.text}
+            </span>
           </Button>
         </div>
       </div>
-      {quiz.questions.length === 0 && <div className="text-gray-500">Chưa có câu hỏi nào.</div>}
+      {quiz.questions.length === 0 && (
+        <div className="text-gray-500">{t('createQuiz.questions.emptyState')}</div>
+      )}
       <DndContext 
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -135,27 +135,12 @@ const QuestionsStep: React.FC<QuestionsStepProps> = ({
         </SortableContext>
       </DndContext>
 
-      {/* Gemini AI Generator Modal */}
-      {showGeminiAI && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-auto">
-            <div className="flex justify-between items-center p-6 border-b border-gray-200">
-              <h3 className="text-2xl font-bold text-gray-900">🤖 Gemini AI Generator</h3>
-              <button
-                onClick={() => setShowGeminiAI(false)}
-                className="text-gray-400 hover:text-gray-600 text-3xl font-bold transition-colors"
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-6">
-              <ClientSideAIGenerator
-                onQuestionsGenerated={handleAIQuestionsGenerated}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Advanced AI Generator Modal */}
+      <AdvancedAIGenerator
+        isOpen={showGeminiAI}
+        onClose={() => setShowGeminiAI(false)}
+        onQuestionsGenerated={handleAIQuestionsGenerated}
+      />
     </div>
   );
 };

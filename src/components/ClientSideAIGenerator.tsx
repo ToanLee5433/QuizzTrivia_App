@@ -39,14 +39,14 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
       const available = await FirebaseAIService.checkAvailability();
       if (available) {
         setConnectionStatus('connected');
-        toast.success('✅ Kết nối Cloud Functions AI thành công!');
+        toast.success(t('aiGenerator.cloudConnectionSuccess'));
       } else {
         setConnectionStatus('failed');
-        toast.error('❌ Không thể kết nối Cloud Functions');
+        toast.error(t('aiGenerator.cloudConnectionFailed'));
       }
     } catch (error) {
       setConnectionStatus('failed');
-      toast.error('❌ Lỗi kết nối Cloud Functions');
+      toast.error(t('aiGenerator.cloudConnectionError'));
       console.error('Test connection error:', error);
     } finally {
       setIsTesting(false);
@@ -115,11 +115,11 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
 
   const generateQuestions = async () => {
     const topicToUse = formData.useFileContent && fileContent 
-      ? `Dựa trên file: ${fileContent}.\n\nChủ đề cụ thể: ${formData.topic}`
+      ? t('aiGenerator.topicFromFile', { content: fileContent, topic: formData.topic })
       : formData.topic;
 
     if (!topicToUse.trim()) {
-      toast.error('Vui lòng nhập chủ đề hoặc upload file');
+      toast.error(t('aiGenerator.topicOrFileRequiredShort'));
       return;
     }
 
@@ -150,7 +150,7 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
         }));
 
         onQuestionsGenerated(simpleQuestions);
-        toast.success(`✅ Đã tạo thành công ${questions.length} câu hỏi!`);
+        toast.success(t('aiGenerator.generateSuccess', { count: questions.length }));
         
         // Reset form
         setFormData({
@@ -164,12 +164,12 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
         setUploadedFile(null);
         setFileContent('');
       } else {
-        toast.error('❌ Không tạo được câu hỏi');
+        toast.error(t('aiGenerator.generateEmpty'));
       }
     } catch (error) {
       console.error('Generation error:', error);
-      const errorMsg = error instanceof Error ? error.message : 'Lỗi không xác định';
-      toast.error('❌ ' + errorMsg);
+      const errorMsg = error instanceof Error ? error.message : t('aiGenerator.unknownError');
+      toast.error(t('aiGenerator.generateErrorDetailed', { message: errorMsg }));
     } finally {
       setIsGenerating(false);
     }
@@ -177,9 +177,9 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
 
   const getDifficultyLabel = (difficulty: string) => {
     switch (difficulty) {
-      case 'easy': return '🟢 Dễ';
-      case 'medium': return '🟡 Trung bình';
-      case 'hard': return '🔴 Khó';
+      case 'easy': return t('aiGenerator.difficulty.easy');
+      case 'medium': return t('aiGenerator.difficulty.medium');
+      case 'hard': return t('aiGenerator.difficulty.hard');
       default: return difficulty;
     }
   };
@@ -282,7 +282,10 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
                   <div>
                     <p className="text-sm font-medium text-green-800">{uploadedFile.name}</p>
                     <p className="text-xs text-green-600">
-                      {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB - {t('aiGenerator.processedSuccess')}
+                      {t('aiGenerator.fileSizeDisplay', { 
+                        size: (uploadedFile.size / 1024 / 1024).toFixed(2),
+                        status: t('aiGenerator.processedSuccess')
+                      })}
                     </p>
                   </div>
                 </div>
@@ -352,26 +355,34 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
           {isGenerating ? (
             <>
               <RefreshCw className="w-5 h-5 animate-spin" />
-              Đang tạo câu hỏi...
+              {t('aiGenerator.generating')}
             </>
           ) : (
             <>
               <Wand2 className="w-5 h-5" />
-              Tạo {formData.numQuestions} câu hỏi {getDifficultyLabel(formData.difficulty)}
-              {formData.useFileContent && ' từ file'}
+              {formData.useFileContent 
+                ? t('aiGenerator.generateButtonWithFile', { 
+                    count: formData.numQuestions,
+                    difficulty: getDifficultyLabel(formData.difficulty)
+                  })
+                : t('aiGenerator.generateButton', {
+                    count: formData.numQuestions,
+                    difficulty: getDifficultyLabel(formData.difficulty)
+                  })
+              }
             </>
           )}
         </button>
 
         {/* Info */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-blue-800 mb-2">💡 Thông tin:</h4>
+          <h4 className="text-sm font-medium text-blue-800 mb-2">{t('aiGenerator.infoTitle')}</h4>
           <ul className="text-sm text-blue-700 space-y-1">
-            <li>• Sử dụng Firebase Cloud Functions + Google Gemini AI</li>
-            <li>• Model: gemini-2.0-flash-exp (mới nhất)</li>
-            <li>• Xử lý thông qua server (bảo mật API key)</li>
-            <li>• <strong>Mới:</strong> Hỗ trợ đọc file ảnh, PDF, Word, Text</li>
-            <li>• Không giới hạn quota client-side</li>
+            <li>• {t('aiGenerator.infoCloudFunctions')}</li>
+            <li>• {t('aiGenerator.infoModel')}</li>
+            <li>• {t('aiGenerator.infoSecurity')}</li>
+            <li>• <strong>{t('aiGenerator.infoNew')}</strong> {t('aiGenerator.infoFileSupport')}</li>
+            <li>• {t('aiGenerator.infoNoQuota')}</li>
           </ul>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState, useEffect } from 'react';
+import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { MultiplayerServiceInterface } from '../services/enhancedMultiplayerService';
 import { Clock, Users, CheckCircle, AlertCircle } from 'lucide-react';
 import { doc, onSnapshot, collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -268,7 +268,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
         gameStartRef.current = null;
       }
     };
-  }, [roomData?.id]);
+  }, [roomData?.id, gameStartCountdown, timePerQuestion]);
 
   // Sync all players' scores and answers from server data
   useEffect(() => {
@@ -423,13 +423,13 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
   const currentQuestion = processedQuestions[currentQuestionIndex];
 
   // Fallback for missing question data
-  const finalQuestion: ProcessedQuestion = currentQuestion || {
+  const finalQuestion: ProcessedQuestion = useMemo(() => currentQuestion || {
     id: 'error',
     title: 'No question available',
     options: ['Please wait...'],
     correct: 0,
     explanation: 'Question loading...'
-  };
+  }, [currentQuestion]);
 
   // Countdown timer (optimized - minimal dependencies)
   useEffect(() => {
@@ -447,38 +447,8 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
     };
   }, [timeLeft, locked, showResults]);
 
-  // Handle time up
-  useEffect(() => {
-    if (timeLeft <= 0 && !locked) {
-      // Auto-submit with selected answer, or undefined if no selection
-      handleSubmit(selectedIndex ?? undefined);
-    }
-  }, [timeLeft, locked]);
-
-  // Next question countdown (server-controlled)
-  useEffect(() => {
-    if (nextQuestionCountdown === null || nextQuestionCountdown <= 0) return;
-    
-    countdownRef.current = window.setTimeout(() => {
-      setNextQuestionCountdown(prev => prev !== null ? prev - 1 : null);
-    }, 1000);
-
-    return () => {
-      if (countdownRef.current) {
-        window.clearTimeout(countdownRef.current);
-        countdownRef.current = null;
-      }
-    };
-  }, [nextQuestionCountdown]);
-
-  const handleSelect = (answerIndex: number) => {
-    if (locked) return;
-    setSelectedIndex(answerIndex);
-    // Auto-submit immediately after selection (like MultiplayerGameSimple)
-    setTimeout(() => handleSubmit(answerIndex), 100);
-  };
-  
-  const handleSubmit = async (answerIndex?: number) => {
+  // Submit answer function - defined before useEffect that uses it
+  const handleSubmit = useCallback(async (answerIndex?: number) => {
     const indexToSubmit = answerIndex !== undefined ? answerIndex : selectedIndex;
     if (locked) return; // Prevent double submission
     
@@ -564,8 +534,39 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
       console.error('Error submitting answer:', error);
       setLocked(false); // Allow retry on error
     }
-  };
+  }, [selectedIndex, locked, multiplayerService, currentRoomData, finalQuestion, currentUser, timePerQuestion, timeLeft]);
 
+  // Handle time up
+  useEffect(() => {
+    if (timeLeft <= 0 && !locked) {
+      // Auto-submit with selected answer, or undefined if no selection
+      handleSubmit(selectedIndex ?? undefined);
+    }
+  }, [timeLeft, locked, handleSubmit, selectedIndex]);
+
+  // Next question countdown (server-controlled)
+  useEffect(() => {
+    if (nextQuestionCountdown === null || nextQuestionCountdown <= 0) return;
+    
+    countdownRef.current = window.setTimeout(() => {
+      setNextQuestionCountdown(prev => prev !== null ? prev - 1 : null);
+    }, 1000);
+
+    return () => {
+      if (countdownRef.current) {
+        window.clearTimeout(countdownRef.current);
+        countdownRef.current = null;
+      }
+    };
+  }, [nextQuestionCountdown]);
+
+  const handleSelect = (answerIndex: number) => {
+    if (locked) return;
+    setSelectedIndex(answerIndex);
+    // Auto-submit immediately after selection (like MultiplayerGameSimple)
+    setTimeout(() => handleSubmit(answerIndex), 100);
+  };
+  
   // Calculate progress percentage with proper pathLength
   const progressPercent = useMemo(() => {
     return Math.max(0, Math.min(100, Math.round((timeLeft / timePerQuestion) * 100)));

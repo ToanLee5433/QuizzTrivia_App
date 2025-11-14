@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { RootState } from '../../lib/store';
+import { ROUTES } from '../../config/routes';
 
 // Dashboard card component giống style Admin
 const DashboardCard = React.memo(({ 
@@ -39,6 +40,11 @@ const DashboardCard = React.memo(({
 const Dashboard = React.memo(() => {
   const user = useSelector((state: RootState) => state.auth.user);
   const { t } = useTranslation();
+  const fallbackName = t('dashboard.defaultUserName');
+  const shortName = user?.displayName || (user?.email ? user.email.split('@')[0] : fallbackName);
+  const fullName = user?.displayName || user?.email || fallbackName;
+  const roleKey = user?.role === 'admin' ? 'admin' : user?.role === 'creator' ? 'creator' : 'user';
+  const roleLabel = t(`dashboard.roles.${roleKey}`);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -47,12 +53,12 @@ const Dashboard = React.memo(() => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {t('dashboard.welcome', {name: (user?.displayName || (user?.email ? user.email.split('@')[0] : 'User')),})} 👋
+              {t('dashboard.welcome', { name: shortName })} 👋
             </h1>
-            <p className="text-gray-600">{user?.displayName || user?.email || 'User'}</p>
+            <p className="text-gray-600">{fullName}</p>
           </div>
           <div className="bg-purple-100 text-purple-700 px-4 py-2 rounded-lg font-medium">
-            {user?.role === 'admin' ? 'Admin' : user?.role === 'creator' ? 'Creator' : 'User'}
+            {roleLabel}
           </div>
         </div>
 
@@ -70,8 +76,8 @@ const Dashboard = React.memo(() => {
             to="/multiplayer"
             emoji="🎮"
             bgColor="bg-gradient-to-br from-purple-100 to-pink-100"
-            title="Multiplayer"
-            description="Chơi quiz cùng bạn bè và cạnh tranh trực tiếp"
+            title={t('dashboard.multiplayer.title')}
+            description={t('dashboard.multiplayer.description')}
           />
           
           <DashboardCard
@@ -100,7 +106,7 @@ const Dashboard = React.memo(() => {
           
           {(user?.role === 'creator' || user?.role === 'admin') && (
             <DashboardCard
-              to="/creator"
+              to={ROUTES.CREATOR}
               emoji="✨"
               bgColor="bg-purple-100"
               title={t('nav.creator')}

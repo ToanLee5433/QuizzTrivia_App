@@ -119,7 +119,7 @@ const AuthPage: React.FC = () => {
   // Complete registration sau khi OTP verify thành công
   const completeRegistrationAfterOTP = async () => {
     if (!pendingUserData) {
-      toast.error('Không tìm thấy thông tin đăng ký');
+      toast.error(t('auth.errors.pendingRegistrationNotFound'));
       return;
     }
 
@@ -179,25 +179,30 @@ const AuthPage: React.FC = () => {
     setLoading(true);
     try {
       // Gửi OTP trước
-      const result = await generateAndSendOTP(formData.email.trim().toLowerCase());
+      const normalizedEmail = formData.email.trim().toLowerCase();
+      const result = await generateAndSendOTP(normalizedEmail);
       
       if (result.success) {
         // Lưu data tạm
         setPendingUserData({
-          email: formData.email.trim().toLowerCase(),
+          email: normalizedEmail,
           password: formData.password,
           displayName: formData.displayName.trim()
         });
         
         // Hiện màn hình nhập OTP
         setShowOTPVerification(true);
-        toast.success(result.message);
+        toast.success(t('auth.otp.sent', { email: normalizedEmail }));
       } else {
-        toast.error(result.message);
+        const errorKey =
+          result.code === 'otp.emailFailed'
+            ? 'auth.otp.errors.emailFailed'
+            : 'auth.errors.genericError';
+        toast.error(t(errorKey));
       }
     } catch (error: any) {
       console.error('Registration error:', error);
-      toast.error('Có lỗi xảy ra. Vui lòng thử lại.');
+      toast.error(t('auth.errors.genericError'));
     } finally {
       setLoading(false);
     }

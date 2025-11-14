@@ -402,6 +402,72 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
     }
   }
 
+  async setPresence(roomId: string, isOnline: boolean): Promise<void> {
+    try {
+      if (!this.userId) return;
+      
+      // Update player presence in Firestore
+      const playerDoc = doc(db, 'multiplayer_rooms', roomId, 'players', this.userId);
+      await updateDoc(playerDoc, {
+        isOnline,
+        lastSeen: serverTimestamp()
+      });
+      
+      logger.info('Updated presence', { roomId, isOnline });
+    } catch (error) {
+      logger.error('Error setting presence', error);
+      // Don't throw - this is not critical
+    }
+  }
+
+  async resumeRoom(roomId: string): Promise<{ room: Room } | null> {
+    try {
+      // Get room data
+      const roomDoc = doc(db, 'multiplayer_rooms', roomId);
+      const roomSnap = await getDoc(roomDoc);
+      
+      if (!roomSnap.exists()) {
+        logger.warn('Room not found for resume', { roomId });
+        return null;
+      }
+      
+      const roomData = roomSnap.data();
+      
+      // Restart listeners
+      this.currentRoomId = roomId;
+      this.listenToRoom(roomId);
+      this.listenToPlayers(roomId);
+      this.listenToMessages(roomId);
+      
+      // Rebuild room object
+      const playersSnapshot = await getDocs(collection(db, 'multiplayer_rooms', roomId, 'players'));
+      const players = playersSnapshot.docs.map(doc => doc.data() as Player);
+      
+      const room: Room = {
+        id: roomId,
+        code: roomData.code,
+        name: roomData.name,
+        players,
+        maxPlayers: roomData.maxPlayers,
+        isPrivate: roomData.isPrivate,
+        password: roomData.password,
+        status: roomData.status,
+        quizId: roomData.quizId,
+        quiz: roomData.quiz,
+        settings: roomData.settings,
+        createdAt: roomData.createdAt?.toDate() || new Date()
+      };
+      
+      logger.success('Resumed room', { roomId });
+      this.emit('room:resumed', room);
+      
+      return { room };
+    } catch (error) {
+      logger.error('Error resuming room', error);
+      return null;
+    }
+  }
+
   // Game Control
   async startGame(roomId: string): Promise<void> {
     try {

@@ -91,7 +91,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
             {/* Rating */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Đánh giá của bạn
+                {t('reviews.yourRating')}
               </label>
               <div className="flex items-center space-x-1">
                 {[1, 2, 3, 4, 5].map((star) => (
@@ -127,18 +127,18 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
             {/* Comment */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nhận xét (tùy chọn)
+                {t('reviews.commentOptional')}
               </label>
               <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 rows={4}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                placeholder="Chia sẻ trải nghiệm của bạn về quiz này..."
+                placeholder={t('placeholders.shareExperience')}
                 maxLength={500}
               />
               <p className="text-xs text-gray-500 mt-1">
-                {comment.length}/500 ký tự
+                {t('reviews.characterCount', { count: comment.length, max: 500 })}
               </p>
             </div>
 

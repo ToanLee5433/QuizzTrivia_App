@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
@@ -59,11 +59,7 @@ const LearningMaterialsPage: React.FC = () => {
   const [gatingStatus, setGatingStatus] = useState<GatingResult | null>(null);
   const [selectedResource, setSelectedResource] = useState<SimpleResource | null>(null);
 
-  useEffect(() => {
-    loadQuizAndSession();
-  }, [quizId]);
-
-  const loadQuizAndSession = async () => {
+  const loadQuizAndSession = useCallback(async () => {
     if (!quizId || !currentUser?.uid) return;
     
     try {
@@ -117,7 +113,11 @@ const LearningMaterialsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [quizId, currentUser, t, navigate]);
+
+  useEffect(() => {
+    loadQuizAndSession();
+  }, [loadQuizAndSession]);
 
   const handleStartQuiz = () => {
     if (!gatingStatus?.ready) {

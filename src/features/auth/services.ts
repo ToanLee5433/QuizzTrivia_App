@@ -1,6 +1,6 @@
 import {
-  signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
   signOut,
   updateProfile,
   sendPasswordResetEmail,

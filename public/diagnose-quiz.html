@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Questions Diagnostic Tool</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+    }
+    .input-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #555;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      margin-right: 10px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    button.migrate {
+      background: #ff9800;
+    }
+    button.migrate:hover {
+      background: #e68900;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    #output {
+      margin-top: 30px;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 4px;
+      border-left: 4px solid #4CAF50;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+    #output.error {
+      border-left-color: #f44336;
+      background: #ffebee;
+    }
+    #output.warning {
+      border-left-color: #ff9800;
+      background: #fff3e0;
+    }
+    .hidden {
+      display: none;
+    }
+    .result-card {
+      background: white;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+    .result-card h3 {
+      margin-top: 0;
+      color: #333;
+    }
+    .result-card.success {
+      border-left: 4px solid #4CAF50;
+    }
+    .result-card.error {
+      border-left: 4px solid #f44336;
+    }
+    .result-card.warning {
+      border-left: 4px solid #ff9800;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Quiz Questions Diagnostic Tool</h1>
+    <p class="subtitle">Tìm lỗi tại sao quiz không load được câu hỏi</p>
+
+    <div class="input-group">
+      <label for="quizId">Quiz ID:</label>
+      <input type="text" id="quizId" value="mGEoMyTxuttzEKxHy9CM" placeholder="Nhập Quiz ID...">
+    </div>
+
+    <button onclick="runDiagnostic()">🔍 Chạy Kiểm Tra</button>
+    <button id="migrateBtn" class="migrate hidden" onclick="runMigration()">🔄 Migrate Questions</button>
+
+    <div id="output" class="hidden"></div>
+  </div>
+
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import { getFirestore, doc, getDoc, collection, getDocs, setDoc, deleteDoc, writeBatch } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    // Get Firebase config from main app
+    let app, auth, db;
+    
+    try {
+      // Try to get from window (if app is already initialized)
+      if (window.firebase) {
+        app = window.firebase;
+      } else {
+        // Import from config file
+        const config = {
+          apiKey: "AIzaSyBiDR9dZcBHIiRxEHsrCiLtR2vbKIe-Erk",
+          authDomain: "quiztrivia-app.firebaseapp.com",
+          projectId: "quiztrivia-app",
+          storageBucket: "quiztrivia-app.firebasestorage.app",
+          messagingSenderId: "445344607230",
+          appId: "1:445344607230:web:f8ee28ccca0eb4e5b81f7d"
+        };
+        app = initializeApp(config);
+      }
+      
+      auth = getAuth(app);
+      db = getFirestore(app);
+      
+      window.auth = auth;
+      window.db = db;
+      window.firestoreModules = { doc, getDoc, collection, getDocs, setDoc, deleteDoc, writeBatch };
+      
+      console.log('✅ Firebase initialized');
+    } catch (error) {
+      console.error('❌ Failed to initialize Firebase:', error);
+      showOutput('❌ Không thể kết nối Firebase. Vui lòng mở trang này từ ứng dụng đang chạy.', 'error');
+    }
+
+    window.runDiagnostic = async function() {
+      const quizId = document.getElementById('quizId').value.trim();
+      
+      if (!quizId) {
+        alert('Vui lòng nhập Quiz ID!');
+        return;
+      }
+
+      const output = document.getElementById('output');
+      const migrateBtn = document.getElementById('migrateBtn');
+      
+      output.classList.remove('hidden', 'error', 'warning');
+      migrateBtn.classList.add('hidden');
+      
+      let result = '🔍 QUIZ QUESTIONS DIAGNOSTIC\n';
+      result += '=====================================\n\n';
+      result += `Quiz ID: ${quizId}\n`;
+      result += `User: ${auth.currentUser?.email || 'Not logged in'}\n\n`;
+
+      try {
+        // Check authentication
+        if (!auth.currentUser) {
+          result += '❌ ERROR: Not logged in!\n';
+          result += 'Please login to the app first.\n';
+          output.textContent = result;
+          output.classList.add('error');
+          return;
+        }
+
+        // Test 1: Get quiz metadata
+        result += '📋 TEST 1: Quiz Metadata\n';
+        result += '─────────────────────────\n';
+        
+        const quizRef = doc(db, 'quizzes', quizId);
+        const quizDoc = await getDoc(quizRef);
+        
+        if (!quizDoc.exists()) {
+          result += `❌ Quiz not found: ${quizId}\n`;
+          result += '\n💡 Possible causes:\n';
+          result += '  - Wrong quiz ID\n';
+          result += '  - Quiz was deleted\n';
+          result += '  - No permission to read\n';
+          output.textContent = result;
+          output.classList.add('error');
+          return;
+        }
+        
+        const quizData = quizDoc.data();
+        result += `✅ Quiz found: ${quizData.title}\n`;
+        result += `   Status: ${quizData.status}\n`;
+        result += `   Visibility: ${quizData.visibility}\n`;
+        result += `   Created by: ${quizData.createdBy}\n`;
+        result += `   Is owner: ${auth.currentUser.uid === quizData.createdBy}\n`;
+        
+        // Check for questions field in parent doc
+        const hasQuestionsField = 'questions' in quizData;
+        result += `   Has "questions" field: ${hasQuestionsField}\n`;
+        
+        let needsMigration = false;
+        
+        if (hasQuestionsField) {
+          result += '\n⚠️  WARNING: Found "questions" field in parent document!\n';
+          result += `   Type: ${Array.isArray(quizData.questions) ? 'Array' : typeof quizData.questions}\n`;
+          
+          if (Array.isArray(quizData.questions)) {
+            result += `   Length: ${quizData.questions.length}\n`;
+            result += '\n🔍 This is OLD data structure!\n';
+            result += '   Current code expects: quizzes/{id}/questions/{qid} (subcollection)\n';
+            result += '   But data is stored as: quizzes/{id}.questions[] (array field)\n';
+            result += '\n💥 ROOT CAUSE FOUND!\n';
+            needsMigration = true;
+          }
+        }
+        
+        // Test 2: Query questions subcollection
+        result += '\n📝 TEST 2: Questions Subcollection\n';
+        result += '─────────────────────────────────\n';
+        
+        const questionsRef = collection(db, 'quizzes', quizId, 'questions');
+        result += `Query path: quizzes/${quizId}/questions\n`;
+        
+        const questionsSnap = await getDocs(questionsRef);
+        
+        result += `Result: ${questionsSnap.size} documents\n`;
+        result += `  - size: ${questionsSnap.size}\n`;
+        result += `  - empty: ${questionsSnap.empty}\n`;
+        result += `  - docs.length: ${questionsSnap.docs.length}\n`;
+        
+        if (questionsSnap.empty) {
+          result += '\n❌ Subcollection is EMPTY!\n';
+          
+          if (hasQuestionsField && Array.isArray(quizData.questions) && quizData.questions.length > 0) {
+            result += '\n🔧 SOLUTION: Migrate questions from parent doc to subcollection\n';
+            result += `   - Parent doc has ${quizData.questions.length} questions\n`;
+            result += '   - Subcollection has 0 questions\n';
+            result += '   - Need to move questions to subcollection structure\n';
+            
+            result += '\n📊 Sample questions from parent doc:\n';
+            quizData.questions.slice(0, 3).forEach((q, i) => {
+              result += `   Q${i+1}: ${q.questionText?.substring(0, 50)}...\n`;
+              result += `       Type: ${q.type || 'multiple-choice'}\n`;
+              result += `       Answers: ${q.answers?.length || q.options?.length || 0}\n`;
+            });
+            
+            output.classList.add('warning');
+            migrateBtn.classList.remove('hidden');
+            
+          } else {
+            result += '\n💡 Possible causes:\n';
+            result += '  - Quiz has no questions yet\n';
+            result += '  - Questions were deleted\n';
+            result += '  - Wrong subcollection name\n';
+            output.classList.add('error');
+          }
+        } else {
+          result += `\n✅ Found ${questionsSnap.size} questions in subcollection\n`;
+          
+          result += '\n📊 Questions list:\n';
+          questionsSnap.docs.forEach((doc, i) => {
+            const data = doc.data();
+            result += `   Q${i+1} (${doc.id}):\n`;
+            result += `       ${data.questionText?.substring(0, 60)}...\n`;
+            result += `       Type: ${data.type || 'multiple-choice'}\n`;
+            result += `       Points: ${data.points || 1}\n`;
+          });
+          
+          if (hasQuestionsField) {
+            result += '\n⚠️  Note: Parent doc still has old "questions" field\n';
+            result += '   This can be safely removed after confirming subcollection works.\n';
+            output.classList.add('warning');
+          }
+        }
+        
+        // Summary
+        result += '\n=====================================\n';
+        result += '🎯 DIAGNOSTIC SUMMARY\n';
+        result += '=====================================\n\n';
+        
+        if (needsMigration) {
+          result += '🔴 ISSUE: Structure mismatch\n';
+          result += `   - Questions in parent doc: ${quizData.questions.length}\n`;
+          result += `   - Questions in subcollection: ${questionsSnap.size}\n`;
+          result += '\n✅ SOLUTION: Click "Migrate Questions" button above\n';
+        } else if (questionsSnap.empty) {
+          result += '🔴 ISSUE: No questions found\n';
+          result += '   Quiz has no questions in either location\n';
+        } else {
+          result += '✅ NO ISSUES: Questions properly stored in subcollection\n';
+          result += '   If app still shows 0 questions, check application code.\n';
+        }
+        
+        output.textContent = result;
+        
+        // Store data for migration
+        window.diagnosticData = {
+          quizId,
+          quizData,
+          questionsSnap,
+          needsMigration
+        };
+        
+      } catch (error) {
+        result += `\n❌ ERROR: ${error.message}\n`;
+        result += `\nStack: ${error.stack}\n`;
+        output.textContent = result;
+        output.classList.add('error');
+        console.error(error);
+      }
+    };
+
+    window.runMigration = async function() {
+      if (!window.diagnosticData || !window.diagnosticData.needsMigration) {
+        alert('Chạy diagnostic trước khi migrate!');
+        return;
+      }
+
+      const { quizId, quizData } = window.diagnosticData;
+      
+      const confirmMsg = `Migrate ${quizData.questions.length} questions từ parent doc sang subcollection?\n\n` +
+                        `Quiz: ${quizData.title}\n` +
+                        `Questions: ${quizData.questions.length}\n\n` +
+                        `Thao tác này KHÔNG XOÁ dữ liệu cũ (giữ làm backup).`;
+      
+      if (!confirm(confirmMsg)) {
+        return;
+      }
+
+      const output = document.getElementById('output');
+      let result = output.textContent;
+      
+      result += '\n\n🔄 MIGRATION IN PROGRESS\n';
+      result += '=====================================\n\n';
+      output.textContent = result;
+
+      try {
+        const questions = quizData.questions;
+        const questionsRef = collection(db, 'quizzes', quizId, 'questions');
+        
+        result += `Migrating ${questions.length} questions...\n`;
+        output.textContent = result;
+
+        // Migrate in batches (Firestore write batch limit: 500)
+        const batchSize = 500;
+        let migrated = 0;
+
+        for (let i = 0; i < questions.length; i += batchSize) {
+          const batch = writeBatch(db);
+          const chunk = questions.slice(i, Math.min(i + batchSize, questions.length));
+          
+          for (const question of chunk) {
+            // Generate ID or use existing
+            const questionId = question.id || doc(collection(db, '_')).id;
+            const questionRef = doc(questionsRef, questionId);
+            
+            // Clean up question data
+            const questionData = {
+              ...question,
+              id: questionId,
+              createdAt: question.createdAt || new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            };
+            
+            batch.set(questionRef, questionData);
+            migrated++;
+          }
+          
+          await batch.commit();
+          result += `✅ Migrated ${migrated}/${questions.length} questions\n`;
+          output.textContent = result;
+        }
+
+        result += '\n✅ MIGRATION COMPLETE!\n';
+        result += `\n📊 Summary:\n`;
+        result += `   Migrated: ${migrated} questions\n`;
+        result += `   Location: quizzes/${quizId}/questions/\n`;
+        result += `   Old data: Kept in parent doc (backup)\n`;
+        result += '\n🎉 Refresh app to see questions!\n';
+        
+        output.textContent = result;
+        output.classList.remove('warning');
+        output.classList.add('success');
+
+        document.getElementById('migrateBtn').classList.add('hidden');
+
+      } catch (error) {
+        result += `\n❌ MIGRATION FAILED: ${error.message}\n`;
+        result += `\nStack: ${error.stack}\n`;
+        output.textContent = result;
+        output.classList.add('error');
+        console.error(error);
+      }
+    };
+
+    function showOutput(text, type = '') {
+      const output = document.getElementById('output');
+      output.textContent = text;
+      output.classList.remove('hidden', 'error', 'warning');
+      if (type) output.classList.add(type);
+    }
+  </script>
+</body>
+</html>

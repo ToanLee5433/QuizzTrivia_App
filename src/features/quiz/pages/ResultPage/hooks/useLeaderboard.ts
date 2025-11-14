@@ -25,7 +25,7 @@ export const useLeaderboard = (quizId: string | null, currentResult?: any) => {
         console.log('📊 Raw quiz results:', quizResults);
         
         // Use only real data
-        let leaderboardData = quizResults;
+        const leaderboardData = quizResults;
         
         // Add current result to leaderboard if provided
         if (currentResult && user) {
@@ -87,7 +87,7 @@ export const useLeaderboard = (quizId: string | null, currentResult?: any) => {
     };
 
     fetchLeaderboard();
-  }, [quizId, user]);
+  }, [quizId, user, currentResult]);
 
   return {
     leaderboard,

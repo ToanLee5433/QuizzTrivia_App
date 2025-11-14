@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, Maximize2, Grid } from 'lucide-react';
 
 interface ImageSlidesViewerProps {
@@ -50,7 +50,7 @@ export const ImageSlidesViewer: React.FC<ImageSlidesViewerProps> = ({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [currentIndex, imageStartTime]);
+  }, [currentIndex, imageStartTime, imageViewTimes, imagesViewed, onProgressUpdate]);
 
   useEffect(() => {
     // Reset timer when image changes
@@ -59,31 +59,31 @@ export const ImageSlidesViewer: React.FC<ImageSlidesViewerProps> = ({
     // Mark image as viewed
     const newImagesViewed = new Set(imagesViewed).add(currentIndex);
     setImagesViewed(newImagesViewed);
-  }, [currentIndex]);
+  }, [currentIndex, imagesViewed]);
 
-  const handlePrevious = () => {
+  const handlePrevious = useCallback(() => {
     setCurrentIndex((prev) => Math.max(0, prev - 1));
-  };
+  }, []);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     setCurrentIndex((prev) => Math.min(urls.length - 1, prev + 1));
-  };
+  }, [urls.length]);
 
   const handleImageClick = (index: number) => {
     setCurrentIndex(index);
     setShowGrid(false);
   };
 
-  const handleKeyDown = (e: KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'ArrowLeft') handlePrevious();
     if (e.key === 'ArrowRight') handleNext();
     if (e.key === 'Escape') setIsFullscreen(false);
-  };
+  }, [handlePrevious, handleNext]);
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [currentIndex]);
+  }, [handleKeyDown]);
 
   const progressPercent = urls.length > 0 ? Math.round((imagesViewed.size / urls.length) * 100) : 0;
 

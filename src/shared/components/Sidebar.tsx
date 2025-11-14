@@ -2,6 +2,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../lib/store';
+import { ROUTES } from '../../config/routes';
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
@@ -17,8 +18,8 @@ const Sidebar: React.FC = () => {
 
   // Add role-specific menu items
   if (user?.role === 'creator' || user?.role === 'admin') {
-    menuItems.push({ path: '/creator', label: 'Tạo Quiz', icon: '➕' });
-    menuItems.push({ path: '/my-quizzes', label: 'Quiz của tôi', icon: '📝' });
+    menuItems.push({ path: ROUTES.CREATOR_NEW_QUIZ, label: 'Tạo Quiz', icon: '➕' });
+    menuItems.push({ path: ROUTES.CREATOR_MY_QUIZZES, label: 'Quiz của tôi', icon: '📝' });
   }
 
   if (user?.role === 'admin') {

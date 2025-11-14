@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../lib/store';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { ROUTES } from '../../../../config/routes';
+import { collection, addDoc, serverTimestamp, writeBatch, doc } from 'firebase/firestore';
 import { db } from '../../../../lib/firebase/config';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
@@ -11,7 +12,7 @@ import ConfirmDialog from '../../../../shared/components/ui/ConfirmDialog';
 import ShareLinkModal from '../../../../shared/components/ui/ShareLinkModal';
 
 import { QuizFormData, Question } from './types';
-import { defaultQuiz, steps } from './constants';
+import { defaultQuiz, stepKeys } from './constants';
 import { generateId } from './utils';
 import { createPasswordHash } from '../../../../lib/utils/passwordHash'; // 🔒 Password hash utility
 import QuizTypeStep from './components/QuizTypeStep'; // 🆕
@@ -67,18 +68,25 @@ const CreateQuizPage: React.FC = () => {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges, submitting]);
 
+  const maxStepIndex = React.useMemo(() => {
+    if (quiz.quizType === 'standard') {
+      return stepKeys.length - 2; // Skip resources step
+    }
+    return stepKeys.length - 1;
+  }, [quiz.quizType]);
+
   // Handle back navigation with confirmation
   const handleBackNavigation = () => {
     if (hasUnsavedChanges) {
       setShowExitConfirm(true);
     } else {
-      navigate('/creator');
+      navigate(ROUTES.CREATOR_MY_QUIZZES);
     }
   };
 
   const confirmExit = () => {
     setShowExitConfirm(false);
-    navigate('/creator');
+    navigate(ROUTES.CREATOR_MY_QUIZZES);
   };
 
   // Kiểm tra quyền truy cập
@@ -183,13 +191,13 @@ const CreateQuizPage: React.FC = () => {
     switch (actualStep) {
       case 'type': // Step 0: Quiz Type Selection
         return !!quiz.quizType;
-      case 'info': // Quiz Info step (includes password now)
+      case 'info': { // Quiz Info step (includes password now)
         const basicInfoValid = !!(quiz.title && quiz.description && quiz.category && quiz.difficulty);
-        // If password is required, validate it
         const passwordValid = quiz.havePassword === 'password'
           ? !!(quiz.password && quiz.password.length >= 6)
           : true;
         return basicInfoValid && passwordValid;
+      }
       case 'resources': // Resources step - Only for with-materials type
         return !!(quiz.resources && quiz.resources.length > 0);
       case 'questions': // Questions step
@@ -216,6 +224,29 @@ const CreateQuizPage: React.FC = () => {
     }
   };
 
+  const deepCleanValue = (value: unknown): unknown => {
+    if (value === undefined || value === null) {
+      return null;
+    }
+
+    if (Array.isArray(value)) {
+      return (value as unknown[]).map((item) => deepCleanValue(item));
+    }
+
+    if (typeof value === 'object') {
+      const cleaned: Record<string, unknown> = {};
+      Object.entries(value as Record<string, unknown>).forEach(([key, nestedValue]) => {
+        const cleanedVal = deepCleanValue(nestedValue);
+        if (cleanedVal !== undefined) {
+          cleaned[key] = cleanedVal;
+        }
+      });
+      return cleaned;
+    }
+
+    return value;
+  };
+
   // Submit quiz
   const handleSubmit = async () => {
     if (!currentUser) {
@@ -230,26 +261,6 @@ const CreateQuizPage: React.FC = () => {
 
     setSubmitting(true);
     try {
-      // Deep clean function để loại bỏ tất cả undefined values
-      const cleanValue = (value: any): any => {
-        if (value === undefined || value === null) {
-          return null;
-        }
-        if (Array.isArray(value)) {
-          return value.map(cleanValue);
-        }
-        if (typeof value === 'object' && value !== null) {
-          const cleaned: any = {};
-          Object.keys(value).forEach(key => {
-            const cleanedVal = cleanValue(value[key]);
-            if (cleanedVal !== undefined) {
-              cleaned[key] = cleanedVal;
-            }
-          });
-          return cleaned;
-        }
-        return value;
-      };
 
       // 🔒 Generate password hash if visibility is password
       let pwdData = undefined;
@@ -261,10 +272,16 @@ const CreateQuizPage: React.FC = () => {
           salt,
           hash
         };
+        console.log('🔒 [PUBLISH] Password data generated:', {
+          havePassword: quiz.havePassword,
+          passwordLength: quiz.password.length,
+          salt: salt.substring(0, 20) + '...',
+          hash: hash.substring(0, 20) + '...'
+        });
       }
 
-      // Clean up undefined values - Firestore doesn't accept undefined
-      const cleanQuizData = cleanValue({
+    // Clean up undefined values - Firestore doesn't accept undefined
+    const baseQuizData = {
         title: quiz.title || '',
         description: quiz.description || '',
         category: quiz.category || 'general',
@@ -274,23 +291,11 @@ const CreateQuizPage: React.FC = () => {
         
         // 🔒 New Password Protection System
         visibility: quiz.havePassword === 'password' ? 'password' : 'public',
-        pwd: pwdData, // { enabled, algo, salt, hash }
+        ...(pwdData ? { pwd: pwdData } : {}), // Only add pwd if it exists
         
-        questions: (quiz.questions || []).map(q => ({
-          id: q.id || '',
-          text: q.text || '',
-          type: q.type || 'multiple',
-          answers: (q.answers || []).map(a => ({
-            id: a.id || '',
-            text: a.text || '',
-            isCorrect: a.isCorrect !== undefined ? a.isCorrect : false
-          })),
-          explanation: q.explanation || '',
-          points: q.points !== undefined ? q.points : 1,
-          imageUrl: q.imageUrl || null,
-          correctAnswer: q.correctAnswer || null,
-          acceptedAnswers: q.acceptedAnswers || []
-        })),
+        // ❌ DO NOT store questions in parent doc anymore (old structure)
+        // ✅ Will store in subcollection below (new structure)
+        
         resources: (quiz.resources || []).map(r => ({
           id: r.id || '',
           type: r.type || 'video',
@@ -315,12 +320,57 @@ const CreateQuizPage: React.FC = () => {
         imageUrl: quiz.imageUrl || null,
         isPublic: quiz.isPublic !== undefined ? quiz.isPublic : false,
         allowRetake: quiz.allowRetake !== undefined ? quiz.allowRetake : true,
-        status: 'pending'
+        status: 'draft'
+      };
+
+      const cleanQuizData = deepCleanValue(baseQuizData) as Record<string, unknown>;
+
+      console.log('🔍 [PUBLISH] Clean quiz data (without questions):', {
+        ...cleanQuizData,
+        pwd: cleanQuizData.pwd || 'NOT SET',
+        visibility: cleanQuizData.visibility,
+        questionsCount: quiz.questions?.length || 0
       });
 
-      console.log('🔍 Clean quiz data:', cleanQuizData);
-
+      // Step 1: Create quiz document (metadata only)
       const docRef = await addDoc(collection(db, 'quizzes'), cleanQuizData);
+      console.log('✅ Created quiz document:', docRef.id);
+
+      // Step 2: Save questions to subcollection (NEW structure)
+      if (quiz.questions && quiz.questions.length > 0) {
+        console.log('📝 Saving', quiz.questions.length, 'questions to subcollection...');
+        
+        const questionsRef = collection(db, 'quizzes', docRef.id, 'questions');
+        const batch = writeBatch(db);
+        
+        quiz.questions.forEach((q, index) => {
+          const questionId = q.id || `q${index}`;
+          const questionRef = doc(questionsRef, questionId);
+          
+          const questionData = {
+            id: questionId,
+            text: q.text || '',
+            type: q.type || 'multiple-choice',
+            answers: (q.answers || []).map(a => ({
+              id: a.id || '',
+              text: a.text || '',
+              isCorrect: a.isCorrect !== undefined ? a.isCorrect : false
+            })),
+            explanation: q.explanation || '',
+            points: q.points !== undefined ? q.points : 1,
+            imageUrl: q.imageUrl || null,
+            correctAnswer: q.correctAnswer || null,
+            acceptedAnswers: q.acceptedAnswers || [],
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          };
+          
+          batch.set(questionRef, deepCleanValue(questionData));
+        });
+        
+        await batch.commit();
+        console.log('✅ Saved all questions to subcollection');
+      }
 
       toast.success(t('createQuiz.createSuccess'));
       
@@ -350,31 +400,12 @@ const CreateQuizPage: React.FC = () => {
 
     // Validate at least title and quiz type
     if (!quiz.title || !quiz.quizType) {
-      toast.error('Vui lòng nhập ít nhất tiêu đề và chọn loại quiz để lưu nháp');
+      toast.error(t('createQuiz.draft.validationError'));
       return;
     }
 
     setSubmitting(true);
     try {
-      const cleanValue = (value: any): any => {
-        if (value === undefined || value === null) {
-          return null;
-        }
-        if (Array.isArray(value)) {
-          return value.map(cleanValue);
-        }
-        if (typeof value === 'object' && value !== null) {
-          const cleaned: any = {};
-          Object.keys(value).forEach(key => {
-            const cleanedVal = cleanValue(value[key]);
-            if (cleanedVal !== undefined) {
-              cleaned[key] = cleanedVal;
-            }
-          });
-          return cleaned;
-        }
-        return value;
-      };
 
       // 🔒 Generate password hash if visibility is password
       let pwdData = undefined;
@@ -386,9 +417,15 @@ const CreateQuizPage: React.FC = () => {
           salt,
           hash
         };
+        console.log('🔒 [DRAFT] Password data generated:', {
+          havePassword: quiz.havePassword,
+          passwordLength: quiz.password.length,
+          salt: salt.substring(0, 20) + '...',
+          hash: hash.substring(0, 20) + '...'
+        });
       }
 
-      const draftQuizData = cleanValue({
+    const baseDraftData = {
         title: quiz.title || '',
         description: quiz.description || '',
         category: quiz.category || 'general',
@@ -398,23 +435,11 @@ const CreateQuizPage: React.FC = () => {
         
         // 🔒 New Password Protection System
         visibility: quiz.havePassword === 'password' ? 'password' : 'public',
-        pwd: pwdData, // { enabled, algo, salt, hash }
+        ...(pwdData ? { pwd: pwdData } : {}), // Only add pwd if it exists
         
-        questions: (quiz.questions || []).map(q => ({
-          id: q.id || '',
-          text: q.text || '',
-          type: q.type || 'multiple',
-          answers: (q.answers || []).map(a => ({
-            id: a.id || '',
-            text: a.text || '',
-            isCorrect: a.isCorrect !== undefined ? a.isCorrect : false
-          })),
-          explanation: q.explanation || '',
-          points: q.points !== undefined ? q.points : 1,
-          imageUrl: q.imageUrl || null,
-          correctAnswer: q.correctAnswer || null,
-          acceptedAnswers: q.acceptedAnswers || []
-        })),
+        // ❌ DO NOT store questions in parent doc (old structure)
+        // ✅ Will store in subcollection below (new structure)
+        
         resources: (quiz.resources || []).map(r => ({
           id: r.id || '',
           type: r.type || 'video',
@@ -441,18 +466,61 @@ const CreateQuizPage: React.FC = () => {
         allowRetake: quiz.allowRetake !== undefined ? quiz.allowRetake : true,
         status: 'draft', // 📝 Mark as draft
         isDraft: true
+      };
+
+      const draftQuizData = deepCleanValue(baseDraftData) as Record<string, unknown>;
+
+      console.log('📝 Saving draft (without questions):', {
+        ...draftQuizData,
+        questionsCount: quiz.questions?.length || 0
       });
 
-      console.log('📝 Saving draft:', draftQuizData);
+      // Step 1: Create draft quiz document
+      const docRef = await addDoc(collection(db, 'quizzes'), draftQuizData);
+      console.log('✅ Created draft quiz:', docRef.id);
 
-      await addDoc(collection(db, 'quizzes'), draftQuizData);
+      // Step 2: Save questions to subcollection (NEW structure)
+      if (quiz.questions && quiz.questions.length > 0) {
+        console.log('📝 Saving', quiz.questions.length, 'draft questions to subcollection...');
+        
+        const questionsRef = collection(db, 'quizzes', docRef.id, 'questions');
+        const batch = writeBatch(db);
+        
+        quiz.questions.forEach((q, index) => {
+          const questionId = q.id || `q${index}`;
+          const questionRef = doc(questionsRef, questionId);
+          
+          const questionData = {
+            id: questionId,
+            text: q.text || '',
+            type: q.type || 'multiple-choice',
+            answers: (q.answers || []).map(a => ({
+              id: a.id || '',
+              text: a.text || '',
+              isCorrect: a.isCorrect !== undefined ? a.isCorrect : false
+            })),
+            explanation: q.explanation || '',
+            points: q.points !== undefined ? q.points : 1,
+            imageUrl: q.imageUrl || null,
+            correctAnswer: q.correctAnswer || null,
+            acceptedAnswers: q.acceptedAnswers || [],
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          };
+          
+          batch.set(questionRef, deepCleanValue(questionData));
+        });
+        
+        await batch.commit();
+        console.log('✅ Saved all draft questions to subcollection');
+      }
 
-      toast.success('💾 Đã lưu bản nháp thành công!');
+      toast.success(`${t('emoji.floppyDisk')} ${t('createQuiz.draft.success')}`);
       setQuiz(defaultQuiz);
       setStep(0);
     } catch (error) {
       console.error('Error saving draft:', error);
-      toast.error('Lỗi khi lưu bản nháp');
+      toast.error(t('createQuiz.draft.error'));
     } finally {
       setSubmitting(false);
     }
@@ -460,7 +528,7 @@ const CreateQuizPage: React.FC = () => {
 
   const nextStep = () => {
     if (validateStep(step)) {
-      setStep(prev => Math.min(prev + 1, steps.length - 1));
+      setStep(prev => Math.min(prev + 1, maxStepIndex));
     } else {
       toast.error(t('createQuiz.completeInfoFirst'));
     }
@@ -479,7 +547,7 @@ const CreateQuizPage: React.FC = () => {
           className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors group"
         >
           <span className="text-lg group-hover:-translate-x-1 transition-transform">←</span>
-          <span className="font-medium">Quay lại Creator Dashboard</span>
+          <span className="font-medium">{t('createQuiz.backToCreator')}</span>
         </button>
 
         {/* Header */}
@@ -491,21 +559,23 @@ const CreateQuizPage: React.FC = () => {
           {/* Progress Steps */}
           <div className="flex items-center justify-between overflow-x-auto pb-2">
             {(() => {
-              // Dynamic steps based on quiz type
-              let displaySteps = [...steps];
-              if (quiz.quizType === 'standard') {
-                // Remove Resources step for standard quiz (keep Privacy)
-                displaySteps = [
-                  steps[0], // Chọn Loại Quiz
-                  steps[1], // Thông tin Quiz
-                  steps[2], // Quyền riêng tư
-                  steps[4], // Câu hỏi (skip resources at index 3)
-                  steps[5], // Xem lại & Xuất bản
-                ];
-              }
+              const displayStepKeys = (() => {
+                if (quiz.quizType === 'standard') {
+                  return [
+                    'createQuiz.steps.selectType',
+                    'createQuiz.steps.info',
+                    'createQuiz.steps.questions',
+                    'createQuiz.steps.review',
+                  ] as const;
+                }
+                if (quiz.quizType === 'with-materials') {
+                  return stepKeys;
+                }
+                return stepKeys;
+              })();
 
-              return displaySteps.map((stepName, idx) => (
-                <div key={idx} className="flex items-center flex-shrink-0">
+              return displayStepKeys.map((stepKey, idx) => (
+                <div key={stepKey} className="flex items-center flex-shrink-0">
                   <div className={`
                     w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold
                     transition-all duration-300 transform
@@ -520,9 +590,9 @@ const CreateQuizPage: React.FC = () => {
                     ml-2 text-sm whitespace-nowrap
                     ${idx <= step ? 'text-purple-600 font-semibold' : 'text-gray-500'}
                   `}>
-                    {stepName}
+                    {t(stepKey)}
                   </span>
-                  {idx < displaySteps.length - 1 && (
+                  {idx < displayStepKeys.length - 1 && (
                     <div className={`
                       w-12 sm:w-16 h-1 mx-2 sm:mx-4 rounded-full transition-all duration-300
                       ${idx < step ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-gray-200'}
@@ -586,7 +656,7 @@ const CreateQuizPage: React.FC = () => {
                     variant="outline"
                     className="h-11 border-blue-300 text-blue-700 hover:bg-blue-50"
                   >
-                    💾 Lưu bản nháp
+                    {`${t('emoji.floppyDisk')} ${t('createQuiz.draft.button')}`}
                   </Button>
                   <Button
                     onClick={handleSubmit}
@@ -616,10 +686,10 @@ const CreateQuizPage: React.FC = () => {
         isOpen={showExitConfirm}
         onClose={() => setShowExitConfirm(false)}
         onConfirm={confirmExit}
-        title="⚠️ Rời khỏi trang tạo Quiz?"
-        message="Bạn có những thay đổi chưa được lưu. Nếu rời đi, tất cả thay đổi sẽ bị mất. Bạn có chắc chắn muốn tiếp tục?"
-        confirmText="Rời khỏi"
-        cancelText="Ở lại"
+        title={`${t('emoji.warning')} ${t('createQuiz.exitConfirm.title')}`}
+        message={t('createQuiz.exitConfirm.message')}
+        confirmText={t('createQuiz.exitConfirm.confirm')}
+        cancelText={t('createQuiz.exitConfirm.cancel')}
         type="warning"
       />
 

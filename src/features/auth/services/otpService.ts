@@ -8,6 +8,10 @@ const db = getFirestore();
 const OTP_SECRET = import.meta.env.VITE_OTP_SECRET || 'quiz-app-otp-secret-2025';
 const OTP_EXPIRY_MINUTES = 10;
 
+type OTPMetadata = Record<string, unknown> & {
+  remaining?: number;
+};
+
 export interface OTPData {
   email: string;
   hashedOTP: string;
@@ -52,7 +56,15 @@ export const storeOTP = (email: string, otp: string): void => {
  * Gửi OTP qua Firestore Trigger Email Extension
  * Extension sẽ tự động gửi email khi có document mới trong collection 'mail'
  */
-export const sendOTPEmail = async (email: string, otp: string): Promise<{ success: boolean; message: string }> => {
+export const sendOTPEmail = async (
+  email: string,
+  otp: string
+): Promise<{
+  success: boolean;
+  code: 'otp.emailQueued' | 'otp.emailQueueFailed';
+  errorCode?: string;
+  details?: string;
+}> => {
   try {
     // Tạo HTML template cho email OTP
     const emailHTML = `
@@ -125,13 +137,15 @@ export const sendOTPEmail = async (email: string, otp: string): Promise<{ succes
 
     return {
       success: true,
-      message: 'Email OTP đang được gửi đi...'
+      code: 'otp.emailQueued'
     };
   } catch (error: any) {
     console.error('Error queuing email:', error);
     return {
       success: false,
-      message: error.message || 'Không thể gửi email. Vui lòng thử lại.'
+      code: 'otp.emailQueueFailed',
+      errorCode: error?.code,
+      details: error?.message
     };
   }
 };
@@ -139,7 +153,13 @@ export const sendOTPEmail = async (email: string, otp: string): Promise<{ succes
 /**
  * Generate và gửi OTP
  */
-export const generateAndSendOTP = async (email: string): Promise<{ success: boolean; message: string }> => {
+export const generateAndSendOTP = async (
+  email: string
+): Promise<{
+  success: boolean;
+  code: 'otp.sent' | 'otp.emailFailed' | 'otp.genericError';
+  metadata?: OTPMetadata;
+}> => {
   try {
     // Generate OTP
     const otp = generateOTP();
@@ -153,18 +173,31 @@ export const generateAndSendOTP = async (email: string): Promise<{ success: bool
     if (result.success) {
       return {
         success: true,
-        message: `Mã OTP đã được gửi đến ${email}. Vui lòng kiểm tra hộp thư.`
+        code: 'otp.sent',
+        metadata: { email }
       };
-    } else {
-      // Clear stored OTP nếu gửi thất bại
-      clearOTP(email);
-      return result;
     }
+
+    // Clear stored OTP nếu gửi thất bại
+    clearOTP(email);
+    return {
+      success: false,
+      code: 'otp.emailFailed',
+      metadata: {
+        email,
+        errorCode: result.errorCode,
+        details: result.details
+      }
+    };
   } catch (error: any) {
     console.error('Error generating and sending OTP:', error);
     return {
       success: false,
-      message: 'Có lỗi xảy ra. Vui lòng thử lại.'
+      code: 'otp.genericError',
+      metadata: {
+        email,
+        details: error?.message
+      }
     };
   }
 };
@@ -172,12 +205,19 @@ export const generateAndSendOTP = async (email: string): Promise<{ success: bool
 /**
  * Verify OTP
  */
-export const verifyOTP = (email: string, inputOTP: string): { success: boolean; message: string } => {
+export const verifyOTP = (
+  email: string,
+  inputOTP: string
+): {
+  success: boolean;
+  code: 'otp.verifySuccess' | 'otp.notFound' | 'otp.expired' | 'otp.maxAttempts' | 'otp.incorrect' | 'otp.genericError';
+  metadata?: OTPMetadata;
+} => {
   const storageKey = `otp_${email.toLowerCase()}`;
   const storedData = sessionStorage.getItem(storageKey);
 
   if (!storedData) {
-    return { success: false, message: 'Không tìm thấy OTP. Vui lòng yêu cầu gửi lại.' };
+    return { success: false, code: 'otp.notFound' };
   }
 
   try {
@@ -186,13 +226,13 @@ export const verifyOTP = (email: string, inputOTP: string): { success: boolean; 
     // Check expiry
     if (Date.now() > otpData.expiresAt) {
       sessionStorage.removeItem(storageKey);
-      return { success: false, message: 'OTP đã hết hạn. Vui lòng yêu cầu gửi lại.' };
+      return { success: false, code: 'otp.expired' };
     }
 
     // Check max attempts
     if (otpData.attempts >= otpData.maxAttempts) {
       sessionStorage.removeItem(storageKey);
-      return { success: false, message: 'Đã vượt quá số lần thử. Vui lòng yêu cầu OTP mới.' };
+      return { success: false, code: 'otp.maxAttempts' };
     }
 
     // Verify OTP
@@ -200,7 +240,7 @@ export const verifyOTP = (email: string, inputOTP: string): { success: boolean; 
     if (inputHash === otpData.hashedOTP) {
       // Success - xóa OTP
       sessionStorage.removeItem(storageKey);
-      return { success: true, message: 'Xác thực thành công!' };
+      return { success: true, code: 'otp.verifySuccess' };
     } else {
       // Failed - tăng attempts
       otpData.attempts += 1;
@@ -209,12 +249,13 @@ export const verifyOTP = (email: string, inputOTP: string): { success: boolean; 
       const remaining = otpData.maxAttempts - otpData.attempts;
       return { 
         success: false, 
-        message: `OTP không đúng. Còn ${remaining} lần thử.` 
+        code: 'otp.incorrect',
+        metadata: { remaining }
       };
     }
   } catch (error) {
     console.error('Error verifying OTP:', error);
-    return { success: false, message: 'Có lỗi xảy ra khi xác thực.' };
+    return { success: false, code: 'otp.genericError' };
   }
 };
 

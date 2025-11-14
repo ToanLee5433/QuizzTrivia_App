@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
 import { Lock, X, Eye, EyeOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { generateProofHash } from '../../../lib/utils/passwordHash';
 
 interface PasswordModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  correctPassword: string;
+  passwordData?: {
+    salt: string;
+    hash: string;
+  } | null;
   quizTitle: string;
 }
 
@@ -13,37 +18,66 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
-  correctPassword,
+  passwordData,
   quizTitle,
 }) => {
+  const { t } = useTranslation();
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [attempts, setAttempts] = useState(0);
+  const [verifying, setVerifying] = useState(false);
   const maxAttempts = 5;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (attempts >= maxAttempts) {
-      setError('Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau.');
+      setError(t('passwordModal.tooManyAttempts'));
       return;
     }
 
-    if (password === correctPassword) {
-      setError('');
-      setPassword('');
-      setAttempts(0);
-      onSuccess();
-    } else {
-      const remainingAttempts = maxAttempts - attempts - 1;
-      setAttempts(prev => prev + 1);
-      setError(
-        remainingAttempts > 0
-          ? `Mật khẩu không đúng! Còn ${remainingAttempts} lần thử.`
-          : 'Mật khẩu không đúng! Đây là lần thử cuối cùng.'
-      );
-      setPassword('');
+    if (!passwordData) {
+      setError(t('passwordModal.configError'));
+      return;
+    }
+
+    setVerifying(true);
+    
+    try {
+      // 🐛 Debug logging
+      console.log('🔍 Password Verification Debug:');
+      console.log('   Salt:', passwordData.salt);
+      console.log('   Stored Hash:', passwordData.hash);
+      console.log('   Entered Password:', password);
+      
+      // Generate hash from entered password
+      const proofHash = await generateProofHash(passwordData.salt, password);
+      console.log('   Generated Hash:', proofHash);
+      console.log('   Match:', proofHash === passwordData.hash);
+      
+      // Compare with stored hash
+      if (proofHash === passwordData.hash) {
+        setError('');
+        setPassword('');
+        setAttempts(0);
+        setVerifying(false);
+        onSuccess();
+      } else {
+        const remainingAttempts = maxAttempts - attempts - 1;
+        setAttempts(prev => prev + 1);
+        setError(
+          remainingAttempts > 0
+            ? t('passwordModal.incorrectRemaining', { remaining: remainingAttempts })
+            : t('passwordModal.incorrectFinal')
+        );
+        setPassword('');
+        setVerifying(false);
+      }
+    } catch (error) {
+      console.error('Password verification error:', error);
+      setError(t('passwordModal.verificationError'));
+      setVerifying(false);
     }
   };
 
@@ -74,8 +108,8 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
                 <Lock className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-xl font-bold">Quiz được bảo vệ</h3>
-                <p className="text-sm text-white/80 mt-1">Nhập mật khẩu để tiếp tục</p>
+                <h3 className="text-xl font-bold">{t('passwordModal.title')}</h3>
+                <p className="text-sm text-white/80 mt-1">{t('passwordModal.subtitle')}</p>
               </div>
             </div>
             <button
@@ -91,17 +125,17 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
         <div className="p-6">
           <div className="mb-4">
             <p className="text-gray-600 text-sm mb-2">
-              Quiz: <span className="font-semibold text-gray-900">{quizTitle}</span>
+              {t('passwordModal.quizLabel')} <span className="font-semibold text-gray-900">{quizTitle}</span>
             </p>
             <p className="text-gray-500 text-xs">
-              Quiz này được bảo vệ bằng mật khẩu. Vui lòng liên hệ người tạo để lấy mật khẩu.
+              {t('passwordModal.description')}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Mật khẩu
+                {t('passwordModal.passwordLabel')}
               </label>
               <div className="relative">
                 <input
@@ -116,7 +150,7 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
                       : 'border-gray-200 focus:border-purple-500'
                     }
                   `}
-                  placeholder="Nhập mật khẩu..."
+                  placeholder={t('placeholders.enterPassword')}
                   disabled={attempts >= maxAttempts}
                   autoFocus
                 />
@@ -140,7 +174,7 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
               )}
               {attempts > 0 && attempts < maxAttempts && (
                 <p className="mt-2 text-xs text-gray-500">
-                  Lần thử: {attempts}/{maxAttempts}
+                  {t('passwordModal.attempts', { current: attempts, max: maxAttempts })}
                 </p>
               )}
             </div>
@@ -151,14 +185,14 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
                 onClick={handleClose}
                 className="flex-1 h-11 px-4 rounded-xl border-2 border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
               >
-                Hủy
+                {t('passwordModal.cancel')}
               </button>
               <button
                 type="submit"
-                disabled={!password || attempts >= maxAttempts}
+                disabled={!password || attempts >= maxAttempts || verifying}
                 className="flex-1 h-11 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
-                Xác nhận
+                {verifying ? t('passwordModal.verifying') : t('passwordModal.confirm')}
               </button>
             </div>
           </form>
@@ -166,7 +200,7 @@ const PasswordModal: React.FC<PasswordModalProps> = ({
           {attempts >= maxAttempts && (
             <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
               <p className="text-sm text-red-800 text-center">
-                ⚠️ Bạn đã vượt quá số lần thử cho phép. Vui lòng liên hệ người tạo quiz để được hỗ trợ.
+                {t('passwordModal.maxAttemptsReached')}
               </p>
             </div>
           )}

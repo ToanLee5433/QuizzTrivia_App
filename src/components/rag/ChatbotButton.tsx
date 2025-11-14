@@ -12,8 +12,10 @@ import { MessageCircle, X, Sparkles } from 'lucide-react';
 import { ChatbotModal } from './ChatbotModal';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../lib/store';
+import { useTranslation } from 'react-i18next';
 
 export function ChatbotButton() {
+  const { t } = useTranslation();
   const { user } = useSelector((state: RootState) => state.auth);
   const [isOpen, setIsOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -82,7 +84,7 @@ export function ChatbotButton() {
             right: '168px', // 96px (button right) + 56px (button width) + 16px (gap)
           }}
         >
-          Hỏi AI Learning Assistant
+          {t('chatbot.askAssistant')}
           <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 rotate-45 w-2 h-2 bg-gray-900" />
         </motion.div>
       )}

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { RootState } from '../../lib/store';
+import { ROUTES } from '../../config/routes';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../lib/firebase/config';
 import { logout } from '../../features/auth/store';
@@ -86,7 +87,7 @@ const Header: React.FC<HeaderProps> = () => {
   ];
 
   if (user?.role === 'creator' || user?.role === 'admin') {
-    navigationItems.push({ path: '/creator', label: t('nav.creator'), icon: Plus });
+    navigationItems.push({ path: ROUTES.CREATOR, label: t('nav.creator'), icon: Plus });
   }
 
   if (user?.role === 'admin') {
@@ -126,7 +127,7 @@ const Header: React.FC<HeaderProps> = () => {
                     ? 'bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent' 
                     : 'text-white'
                 }`}>
-                  Quiz Trivia
+                  {t('appName')}
                 </h1>
                 <p className={`text-xs hidden lg:block transition-colors duration-300 ${
                   scrolled ? 'text-gray-600' : 'text-blue-100/90'

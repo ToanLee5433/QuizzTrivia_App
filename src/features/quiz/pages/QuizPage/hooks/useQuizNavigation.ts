@@ -1,12 +1,13 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Question } from '../../../types';
+import { Question, AnswerMap } from '../../../types';
+import { isAnswerProvided } from '../utils';
 
 interface UseQuizNavigationProps {
   questions: Question[];
   currentQuestionIndex: number;
   onQuestionChange: (index: number) => void;
-  answers: Record<string, any>;
+  answers: AnswerMap;
 }
 
 export const useQuizNavigation = ({
@@ -48,11 +49,7 @@ export const useQuizNavigation = ({
 
   const handleSubmitQuiz = useCallback(() => {
     // Check for unanswered questions
-    const unansweredQuestions = questions.filter(question => 
-      !answers[question.id] || 
-      (Array.isArray(answers[question.id]) && answers[question.id].length === 0) ||
-      answers[question.id] === ''
-    );
+    const unansweredQuestions = questions.filter(question => !isAnswerProvided(answers[question.id]));
 
     if (unansweredQuestions.length > 0) {
       setShowUnansweredModal(true);
@@ -62,11 +59,7 @@ export const useQuizNavigation = ({
   }, [questions, answers]);
 
   const getUnansweredQuestions = useCallback(() => {
-    return questions.filter(question => 
-      !answers[question.id] || 
-      (Array.isArray(answers[question.id]) && answers[question.id].length === 0) ||
-      answers[question.id] === ''
-    );
+    return questions.filter(question => !isAnswerProvided(answers[question.id]));
   }, [questions, answers]);
 
   const isFirstQuestion = currentQuestionIndex === 0;

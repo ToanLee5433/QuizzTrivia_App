@@ -58,7 +58,7 @@ const Creator: React.FC = () => {
               }`}
             >
               <BookOpen className="w-4 h-4" />
-              <span>{t('quiz.myQuizzes')}</span>
+              <span>{t('quiz.myQuizzes.title')}</span>
             </button>
             <button
               onClick={() => setActiveTab('create')}

@@ -3,6 +3,7 @@
  */
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Video, 
   FileText, 
@@ -18,20 +19,9 @@ import YouTubePlayer from '../../../../../shared/components/ui/YouTubePlayer';
 import ImageViewer from '../../../../../shared/components/ui/ImageViewer';
 import PDFViewer from '../../../../../shared/components/ui/PDFViewer';
 import AudioPlayer from '../../../../../shared/components/ui/AudioPlayer';
+import { Quiz } from '../../../types';
 
-// Simplified LearningResource interface matching Quiz type
-interface LearningResource {
-  id: string;
-  type: 'video' | 'pdf' | 'image' | 'link' | 'slides';
-  title: string;
-  description?: string;
-  url: string;
-  required: boolean;
-  thumbnailUrl?: string;
-  whyWatch?: string;
-  estimatedTime?: number;
-  order?: number;
-}
+type LearningResource = NonNullable<Quiz['resources']>[number];
 
 interface LearningResourcesViewProps {
   resources: LearningResource[];
@@ -44,6 +34,7 @@ const LearningResourcesView: React.FC<LearningResourcesViewProps> = ({
   onComplete,
   onSkip 
 }) => {
+  const { t } = useTranslation();
   const [viewedResources, setViewedResources] = useState<Set<string>>(new Set());
   const [activeVideo, setActiveVideo] = useState<LearningResource | null>(null);
   const [activeImage, setActiveImage] = useState<LearningResource | null>(null);
@@ -54,7 +45,12 @@ const LearningResourcesView: React.FC<LearningResourcesViewProps> = ({
   const optionalResources = resources.filter(r => !r.required);
 
   const allRequiredViewed = requiredResources.every(r => viewedResources.has(r.id));
+  const viewedRequiredCount = requiredResources.filter(r => viewedResources.has(r.id)).length;
+  const remainingRequired = requiredResources.length - viewedRequiredCount;
   const totalEstimatedTime = resources.reduce((sum, r) => sum + (r.estimatedTime || 0), 0);
+  const progressPercentage = resources.length > 0
+    ? (viewedResources.size / resources.length) * 100
+    : 0;
 
   const handleViewResource = (resourceId: string) => {
     setViewedResources(prev => new Set([...prev, resourceId]));
@@ -98,26 +94,29 @@ const LearningResourcesView: React.FC<LearningResourcesViewProps> = ({
     }
   };
 
-  const getResourceIcon = (type: string) => {
+  const getResourceIcon = (type: LearningResource['type']) => {
     switch (type) {
       case 'video': return <Video className="w-5 h-5" />;
       case 'pdf': return <FileText className="w-5 h-5" />;
       case 'image': return <ImageIcon className="w-5 h-5" />;
       case 'link': return <LinkIcon className="w-5 h-5" />;
+      case 'slides': return <FileText className="w-5 h-5" />;
       default: return <Music className="w-5 h-5" />;
     }
   };
 
-  const getTypeLabel = (type: string) => {
-    const labels: Record<string, string> = {
-      video: 'Video',
-      pdf: 'PDF',
-      image: 'Ảnh/Slide',
-      link: 'Link',
-      slides: 'Slides'
-    };
-    return labels[type] || type;
+  const defaultTypeLabels: Record<LearningResource['type'], string> = {
+    video: 'Video',
+    pdf: 'PDF',
+    image: 'Ảnh/Slide',
+    link: 'Link',
+    slides: 'Slides'
   };
+
+  const getTypeLabel = (type: LearningResource['type']) =>
+    t(`quiz.learningResources.typeLabels.${type}`, {
+      defaultValue: defaultTypeLabels[type] ?? type
+    });
 
   const renderResource = (resource: LearningResource) => {
     const isViewed = viewedResources.has(resource.id);
@@ -166,22 +165,25 @@ const LearningResourcesView: React.FC<LearningResourcesViewProps> = ({
                   {resource.estimatedTime && (
                     <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
-                      {resource.estimatedTime} phút
+                      {t('quiz.learningResources.estimatedTimeShort', {
+                        minutes: resource.estimatedTime,
+                        defaultValue: '{{minutes}} phút'
+                      })}
                     </span>
                   )}
                   {resource.required ? (
                     <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded font-medium">
-                      Bắt buộc
+                      {t('quiz.learningResources.badges.required', 'Bắt buộc')}
                     </span>
                   ) : (
                     <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
-                      Khuyến nghị
+                      {t('quiz.learningResources.badges.recommended', 'Khuyến nghị')}
                     </span>
                   )}
                   {isViewed && (
                     <span className="flex items-center gap-1 text-green-600 font-medium">
                       <CheckCircle className="w-4 h-4" />
-                      Đã xem
+                      {t('quiz.learningResources.badges.viewed', 'Đã xem')}
                     </span>
                   )}
                 </div>
@@ -191,7 +193,9 @@ const LearningResourcesView: React.FC<LearningResourcesViewProps> = ({
             {resource.whyWatch && (
               <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-3">
                 <p className="text-sm text-yellow-800">
-                  💡 <strong>Vì sao nên xem:</strong> {resource.whyWatch}
+                  <span role="img" aria-hidden="true">💡</span>{' '}
+                  <strong>{t('quiz.learningResources.whyWatchTitle', 'Vì sao nên xem')}:</strong>{' '}
+                  {resource.whyWatch}
                 </p>
               </div>
             )}
@@ -209,12 +213,12 @@ const LearningResourcesView: React.FC<LearningResourcesViewProps> = ({
                 {isViewed ? (
                   <>
                     <CheckCircle className="w-4 h-4" />
-                    Xem lại
+                    {t('quiz.learningResources.actions.review', 'Xem lại')}
                   </>
                 ) : (
                   <>
                     <Play className="w-4 h-4" />
-                    Xem ngay
+                    {t('quiz.learningResources.actions.view', 'Xem ngay')}
                   </>
                 )}
               </button>
@@ -224,7 +228,7 @@ const LearningResourcesView: React.FC<LearningResourcesViewProps> = ({
                   onClick={() => handleViewResource(resource.id)}
                   className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  Đánh dấu đã xem
+                  {t('quiz.learningResources.actions.markViewed', 'Đánh dấu đã xem')}
                 </button>
               )}
             </div>
@@ -244,10 +248,10 @@ const LearningResourcesView: React.FC<LearningResourcesViewProps> = ({
               <BookOpen className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              📚 Tài liệu học tập
+              {t('quiz.learningResources.headerTitle', '📚 Tài liệu học tập')}
             </h1>
             <p className="text-gray-600">
-              Xem qua tài liệu để chuẩn bị tốt hơn cho bài quiz
+              {t('quiz.learningResources.headerSubtitle', 'Xem qua tài liệu để chuẩn bị tốt hơn cho bài quiz')}
             </p>
           </div>
 
@@ -255,21 +259,28 @@ const LearningResourcesView: React.FC<LearningResourcesViewProps> = ({
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="font-semibold text-blue-900">
-                Tiến độ học tập
+                {t('quiz.learningResources.progressTitle', 'Tiến độ học tập')}
               </span>
               <span className="text-sm text-blue-700">
-                {viewedResources.size}/{resources.length} tài liệu
+                {t('quiz.learningResources.progressCount', {
+                  viewed: viewedResources.size,
+                  total: resources.length,
+                  defaultValue: '{{viewed}}/{{total}} tài liệu'
+                })}
               </span>
             </div>
             <div className="w-full bg-blue-200 rounded-full h-3">
               <div 
                 className="bg-blue-600 h-3 rounded-full transition-all duration-300"
-                style={{ width: `${(viewedResources.size / resources.length) * 100}%` }}
+                style={{ width: `${progressPercentage}%` }}
               />
             </div>
             {totalEstimatedTime > 0 && (
               <p className="text-xs text-blue-600 mt-2">
-                ⏱️ Thời gian ước tính: {totalEstimatedTime} phút
+                {t('quiz.learningResources.totalEstimatedTime', {
+                  minutes: totalEstimatedTime,
+                  defaultValue: '⏱️ Thời gian ước tính: {{minutes}} phút'
+                })}
               </p>
             )}
           </div>
@@ -277,7 +288,10 @@ const LearningResourcesView: React.FC<LearningResourcesViewProps> = ({
           {!allRequiredViewed && requiredResources.length > 0 && (
             <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-sm text-red-700">
-                ⚠️ <strong>Lưu ý:</strong> Bạn cần xem tất cả {requiredResources.length} tài liệu bắt buộc trước khi làm quiz
+                {t('quiz.learningResources.warningMessage', {
+                  count: requiredResources.length,
+                  defaultValue: '⚠️ Lưu ý: Bạn cần xem tất cả {{count}} tài liệu bắt buộc trước khi làm quiz'
+                })}
               </p>
             </div>
           )}
@@ -288,7 +302,10 @@ const LearningResourcesView: React.FC<LearningResourcesViewProps> = ({
           <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
               <span className="w-2 h-8 bg-red-500 rounded"></span>
-              Tài liệu bắt buộc ({requiredResources.length})
+              {t('quiz.learningResources.requiredSectionTitle', {
+                count: requiredResources.length,
+                defaultValue: 'Tài liệu bắt buộc ({{count}})'
+              })}
             </h2>
             <div className="space-y-4">
               {requiredResources.map(renderResource)}
@@ -301,7 +318,10 @@ const LearningResourcesView: React.FC<LearningResourcesViewProps> = ({
           <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
               <span className="w-2 h-8 bg-blue-500 rounded"></span>
-              Tài liệu khuyến nghị ({optionalResources.length})
+              {t('quiz.learningResources.optionalSectionTitle', {
+                count: optionalResources.length,
+                defaultValue: 'Tài liệu khuyến nghị ({{count}})'
+              })}
             </h2>
             <div className="space-y-4">
               {optionalResources.map(renderResource)}
@@ -317,7 +337,7 @@ const LearningResourcesView: React.FC<LearningResourcesViewProps> = ({
                 onClick={onSkip}
                 className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
               >
-                Bỏ qua
+                {t('quiz.learningResources.actions.skip', 'Bỏ qua')}
               </button>
             )}
 
@@ -333,12 +353,12 @@ const LearningResourcesView: React.FC<LearningResourcesViewProps> = ({
               {allRequiredViewed ? (
                 <>
                   <CheckCircle className="w-6 h-6" />
-                  Bắt đầu làm Quiz
+                  {t('quiz.learningResources.actions.startQuiz', 'Bắt đầu làm Quiz')}
                 </>
               ) : (
                 <>
                   <span className="w-6 h-6 border-2 border-gray-400 rounded-full" />
-                  Xem tài liệu bắt buộc để tiếp tục
+                  {t('quiz.learningResources.actions.completeRequired', 'Xem tài liệu bắt buộc để tiếp tục')}
                 </>
               )}
             </button>
@@ -346,7 +366,10 @@ const LearningResourcesView: React.FC<LearningResourcesViewProps> = ({
 
           {!allRequiredViewed && (
             <p className="text-center text-sm text-gray-500 mt-3">
-              Còn {requiredResources.length - requiredResources.filter(r => viewedResources.has(r.id)).length} tài liệu bắt buộc chưa xem
+              {t('quiz.learningResources.remainingRequired', {
+                count: remainingRequired,
+                defaultValue: 'Còn {{count}} tài liệu bắt buộc chưa xem'
+              })}
             </p>
           )}
         </div>

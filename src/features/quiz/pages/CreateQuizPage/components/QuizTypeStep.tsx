@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { BookOpen, Zap, GraduationCap, Target, Clock, TrendingUp } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface QuizTypeStepProps {
   selectedType?: 'with-materials' | 'standard';
@@ -7,49 +8,60 @@ interface QuizTypeStepProps {
 }
 
 const QuizTypeStep: React.FC<QuizTypeStepProps> = ({ selectedType, onTypeSelect }) => {
+  const { t } = useTranslation();
 
-  const quizTypes = [
+  const quizTypes = useMemo(() => ([
     {
       id: 'with-materials' as const,
       icon: BookOpen,
-      title: 'Quiz với Tài Liệu Học',
-      subtitle: 'Learn → Test Flow',
-      description: 'Học viên sẽ học tài liệu trước khi làm quiz. Phù hợp cho nội dung giáo dục chuyên sâu.',
+      title: t('createQuiz.type.cards.withMaterials.title'),
+      subtitle: t('createQuiz.type.cards.withMaterials.subtitle'),
+      description: t('createQuiz.type.cards.withMaterials.description'),
       gradient: 'from-purple-500 via-pink-500 to-red-500',
       features: [
-        { icon: GraduationCap, text: 'Tài liệu học tập đa dạng (Video, PDF, Slides)' },
-        { icon: Target, text: 'Theo dõi tiến độ học chi tiết' },
-        { icon: TrendingUp, text: 'Tỷ lệ hoàn thành cao hơn 45%' },
+        { icon: GraduationCap, text: t('createQuiz.type.cards.withMaterials.features.learning') },
+        { icon: Target, text: t('createQuiz.type.cards.withMaterials.features.progress') },
+        { icon: TrendingUp, text: t('createQuiz.type.cards.withMaterials.features.completion') },
       ],
-      badge: 'Recommended',
+      badge: t('createQuiz.type.cards.withMaterials.badge'),
       badgeColor: 'bg-purple-500',
     },
     {
       id: 'standard' as const,
       icon: Zap,
-      title: 'Quiz Trực Tiếp',
-      subtitle: 'Quick Test Flow',
-      description: 'Học viên làm quiz ngay lập tức. Phù hợp cho bài kiểm tra nhanh, đánh giá kiến thức.',
+      title: t('createQuiz.type.cards.standard.title'),
+      subtitle: t('createQuiz.type.cards.standard.subtitle'),
+      description: t('createQuiz.type.cards.standard.description'),
       gradient: 'from-blue-500 via-cyan-500 to-teal-500',
       features: [
-        { icon: Clock, text: 'Truy cập nhanh chóng, không chờ đợi' },
-        { icon: Zap, text: 'Trải nghiệm gọn nhẹ, tập trung' },
-        { icon: Target, text: 'Đánh giá kiến thức tức thì' },
+        { icon: Clock, text: t('createQuiz.type.cards.standard.features.speed') },
+        { icon: Zap, text: t('createQuiz.type.cards.standard.features.focus') },
+        { icon: Target, text: t('createQuiz.type.cards.standard.features.assessment') },
       ],
-      badge: 'Fast',
+      badge: t('createQuiz.type.cards.standard.badge'),
       badgeColor: 'bg-blue-500',
     },
-  ];
+  ]), [t]);
+
+  const statsData = useMemo(
+    () => ({
+      'with-materials': { completion: 78, rating: 4.8, duration: 25 },
+      standard: { completion: 92, rating: 4.5, duration: 8 },
+    }),
+    []
+  );
+
+  const currentStats = selectedType ? statsData[selectedType] : null;
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="text-center space-y-3">
         <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
-          🎯 Chọn Loại Quiz
+          {t('createQuiz.type.headerTitle')}
         </h2>
         <p className="text-base leading-7 text-gray-600 max-w-2xl mx-auto">
-          Chọn loại quiz phù hợp với mục tiêu của bạn. Bạn có thể thay đổi sau này.
+          {t('createQuiz.type.headerSubtitle')}
         </p>
       </div>
 
@@ -153,7 +165,7 @@ const QuizTypeStep: React.FC<QuizTypeStepProps> = ({ selectedType, onTypeSelect 
                 {isSelected && (
                   <div className="pt-3 flex items-center gap-2 text-purple-600 font-semibold">
                     <div className="w-2 h-2 bg-purple-600 rounded-full animate-pulse" />
-                    <span className="text-sm">✓ Đã chọn</span>
+                    <span className="text-sm">{t('createQuiz.type.selected')}</span>
                   </div>
                 )}
               </div>
@@ -172,10 +184,16 @@ const QuizTypeStep: React.FC<QuizTypeStepProps> = ({ selectedType, onTypeSelect 
               </div>
             </div>
             <div className="flex-1 space-y-1">
-              <h4 className="font-semibold text-gray-900">Mẹo chọn loại quiz phù hợp</h4>
+              <h4 className="font-semibold text-gray-900">{t('createQuiz.type.tip.title')}</h4>
               <ul className="text-sm text-gray-700 space-y-1">
-                <li>• <strong>Quiz với Tài Liệu:</strong> Dùng khi bạn muốn dạy kiến thức mới, training nhân viên, hoặc khóa học online</li>
-                <li>• <strong>Quiz Trực Tiếp:</strong> Dùng cho bài kiểm tra nhanh, đánh giá kiến thức sẵn có, hoặc game giải trí</li>
+                <li>
+                  • <strong>{t('createQuiz.type.tip.withMaterialsTitle')}</strong>{' '}
+                  {t('createQuiz.type.tip.withMaterialsDescription')}
+                </li>
+                <li>
+                  • <strong>{t('createQuiz.type.tip.standardTitle')}</strong>{' '}
+                  {t('createQuiz.type.tip.standardDescription')}
+                </li>
               </ul>
             </div>
           </div>
@@ -183,25 +201,25 @@ const QuizTypeStep: React.FC<QuizTypeStepProps> = ({ selectedType, onTypeSelect 
       </div>
 
       {/* Statistics */}
-      {selectedType && (
+      {currentStats && (
         <div className="max-w-5xl mx-auto grid grid-cols-3 gap-4 pt-4">
           <div className="bg-white rounded-xl p-4 border border-gray-200 text-center">
             <div className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              {selectedType === 'with-materials' ? '78%' : '92%'}
+              {t('createQuiz.type.stats.completionValue', { value: currentStats.completion })}
             </div>
-            <div className="text-sm text-gray-600 mt-1">Hoàn thành</div>
+            <div className="text-sm text-gray-600 mt-1">{t('createQuiz.type.stats.completionLabel')}</div>
           </div>
           <div className="bg-white rounded-xl p-4 border border-gray-200 text-center">
             <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-              {selectedType === 'with-materials' ? '4.8★' : '4.5★'}
+              {t('createQuiz.type.stats.ratingValue', { value: currentStats.rating })}
             </div>
-            <div className="text-sm text-gray-600 mt-1">Đánh giá</div>
+            <div className="text-sm text-gray-600 mt-1">{t('createQuiz.type.stats.ratingLabel')}</div>
           </div>
           <div className="bg-white rounded-xl p-4 border border-gray-200 text-center">
             <div className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-green-600 bg-clip-text text-transparent">
-              {selectedType === 'with-materials' ? '25m' : '8m'}
+              {t('createQuiz.type.stats.durationValue', { value: currentStats.duration })}
             </div>
-            <div className="text-sm text-gray-600 mt-1">Thời gian TB</div>
+            <div className="text-sm text-gray-600 mt-1">{t('createQuiz.type.stats.durationLabel')}</div>
           </div>
         </div>
       )}

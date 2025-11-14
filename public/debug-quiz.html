@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Debug Tool</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 5px 0 0;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    button.secondary {
+      background: #2196F3;
+    }
+    button.secondary:hover {
+      background: #0b7dda;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 4px;
+      font-family: monospace;
+      white-space: pre-wrap;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 3px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-left: 10px;
+    }
+    .badge.good { background: #28a745; color: white; }
+    .badge.bad { background: #dc3545; color: white; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Quiz Debug Tool</h1>
+    <p>Paste Quiz ID from URL (e.g., from <code>/quiz/<strong>abc123</strong>/preview</code>)</p>
+    
+    <input type="text" id="quizId" placeholder="Enter Quiz ID here..." />
+    
+    <button onclick="checkQuiz()">🔍 Check Quiz Health</button>
+    <button onclick="checkAllQuizzes()" class="secondary">📋 List All My Quizzes</button>
+    
+    <div id="result"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore, getDoc, getDocs, doc, collection, query, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+    // Firebase config (same as your app)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDiIndependence_nq48rZfAcG8Q9123456789",
+      authDomain: "quiz-trivia-app-123456.firebaseapp.com",
+      projectId: "quiz-trivia-app-123456",
+      storageBucket: "quiz-trivia-app-123456.appspot.com",
+      messagingSenderId: "123456789012",
+      appId: "1:123456789012:web:abcdef123456"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    window.db = db;
+    window.auth = auth;
+
+    window.checkQuiz = async function() {
+      const quizId = document.getElementById('quizId').value.trim();
+      const resultDiv = document.getElementById('result');
+      
+      if (!quizId) {
+        resultDiv.innerHTML = '<div class="result error">❌ Please enter a Quiz ID</div>';
+        return;
+      }
+
+      resultDiv.innerHTML = '<div class="result info">🔄 Checking quiz...</div>';
+
+      try {
+        const user = auth.currentUser;
+        
+        if (!user) {
+          resultDiv.innerHTML = '<div class="result error">❌ You must be logged in! Please login first in the main app.</div>';
+          return;
+        }
+
+        // Check metadata
+        const quizDoc = await getDoc(doc(db, 'quizzes', quizId));
+        
+        if (!quizDoc.exists()) {
+          resultDiv.innerHTML = '<div class="result error">❌ Quiz not found in database!</div>';
+          return;
+        }
+
+        const data = quizDoc.data();
+        
+        // Check questions
+        let questionsData = [];
+        let questionsError = null;
+        try {
+          const questionsSnap = await getDocs(collection(db, 'quizzes', quizId, 'questions'));
+          questionsData = questionsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch (err) {
+          questionsError = err.message;
+        }
+
+        // Check access
+        let hasAccess = false;
+        if (data.visibility === 'password') {
+          const accessDoc = await getDoc(doc(db, 'quizzes', quizId, 'access', user.uid));
+          hasAccess = accessDoc.exists();
+        }
+
+        // Build report
+        const isOwner = user.uid === data.createdBy;
+        const canAccess = 
+          isOwner || 
+          data.status === 'approved' && (
+            data.visibility === 'public' || 
+            (data.visibility === 'password' && hasAccess)
+          );
+
+        let report = '📊 QUIZ HEALTH REPORT\n';
+        report += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+        
+        report += '📋 METADATA:\n';
+        report += `  Title: ${data.title || 'Untitled'}\n`;
+        report += `  Status: ${data.status} ${data.status === 'approved' ? '✅' : '❌'}\n`;
+        report += `  Visibility: ${data.visibility}\n`;
+        report += `  Created By: ${data.createdBy}\n`;
+        report += `  Category: ${data.category || 'N/A'}\n`;
+        report += `  Difficulty: ${data.difficulty || 'N/A'}\n`;
+        report += `  Duration: ${data.duration || 0} minutes\n\n`;
+
+        report += '👤 USER INFO:\n';
+        report += `  Your UID: ${user.uid}\n`;
+        report += `  Is Owner: ${isOwner ? '✅ YES' : '❌ NO'}\n`;
+        report += `  Email: ${user.email}\n\n`;
+
+        report += '📝 QUESTIONS:\n';
+        if (questionsError) {
+          report += `  ❌ ERROR: ${questionsError}\n`;
+          report += `  Cannot load questions - Permission Denied?\n\n`;
+        } else {
+          report += `  Count: ${questionsData.length} ${questionsData.length > 0 ? '✅' : '❌ NO QUESTIONS!'}\n`;
+          if (questionsData.length > 0) {
+            report += `  IDs: ${questionsData.map(q => q.id).join(', ')}\n`;
+          }
+          report += '\n';
+        }
+
+        if (data.visibility === 'password') {
+          report += '🔐 PASSWORD PROTECTION:\n';
+          report += `  Has Password: ${data.pwd?.enabled ? '✅ YES' : '❌ NO'}\n`;
+          report += `  You Have Access: ${hasAccess ? '✅ YES' : '❌ NO - Need to unlock'}\n\n`;
+        }
+
+        report += '🎯 ACCESS CHECK:\n';
+        report += `  Can Access Quiz: ${canAccess ? '✅ YES' : '❌ NO'}\n\n`;
+
+        report += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+        report += '🔍 DIAGNOSIS:\n\n';
+
+        if (questionsData.length === 0) {
+          report += '❌ CRITICAL: Quiz has NO questions!\n';
+          report += '   → Add questions via CreateQuizPage or AI Generator\n\n';
+        }
+
+        if (data.status !== 'approved' && !isOwner) {
+          report += '❌ WARNING: Quiz not approved yet!\n';
+          report += '   → Only owner can access draft quizzes\n';
+          report += '   → Ask admin to approve this quiz\n\n';
+        }
+
+        if (data.visibility === 'password' && !hasAccess && !isOwner) {
+          report += '❌ WARNING: Password-protected and not unlocked!\n';
+          report += '   → Enter password in Preview page first\n\n';
+        }
+
+        if (questionsData.length > 0 && canAccess) {
+          report += '✅ GOOD: Quiz is accessible and has questions!\n';
+          report += '   → Should work fine\n\n';
+        }
+
+        const cssClass = questionsData.length === 0 ? 'error' : (canAccess ? 'success' : 'warning');
+        resultDiv.innerHTML = `<div class="result ${cssClass}">${report}</div>`;
+
+      } catch (err) {
+        console.error(err);
+        resultDiv.innerHTML = `<div class="result error">❌ ERROR: ${err.message}</div>`;
+      }
+    };
+
+    window.checkAllQuizzes = async function() {
+      const resultDiv = document.getElementById('result');
+      const user = auth.currentUser;
+      
+      if (!user) {
+        resultDiv.innerHTML = '<div class="result error">❌ You must be logged in!</div>';
+        return;
+      }
+
+      resultDiv.innerHTML = '<div class="result info">🔄 Loading your quizzes...</div>';
+
+      try {
+        const q = query(
+          collection(db, 'quizzes'),
+          where('createdBy', '==', user.uid)
+        );
+        const snapshot = await getDocs(q);
+        
+        let report = '📚 YOUR QUIZZES:\n';
+        report += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+
+        if (snapshot.empty) {
+          report += '❌ No quizzes found for your account.\n';
+          resultDiv.innerHTML = `<div class="result warning">${report}</div>`;
+          return;
+        }
+
+        for (const quizDoc of snapshot.docs) {
+          const data = quizDoc.data();
+          const questionsSnap = await getDocs(collection(db, 'quizzes', quizDoc.id, 'questions'));
+          const qCount = questionsSnap.docs.length;
+          
+          report += `📋 ${data.title || 'Untitled'}\n`;
+          report += `   ID: ${quizDoc.id}\n`;
+          report += `   Status: ${data.status} ${data.status === 'approved' ? '✅' : '⏳'}\n`;
+          report += `   Questions: ${qCount} ${qCount > 0 ? '✅' : '❌'}\n`;
+          report += `   Visibility: ${data.visibility}\n`;
+          report += `   URL: /quiz/${quizDoc.id}/preview\n\n`;
+        }
+
+        resultDiv.innerHTML = `<div class="result info">${report}</div>`;
+
+      } catch (err) {
+        console.error(err);
+        resultDiv.innerHTML = `<div class="result error">❌ ERROR: ${err.message}</div>`;
+      }
+    };
+  </script>
+</body>
+</html>

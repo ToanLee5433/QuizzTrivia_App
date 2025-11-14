@@ -48,6 +48,7 @@ export const getQuizzes = async (
   try {
     let q = query(
       collection(db, QUIZZES_COLLECTION),
+      where('status', '==', 'approved'), // CHỈ LẤY QUIZ ĐÃ DUYỆT
       limit(pageSize || 10)
     );
 

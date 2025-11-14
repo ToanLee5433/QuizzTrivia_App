@@ -16,7 +16,7 @@ import JoinRoomModal from './JoinRoomModal';
 import RoomLobby from './RoomLobby';
 import MultiplayerQuiz from './MultiplayerQuiz';
 import GameResults from './GameResults';
-import MultiplayerChat from './MultiplayerChat';
+import RealtimeChat from './RealtimeChat';
 import MobileChatModal from './MobileChatModal';
 
 // Import services
@@ -29,8 +29,8 @@ import type { GameResults as GameResultsType } from '../types/index';
 export interface MultiplayerState {
   currentState: 'mode-selection' | 'create-room' | 'join-room' | 'lobby' | 'game' | 'results';
   roomId?: string;
-  roomData?: any; // Complex type, needs full refactor
-  gameData?: any; // Complex type, needs full refactor
+  roomData?: any;
+  gameData?: any;
   results?: GameResultsType;
   error?: string;
   isConnecting: boolean;
@@ -55,7 +55,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
   initialRoomId
 }) => {
   const { t } = useTranslation();
-  const [selectedQuiz] = useState<any>(initialSelectedQuiz);
+  const [selectedQuiz] = useState<Quiz | undefined>(initialSelectedQuiz);
   const [state, setState] = useState<MultiplayerState>({
     currentState: 'mode-selection', // Luôn bắt đầu từ mode-selection vì quiz đã được chọn từ MultiplayerLobby
     isConnecting: false,
@@ -63,13 +63,12 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
   });
   
   const [multiplayerService, setMultiplayerService] = useState<MultiplayerServiceInterface | null>(null);
-  const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
-  const [readyCountdown, setReadyCountdown] = useState<number | null>(null);
   const [joinError, setJoinError] = useState<string | undefined>(undefined);
 	const [createLoading, setCreateLoading] = useState<boolean>(false);
 	const [joinLoading, setJoinLoading] = useState<boolean>(false);
   const [isMobileChatOpen, setIsMobileChatOpen] = useState<boolean>(false);
+  const [isReconnecting, setIsReconnecting] = useState<boolean>(false);
 
   // Initialize multiplayer service
   useEffect(() => {
@@ -87,7 +86,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
         // Set up event listeners
         service.on('room:updated', handleRoomUpdate);
         service.on('players:updated', handlePlayersUpdate);
-        service.on('messages:updated', handleMessagesUpdate);
+        // messages:updated listener removed - RealtimeChat handles this directly
         service.on('game:start', handleGameStart);
         service.on('game:next-question', handleNextQuestion);
         service.on('game:finish', handleGameFinish);
@@ -107,6 +106,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
       service.disconnect();
     };
   }, [currentUserId, currentUserName, t]);
+  // Handlers are intentionally omitted from dependencies to prevent infinite loop from re-subscription
 
   // Try resuming room from state (if page reload)
   useEffect(() => {
@@ -117,7 +117,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
     multiplayerService.resumeRoom(previousRoomId).catch(() => {});
     // Set UI state to lobby immediately while streams resume
     setState(prev => ({ ...prev, currentState: 'lobby', roomId: previousRoomId }));
-  }, [multiplayerService, connectionStatus]);
+  }, [multiplayerService, connectionStatus, initialRoomId, state.roomId, state.roomData?.id]);
 
   // Event handlers
   const handleRoomUpdate = useCallback((roomData: any) => {
@@ -134,56 +134,37 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
         players: roomData.players || prev.roomData?.players || []
       };
       
+      // Auto-transition to game state when room status changes
+      if (roomData?.status === 'playing' && prev.currentState === 'lobby') {
+        logger.info('Room status changed to playing, transitioning to game');
+        return { ...prev, roomData: updatedRoomData, currentState: 'game' };
+      }
+      
       return { ...prev, roomData: updatedRoomData };
     });
-    
-    // Auto-start countdown when all players ready (no host restriction)
-    try {
-      const players = roomData?.players || [];
-      const total = players.length;
-      const ready = players.filter((p: any) => p.isReady).length;
-      const allReady = total >= 2 && ready === total;
-      
-      if (allReady && state.currentState === 'lobby') {
-        if (readyCountdown === null) {
-          setReadyCountdown(5);
-          logger.info('All players ready - starting countdown', { total, ready });
-        }
-      } else {
-        if (readyCountdown !== null) {
-          setReadyCountdown(null);
-          logger.debug('Countdown cancelled', { total, ready, allReady });
-        }
-      }
-    } catch (error) {
-      logger.error('Error in handleRoomUpdate', error);
-    }
-  }, [state.currentState, readyCountdown]);
+  }, []);
 
+  // Auto-reconnect on disconnect
   useEffect(() => {
-    if (readyCountdown === null) return;
-    
-    if (readyCountdown <= 0) {
-      // Start game when countdown reaches 0 (any player can trigger)
-      if (multiplayerService && state.roomId) {
-        logger.info('Starting game from countdown...');
-        multiplayerService.startGame(state.roomId).then(() => {
-          logger.success('Game started successfully');
-        }).catch((error) => {
-          logger.error('Failed to start game', error);
-          toast.error('Failed to start game');
-        });
-      }
-      setReadyCountdown(null);
-      return;
+    if (connectionStatus === 'error' && !isReconnecting && multiplayerService) {
+      setIsReconnecting(true);
+      const timer = setTimeout(async () => {
+        logger.info('Attempting to reconnect...');
+        try {
+          setConnectionStatus('connecting');
+          await multiplayerService.connect(currentUserId, currentUserName);
+          setConnectionStatus('connected');
+          toast.success(t('multiplayer.success.connectionRestored'));
+        } catch (error) {
+          logger.error('Reconnection failed:', error);
+          setConnectionStatus('error');
+        } finally {
+          setIsReconnecting(false);
+        }
+      }, 3000);
+      return () => clearTimeout(timer);
     }
-    
-    const timer = setTimeout(() => {
-      setReadyCountdown(prev => prev !== null ? prev - 1 : null);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, [readyCountdown, multiplayerService, state.roomId]);
+  }, [connectionStatus, isReconnecting, multiplayerService, currentUserId, currentUserName, t]);
 
   const handleGameStart = useCallback((gameData: any) => {
     logger.debug('Game Start Event Received', {
@@ -204,7 +185,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
     }));
   }, []);
 
-  const handleGameFinish = useCallback((results: any) => {
+  const handleGameFinish = useCallback((results: GameResultsType) => {
     setState(prev => ({ 
       ...prev, 
       currentState: 'results', 
@@ -232,10 +213,8 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
     });
   }, []);
 
-  const handleMessagesUpdate = useCallback((messages: any[]) => {
-    logger.debug('Messages updated', { count: messages.length });
-    setChatMessages(messages);
-  }, []);
+  // Messages are now handled directly by RealtimeChat component via RTDB listeners
+  // No need for handleMessagesUpdate callback
 
   // const handleChatMessage = useCallback((message: any) => {
   //   console.log('MultiplayerManager received chat message:', message);
@@ -249,12 +228,12 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
   const handleConnectionLost = useCallback(() => {
     setConnectionStatus('disconnected');
     // toast.warning(t('multiplayer.errors.connectionLost'));
-  }, [t]);
+  }, []);
 
   const handleConnectionRestored = useCallback(() => {
     setConnectionStatus('connected');
     // toast.success(t('multiplayer.success.connectionRestored'));
-  }, [t]);
+  }, []);
 
   // Navigation handlers
   const handleModeSelection = (mode: 'create' | 'join') => {
@@ -316,18 +295,8 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
     toast.info(t('multiplayer.success.leftRoom'));
   };
 
-  const handleSendChatMessage = (message: string) => {
-    if (multiplayerService && state.roomId) {
-      multiplayerService.sendChatMessage(state.roomId, message).catch((error) => {
-        console.error('Failed to send chat message:', error);
-      });
-    } else {
-      console.error('Cannot send message - service or roomId missing:', { 
-        hasService: !!multiplayerService, 
-        roomId: state.roomId 
-      });
-    }
-  };
+  // Chat message handler - not needed with RealtimeChat component
+  // Messages are sent directly from RealtimeChat via RTDB
 
   // Render connection status
   const renderConnectionStatus = () => {
@@ -366,22 +335,30 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
         return (
 				<CreateRoomModal
             isOpen={true}
-					onClose={handleBackToModeSelection}
+				onClose={handleBackToModeSelection}
             onCreateRoom={async (roomConfig) => {
-						try {
-							setCreateLoading(true);
-							if (!multiplayerService || connectionStatus !== 'connected') {
-								toast.info(t('multiplayer.errors.reconnecting'));
-								return;
-							}
-							const result = await multiplayerService.createRoom(roomConfig as any, selectedQuiz);
-							if (result) {
-								handleRoomCreated(result.room.id, result.room);
-							}
-						} catch (error: any) {
-							console.error('Failed to create room:', error);
-							const errorMessage = error.message || t('multiplayer.errors.createRoomFailed');
-							toast.error(errorMessage);
+					try {
+						setCreateLoading(true);
+						if (!multiplayerService || connectionStatus !== 'connected') {
+							toast.info(t('multiplayer.errors.reconnecting'));
+							return;
+						}
+						
+						// Pass full quiz object instead of just quizId
+						console.log('🎮 Manager: Creating room with quiz', { 
+							quizId: selectedQuiz?.id, 
+							quizTitle: selectedQuiz?.title,
+							hasQuestions: !!selectedQuiz?.questions?.length
+						});
+						
+						const result = await multiplayerService.createRoom(roomConfig as any, selectedQuiz);
+						if (result) {
+							handleRoomCreated(result.room.id, result.room);
+						}
+					} catch (error: any) {
+						console.error('❌ Manager: Failed to create room:', error);
+						const errorMessage = error.message || t('multiplayer.errors.createRoomFailed');
+						toast.error(errorMessage);
 						} finally {
 							setCreateLoading(false);
 						}
@@ -465,25 +442,16 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
                 onLeaveRoom={handleLeaveRoom}
                 multiplayerService={multiplayerService ?? undefined}
               />
-              {readyCountdown !== null && (
-                <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
-                  <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-pulse">
-                    <div className="w-3 h-3 bg-white rounded-full animate-ping"></div>
-                    <span className="font-bold text-lg">
-                      {t('common.start')}: {readyCountdown}s
-                    </span>
-                  </div>
-                </div>
-              )}
             </div>
             
             {/* Chat Sidebar - Hidden on mobile, show on lg+ */}
             <div className="hidden lg:block lg:w-80 xl:w-96 border-l border-gray-200 bg-white">
               <div className="h-screen sticky top-0">
-                <MultiplayerChat
-                  messages={chatMessages}
-                  onSendMessage={handleSendChatMessage}
+                <RealtimeChat
+                  roomId={state.roomId || ''}
                   currentUserId={currentUserId}
+                  currentUsername={currentUserName}
+                  isMobile={false}
                 />
               </div>
             </div>
@@ -494,21 +462,15 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
               onClick={() => setIsMobileChatOpen(true)}
             >
               <Users className="w-6 h-6" />
-              {chatMessages.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                  {chatMessages.length > 9 ? '9+' : chatMessages.length}
-                </span>
-              )}
             </button>
 
             {/* Mobile Chat Modal */}
             <MobileChatModal
               isOpen={isMobileChatOpen}
               onClose={() => setIsMobileChatOpen(false)}
-              messages={chatMessages}
+              roomId={state.roomId || ''}
               currentUserId={currentUserId}
-              onSendMessage={handleSendChatMessage}
-              disabled={false}
+              currentUsername={currentUserName}
             />
           </div>
         );
@@ -519,8 +481,8 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
             {/* Game Area - Full width on mobile */}
             <div className="flex-1 overflow-y-auto">
               <MultiplayerQuiz
-                gameData={state.gameData}
-                roomData={state.roomData}
+                gameData={state.gameData ?? null}
+                roomData={state.roomData ?? null}
                 currentUserId={currentUserId}
                 currentUserName={currentUserName}
                 multiplayerService={multiplayerService}
@@ -530,11 +492,11 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
             {/* Chat Sidebar - Hidden on mobile during game */}
             <div className="hidden lg:block lg:w-80 xl:w-96 border-l border-gray-200 bg-white">
               <div className="h-screen sticky top-0">
-                <MultiplayerChat
-                  messages={chatMessages}
-                  onSendMessage={handleSendChatMessage}
+                <RealtimeChat
+                  roomId={state.roomId || ''}
                   currentUserId={currentUserId}
-                  disabled={true}
+                  currentUsername={currentUserName}
+                  isMobile={false}
                 />
               </div>
             </div>
@@ -585,7 +547,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
             {state.roomData && (
               <div className="flex items-center gap-2 text-white">
                 <Users size={16} />
-                <span>{state.roomData.players?.length || 0}/{state.roomData.maxPlayers || 10}</span>
+                <span>{state.roomData.players?.length || 0}/{state.roomData.settings?.maxPlayers || 10}</span>
               </div>
             )}
           </div>

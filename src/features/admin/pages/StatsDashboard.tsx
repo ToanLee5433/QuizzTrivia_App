@@ -1,7 +1,10 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import AdminStats from '../components/AdminStats';
 
 const StatsDashboard: React.FC = () => {
+  const { t } = useTranslation();
+  
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -12,7 +15,7 @@ const StatsDashboard: React.FC = () => {
               <div className="h-8 w-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-3">
                 <span className="text-white text-xl">📊</span>
               </div>
-              <h1 className="text-xl font-bold text-gray-900">Thống kê Admin</h1>
+              <h1 className="text-xl font-bold text-gray-900">{t('admin.stats.title')}</h1>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -20,7 +23,7 @@ const StatsDashboard: React.FC = () => {
                 href="/admin"
                 className="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors duration-200"
               >
-                ← Về Admin Dashboard
+                ← {t('admin.sidebar.backToDashboard')}
               </a>
             </div>
           </div>

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { ROUTES } from '../../../config/routes';
 import { 
   collection, 
   getDocs, 
@@ -112,12 +113,7 @@ const AdminQuizManagement: React.FC = () => {
     return new Date();
   };
 
-  useEffect(() => {
-    loadQuizzes();
-    loadEditRequests();
-  }, []);
-
-  const loadQuizzes = async () => {
+  const loadQuizzes = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -184,9 +180,9 @@ const AdminQuizManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
-  const loadEditRequests = async () => {
+  const loadEditRequests = useCallback(async () => {
     try {
       console.log('🔍 Loading edit requests...');
       
@@ -253,7 +249,12 @@ const AdminQuizManagement: React.FC = () => {
         setEditRequests([]);
       }
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadQuizzes();
+    loadEditRequests();
+  }, [loadQuizzes, loadEditRequests]);
 
   const handleEdit = (quizId: string) => {
     navigate(`/admin/edit-quiz/${quizId}`);
@@ -769,7 +770,7 @@ const AdminQuizManagement: React.FC = () => {
             {!searchTerm && (
               <div className="flex justify-center">
                 <button
-                  onClick={() => window.open('/creator', '_blank')}
+                  onClick={() => window.open(ROUTES.CREATOR, '_blank')}
                   className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
                 >
                   <BookOpen className="w-5 h-5" />

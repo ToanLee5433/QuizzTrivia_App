@@ -9,6 +9,7 @@ import { toast } from 'react-toastify';
 import QuickReviewSection from '../../../shared/components/QuickReviewSection';
 import { quizStatsService } from '../../../services/quizStatsService';
 import SafeHTML from '../../../shared/components/ui/SafeHTML';
+import { useTranslation } from 'react-i18next';
 
 
 interface ResultState {
@@ -147,6 +148,7 @@ const safeNumber = (val: any, fallback = 0) => {
 };
 
 export const ResultPage: React.FC = () => {
+  const { t } = useTranslation();
   const { attemptId } = useParams<{ attemptId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
@@ -301,9 +303,9 @@ export const ResultPage: React.FC = () => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mb-4"></div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Loading results...</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('resultPage.loading')}</h2>
           <Button onClick={() => navigate('/quiz-list')}>
-            Back to Quiz List
+            {t('resultPage.backToQuizList')}
           </Button>
         </div>
       </div>
@@ -325,31 +327,33 @@ export const ResultPage: React.FC = () => {
         <div className="text-center mb-8">
           <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
             {result.isTimeUp && (
+              /* eslint-disable-next-line i18next/no-literal-string */
               <div className="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-lg mb-6">
-                ⏰ Time's up! Quiz was automatically submitted.
+                {t('resultPage.timeUpAlert')}
               </div>
             )}
             <div className="flex flex-col items-center">
               <ScoreCircle score={percentage} />
               <h1 className="text-3xl font-bold text-gray-900 mt-4 mb-2">
-                Quiz Completed!
+                {t('resultPage.quizCompleted')}
               </h1>
               <p className="text-xl text-gray-600 mb-4">
-                {percentage >= 90 ? 'Outstanding! 🏆' :
-                 percentage >= 80 ? 'Excellent! 🌟' :
-                 percentage >= 70 ? 'Great Job! 👏' :
-                 percentage >= 60 ? 'Good Work! 👍' :
-                 percentage >= 50 ? 'Not Bad! 📚' :
-                 'Keep Practicing! 💪'}
+                {percentage >= 90 ? t('resultPage.outstanding') :
+                 percentage >= 80 ? t('resultPage.excellent') :
+                 percentage >= 70 ? t('resultPage.greatJob') :
+                 percentage >= 60 ? t('resultPage.goodWork') :
+                 percentage >= 50 ? t('resultPage.notBad') :
+                 t('resultPage.keepPracticing')}
               </p>
               <div className="text-lg text-gray-700 mb-2">
-                You got <span className="font-bold text-blue-600">{correct}</span> out of{' '}
-                <span className="font-bold">{total}</span> questions correct
+                {t('resultPage.youGot')} <span className="font-bold text-blue-600">{correct}</span> {t('resultPage.outOf')}{' '}
+                <span className="font-bold">{total}</span> {t('resultPage.questionsCorrect')}
               </div>
               {/* Hiển thị thời gian làm bài */}
               {typeof result.timeSpent === 'number' && (
+                /* eslint-disable-next-line i18next/no-literal-string */
                 <div className="text-md text-gray-500 mt-2">
-                  ⏱️ Time taken: <span className="font-semibold text-blue-700">{formatTime(safeNumber(result.timeSpent))}</span>
+                  {t('resultPage.timeTaken')} <span className="font-semibold text-blue-700">{formatTime(safeNumber(result.timeSpent))}</span>
                 </div>
               )}
             </div>
@@ -360,27 +364,27 @@ export const ResultPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-lg p-6 text-center">
             <div className="text-3xl font-bold text-green-600 mb-2">{correct}</div>
-            <div className="text-gray-600">Correct Answers</div>
+            <div className="text-gray-600">{t('resultPage.correctAnswers')}</div>
           </div>
           
           <div className="bg-white rounded-xl shadow-lg p-6 text-center">
             <div className="text-3xl font-bold text-red-600 mb-2">{total - correct}</div>
-            <div className="text-gray-600">Incorrect Answers</div>
+            <div className="text-gray-600">{t('resultPage.incorrectAnswers')}</div>
           </div>
           
           <div className="bg-white rounded-xl shadow-lg p-6 text-center">
             <div className="text-3xl font-bold text-blue-600 mb-2">{percentage}%</div>
-            <div className="text-gray-600">Final Score</div>
+            <div className="text-gray-600">{t('resultPage.finalScore')}</div>
           </div>
         </div>
 
         {/* **THÊM MỚI**: Performance Analysis */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Performance Analysis</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">{t('resultPage.performanceAnalysis')}</h2>
           
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-gray-600">Accuracy Rate</span>
+              <span className="text-gray-600">{t('resultPage.accuracyRate')}</span>
               <div className="flex items-center">
                 <div className="w-32 bg-gray-200 rounded-full h-2 mr-3">
                   <div 
@@ -393,7 +397,7 @@ export const ResultPage: React.FC = () => {
             </div>
             
             <div className="flex items-center justify-between">
-              <span className="text-gray-600">Quiz Difficulty</span>
+              <span className="text-gray-600">{t('resultPage.quizDifficulty')}</span>
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                 quiz.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
                 quiz.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-800' :
@@ -404,7 +408,7 @@ export const ResultPage: React.FC = () => {
             </div>
             
             <div className="flex items-center justify-between">
-              <span className="text-gray-600">Time Management</span>
+              <span className="text-gray-600">{t('resultPage.timeManagement')}</span>
               <span className="font-semibold text-green-600">
                 {result.isTimeUp ? 'Used full time' : 'Completed early'}
               </span>
@@ -415,12 +419,12 @@ export const ResultPage: React.FC = () => {
         {/* **THÊM MỚI**: Review Answers Section */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Review Answers</h2>
+            <h2 className="text-xl font-bold text-gray-900">{t('resultPage.reviewAnswers')}</h2>
             <Button
               variant="outline"
               onClick={() => setShowAnswers(!showAnswers)}
             >
-              {showAnswers ? 'Hide' : 'Show'} Detailed Review
+              {showAnswers ? t('resultPage.hideDetailedReview') : t('resultPage.showDetailedReview')}
             </Button>
           </div>
 
@@ -462,13 +466,14 @@ export const ResultPage: React.FC = () => {
                             </span>
                             <span>{answer.text}</span>
                             {answer.isCorrect && (
+                              /* eslint-disable-next-line i18next/no-literal-string */
                               <span className="ml-auto text-green-600 font-medium">
-                                ✓ Correct Answer
+                                {t('resultPage.correctAnswer')}
                               </span>
                             )}
                             {answer.id === userAnswerId && !answer.isCorrect && (
                               <span className="ml-auto text-red-600 font-medium">
-                                Your Answer
+                                {t('resultPage.yourAnswer')}
                               </span>
                             )}
                           </div>
@@ -478,7 +483,7 @@ export const ResultPage: React.FC = () => {
                     
                     {question.explanation && (
                       <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                        <span className="font-medium text-blue-800">Explanation: </span>
+                        <span className="font-medium text-blue-800">{t('resultPage.explanation')} </span>
                         <SafeHTML content={question.explanation} className="text-blue-700" />
                       </div>
                     )}
@@ -491,7 +496,8 @@ export const ResultPage: React.FC = () => {
 
         {/* Leaderboard */}
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">🏆 Leaderboard</h2>
+          {/* eslint-disable-next-line i18next/no-literal-string */}
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('resultPage.leaderboard')}</h2>
           {loadingStats ? (
             <div className="flex justify-center items-center h-24">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -520,15 +526,18 @@ export const ResultPage: React.FC = () => {
                     <div>
                       <div className="font-medium text-gray-900">
                         {entry.userName}
-                        {entry.userId === user?.uid && <span className="text-blue-600 ml-2">(You)</span>}
+                        {entry.userId === user?.uid && <span className="text-blue-600 ml-2">{t('resultPage.you')}</span>}
                       </div>
+                      {/* eslint-disable i18next/no-literal-string */}
                       <div className="text-sm text-gray-500">
                         {entry.correctAnswers}/{entry.totalQuestions} correct
                       </div>
+                      {/* eslint-enable i18next/no-literal-string */}
                     </div>
                   </div>
                   <div className="text-right">
                     <div className="font-bold text-xl text-gray-900">{safeNumber(entry.score)}%</div>
+                    {/* eslint-disable-next-line i18next/no-literal-string */}
                     <div className="text-sm text-gray-500">
                       ⏱️ {formatTime(safeNumber(entry.timeSpent))}
                     </div>
@@ -541,7 +550,7 @@ export const ResultPage: React.FC = () => {
                 <div className="mt-6 pt-4 border-t border-gray-200">
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <div className="text-center">
-                      <span className="text-blue-800 font-medium">Your Rank: #{userRank}</span>
+                      <span className="text-blue-800 font-medium">{t('resultPage.yourRank', { rank: userRank })}</span>
                     </div>
                   </div>
                 </div>
@@ -549,9 +558,10 @@ export const ResultPage: React.FC = () => {
             </div>
           ) : (
             <div className="text-center py-12 text-gray-500">
+              {/* eslint-disable-next-line i18next/no-literal-string */}
               <div className="text-6xl mb-4">🏆</div>
-              <p className="text-lg">No results yet!</p>
-              <p>Be the first to complete this quiz and claim the top spot!</p>
+              <p className="text-lg">{t('resultPage.noResultsYet')}</p>
+              <p>{t('resultPage.beFirst')}</p>
             </div>
           )}
         </div>
@@ -572,14 +582,14 @@ export const ResultPage: React.FC = () => {
             onClick={() => navigate(`/quiz/${quiz.id}`)}
             className="bg-blue-600 hover:bg-blue-700"
           >
-            Retake Quiz
+            {t('resultPage.tryAgain')}
           </Button>
           
           <Button
             onClick={() => navigate('/quizzes')}
             variant="outline"
           >
-            More Quizzes
+            {t('resultPage.nextQuiz')}
           </Button>
           
           <Button
@@ -592,14 +602,14 @@ export const ResultPage: React.FC = () => {
               toast.success('Result copied to clipboard!');
             }}
           >
-            Share Result
+            {t('resultPage.shareResult')}
           </Button>
           
           <Button
             onClick={() => navigate('/profile')}
             variant="outline"
           >
-            View All Results
+            {t('resultPage.viewAllResults')}
           </Button>
         </div>
       </div>

@@ -21,7 +21,7 @@ const FavoritesPage: React.FC = () => {
   useEffect(() => {
     if (!user) return;
     if (allQuizzes.length === 0 && !quizLoading) {
-      dispatch(fetchQuizzes({ user }) as any)
+      dispatch(fetchQuizzes({}) as any)
         .unwrap()
         .catch(() => {
           setError(t('favorites.loadError'));
@@ -47,7 +47,7 @@ const FavoritesPage: React.FC = () => {
       setLoading(false);
     };
     fetchFavorites();
-  }, [user, allQuizzes, quizLoading, dispatch]);
+  }, [user, allQuizzes, quizLoading, dispatch, t]);
 
   if (!user) return <div className="p-8 text-center">{t('favorites.loginRequired')}</div>;
   if (error) return <div className="p-8 text-center text-red-600">{error}</div>;

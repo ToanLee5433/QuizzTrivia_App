@@ -53,7 +53,7 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBack }) => {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h2 className="text-2xl font-bold text-gray-800">Quên mật khẩu</h2>
+          <h2 className="text-2xl font-bold text-gray-800">{t('auth.forgotPassword')}</h2>
         </div>
 
         {!sent ? (
@@ -74,7 +74,7 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBack }) => {
                 />
               </div>
               <p className="text-sm text-gray-500 mt-2">
-                Chúng tôi sẽ gửi link đặt lại mật khẩu đến email này.
+                {t('auth.resetPasswordHint')}
               </p>
             </div>
 
@@ -103,20 +103,20 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBack }) => {
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
               <Mail className="w-8 h-8 text-green-600" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-800">Email đã được gửi!</h3>
+            <h3 className="text-lg font-semibold text-gray-800">{t('auth.emailSent')}</h3>
             <p className="text-sm text-gray-600">
-              Chúng tôi đã gửi link đặt lại mật khẩu đến<br />
+              {t('auth.resetEmailSentTo')}<br />
               <strong>{email}</strong>
             </p>
             <p className="text-sm text-gray-500">
-              Kiểm tra hộp thư của bạn và click vào link để đặt lại mật khẩu.
+              {t('auth.checkInboxAndClick')}
             </p>
             <button
               type="button"
               onClick={onBack}
               className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg font-medium transition-colors"
             >
-              Quay lại đăng nhập
+              {t('auth.backToLogin')}
             </button>
           </div>
         )}

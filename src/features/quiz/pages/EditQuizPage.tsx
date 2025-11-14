@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getQuizById } from '../api';
 import { updateQuiz } from '../api';
@@ -23,13 +23,7 @@ const EditQuizPage: React.FC = () => {
     status: 'pending' as 'pending' | 'approved' | 'rejected' | 'draft'
   });
 
-  useEffect(() => {
-    if (id) {
-      loadQuiz();
-    }
-  }, [id]);
-
-  const loadQuiz = async () => {
+  const loadQuiz = useCallback(async () => {
     if (!id) return;
     
     setLoading(true);
@@ -55,7 +49,13 @@ const EditQuizPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, navigate]);
+
+  useEffect(() => {
+    if (id) {
+      loadQuiz();
+    }
+  }, [id, loadQuiz]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -149,13 +149,16 @@ service cloud.firestore {
       /* --- UPDATE QUIZ ---
          Owner: Có thể sửa quiz draft/rejected của mình
          Admin: Có thể sửa mọi quiz và thay đổi status
+         Special: Mọi user có thể cập nhật stats counters
       */
       allow update: if signedIn() && (
         // Admin can update any quiz and change status
         isAdmin() ||
         // Owner can update their draft/rejected quizzes (not approved/pending)
         (resource.data.createdBy == request.auth.uid && 
-         resource.data.status in ['draft', 'rejected'])
+         resource.data.status in ['draft', 'rejected']) ||
+        // Anyone can update stats counters (views, attempts, completions)
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stats'])
       );
       
       /* --- DELETE QUIZ ---
@@ -164,12 +167,6 @@ service cloud.firestore {
       allow delete: if signedIn() && (
         resource.data.createdBy == request.auth.uid || isAdmin()
       );
-      
-      /* --- UPDATE STATS (safe counters) ---
-         Cho phép mọi user cập nhật stats (views, attempts, completions).
-      */
-      allow update: if signedIn() &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stats']);
       
       /* --- ACCESS SUBCOLLECTION ---
          Client ghi /access/{uid} sau khi user nhập password đúng.

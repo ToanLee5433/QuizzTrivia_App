@@ -6,7 +6,7 @@
 
 import { collection, getDocs } from 'firebase/firestore';
 import { ref as storageRef, listAll } from 'firebase/storage';
-import { db, storage } from '../firebase/config';
+import { db as _db, storage as _storage } from '../firebase/config';
 import type { ChunkMetadata, IndexedChunk, VectorIndex } from './types';
 import { generateEmbedding } from './embeddings';
 import CryptoJS from 'crypto-js';
@@ -18,7 +18,7 @@ export async function extractQuizData(): Promise<ChunkMetadata[]> {
   console.log('📖 Extracting quiz data from Firestore...');
   
   const chunks: ChunkMetadata[] = [];
-  const quizzesSnap = await getDocs(collection(db, 'quizzes'));
+  const quizzesSnap = await getDocs(collection(_db, 'quizzes'));
   
   for (const quizDoc of quizzesSnap.docs) {
     const quiz = quizDoc.data();
@@ -51,7 +51,7 @@ Danh mục: ${quiz.category || 'Chưa phân loại'}
     // Extract questions (if public OR if we're doing full indexing)
     if (visibility === 'public') {
       const questionsSnap = await getDocs(
-        collection(db, 'quizzes', quizId, 'questions')
+        collection(_db, 'quizzes', quizId, 'questions')
       );
       
       for (const qDoc of questionsSnap.docs) {
@@ -93,7 +93,7 @@ export async function extractPDFData(): Promise<ChunkMetadata[]> {
   
   try {
     // List all PDFs in learning-resources folder
-    const pdfFolder = storageRef(storage, 'learning-resources/pdfs');
+    const pdfFolder = storageRef(_storage, 'learning-resources/pdfs');
     const pdfList = await listAll(pdfFolder);
     
     console.log(`Found ${pdfList.items.length} PDF files`);

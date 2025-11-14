@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
 import { toast } from 'react-toastify';
@@ -68,26 +68,7 @@ const CategoryManagement: React.FC = () => {
 
   const icons = ['📚', '🔬', '💻', '🎨', '📊', '🌍', '🏃‍♂️', '🎵', '🍳', '📈', '🧮', '📝'];
 
-  // Kiểm tra quyền admin
-  if (!user || user.role !== 'admin') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white p-8 rounded-2xl shadow-lg text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <X className="w-8 h-8 text-red-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">{t('errors.unauthorized')}</h2>
-          <p className="text-gray-600">{t('admin.loginAsAdmin')}</p>
-        </div>
-      </div>
-    );
-  }
-
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     try {
       setLoading(true);
       console.log('🔍 Loading categories from Firebase...');
@@ -128,7 +109,13 @@ const CategoryManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
+
+  // Move useEffect before conditional return - Fix React Hooks rules
+  useEffect(() => {
+    if (!user || user.role !== 'admin') return;
+    loadCategories();
+  }, [user, loadCategories]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

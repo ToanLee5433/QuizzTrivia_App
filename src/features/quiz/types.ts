@@ -8,27 +8,80 @@ export interface Answer {
   videoUrl?: string; // For video answers
 }
 
+export type AnswerValue = string | string[] | number | boolean | null;
+
+export type AnswerMap = Record<string, AnswerValue>;
+
+// 🎯 Extended Question Types
+export type QuestionType = 
+  | 'multiple'      // Multiple choice (single answer)
+  | 'boolean'       // True/False
+  | 'short_answer'  // Short text answer
+  | 'image'         // Image-based multiple choice
+  | 'checkbox'      // Multiple choice (multiple answers)
+  | 'rich_content'  // Rich text content question
+  | 'audio'         // Audio listening comprehension
+  | 'ordering'      // Order items in correct sequence
+  | 'matching'      // Match pairs (drag & drop)
+  | 'fill_blanks';  // Fill in the blanks (cloze test)
+
+// For ordering questions
+export interface OrderingItem {
+  id: string;
+  text: string;
+  correctOrder: number; // 0-based index
+  imageUrl?: string;
+}
+
+// For matching questions
+export interface MatchingPair {
+  id: string;
+  left: string;      // Left side item
+  right: string;     // Right side item (correct match)
+  leftImageUrl?: string;
+  rightImageUrl?: string;
+}
+
+// For fill in the blanks
+export interface BlankItem {
+  id: string;
+  position: number;  // Position in text (0-based)
+  correctAnswer: string;
+  acceptedAnswers?: string[]; // Alternative correct answers
+  caseSensitive?: boolean;
+}
+
 export interface Question {
   id: string;
   text: string;
   richText?: string; // Rich text content with HTML for question
-  type: 'multiple' | 'boolean' | 'short_answer' | 'image' | 'checkbox' | 'rich_content';
+  type: QuestionType;
   answers: Answer[];
   explanation?: string;
   richExplanation?: string; // Rich text explanation
   points: number;
   difficulty?: 'easy' | 'medium' | 'hard';
-  correctAnswer?: string; // Cho dạng điền từ
-  acceptedAnswers?: string[]; // Cho dạng điền từ - các từ được chấp nhận
-  imageUrl?: string; // Question image
-  audioUrl?: string; // Question audio
-  videoUrl?: string; // Question video
-  attachments?: Array<{ // Multiple attachments
+  
+  // For short_answer & fill_blanks
+  correctAnswer?: string;
+  acceptedAnswers?: string[];
+  
+  // Media attachments
+  imageUrl?: string;
+  audioUrl?: string;
+  videoUrl?: string;
+  attachments?: Array<{
     type: 'image' | 'audio' | 'video';
     url: string;
     name?: string;
     description?: string;
   }>;
+  
+  // 🆕 For advanced question types
+  orderingItems?: OrderingItem[];      // For 'ordering' type
+  matchingPairs?: MatchingPair[];      // For 'matching' type
+  blanks?: BlankItem[];                // For 'fill_blanks' type
+  textWithBlanks?: string;             // Template text with {blank} markers
 }
 
 export interface Quiz {
@@ -72,10 +125,21 @@ export interface Quiz {
   averageScore?: number;
   totalPlayers?: number;
   status?: 'pending' | 'approved' | 'rejected' | 'draft'; // Trạng thái kiểm duyệt
+  visibility?: 'public' | 'private' | 'unlisted' | 'password';
+  havePassword?: boolean | 'password';
   
   // **PRIVACY SETTINGS**: Advanced privacy controls
   privacy?: 'public' | 'unlisted' | 'private' | 'password-protected';
   password?: string; // Encrypted password for password-protected quizzes
+  
+  // 🔒 Password Protection Data
+  pwd?: {
+    enabled: boolean;
+    algo: string;
+    salt: string;
+    hash: string;
+  };
+  
   allowedUsers?: string[]; // User IDs who can access private quiz
   shareToken?: string; // Unique token for sharing unlisted/private quizzes
   expiresAt?: Date; // Expiration date for shared links

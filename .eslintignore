@@ -1,0 +1,28 @@
+# Functions directory
+functions/
+
+# Build outputs
+dist/
+build/
+lib/
+
+# Node modules
+node_modules/
+
+# Config files
+*.config.js
+*.config.ts
+*.config.cjs
+*.config.mjs
+
+# Test files that don't need strict linting
+**/*.test.ts
+**/*.test.tsx
+**/__tests__/**
+
+# Generated files
+public/
+coverage/
+
+# Scripts (đã có rule riêng)
+# scripts/

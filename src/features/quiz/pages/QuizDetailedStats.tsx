@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
+import { ROUTES } from '../../../config/routes';
 import { doc, getDoc, collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 import { 
@@ -116,13 +117,7 @@ const QuizDetailedStats: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<'7days' | '30days' | 'all'>('30days');
 
-  useEffect(() => {
-    if (id && user) {
-      fetchQuizAndStats();
-    }
-  }, [id, user, timeRange]);
-
-  const fetchQuizAndStats = async () => {
+  const fetchQuizAndStats = useCallback(async () => {
     if (!id || !user) return;
     
     setLoading(true);
@@ -213,11 +208,18 @@ const QuizDetailedStats: React.FC = () => {
       
     } catch (error) {
       console.error('Error fetching quiz stats:', error);
-      navigate('/my-quizzes');
+      navigate(ROUTES.CREATOR_MY_QUIZZES);
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, user, timeRange, navigate]);
+  // calculateStats is a stable function defined below, doesn't need to be in dependencies
+
+  useEffect(() => {
+    if (id && user) {
+      fetchQuizAndStats();
+    }
+  }, [id, user, timeRange, fetchQuizAndStats]);
 
   const calculateStats = (results: QuizResult[], quizData: Quiz): Stats => {
     // Default score ranges
@@ -377,7 +379,7 @@ const QuizDetailedStats: React.FC = () => {
         <div className="text-center">
           <p className="text-gray-600 mb-4">Không tìm thấy quiz</p>
           <button
-            onClick={() => navigate('/my-quizzes')}
+            onClick={() => navigate(ROUTES.CREATOR_MY_QUIZZES)}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             Quay lại
@@ -448,7 +450,7 @@ const QuizDetailedStats: React.FC = () => {
         {/* Header */}
         <div className="mb-8">
           <button
-            onClick={() => navigate('/my-quizzes')}
+            onClick={() => navigate(ROUTES.CREATOR_MY_QUIZZES)}
             className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors group"
           >
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />

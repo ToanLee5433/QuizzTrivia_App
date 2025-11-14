@@ -66,9 +66,9 @@ export const LandingPage: React.FC = () => {
             
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-6">
               <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">🎮</div>
-              <h3 className="text-lg sm:text-xl font-semibold mb-2">Multiplayer</h3>
+              <h3 className="text-lg sm:text-xl font-semibold mb-2">{t('landing.features.multiplayer.title')}</h3>
               <p className="text-blue-100 text-sm sm:text-base">
-                Chơi cùng bạn bè và cạnh tranh trực tiếp
+                {t('landing.features.multiplayer.description')}
               </p>
             </div>
             

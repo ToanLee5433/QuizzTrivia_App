@@ -177,3 +177,11 @@ export interface GameResults {
   gameStats: GameStatistics;
   completedAt: Date;
 }
+
+export interface GameData {
+  questions: Question[];
+  currentQuestionIndex: number;
+  questionStartTime: number;
+  questionEndTime: number;
+  serverTimeOffset: number;
+}

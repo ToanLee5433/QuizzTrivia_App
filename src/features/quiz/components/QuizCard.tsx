@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Quiz } from '../types';
 import { useSelector } from 'react-redux';
@@ -10,6 +10,7 @@ import { Star, Eye, Play } from 'lucide-react';
 import { reviewService } from '../services/reviewService';
 import { QuizReviewStats } from '../types/review';
 import SafeHTML from '../../../shared/components/ui/SafeHTML';
+import { useTranslation } from 'react-i18next';
 
 
 interface QuizCardProps {
@@ -19,6 +20,28 @@ interface QuizCardProps {
 }
 
   const QuizCard: React.FC<QuizCardProps> = ({ quiz, viewMode = 'grid', onStartQuiz }) => {
+  const { t } = useTranslation();
+
+  const translate = useCallback(
+    (key: string, fallback: string, options?: Record<string, unknown>): string => {
+      const value = t(key, options as any);
+      if (typeof value === 'string') {
+        return value === key ? fallback : value;
+      }
+      return fallback;
+    },
+    [t]
+  );
+
+  const resources = Array.isArray(quiz.resources) ? quiz.resources : [];
+  const hasResources = resources.length > 0;
+  const resourceCount = resources.length;
+
+  const isPasswordProtected = useMemo(() => {
+    const extended = quiz as Partial<{ havePassword?: string; visibility?: string }>;
+    return extended.havePassword === 'password' || extended.visibility === 'password';
+  }, [quiz]);
+
   // **THÊM MỚI**: Helper functions
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -29,16 +52,131 @@ interface QuizCardProps {
     }
   };
 
-  const formatDuration = (minutes: number) => {
-    if (minutes < 60) return `${minutes}m`;
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
-  };
+  const formatDuration = useCallback(
+    (minutes: number) => {
+      if (!Number.isFinite(minutes)) {
+        return '';
+      }
 
-  // 🆕 Check if quiz has resources
-  const hasResources = (quiz as any).resources && (quiz as any).resources.length > 0;
-  const resourceCount = hasResources ? (quiz as any).resources.length : 0;
+      if (minutes < 60) {
+        return translate('quiz.card.duration.minutes', `${minutes} phút`, { count: minutes });
+      }
+
+      const hours = Math.floor(minutes / 60);
+      const remainingMinutes = minutes % 60;
+
+      if (remainingMinutes > 0) {
+        return translate('quiz.card.duration.hoursAndMinutes', `${hours} giờ ${remainingMinutes} phút`, {
+          hours,
+          minutes: remainingMinutes,
+        });
+      }
+
+      return translate('quiz.card.duration.hours', `${hours} giờ`, { count: hours });
+    },
+    [translate]
+  );
+
+  const getDifficultyLabel = useCallback(
+    (difficulty: Quiz['difficulty']) =>
+      translate(`quiz.difficulty.${difficulty}`, difficulty.charAt(0).toUpperCase() + difficulty.slice(1)),
+    [translate]
+  );
+
+  const getDifficultyBadgeLabel = useCallback(
+    (difficulty: Quiz['difficulty']) =>
+      translate(`quiz.card.difficultyBadge.${difficulty}`, difficulty.charAt(0).toUpperCase() + difficulty.slice(1)),
+    [translate]
+  );
+
+  const getResourceLabel = useCallback(
+    (count: number) => translate('quiz.card.resources', `📚 ${count} tài liệu học tập`, { count }),
+    [translate]
+  );
+
+  const getQuestionsLabel = useCallback(
+    (count: number) => translate('quiz.card.questions', `${count} câu hỏi`, { count }),
+    [translate]
+  );
+
+  const getPlayersLabel = useCallback(
+    (count: number) => translate('quiz.card.players', `${count} lượt chơi`, { count }),
+    [translate]
+  );
+
+  const getTagsRemainingLabel = useCallback(
+    (count: number) => translate('quiz.card.tagsRemaining', `+${count}`, { count }),
+    [translate]
+  );
+
+  const getCompletedWithScore = useCallback(
+    (score?: number) => translate('quiz.card.completedWithScore', `Đã hoàn thành: ${score ?? 0}%`, { score: score ?? 0 }),
+    [translate]
+  );
+
+  const getRatingSummary = useCallback(
+    (rating: number, count: number) =>
+      translate('quiz.card.ratingSummary', `${rating.toFixed(1)} (${count})`, {
+        rating: rating.toFixed(1),
+        count
+      }),
+    [translate]
+  );
+
+  const favoriteTooltipAdd = useMemo(
+    () => translate('quiz.card.favoriteTooltipAdd', 'Yêu thích quiz này'),
+    [translate]
+  );
+
+  const favoriteTooltipRemove = useMemo(
+    () => translate('quiz.card.favoriteTooltipRemove', 'Bỏ yêu thích'),
+    [translate]
+  );
+
+  const viewReviewsLabel = useMemo(
+    () => translate('quiz.card.viewReviews', 'Xem đánh giá'),
+    [translate]
+  );
+
+  const retakeLabel = useMemo(
+    () => translate('quiz.card.retake', '🔄 Chơi lại'),
+    [translate]
+  );
+
+  const startLabel = useMemo(
+    () => translate('quiz.card.start', '🚀 Bắt đầu Quiz'),
+    [translate]
+  );
+
+  const completedBadgeLabel = useMemo(
+    () => translate('quiz.card.completed', '✓ Hoàn thành'),
+    [translate]
+  );
+
+  const passwordBadgeLabel = useMemo(
+    () => translate('quiz.card.passwordRequired', '🔒 Cần mật khẩu'),
+    [translate]
+  );
+
+  const resourcesHint = useMemo(
+    () => translate('quiz.card.resourcesHint', '💡 Xem tài liệu để hiểu sâu hơn trước khi làm bài!'),
+    [translate]
+  );
+
+  const reviewsButtonLabel = useMemo(
+    () => translate('quiz.card.reviewsButton', 'Đánh giá'),
+    [translate]
+  );
+
+  const favoriteButtonAddedLabel = useMemo(
+    () => translate('quiz.card.favoriteAdded', 'Đã thích'),
+    [translate]
+  );
+
+  const favoriteButtonAddLabel = useMemo(
+    () => translate('quiz.card.favoriteAction', 'Yêu thích'),
+    [translate]
+  );
 
   // Helper component for rating display
   const RatingDisplay = ({ rating, reviewCount, size = 'sm' }: { rating: number; reviewCount: number; size?: 'sm' | 'md' }) => {
@@ -154,23 +292,23 @@ interface QuizCardProps {
               <h3 className="text-lg font-semibold text-gray-900 truncate pr-4">{quiz.title}</h3>
               <div className="flex items-center gap-2">
                 <span className={`px-2 py-1 rounded text-xs font-medium ${getDifficultyColor(quiz.difficulty)}`}>
-                  {quiz.difficulty.charAt(0).toUpperCase() + quiz.difficulty.slice(1)}
+                  {getDifficultyLabel(quiz.difficulty)}
                 </span>
                 {quiz.isCompleted && (
                   <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded font-medium">
-                    ✓ Hoàn thành
+                    {completedBadgeLabel}
                   </span>
                 )}
                 {/* 🔒 Password Badge - Support both old (havePassword) and new (visibility) format */}
-                {((quiz as any).havePassword === 'password' || (quiz as any).visibility === 'password') && (
+                {isPasswordProtected && (
                   <span className="px-2 py-1 bg-purple-100 text-purple-700 border border-purple-300 text-xs rounded-full font-bold flex items-center gap-1">
-                    🔒 Cần mật khẩu
+                    {passwordBadgeLabel}
                   </span>
                 )}
                 {/* 🆕 Resource Badge */}
                 {hasResources && (
                   <span className="px-2 py-1 bg-emerald-100 text-emerald-700 border border-emerald-300 text-xs rounded-full font-bold flex items-center gap-1">
-                    📚 {resourceCount} tài liệu
+                    {getResourceLabel(resourceCount)}
                   </span>
                 )}
               </div>
@@ -189,7 +327,7 @@ interface QuizCardProps {
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                {quiz.questions.length} câu hỏi
+                {getQuestionsLabel(quiz.questions.length)}
               </div>
               <div className="flex items-center">
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -200,7 +338,7 @@ interface QuizCardProps {
               {quiz.totalPlayers && (
                 <div className="flex items-center">
                   <Eye className="w-4 h-4 mr-1" />
-                  {quiz.totalPlayers} lượt chơi
+                  {getPlayersLabel(quiz.totalPlayers)}
                 </div>
               )}
               {reviewStats && reviewStats.totalReviews > 0 && (
@@ -221,7 +359,7 @@ interface QuizCardProps {
                 ))}
                 {quiz.tags.length > 4 && (
                   <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
-                    +{quiz.tags.length - 4}
+                    {getTagsRemainingLabel(quiz.tags.length - 4)}
                   </span>
                 )}
               </div>
@@ -234,7 +372,7 @@ interface QuizCardProps {
               onClick={handleToggleFavorite}
               disabled={!user || favLoading}
               className={`p-2 border rounded-lg transition-colors ${isFavorite ? 'bg-yellow-100 border-yellow-400 text-yellow-600' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
-              title={isFavorite ? 'Bỏ yêu thích' : 'Yêu thích quiz này'}
+              title={isFavorite ? favoriteTooltipRemove : favoriteTooltipAdd}
             >
               <svg className="w-5 h-5" fill={isFavorite ? 'gold' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
@@ -243,7 +381,7 @@ interface QuizCardProps {
             <Link
               to={`/quiz/${quiz.id}/reviews`}
               className="p-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              title="Xem đánh giá"
+              title={viewReviewsLabel}
             >
               <Eye className="w-5 h-5" />
             </Link>
@@ -251,7 +389,7 @@ interface QuizCardProps {
               onClick={() => onStartQuiz?.(quiz)}
               className="bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 px-6 rounded-lg font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-200"
             >
-              {quiz.isCompleted ? '🔄 Chơi lại' : '🚀 Bắt đầu Quiz'}
+              {quiz.isCompleted ? retakeLabel : startLabel}
             </button>
           </div>
         </div>
@@ -286,12 +424,12 @@ interface QuizCardProps {
         {/* **THÊM MỚI**: Overlay badges */}
         <div className="absolute top-4 left-4 flex flex-wrap gap-2 z-20">
           <span className={`px-3 py-1.5 rounded-2xl text-xs font-semibold backdrop-blur-sm shadow-lg ${getDifficultyColor(quiz.difficulty)}`}>
-            {quiz.difficulty === 'easy' ? '🟢 Dễ' : quiz.difficulty === 'medium' ? '🟡 Trung bình' : '🔴 Khó'}
+            {getDifficultyBadgeLabel(quiz.difficulty)}
           </span>
           {/* 🔒 Password Badge - Support both old (havePassword) and new (visibility) format */}
-          {((quiz as any).havePassword === 'password' || (quiz as any).visibility === 'password') && (
+          {isPasswordProtected && (
             <span className="px-3 py-1.5 rounded-2xl text-xs font-semibold bg-purple-500/90 text-white backdrop-blur-sm shadow-lg border border-purple-400">
-              🔒 Cần mật khẩu
+              {passwordBadgeLabel}
             </span>
           )}
         </div>
@@ -302,7 +440,7 @@ interface QuizCardProps {
             onClick={handleToggleFavorite}
             disabled={!user || favLoading}
             className={`p-2.5 backdrop-blur-sm rounded-2xl shadow-lg transition-all duration-300 ${isFavorite ? 'bg-yellow-400/90 border border-yellow-300 text-yellow-900' : 'bg-white/20 border border-white/30 text-white hover:bg-white/30'}`}
-            title={isFavorite ? 'Bỏ yêu thích' : 'Yêu thích quiz này'}
+            title={isFavorite ? favoriteTooltipRemove : favoriteTooltipAdd}
           >
             <svg className="w-5 h-5" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
@@ -316,14 +454,14 @@ interface QuizCardProps {
             {quiz.totalPlayers && (
               <div className="flex items-center text-white/90 text-sm bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-2xl">
                 <Eye className="w-4 h-4 mr-1.5" />
-                {quiz.totalPlayers}
+                {getPlayersLabel(quiz.totalPlayers)}
               </div>
             )}
           </div>
           {reviewStats && reviewStats.totalReviews > 0 && (
             <div className="flex items-center text-white text-sm bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-2xl">
               <Star className="w-4 h-4 mr-1.5 fill-current text-yellow-400" />
-              {reviewStats.averageRating.toFixed(1)}
+              {getRatingSummary(reviewStats.averageRating, reviewStats.totalReviews)}
             </div>
           )}
         </div>
@@ -361,12 +499,12 @@ interface QuizCardProps {
               <svg className="w-4 h-4 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span className="font-medium">{quiz.questions.length} câu hỏi</span>
+              <span className="font-medium">{getQuestionsLabel(quiz.questions.length)}</span>
             </div>
             {reviewStats && reviewStats.totalReviews > 0 && (
               <div className="flex items-center">
                 <Star className="w-4 h-4 mr-1 text-yellow-500 fill-current" />
-                <span className="font-medium">{reviewStats.averageRating.toFixed(1)} ({reviewStats.totalReviews})</span>
+                <span className="font-medium">{getRatingSummary(reviewStats.averageRating, reviewStats.totalReviews)}</span>
               </div>
             )}
           </div>
@@ -378,7 +516,7 @@ interface QuizCardProps {
             <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
             </svg>
-            <span className="font-semibold">Đã hoàn thành: {quiz.score}%</span>
+            <span className="font-semibold">{getCompletedWithScore(quiz.score)}</span>
           </div>
         )}
 
@@ -395,7 +533,7 @@ interface QuizCardProps {
             ))}
             {quiz.tags.length > 3 && (
               <span className="px-3 py-1.5 bg-gray-100 text-gray-600 text-xs rounded-2xl font-medium">
-                +{quiz.tags.length - 3} more
+                {getTagsRemainingLabel(quiz.tags.length - 3)}
               </span>
             )}
           </div>
@@ -407,11 +545,11 @@ interface QuizCardProps {
             <div className="flex items-center gap-2 text-emerald-800">
               <span className="text-lg">📚</span>
               <span className="font-bold text-sm">
-                Có {resourceCount} tài liệu học tập
+                {getResourceLabel(resourceCount)}
               </span>
             </div>
             <p className="text-xs text-emerald-600 mt-1">
-              💡 Xem tài liệu để hiểu sâu hơn trước khi làm bài!
+              {resourcesHint}
             </p>
           </div>
         )}
@@ -423,17 +561,17 @@ interface QuizCardProps {
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 px-4 rounded-xl font-semibold text-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
           >
             <Play className="w-5 h-5" />
-            <span>{quiz.isCompleted ? '🔄 Chơi lại' : '🚀 Bắt đầu Quiz'}</span>
+            <span>{quiz.isCompleted ? retakeLabel : startLabel}</span>
           </button>
           
           <div className="flex gap-2 mt-3">
             <Link
               to={`/quiz/${quiz.id}/reviews`}
               className="flex-1 px-3 py-2 border border-gray-200 hover:border-blue-300 text-gray-700 hover:text-blue-600 rounded-lg transition-all duration-300 hover:bg-blue-50 text-sm text-center flex items-center justify-center"
-              title="Xem đánh giá"
+              title={viewReviewsLabel}
             >
               <Eye className="w-4 h-4 mr-2" />
-              Đánh giá
+              {reviewsButtonLabel}
             </Link>
             
             <button
@@ -444,10 +582,10 @@ interface QuizCardProps {
                   ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
-              title={isFavorite ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}
+              title={isFavorite ? favoriteTooltipRemove : favoriteTooltipAdd}
             >
               <Star className={`w-4 h-4 mr-2 ${isFavorite ? 'fill-current' : ''}`} />
-              {isFavorite ? 'Đã thích' : 'Yêu thích'}
+              {isFavorite ? favoriteButtonAddedLabel : favoriteButtonAddLabel}
             </button>
           </div>
         </div>

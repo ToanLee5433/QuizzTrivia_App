@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { reviewService } from '../services/reviewService';
 import ReviewForm from '../components/ReviewForm';
@@ -26,17 +26,7 @@ const QuizReviewsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showReviewForm, setShowReviewForm] = useState(false);
 
-  useEffect(() => {
-    if (quizId) {
-      console.log('🎯 QuizReviewsPage mounted with quizId:', quizId);
-      loadQuizAndReviews();
-    } else {
-      console.error('❌ No quizId provided in URL params');
-      setLoading(false);
-    }
-  }, [quizId]);
-
-  const loadQuizAndReviews = async () => {
+  const loadQuizAndReviews = useCallback(async () => {
     if (!quizId) {
       console.error('❌ No quizId provided');
       setLoading(false);
@@ -157,7 +147,17 @@ const QuizReviewsPage: React.FC = () => {
       setLoading(false);
       console.log('✅ Loading state set to false');
     }
-  };
+  }, [quizId, t]);
+
+  useEffect(() => {
+    if (quizId) {
+      console.log('🎯 QuizReviewsPage mounted with quizId:', quizId);
+      loadQuizAndReviews();
+    } else {
+      console.error('❌ No quizId provided in URL params');
+      setLoading(false);
+    }
+  }, [quizId, loadQuizAndReviews]);
 
   const handleReviewSubmitted = async () => {
     console.log('🔄 Review submitted, refreshing data...');

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { RootState } from '../../../lib/store';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db, auth } from '../../../lib/firebase/config';
 import QuizCard, { QuizCardSkeleton } from '../../quiz/components/QuizCard';
 import { Quiz } from '../../quiz/types';
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react';
 
 const MultiplayerLobby: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
@@ -27,15 +29,7 @@ const MultiplayerLobby: React.FC = () => {
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-    fetchQuizzes();
-  }, [user, navigate]);
-
-  const fetchQuizzes = async () => {
+  const fetchQuizzes = useCallback(async () => {
     try {
       setLoading(true);
       setFetchError(null);
@@ -57,8 +51,11 @@ const MultiplayerLobby: React.FC = () => {
         });
       }
       
-      // Fetch ALL quizzes first (no filters)
-      const allQuizzesRef = collection(db, 'quizzes');
+      // Fetch ONLY APPROVED quizzes with status filter
+      const allQuizzesRef = query(
+        collection(db, 'quizzes'),
+        where('status', '==', 'approved')
+      );
       const allSnapshot = await getDocs(allQuizzesRef);
       
       const allQuizData = allSnapshot.docs.map(doc => ({
@@ -66,11 +63,10 @@ const MultiplayerLobby: React.FC = () => {
         ...doc.data()
       } as Quiz));
       
-      // Filter quizzes - Chỉ cần 1 câu hỏi trở lên và đã được approve
+      // Filter quizzes - Chỉ cần 1 câu hỏi trở lên (đã approved từ query)
       const validQuizzes = allQuizData.filter(quiz => {
         const hasQuestions = quiz.questions && quiz.questions.length >= 1;
-        const isApproved = quiz.status === 'approved';
-        return hasQuestions && isApproved;
+        return hasQuestions;
       });
       
       setQuizzes(validQuizzes);
@@ -80,7 +76,15 @@ const MultiplayerLobby: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    fetchQuizzes();
+  }, [user, navigate, fetchQuizzes]);
 
   const filteredQuizzes = quizzes.filter(quiz => {
     const matchesSearch = quiz.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -194,7 +198,7 @@ const MultiplayerLobby: React.FC = () => {
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="🔍 Tìm kiếm quiz..."
+                  placeholder={t('placeholders.searchQuiz')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg p-3 pl-10 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"

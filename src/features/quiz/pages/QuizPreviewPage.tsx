@@ -1,490 +1,694 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
+/**
+ * 🎯 Quiz Overview Page - Modern Design
+ * 
+ * Inspired by: Moodle, Canvas, Quizlet
+ * Features:
+ * - Clean, modern layout with summary cards
+ * - Password protection with unlock dialog
+ * - Schedule & access control
+ * - Learning resources preview
+ * - Attempt state management (Start/Resume/Retake)
+ * - Full i18n support
+ * - Responsive design (mobile-first)
+ * - Smooth animations with Framer Motion
+ */
+
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Clock, Star, Play, Eye, BookOpen, Target, FileText, Video, Image as ImageIcon, Music, Link as LinkIcon, Presentation, ExternalLink } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { 
+  Clock, Target, Users, Lock, Unlock,
+  BookOpen, Play, AlertCircle, CheckCircle,
+  FileText, Video, Image as ImageIcon, Music, Link as LinkIcon,
+  Presentation, ChevronRight, Star, Trophy, Brain, TrendingUp,
+  Info, ArrowLeft, Settings, ChevronDown, ChevronUp
+} from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
-import { Quiz } from '../types';
-import RichTextViewer from '../../../shared/components/ui/RichTextViewer';
+import { Quiz, Question } from '../types';
 import { reviewService } from '../services/reviewService';
 import { QuizReviewStats } from '../types/review';
-import QuickReviewSection from '../../../shared/components/QuickReviewSection';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../../lib/store';
-import GameModeSelector from '../../multiplayer/components/GameModeSelector';
 import PasswordModal from '../../../shared/components/ui/PasswordModal';
+import RichTextViewer from '../../../shared/components/ui/RichTextViewer';
+import QuizSettingsModal, { QuizSettings } from '../components/QuizSettingsModal';
+
+// 📌 Type for resource
+type QuizResource = NonNullable<Quiz['resources']>[number];
+
+// 📱 Loading skeleton
+const OverviewSkeleton: React.FC = () => (
+  <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
+    <div className="container max-w-5xl mx-auto px-4 py-8">
+      <div className="animate-pulse space-y-6">
+        <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded-lg w-1/3"></div>
+        <div className="h-32 bg-slate-200 dark:bg-slate-800 rounded-2xl"></div>
+        <div className="grid gap-6 md:grid-cols-[2fr,1fr]">
+          <div className="space-y-6">
+            <div className="h-64 bg-slate-200 dark:bg-slate-800 rounded-2xl"></div>
+            <div className="h-48 bg-slate-200 dark:bg-slate-800 rounded-2xl"></div>
+          </div>
+          <div className="space-y-6">
+            <div className="h-96 bg-slate-200 dark:bg-slate-800 rounded-2xl"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 const QuizPreviewPage: React.FC = () => {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
-  const user = useSelector((state: RootState) => state.auth.user);
+  
+  // State
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [reviewStats, setReviewStats] = useState<QuizReviewStats | null>(null);
-  const [showGameModeSelector, setShowGameModeSelector] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordVerified, setPasswordVerified] = useState(false);
-  const [pendingAction, setPendingAction] = useState<'single' | 'multi' | null>(null);
+  const [pendingAction, setPendingAction] = useState<'start' | 'resume' | null>(null);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [quizSettings, setQuizSettings] = useState<QuizSettings | null>(null);
+  const [showAllQuestions, setShowAllQuestions] = useState(false);
 
+  // 🔐 Password check
+  const isLocked = useMemo(() => {
+    if (!quiz) return false;
+    return (
+      (quiz.visibility === 'password' || quiz.havePassword === 'password') &&
+      !passwordVerified
+    );
+  }, [quiz, passwordVerified]);
+
+  // 📊 Fetch quiz data
   useEffect(() => {
     const fetchQuiz = async () => {
       if (!id) return;
       
+      setLoading(true);
+      setError(null);
+      
       try {
         const quizDoc = await getDoc(doc(db, 'quizzes', id));
-        if (quizDoc.exists()) {
-          const quizData = { id: quizDoc.id, ...quizDoc.data() } as Quiz;
-          setQuiz(quizData);
-          
-          // Fetch review stats
-          try {
-            const stats = await reviewService.getQuizReviewStats(id);
-            setReviewStats(stats);
-          } catch (error) {
-            console.error('Error fetching review stats:', error);
-          }
-        } else {
-          navigate('/quizzes');
+        
+        if (!quizDoc.exists()) {
+          setError(t('quizOverview.errors.notFound', 'Quiz not found'));
+          return;
         }
-      } catch (error) {
-        console.error('Error fetching quiz:', error);
-        navigate('/quizzes');
+        
+        const quizData = { id: quizDoc.id, ...quizDoc.data() } as Quiz;
+        setQuiz(quizData);
+        
+        // Fetch review stats
+        try {
+          const stats = await reviewService.getQuizReviewStats(id);
+          setReviewStats(stats);
+        } catch (err) {
+          console.error('Error fetching review stats:', err);
+        }
+      } catch (err) {
+        console.error('Error fetching quiz:', err);
+        setError(t('quizOverview.errors.loadFailed', 'Failed to load quiz'));
       } finally {
         setLoading(false);
       }
     };
 
     fetchQuiz();
-  }, [id, navigate]);
+  }, [id, t]);
 
-  // Auto-open GameModeSelector if coming from QuizCard
-  useEffect(() => {
-    const locationState = location.state as any;
-    if (locationState?.openGameModeSelector) {
-      setShowGameModeSelector(true);
-    }
-  }, [location.state]);
-
-  // 🔒 Handle start quiz with password check
-  const handleStartQuiz = (mode: 'single' | 'multi') => {
+  // 🎯 Handle start quiz
+  const handleStartQuiz = (action: 'start' | 'resume' = 'start') => {
     if (!quiz) return;
-    
-    const havePassword = (quiz as any).havePassword || 'public';
-    
-    // If password-protected and not verified yet, show password modal
-    if (havePassword === 'password' && !passwordVerified) {
-      setPendingAction(mode);
+
+    if (isLocked) {
+      setPendingAction(action);
       setShowPasswordModal(true);
       return;
     }
-    
-    // Otherwise, proceed with starting quiz
-    if (mode === 'single') {
-      navigate(`/quiz/${quiz.id}`);
-    } else {
-      navigate('/multiplayer', { state: { selectedQuiz: quiz } });
-    }
-  };
 
-  // 🔒 Handle password verification success
-  const handlePasswordSuccess = () => {
-    if (!quiz) return;
-    
-    setShowPasswordModal(false);
-    setPasswordVerified(true);
-    
-    // Execute pending action
-    if (pendingAction === 'single') {
-      navigate(`/quiz/${quiz.id}`);
-    } else if (pendingAction === 'multi') {
-      navigate('/multiplayer', { state: { selectedQuiz: quiz } });
+    // Save settings to pass to quiz page
+    if (quizSettings && quiz.id) {
+      localStorage.setItem(`quiz_settings_${quiz.id}`, JSON.stringify(quizSettings));
     }
+
+    // Navigate directly without mode selection
+    navigate(`/quiz/${quiz.id}`);
     setPendingAction(null);
   };
 
+  // ⚙️ Handle settings save
+  const handleSettingsSave = (settings: QuizSettings) => {
+    setQuizSettings(settings);
+    if (quiz?.id) {
+      localStorage.setItem(`quiz_settings_${quiz.id}`, JSON.stringify(settings));
+    }
+  };
+
+  // 🔓 Handle password success
+  const handlePasswordSuccess = () => {
+    setShowPasswordModal(false);
+    setPasswordVerified(true);
+    
+    if (pendingAction && quiz) {
+      // Navigate after password verification
+      navigate(`/quiz/${quiz.id}`);
+      setPendingAction(null);
+    }
+  };
+
+  // 🎨 Helper functions
+  const getDifficultyConfig = (difficulty: 'easy' | 'medium' | 'hard' | undefined) => {
+    const configs: Record<'easy' | 'medium' | 'hard', { label: string; icon: string; className: string }> = {
+      easy: {
+        label: t('quizOverview.difficulty.easy', 'Easy'),
+        icon: '😊',
+        className: 'bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800'
+      },
+      medium: {
+        label: t('quizOverview.difficulty.medium', 'Medium'),
+        icon: '🤔',
+        className: 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'
+      },
+      hard: {
+        label: t('quizOverview.difficulty.hard', 'Hard'),
+        icon: '🔥',
+        className: 'bg-rose-100 text-rose-700 border-rose-300 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800'
+      }
+    };
+    return configs[difficulty || 'easy'];
+  };
+
+  const getResourceIcon = (type: string) => {
+    const icons = {
+      video: Video,
+      pdf: FileText,
+      image: ImageIcon,
+      audio: Music,
+      link: LinkIcon,
+      slides: Presentation
+    };
+    return icons[type as keyof typeof icons] || FileText;
+  };
+
+  // ⏳ Loading state
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">{t('quiz.loading')}</p>
-        </div>
-      </div>
-    );
+    return <OverviewSkeleton />;
   }
 
+  // 🚫 Early return - ensures quiz is not null below
   if (!quiz) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('quiz.notFound')}</h2>
-          <Link to="/quizzes" className="text-blue-600 hover:underline">
-            {t('quiz.backToQuizList')}
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-8 max-w-md w-full text-center border border-slate-200 dark:border-slate-800"
+        >
+          <div className="w-20 h-20 bg-rose-100 dark:bg-rose-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-10 h-10 text-rose-600 dark:text-rose-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+            {t('quizOverview.errors.title', 'Quiz Not Found')}
+          </h2>
+          <p className="text-slate-600 dark:text-slate-400 mb-6">
+            {error || t('quizOverview.errors.description', 'The quiz you are looking for does not exist or has been removed.')}
+          </p>
+          <Link
+            to="/quizzes"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            {t('quizOverview.actions.backToQuizzes', 'Back to Quizzes')}
           </Link>
-        </div>
+        </motion.div>
       </div>
     );
   }
 
-  // 🔒 Check if user has access to this quiz
-  // Removed - All quizzes are accessible (password check happens when starting)
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'bg-green-100 text-green-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'hard': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getDifficultyText = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'Dễ';
-      case 'medium': return 'Trung bình';
-      case 'hard': return 'Khó';
-      default: return difficulty;
-    }
-  };
-
-  // Helper để lấy icon theo loại tài liệu
-  const getResourceIcon = (type: string) => {
-    switch (type) {
-      case 'video': return <Video className="w-5 h-5" />;
-      case 'pdf': return <FileText className="w-5 h-5" />;
-      case 'image': return <ImageIcon className="w-5 h-5" />;
-      case 'audio': return <Music className="w-5 h-5" />;
-      case 'link': return <LinkIcon className="w-5 h-5" />;
-      case 'slides': return <Presentation className="w-5 h-5" />;
-      default: return <FileText className="w-5 h-5" />;
-    }
-  };
-
-  // Helper để lấy màu badge theo loại tài liệu
-  const getResourceBadgeColor = (type: string) => {
-    switch (type) {
-      case 'video': return 'bg-blue-100 text-blue-700 border-blue-300';
-      case 'pdf': return 'bg-red-100 text-red-700 border-red-300';
-      case 'image': return 'bg-purple-100 text-purple-700 border-purple-300';
-      case 'audio': return 'bg-green-100 text-green-700 border-green-300';
-      case 'link': return 'bg-indigo-100 text-indigo-700 border-indigo-300';
-      case 'slides': return 'bg-orange-100 text-orange-700 border-orange-300';
-      default: return 'bg-gray-100 text-gray-700 border-gray-300';
-    }
-  };
+  const difficultyConfig = getDifficultyConfig(quiz.difficulty);
+  const hasResources = quiz.resources && quiz.resources.length > 0;
+  const averageRating = reviewStats?.averageRating || 0;
+  const totalReviews = reviewStats?.totalReviews || 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        {/* Hero Section */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white mb-8">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-4">{quiz.title}</h1>
-              <RichTextViewer
-                content={quiz.description || ''}
-                className="text-blue-100 text-lg mb-6"
-              />
-              
-              <div className="flex flex-wrap gap-4 mb-6">
-                <div className="flex items-center space-x-2">
-                  <BookOpen className="w-5 h-5" />
-                  <span>{t('quiz.questionsCount', {count: quiz.questions.length})}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Clock className="w-5 h-5" />
-                  <span>{(quiz as any).timeLimit ? t('quiz.timeLimit', {time: (quiz as any).timeLimit / 60}) : t('quiz.noTimeLimit')}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Target className="w-5 h-5" />
-                  <span className={`px-2 py-1 rounded-full text-sm ${getDifficultyColor(quiz.difficulty)}`}>
-                    {getDifficultyText(quiz.difficulty)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Rating Display */}
-              {reviewStats && reviewStats.totalReviews > 0 && (
-                <div className="flex items-center space-x-4 mb-6">
-                  <div className="flex items-center space-x-1">
-                    {[1, 2, 3, 4, 5].map(star => (
-                      <Star
-                        key={star}
-                        className={`w-5 h-5 ${
-                          star <= Math.round(reviewStats.averageRating)
-                            ? 'text-yellow-400 fill-current'
-                            : 'text-gray-300'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <span className="font-semibold">
-                    {reviewStats.averageRating.toFixed(1)}
-                  </span>
-                  <span className="text-blue-200">
-                    ({t('quiz.ratingCount', {count: reviewStats.totalReviews})})
-                  </span>
-                </div>
-              )}
-
-              <div className="flex flex-wrap gap-4">
-                <button
-                  onClick={() => setShowGameModeSelector(true)}
-                  className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg"
-                >
-                  <Play className="w-6 h-6 mr-2" />
-                  {t('quiz.startQuizButton')}
-                </button>
-                
-                <Link
-                  to={`/quiz/${quiz.id}/reviews`}
-                  className="inline-flex items-center px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-400 transition-colors border border-blue-400"
-                >
-                  <Eye className="w-5 h-5 mr-2" />
-                  {t('quiz.viewReviews')}
-                </Link>
-              </div>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
+      {/* 🍞 Breadcrumb */}
+      <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10">
+        <div className="container max-w-5xl mx-auto px-4 py-3">
+          <div className="flex items-center gap-2 text-sm">
+            <Link
+              to="/quizzes"
+              className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              {t('quizOverview.breadcrumb.quizzes', 'Quizzes')}
+            </Link>
+            <ChevronRight className="w-4 h-4 text-slate-400" />
+            <span className="text-slate-900 dark:text-white font-medium truncate">
+              {quiz.title}
+            </span>
           </div>
         </div>
+      </div>
 
-        {/* Content Sections */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Quiz Info */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">{t('quiz.detailedInfo')}</h2>
-              
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <BookOpen className="w-5 h-5 text-blue-600" />
-                    <span className="font-semibold text-gray-900">{t('quiz.questions')}</span>
-                  </div>
-                  <p className="text-2xl font-bold text-blue-600">{quiz.questions.length}</p>
+      <div className="container max-w-5xl mx-auto px-4 py-8">
+        {/* 🎯 Hero Section */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="mb-8"
+        >
+          {/* Category & Difficulty Badges */}
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <span className="px-4 py-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-sm font-medium border border-blue-200 dark:border-blue-800">
+              {t(`categories.${quiz.category}`, quiz.category)}
+            </span>
+            <span className={`px-4 py-1.5 rounded-full text-sm font-medium border ${difficultyConfig.className}`}>
+              {difficultyConfig.icon} {difficultyConfig.label}
+            </span>
+            {isLocked && (
+              <span className="px-4 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-sm font-medium border border-amber-200 dark:border-amber-800 flex items-center gap-2">
+                <Lock className="w-4 h-4" />
+                {t('quizOverview.status.locked', 'Password Protected')}
+              </span>
+            )}
+          </div>
+
+          {/* Title */}
+          <h1 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4 leading-tight">
+            {quiz.title}
+          </h1>
+
+          {/* Description */}
+          {quiz.description && (
+            <div className="text-lg text-slate-600 dark:text-slate-300 mb-6 prose prose-slate dark:prose-invert max-w-none">
+              <RichTextViewer content={quiz.description} />
+            </div>
+          )}
+
+          {/* Rating & Stats */}
+          <div className="flex flex-wrap items-center gap-6 text-sm">
+            {totalReviews > 0 && (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`w-4 h-4 ${
+                        star <= Math.round(averageRating)
+                          ? 'fill-yellow-400 text-yellow-400'
+                          : 'text-slate-300 dark:text-slate-600'
+                      }`}
+                    />
+                  ))}
                 </div>
-                
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Clock className="w-5 h-5 text-purple-600" />
-                    <span className="font-semibold text-gray-900">{t('quiz.duration')}</span>
+                <span className="text-slate-900 dark:text-white font-semibold">
+                  {averageRating.toFixed(1)}
+                </span>
+                <span className="text-slate-500 dark:text-slate-400">
+                  ({t('quizOverview.stats.reviews', '{{count}} reviews', { count: totalReviews })})
+                </span>
+              </div>
+            )}
+            {quiz.totalPlayers !== undefined && quiz.totalPlayers > 0 && (
+              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                <Users className="w-4 h-4" />
+                <span>
+                  {t('quizOverview.stats.players', '{{count}} players', { count: quiz.totalPlayers })}
+                </span>
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* 📊 Main Grid */}
+        <div className="grid gap-6 md:grid-cols-[2fr,1fr]">
+          {/* Left Column */}
+          <div className="space-y-6">
+            {/* 📋 Instructions/Rules */}
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6"
+            >
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                <Info className="w-5 h-5 text-blue-600" />
+                {t('quizOverview.sections.overview', 'Quiz Overview')}
+              </h2>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {/* Time Limit */}
+                <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-xl border border-blue-100 dark:border-blue-900">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <p className="text-2xl font-bold text-purple-600">
-                    {(quiz as any).timeLimit ? `${(quiz as any).timeLimit / 60}'` : '∞'}
-                  </p>
+                  <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                    {quiz.duration}
+                  </div>
+                  <div className="text-xs text-slate-600 dark:text-slate-400">
+                    {t('quizOverview.facts.minutes', 'minutes')}
+                  </div>
+                </div>
+
+                {/* Questions */}
+                <div className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 rounded-xl border border-emerald-100 dark:border-emerald-900">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                    {quiz.questions?.length || 0}
+                  </div>
+                  <div className="text-xs text-slate-600 dark:text-slate-400">
+                    {t('quizOverview.facts.questions', 'questions')}
+                  </div>
+                </div>
+
+                {/* Difficulty */}
+                <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-xl border border-amber-100 dark:border-amber-900">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Brain className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div className="text-lg font-bold text-slate-900 dark:text-white">
+                    {difficultyConfig.icon}
+                  </div>
+                  <div className="text-xs text-slate-600 dark:text-slate-400">
+                    {difficultyConfig.label}
+                  </div>
+                </div>
+
+                {/* Players */}
+                <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 rounded-xl border border-purple-100 dark:border-purple-900">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                    {quiz.totalPlayers || 0}
+                  </div>
+                  <div className="text-xs text-slate-600 dark:text-slate-400">
+                    {t('quizOverview.facts.players', 'players')}
+                  </div>
                 </div>
               </div>
+            </motion.div>
 
-              {/* Tags */}
-              {quiz.tags && quiz.tags.length > 0 && (
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">{t('quiz.topics')}</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {quiz.tags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
-                      >
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Learning Resources Section - NEW */}
-            {(quiz as any).learningResources && (quiz as any).learningResources.length > 0 && (
-              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl shadow-sm p-6 border-2 border-emerald-200">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-emerald-900 flex items-center gap-2">
-                    <BookOpen className="w-6 h-6 text-emerald-600" />
-                    📚 Tài liệu học tập
-                  </h2>
-                  <span className="px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full text-sm font-semibold">
-                    {(quiz as any).learningResources.length} tài liệu
+            {/* 📚 Learning Resources */}
+            {hasResources && (
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6"
+              >
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                  <BookOpen className="w-5 h-5 text-purple-600" />
+                  {t('quizOverview.resources.title', 'Learning Materials')}
+                  <span className="ml-auto text-sm font-normal text-slate-500">
+                    {quiz.resources?.length} {t('quizOverview.resources.items', 'items')}
                   </span>
-                </div>
-
-                <p className="text-emerald-700 text-sm mb-4">
-                  💡 Xem tài liệu này trước khi làm bài để đạt kết quả tốt nhất!
-                </p>
+                </h2>
 
                 <div className="space-y-3">
-                  {(quiz as any).learningResources.map((resource: any, idx: number) => (
-                    <div 
-                      key={resource.id || idx} 
-                      className="bg-white rounded-lg p-4 border-2 border-emerald-100 hover:border-emerald-300 hover:shadow-md transition-all"
-                    >
-                      <div className="flex items-start gap-4">
-                        {/* Icon */}
-                        <div className={`flex items-center justify-center w-12 h-12 rounded-xl border-2 flex-shrink-0 ${getResourceBadgeColor(resource.type)}`}>
-                          {getResourceIcon(resource.type)}
+                  {quiz.resources?.map((resource: QuizResource, index: number) => {
+                    const ResourceIcon = getResourceIcon(resource.type);
+                    return (
+                      <motion.a
+                        key={resource.id || index}
+                        href={resource.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        initial={{ x: -20, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: 0.1 * index }}
+                        whileHover={{ scale: 1.02 }}
+                        className="group flex items-start gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
+                      >
+                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+                          <ResourceIcon className="w-6 h-6 text-white" />
                         </div>
-                        
-                        {/* Content */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2 mb-2">
-                            <h4 className="font-bold text-gray-900 text-base leading-tight">{resource.title}</h4>
-                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold border-2 flex-shrink-0 ${getResourceBadgeColor(resource.type)}`}>
-                              {resource.type.toUpperCase()}
-                            </span>
-                          </div>
-                          
+                          <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                            {resource.title}
+                          </h3>
                           {resource.description && (
-                            <p className="text-sm text-gray-600 mb-3 line-clamp-2">{resource.description}</p>
+                            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">
+                              {resource.description}
+                            </p>
                           )}
-                          
-                          <div className="flex flex-wrap items-center gap-3 text-sm">
-                            {resource.required && (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-red-100 text-red-700 rounded-full font-bold border border-red-300">
-                                <span className="text-base">⚠️</span> BẮT BUỘC
-                              </span>
-                            )}
+                          <div className="flex items-center gap-3 mt-2 text-xs text-slate-500 dark:text-slate-400">
+                            <span className="px-2 py-1 bg-white dark:bg-slate-700 rounded capitalize">
+                              {resource.type}
+                            </span>
                             {resource.estimatedTime && (
-                              <span className="inline-flex items-center gap-1 text-gray-600">
-                                <Clock className="w-4 h-4" />
-                                <span className="font-medium">{resource.estimatedTime} phút</span>
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {resource.estimatedTime} {t('quizOverview.resources.minutes', 'min')}
                               </span>
                             )}
-                            {resource.url && (
-                              <a 
-                                href={resource.url} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm hover:shadow"
-                              >
-                                <ExternalLink className="w-4 h-4" />
-                                Xem tài liệu
-                              </a>
+                            {resource.required && (
+                              <span className="px-2 py-1 bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 rounded font-medium">
+                                {t('quizOverview.resources.required', 'Required')}
+                              </span>
                             )}
+                          </div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors flex-shrink-0" />
+                      </motion.a>
+                    );
+                  })}
+                </div>
+
+                {quiz.quizType === 'with-materials' && (
+                  <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-xl">
+                    <p className="text-sm text-blue-800 dark:text-blue-300 flex items-start gap-2">
+                      <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <span>
+                        {t('quizOverview.resources.tip', 'Review these materials before taking the quiz for better results.')}
+                      </span>
+                    </p>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {/* 📝 Questions Preview */}
+            {quiz.questions && quiz.questions.length > 0 && (
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6"
+              >
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                  <Target className="w-5 h-5 text-green-600" />
+                  {t('quizOverview.sections.questionsPreview', 'Questions Preview')}
+                  <span className="ml-auto text-sm font-normal text-slate-500">
+                    {quiz.questions.length} {t('quizOverview.facts.total', 'total')}
+                  </span>
+                </h2>
+
+                <div className="space-y-3">
+                  {quiz.questions.slice(0, showAllQuestions ? quiz.questions.length : 3).map((question: Question, index: number) => (
+                    <div
+                      key={question.id || index}
+                      className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0">
+                          {index + 1}
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-slate-900 dark:text-white font-medium line-clamp-2">
+                            {question.text}
+                          </p>
+                          <div className="flex items-center gap-3 mt-2 text-xs text-slate-500 dark:text-slate-400">
+                            <span className="px-2 py-1 bg-white dark:bg-slate-700 rounded capitalize">
+                              {question.type}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Trophy className="w-3 h-3" />
+                              {question.points} {t('quizOverview.facts.points', 'pts')}
+                            </span>
                           </div>
                         </div>
                       </div>
                     </div>
                   ))}
+                  
+                  {/* Show More/Less Button */}
+                  {quiz.questions.length > 3 && (
+                    <button
+                      onClick={() => setShowAllQuestions(!showAllQuestions)}
+                      className="w-full flex items-center justify-center gap-2 py-3 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg font-medium transition-colors"
+                    >
+                      {showAllQuestions ? (
+                        <>
+                          <ChevronUp className="w-4 h-4" />
+                          {t('quizOverview.sections.showLess', 'Thu gọn')}
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="w-4 h-4" />
+                          {t('quizOverview.sections.showMore', 'Xem thêm {{count}} câu hỏi', {
+                            count: quiz.questions.length - 3
+                          })}
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
-
-                {(quiz as any).learningResources.some((r: any) => r.required) && (
-                  <div className="mt-4 p-3 bg-amber-50 border-2 border-amber-300 rounded-lg">
-                    <p className="text-sm text-amber-800 font-medium flex items-center gap-2">
-                      <span className="text-lg">⚠️</span>
-                      <span>Lưu ý: Quiz này có tài liệu <strong>BẮT BUỘC</strong> phải xem trước khi làm bài!</span>
-                    </p>
-                  </div>
-                )}
-              </div>
+              </motion.div>
             )}
-
-            {/* Questions Preview */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">{t('quiz.questionType')}</h2>
-              
-              <div className="space-y-3">
-                {quiz.questions.slice(0, 3).map((question, index) => (
-                  <div key={question.id} className="p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-start space-x-3">
-                      <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-600 text-white text-sm font-semibold rounded-full">
-                        {index + 1}
-                      </span>
-                      <div className="flex-1">
-                        <p className="text-gray-800 font-medium">{question.text}</p>
-                        <div className="mt-2 flex items-center space-x-4 text-sm text-gray-600">
-                          <span>{t('quiz.type', {type: t(`quiz.questionTypes.${question.type}`)})}</span>
-                          <span>{t('quiz.points', {points: question.points})}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                
-                {quiz.questions.length > 3 && (
-                  <p className="text-center text-gray-600 py-4">
-                    {t('quiz.moreQuestions', {count: quiz.questions.length - 3})}
-                  </p>
-                )}
-              </div>
-            </div>
           </div>
 
-          {/* Sidebar */}
+          {/* Right Column - Sticky Sidebar */}
           <div className="space-y-6">
-            {/* Stats */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">{t('quiz.stats')}</h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">{t('quiz.category')}</span>
-                  <span className="font-semibold text-gray-900">{quiz.category}</span>
+            {/* 🎯 CTA Card */}
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 p-6 sticky top-24"
+            >
+              <h3 className="font-bold text-slate-900 dark:text-white mb-4">
+                {t('quizOverview.cta.title', 'Ready to Start?')}
+              </h3>
+
+              {/* Unlock Section */}
+              {isLocked ? (
+                <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <Lock className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-amber-900 dark:text-amber-300">
+                        {t('quizOverview.access.locked', 'This quiz is password protected')}
+                      </p>
+                      <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                        {t('quizOverview.access.unlockRequired', 'Enter password to start')}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">{t('quiz.difficulty')}</span>
-                  <span className={`px-2 py-1 rounded-full text-sm ${getDifficultyColor(quiz.difficulty)}`}>
-                    {getDifficultyText(quiz.difficulty)}
-                  </span>
+              ) : (
+                <div className="mb-4 p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-emerald-900 dark:text-emerald-300">
+                        {t('quizOverview.access.ready', 'Ready to start')}
+                      </p>
+                      <p className="text-xs text-emerald-700 dark:text-emerald-400 mt-1">
+                        {t('quizOverview.access.noRestrictions', 'No restrictions')}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                
-                {reviewStats && (
+              )}
+
+              {/* Start Button */}
+              <motion.button
+                whileHover={{ scale: isLocked ? 1 : 1.02 }}
+                whileTap={{ scale: isLocked ? 1 : 0.98 }}
+                onClick={() => handleStartQuiz('start')}
+                className={`w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-bold text-lg transition-all shadow-lg ${
+                  isLocked
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white'
+                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white'
+                }`}
+              >
+                {isLocked ? (
                   <>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">{t('quiz.rating')}</span>
-                      <span className="font-semibold text-gray-900">
-                        {reviewStats.averageRating.toFixed(1)}/5 ⭐
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">{t('quiz.reviewCount')}</span>
-                      <span className="font-semibold text-gray-900">{reviewStats.totalReviews}</span>
-                    </div>
+                    <Unlock className="w-6 h-6" />
+                    {t('quizOverview.cta.unlock', 'Unlock Quiz')}
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-6 h-6" />
+                    {t('quizOverview.cta.start', 'Start Quiz')}
                   </>
                 )}
-              </div>
-            </div>
+              </motion.button>
 
-            {/* Author */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">{t('quiz.author')}</h3>
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                  {quiz.createdBy?.charAt(0).toUpperCase() || 'A'}
+              {/* Settings Button */}
+              {!isLocked && (
+                <button
+                  onClick={() => setShowSettingsModal(true)}
+                  className="w-full mt-3 flex items-center justify-center gap-2 px-6 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-500 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-all"
+                >
+                  <Settings className="w-5 h-5" />
+                  {t('quizOverview.cta.settings', 'Cài đặt Quiz')}
+                </button>
+              )}
+
+              {/* Flashcard Mode Button */}
+              {!isLocked && (
+                <button
+                  onClick={() => navigate(`/quiz/${quiz.id}/flashcards`)}
+                  className="w-full mt-3 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-semibold transition-all shadow-sm"
+                >
+                  <Brain className="w-5 h-5" />
+                  {t('quizOverview.cta.flashcards', 'Study with Flashcards')}
+                </button>
+              )}
+            </motion.div>
+
+            {/* 📊 Stats Card */}
+            {(quiz.averageScore !== undefined || quiz.totalPlayers !== undefined) && (
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-2xl shadow-sm border border-green-200 dark:border-green-900 p-6"
+              >
+                <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-green-600" />
+                  {t('quizOverview.stats.title', 'Statistics')}
+                </h3>
+
+                <div className="space-y-4">
+                  {quiz.totalPlayers !== undefined && (
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-slate-600 dark:text-slate-400">
+                          {t('quizOverview.stats.totalPlayers', 'Total Players')}
+                        </span>
+                        <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                          {quiz.totalPlayers}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {quiz.averageScore !== undefined && (
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-slate-600 dark:text-slate-400">
+                          {t('quizOverview.stats.avgScore', 'Average Score')}
+                        </span>
+                        <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                          {Math.round(quiz.averageScore)}%
+                        </span>
+                      </div>
+                      <div className="w-full bg-green-200 dark:bg-green-900/30 rounded-full h-2">
+                        <div
+                          className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full transition-all"
+                          style={{ width: `${quiz.averageScore}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <p className="font-semibold text-gray-900">{t('quiz.author')}</p>
-                  <p className="text-sm text-gray-600">
-                    {(quiz as any).createdAt && new Date((quiz as any).createdAt.seconds * 1000).toLocaleDateString('vi-VN')}
-                  </p>
-                </div>
-              </div>
-            </div>
+              </motion.div>
+            )}
           </div>
         </div>
-
-        {/* Review Section */}
-        {user && (
-          <QuickReviewSection quizId={quiz.id} quizTitle={quiz.title} />
-        )}
       </div>
-      
-      {/* Game Mode Selector Modal */}
-      <GameModeSelector
-        isOpen={showGameModeSelector}
-        onClose={() => setShowGameModeSelector(false)}
-        onSelectMultiplayer={() => {
-          setShowGameModeSelector(false);
-          handleStartQuiz('multi');
-        }}
-        connectionStatus="connected"
-      />
 
-      {/* 🔒 Password Modal for password-protected quizzes */}
-      {quiz && (quiz as any).havePassword === 'password' && (
+      {/* 🔐 Password Modal */}
+      {quiz && showPasswordModal && (
         <PasswordModal
           isOpen={showPasswordModal}
           onClose={() => {
@@ -492,8 +696,19 @@ const QuizPreviewPage: React.FC = () => {
             setPendingAction(null);
           }}
           onSuccess={handlePasswordSuccess}
-          correctPassword={(quiz as any).password || ''}
+          passwordData={quiz.pwd}
           quizTitle={quiz.title}
+        />
+      )}
+
+      {/* ⚙️ Settings Modal */}
+      {quiz && showSettingsModal && (
+        <QuizSettingsModal
+          isOpen={showSettingsModal}
+          onClose={() => setShowSettingsModal(false)}
+          onSave={handleSettingsSave}
+          currentSettings={quizSettings || undefined}
+          quizId={quiz.id}
         />
       )}
     </div>

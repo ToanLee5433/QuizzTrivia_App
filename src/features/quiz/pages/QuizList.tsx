@@ -1,37 +1,64 @@
-﻿import React, { useEffect, useState } from 'react';
+﻿import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { RootState } from '../../../lib/store';
+import { AppDispatch, RootState } from '../../../lib/store';
+import { ROUTES } from '../../../config/routes';
 import QuizCard, { QuizCardSkeleton } from '../components/QuizCard';
 import QuizStats from '../components/QuizStats';
 import { Quiz } from '../types';
 import { fetchQuizzes } from '../store';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import PasswordModal from '../../../shared/components/ui/PasswordModal';
 
 const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: propQuizzes, title }) => {
-  console.log('🎯 QuizList component mounted!');
-  
-  // Add error handling for useTranslation
-  let t: any;
-  try {
-    const translation = useTranslation();
-    t = translation.t;
-  } catch (error) {
-    console.error('❌ useTranslation error:', error);
-    // Fallback translation function
-    t = (key: string, fallback?: string) => {
-      console.warn(`Missing translation for key: ${key}`);
-      return fallback || key;
-    };
-  }
-  
-  const dispatch = useDispatch();
+  // Always call hooks at the top - Fix React Hooks rules
+  const { t } = useTranslation();
+  const translate = useCallback(
+    (key: string, fallback: string, options?: Record<string, unknown>): string => {
+      const value = t(key, options as any);
+      if (typeof value === 'string') {
+        return value === key ? fallback : value;
+      }
+      return fallback;
+    },
+    [t]
+  );
+
+  const resultsFoundLabel = useMemo(
+    () => translate('quiz.resultsFound', 'Đã tìm thấy'),
+    [translate]
+  );
+
+  const itemLabel = useMemo(
+    () => translate('quiz.itemLabel', 'quiz'),
+    [translate]
+  );
+
+  const searchPlaceholder = useMemo(
+    () => translate('quiz.searchPlaceholder', '🔍 Tìm kiếm quiz, danh mục, thẻ...'),
+    [translate]
+  );
+
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const quizzes = propQuizzes || useSelector((state: RootState) => state.quiz.quizzes);
+  const storeQuizzes = useSelector((state: RootState) => state.quiz.quizzes);
   const loading = useSelector((state: RootState) => state.quiz.loading || state.quiz.isLoading);
   const error = useSelector((state: RootState) => state.quiz.error);
   const user = useSelector((state: RootState) => state.auth.user);
+
+  // Use propQuizzes if provided, otherwise use store quizzes
+  const quizzes = propQuizzes || storeQuizzes;
+
+  const quizHasResources = useCallback(
+    (quiz: Quiz) => Array.isArray(quiz.resources) && quiz.resources.length > 0,
+    []
+  );
+
+  const approvedQuizzes = useMemo(
+    () => quizzes.filter(q => q.status === 'approved'),
+    [quizzes]
+  );
 
   // Show specific error message for Firestore connection issues
   const showFirestoreError = error && (
@@ -47,35 +74,36 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
     const fetchData = async () => {
       if (!propQuizzes && quizzes.length === 0 && !loading) {
         try {
-          await dispatch(fetchQuizzes({ user }) as any).unwrap();
-        } catch (err: any) {
+          await dispatch(fetchQuizzes({})).unwrap();
+        } catch (err) {
           console.error('Quiz fetch error:', err);
           if (err instanceof Error) {
             console.error('Error message:', err.message);
-            if ((err as any).code) {
-              console.error('Error code:', (err as any).code);
+            const errorWithCode = err as { code?: string };
+            if (errorWithCode.code) {
+              console.error('Error code:', errorWithCode.code);
             }
-          } else {
-            console.error('Unknown error:', err);
+          } else if (typeof err === 'object' && err !== null && 'code' in err) {
+            const errorWithCode = err as { code?: string };
+            if (errorWithCode.code) {
+              console.error('Error code:', errorWithCode.code);
+            }
           }
 
           if (retryCount < maxRetries) {
-            // Retry with exponential backoff
             const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
-            // toast.info('Đang thử kết nối lại...');
-            
             setTimeout(() => {
               setRetryCount(prev => prev + 1);
             }, delay);
           } else {
-            toast.error(t('messages.serverError', 'Không thể kết nối đến server. Vui lòng thử lại sau.'));
+            toast.error(translate('messages.serverError', 'Không thể kết nối đến server. Vui lòng thử lại sau.'));
           }
         }
       }
     };
 
     fetchData();
-  }, [dispatch, propQuizzes, quizzes.length, user, loading, retryCount]);
+  }, [dispatch, propQuizzes, quizzes.length, loading, retryCount, translate]);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
   const [difficulty, setDifficulty] = useState('all');
@@ -84,32 +112,72 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
   const [showCompleted, setShowCompleted] = useState(true);
   const [showStats, setShowStats] = useState(false);
   const [resourceFilter, setResourceFilter] = useState<'all' | 'with-resources' | 'no-resources'>('all'); // 🆕 Filter for resources
+  
+  // 🔒 Password modal state
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
 
   const handleQuizStart = (quiz: Quiz) => {
-    navigate(`/quiz/${quiz.id}`);
+    // 🔒 Check if quiz requires password
+    const requiresPassword = quiz.visibility === 'password' || quiz.havePassword === 'password';
+    
+    if (requiresPassword) {
+      // Show password modal immediately
+      setSelectedQuiz(quiz);
+      setShowPasswordModal(true);
+    } else {
+      // Navigate to preview page for public quizzes
+      navigate(`/quiz/${quiz.id}/preview`);
+    }
+  };
+  
+  // 🔒 Handle successful password verification
+  const handlePasswordSuccess = () => {
+    if (selectedQuiz) {
+      setShowPasswordModal(false);
+      // Navigate to preview page after successful password entry
+      navigate(`/quiz/${selectedQuiz.id}/preview`);
+    }
+  };
+  
+  // 🔒 Handle password modal close
+  const handlePasswordClose = () => {
+    setShowPasswordModal(false);
+    setSelectedQuiz(null);
   };
   
   const categories = Array.from(new Set(quizzes.map(q => q.category)));
   const difficulties = Array.from(new Set(quizzes.map(q => q.difficulty)));
+  const difficultyOrder: Record<Quiz['difficulty'], number> = {
+    easy: 1,
+    medium: 2,
+    hard: 3,
+  };
+  const difficultyOptionFallback = useCallback((level: Quiz['difficulty']) => {
+    switch (level) {
+      case 'easy':
+        return '😊 Dễ';
+      case 'medium':
+        return '😐 Trung bình';
+      case 'hard':
+        return '😤 Khó';
+      default:
+        return level;
+    }
+  }, []);
   
   // Chỉ hiển thị quiz đã được duyệt - CẢ PUBLIC VÀ PASSWORD ĐỀU HIỂN THỊ 🔒
-  let filtered = quizzes.filter(q => {
-    const hasResources = (q as any).resources && (q as any).resources.length > 0;
-    
-    // 🔒 HavePassword: Cả public và password đều hiển thị trong danh sách
-    // Chỉ khác nhau ở chỗ password cần nhập mật khẩu khi vào
-    
+  let filtered = approvedQuizzes.filter(q => {
+    const hasResources = quizHasResources(q);
+
     return (
-      q.status === 'approved' &&
-      // All approved quizzes show in list (both public and password)
       (category === 'all' || q.category === category) &&
       (difficulty === 'all' || q.difficulty === difficulty) &&
       (showCompleted || !q.isCompleted) &&
       q.title.toLowerCase().includes(search.toLowerCase()) &&
-      // 🆕 Resource filter
-      (resourceFilter === 'all' || 
-       (resourceFilter === 'with-resources' && hasResources) ||
-       (resourceFilter === 'no-resources' && !hasResources))
+      (resourceFilter === 'all' ||
+        (resourceFilter === 'with-resources' && hasResources) ||
+        (resourceFilter === 'no-resources' && !hasResources))
     );
   });
 
@@ -122,9 +190,9 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
         return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
       case 'popular':
         return (b.totalPlayers || 0) - (a.totalPlayers || 0);
-      case 'difficulty':
-        const diffOrder = { 'easy': 1, 'medium': 2, 'hard': 3 };
-        return (diffOrder[a.difficulty as keyof typeof diffOrder] || 2) - (diffOrder[b.difficulty as keyof typeof diffOrder] || 2);
+      case 'difficulty': {
+        return (difficultyOrder[a.difficulty] || 2) - (difficultyOrder[b.difficulty] || 2);
+      }
       default:
         return 0;
     }
@@ -133,7 +201,7 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
   // Retry connection handler
   const handleRetry = () => {
     setRetryCount(0);
-    dispatch(fetchQuizzes({ user }) as any);
+    dispatch(fetchQuizzes({}));
   };
 
   if (error) {
@@ -148,7 +216,7 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
               onClick={handleRetry}
               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
             >
-              Thử lại
+              {t('quiz.retryConnection')}
             </button>
           </div>
         </div>
@@ -161,7 +229,7 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
         <div className="max-w-5xl mx-auto px-4">
           <div className="flex justify-center items-center space-x-2">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-            <span className="text-gray-600">Đang tải dữ liệu...</span>
+            <span className="text-gray-600">{t('quiz.loadingData')}</span>
           </div>
         </div>
       </div>
@@ -175,8 +243,8 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">{title || 'Khám phá Quiz'}</h1>
-              <p className="text-gray-600 text-lg">Tìm hiểu kiến thức mới qua các quiz thú vị</p>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">{title || t('quiz.discoverTitle')}</h1>
+              <p className="text-gray-600 text-lg">{t('quiz.discoverDescription')}</p>
             </div>
             <div className="flex items-center gap-4">
               <button
@@ -188,7 +256,9 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
                 </svg>
-                {showStats ? 'Ẩn thống kê' : 'Hiện thống kê'}
+                {showStats
+                  ? translate('quiz.hideStats', 'Ẩn thống kê')
+                  : translate('quiz.showStats', 'Hiện thống kê')}
               </button>
               {/* Multiplayer Button - Nổi bật */}
               <button 
@@ -199,18 +269,18 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
                 <svg className="w-5 h-5 relative z-10 group-hover:rotate-12 transition-transform" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 3C4.13 3 1 6.13 1 10c0 2.38 1.19 4.47 3 5.74V21l6-3h2c3.87 0 7-3.13 7-7s-3.13-7-7-7H8zm13 0v6l3 3-3 3v6l-5.5-4.5L18 13l3-3-3-3V1l3 2z"/>
                 </svg>
-                <span className="relative z-10">🎮 Chơi với bạn bè</span>
-                <span className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-0.5 rounded-bl-lg rounded-tr-lg">HOT</span>
+                <span className="relative z-10">🎮 {t('quiz.playWithFriends')}</span>
+                <span className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-0.5 rounded-bl-lg rounded-tr-lg">{t('quiz.hotBadge')}</span>
               </button>
               {(user?.role === 'creator' || user?.role === 'admin') && (
                 <button 
-                  onClick={() => navigate('/creator')}
+                  onClick={() => navigate(ROUTES.CREATOR_NEW_QUIZ)}
                   className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
-                  Tạo Quiz mới
+                  {t('quiz.createNew')}
                 </button>
               )}
             </div>
@@ -234,7 +304,7 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              📚 Tất cả Quiz ({quizzes.filter(q => q.status === 'approved').length})
+              📚 {translate('quiz.resourceFilter.all', 'Tất cả Quiz')} ({approvedQuizzes.length})
             </button>
             <button
               onClick={() => setResourceFilter('with-resources')}
@@ -245,7 +315,7 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
               }`}
             >
               <span className="text-lg">📖</span>
-              Có tài liệu học tập ({quizzes.filter(q => q.status === 'approved' && (q as any).resources && (q as any).resources.length > 0).length})
+              {translate('quiz.resourceFilter.withResources', 'Có tài liệu học tập')} ({approvedQuizzes.filter(quizHasResources).length})
             </button>
             <button
               onClick={() => setResourceFilter('no-resources')}
@@ -256,7 +326,7 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
               }`}
             >
               <span className="text-lg">⚡</span>
-              Làm trực tiếp ({quizzes.filter(q => q.status === 'approved' && (!(q as any).resources || (q as any).resources.length === 0)).length})
+              {translate('quiz.resourceFilter.noResources', 'Làm trực tiếp')} ({approvedQuizzes.filter(q => !quizHasResources(q)).length})
             </button>
           </div>
 
@@ -266,7 +336,7 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
               <div className="relative">
                 <input
                   type="text"
-                  placeholder={t('quiz.searchPlaceholder', '🔍 Tìm kiếm quiz, danh mục, tags...')}
+                  placeholder={searchPlaceholder}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg p-3 pl-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -293,7 +363,7 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
               value={category} 
               onChange={e => setCategory(e.target.value)}
             >
-              <option value="all">🏷️ Tất cả danh mục</option>
+              <option value="all">{translate('quiz.filters.allCategoriesOption', '🏷️ Tất cả danh mục')}</option>
               {categories.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
             
@@ -303,10 +373,12 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
               value={difficulty} 
               onChange={e => setDifficulty(e.target.value)}
             >
-              <option value="all">📊 Tất cả độ khó</option>
-              {difficulties.map(d => <option key={d} value={d}>
-                {d === 'easy' ? '😊 Dễ' : d === 'medium' ? '😐 Trung bình' : '😤 Khó'}
-              </option>)}
+              <option value="all">{translate('quiz.filters.allDifficultiesOption', '📊 Tất cả độ khó')}</option>
+              {difficulties.map(d => (
+                <option key={d} value={d}>
+                  {translate(`quiz.difficultyOptions.${d}`, difficultyOptionFallback(d))}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -319,10 +391,10 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
                 value={sortBy} 
                 onChange={e => setSortBy(e.target.value)}
               >
-                <option value="newest">🆕 Mới nhất</option>
-                <option value="oldest">📅 Cũ nhất</option>
-                <option value="popular">🔥 Phổ biến</option>
-                <option value="difficulty">📈 Theo độ khó</option>
+                <option value="newest">🆕 {t('quiz.sort.newest')}</option>
+                <option value="oldest">📅 {t('quiz.sort.oldest')}</option>
+                <option value="popular">🔥 {t('quiz.sort.popular')}</option>
+                <option value="difficulty">📈 {t('quiz.sort.byDifficulty')}</option>
               </select>
 
               {/* Show Completed Toggle */}
@@ -333,18 +405,18 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
                   onChange={e => setShowCompleted(e.target.checked)}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                Hiện quiz đã hoàn thành
+                {t('quiz.showCompleted')}
               </label>
             </div>
 
             {/* View Mode Toggle */}
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Hiển thị:</span>
+              <span className="text-sm text-gray-600">{t('quiz.viewMode.label')}:</span>
               <div className="flex border border-gray-300 rounded-lg overflow-hidden">
                 <button
                   onClick={() => setViewMode('grid')}
                   className={`p-2 ${viewMode === 'grid' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-                  title="Lưới"
+                  title={t('quiz.viewMode.grid')}
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -353,7 +425,7 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
                 <button
                   onClick={() => setViewMode('list')}
                   className={`p-2 ${viewMode === 'list' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-                  title="Danh sách"
+                  title={t('quiz.viewMode.list')}
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
@@ -365,10 +437,25 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
 
           {/* Results Summary */}
           <div className="mt-4 text-sm text-gray-600">
-            Tìm thấy <span className="font-semibold text-blue-600">{filtered.length}</span> quiz
-            {search && <span> cho "{search}"</span>}
-            {category !== 'all' && <span> trong danh mục "{category}"</span>}
-            {difficulty !== 'all' && <span> với độ khó "{difficulty}"</span>}
+            {resultsFoundLabel} <span className="font-semibold text-blue-600">{filtered.length}</span> {itemLabel}
+            {search && (
+              <span>
+                {' '}
+                {translate('quiz.resultsSummary.searchTerm', 'cho "{{term}}"', { term: search })}
+              </span>
+            )}
+            {category !== 'all' && (
+              <span>
+                {' '}
+                {translate('quiz.resultsSummary.category', 'trong danh mục "{{category}}"', { category })}
+              </span>
+            )}
+            {difficulty !== 'all' && (
+              <span>
+                {' '}
+                {translate('quiz.resultsSummary.difficulty', 'với độ khó "{{difficulty}}"', { difficulty })}
+              </span>
+            )}
           </div>
         </div>
 
@@ -381,34 +468,34 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
             Array.from({length: 8}).map((_,i) => <QuizCardSkeleton key={i} />)
           ) : showFirestoreError ? (
             <div className="col-span-full bg-red-50 border border-red-200 rounded-xl p-8 text-center">
-              <div className="text-red-600 text-xl font-semibold mb-3">🚫 Kết nối Firestore bị chặn</div>
+              <div className="text-red-600 text-xl font-semibold mb-3">🚫 {t('quiz.errors.connection')}</div>
               <div className="text-red-700 mb-6">{error}</div>
               <div className="text-sm text-gray-600 mb-6 max-w-md mx-auto">
-                <div className="mb-3"><strong>Khắc phục:</strong></div>
+                <div className="mb-3"><strong>{t('quiz.errors.troubleshoot')}:</strong></div>
                 <div className="space-y-1">
-                  <div>1. Tắt Ad Blocker cho localhost:5174</div>
-                  <div>2. Thêm *.googleapis.com vào whitelist</div>
-                  <div>3. Thử chế độ Incognito/Private</div>
-                  <div>4. Kiểm tra Firewall/Antivirus</div>
+                  <div>{t('1TatAdBlockerChoLocalhost5174')}</div>
+                  <div>{t('2ThemGoogleapiscomVaoWhitelist')}</div>
+                  <div>{t('3ThuCheDoIncognitoprivate')}</div>
+                  <div>{t('4KiemTraFirewallantivirus')}</div>
                 </div>
               </div>
               <button 
                 className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium" 
-                onClick={()=>dispatch(fetchQuizzes({ user }) as any)}
+                onClick={() => dispatch(fetchQuizzes({}))}
               >
-                🔄 Thử lại kết nối
+                🔄 {t('quiz.retryConnection')}
               </button>
             </div>
           ) : error ? (
             <div className="col-span-full text-center">
               <div className="bg-red-50 border border-red-200 rounded-xl p-8">
-                <div className="text-red-600 text-lg font-medium mb-4">❌ Có lỗi xảy ra</div>
+                <div className="text-red-600 text-lg font-medium mb-4">❌ {t('quiz.errors.generic')}</div>
                 <div className="text-red-700 mb-6">{error}</div>
                 <button 
                   className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors" 
-                  onClick={()=>dispatch(fetchQuizzes({ user }) as any)}
+                  onClick={() => dispatch(fetchQuizzes({}))}
                 >
-                  🔄 Thử lại
+                  🔄 {t('quiz.retryConnection')}
                 </button>
               </div>
             </div>
@@ -418,8 +505,8 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
                 <svg className='w-16 h-16 mx-auto text-gray-300 mb-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                   <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={1.5} d='M9.75 17L9 21m6-4l.75 4M4 4v16c0 1.104.896 2 2 2h12a2 2 0 002-2V4M4 4l8 8m0 0l8-8' />
                 </svg>
-                <h3 className="text-xl font-medium text-gray-900 mb-2">Không tìm thấy quiz</h3>
-                <p className="text-gray-600 mb-6">Không có quiz nào phù hợp với bộ lọc hiện tại.</p>
+                <h3 className="text-xl font-medium text-gray-900 mb-2">{t('quiz.noResults.title')}</h3>
+                <p className="text-gray-600 mb-6">{t('quiz.noResults.description')}</p>
                 <div className="flex justify-center gap-4">
                   <button 
                     onClick={() => {
@@ -429,14 +516,14 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
                     }}
                     className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
                   >
-                    🔄 Xóa bộ lọc
+                    🔄 {t('quiz.clearFilters')}
                   </button>
                   {(user?.role === 'creator' || user?.role === 'admin') && (
                     <button 
                       className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors" 
-                      onClick={()=>navigate('/creator')}
+                      onClick={()=>navigate(ROUTES.CREATOR_NEW_QUIZ)}
                     >
-                      ➕ Tạo quiz mới
+                      ➕ {t('quiz.createNew')}
                     </button>
                   )}
                 </div>
@@ -454,10 +541,23 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
           )}
         </div>
       </div>
+      
+      {/* 🔒 Password Modal */}
+      {selectedQuiz && showPasswordModal && (
+        <PasswordModal
+          isOpen={showPasswordModal}
+          onClose={handlePasswordClose}
+          onSuccess={handlePasswordSuccess}
+          passwordData={selectedQuiz.pwd}
+          quizTitle={selectedQuiz.title}
+        />
+      )}
     </div>
   );
 };
 
 export default QuizList;
+
+
 
 

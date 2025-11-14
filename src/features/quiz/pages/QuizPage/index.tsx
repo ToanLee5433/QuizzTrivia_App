@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { RootState } from '../../../../lib/store';
-import { useQuizData, useQuizSession, useQuizTimer, useQuizNavigation } from './hooks';
+import { useQuizData, useQuizSession, useQuizTimer, useQuizNavigation, useQuizSettings } from './hooks';
 import Timer from './components/Timer';
 import ProgressIndicator from './components/ProgressIndicator';
 import QuestionRenderer from './components/QuestionRenderer';
 import QuickNavigation from './components/QuickNavigation';
 import ConfirmationModals from './components/ConfirmationModals';
 import LearningResourcesView from './components/LearningResourcesView';
+import QuizSettingsIndicator from './components/QuizSettingsIndicator';
 import QuizPasswordModal from '../../../../shared/components/ui/QuizPasswordModal';
 import { unlockQuiz } from '../../../../lib/services/quizAccessService';
 import { toast } from 'react-toastify';
+import { Quiz } from '../../types';
 
 const QuizPage: React.FC = () => {
   const { quiz, loading, error, needsPassword, quizMetadata, retryLoad } = useQuizData();
@@ -108,11 +111,27 @@ const QuizPage: React.FC = () => {
 };
 
 interface QuizPageContentProps {
-  quiz: any;
+  quiz: Quiz;
 }
 
 const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
-  // const navigate = useNavigate();
+  const { t } = useTranslation();
+  
+  // Apply quiz settings (shuffle, time limits, etc.)
+  const {
+    settings,
+    processedQuestions,
+    totalDuration,
+    shouldAutoSubmit,
+    hasTimeLimit
+  } = useQuizSettings(quiz);
+
+  // Create quiz with processed questions
+  const quizWithSettings = {
+    ...quiz,
+    questions: processedQuestions
+  };
+
   const {
     session,
     updateAnswer,
@@ -120,7 +139,7 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
     completeQuiz,
     getUnansweredQuestions,
     progress
-  } = useQuizSession({ quiz });
+  } = useQuizSession({ quiz: quizWithSettings });
 
   const {
     formattedTime,
@@ -128,8 +147,16 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
     isTimeCritical,
     percentage
   } = useQuizTimer({
-    onTimeUp: completeQuiz,
-    isActive: !session.isCompleted
+    onTimeUp: () => {
+      if (shouldAutoSubmit) {
+        toast.warning('⏰ Hết giờ! Tự động nộp bài...');
+        completeQuiz();
+      } else {
+        toast.warning('⏰ Hết giờ! Nhưng bạn vẫn có thể tiếp tục làm bài.');
+      }
+    },
+    isActive: !session.isCompleted,
+    customDuration: hasTimeLimit ? totalDuration : 0
   });
 
   const {
@@ -143,13 +170,38 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
     isLastQuestion,
     modalControls
   } = useQuizNavigation({
-    questions: quiz.questions,
+    questions: quizWithSettings.questions,
     currentQuestionIndex: session.currentQuestionIndex,
     onQuestionChange: setCurrentQuestion,
     answers: session.answers
   });
 
-  const currentQuestion = quiz.questions[session.currentQuestionIndex];
+  const currentQuestion = quizWithSettings.questions[session.currentQuestionIndex];
+
+  // Safety check: If no questions loaded, show error
+  if (!currentQuestion || !quizWithSettings.questions.length) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-orange-50">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('quiz.errors.noQuestions')}</h2>
+          <p className="text-gray-600 mb-6">
+            {t('quiz.errors.noQuestionsDescription')}
+          </p>
+          <button
+            onClick={() => window.history.back()}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            {t('common.goBack')}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (session.isCompleted) {
     return (
@@ -176,7 +228,7 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-                <span>Thoát</span>
+                <span>{t('quiz.actions.exit')}</span>
               </button>
               <div className="h-6 w-px bg-gray-300"></div>
               <h1 className="text-xl font-semibold text-gray-800">{quiz.title}</h1>
@@ -186,15 +238,17 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
 
               <ProgressIndicator
                 current={session.currentQuestionIndex + 1}
-                total={quiz.questions.length}
+                total={quizWithSettings.questions.length}
                 percentage={progress}
               />
-              <Timer
-                timeLeft={formattedTime}
-                isWarning={isTimeRunningOut}
-                isCritical={isTimeCritical}
-                percentage={percentage}
-              />
+              {hasTimeLimit && (
+                <Timer
+                  timeLeft={formattedTime}
+                  isWarning={isTimeRunningOut}
+                  isCritical={isTimeCritical}
+                  percentage={percentage}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -205,7 +259,7 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
           {/* Navigation Panel */}
           <div className="lg:col-span-1">
             <QuickNavigation
-              questions={quiz.questions}
+              questions={quizWithSettings.questions}
               currentQuestionIndex={session.currentQuestionIndex}
               answers={session.answers}
               onQuestionSelect={goToQuestion}
@@ -219,7 +273,9 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
                 question={currentQuestion}
                 questionNumber={session.currentQuestionIndex + 1}
                 value={session.answers[currentQuestion.id]}
-                onChange={(answer: any) => updateAnswer(currentQuestion.id, answer)}
+                onChange={(answer) => {
+                  updateAnswer(currentQuestion.id, answer);
+                }}
               />
 
               {/* Navigation Buttons */}
@@ -236,7 +292,7 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
-                  <span>Câu trước</span>
+                  <span>{t('quiz.actions.previous')}</span>
                 </button>
 
                 <div className="flex space-x-3">
@@ -248,14 +304,14 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span>Nộp bài</span>
+                      <span>{t('quiz.actions.submit')}</span>
                     </button>
                   ) : (
                     <button
                       onClick={goToNextQuestion}
                       className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 shadow-sm hover:shadow-md transition-all"
                     >
-                      <span>Câu tiếp</span>
+                      <span>{t('quiz.actions.next')}</span>
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
@@ -277,15 +333,34 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
         onGoToQuestion={goToQuestion}
       />
 
+      {/* Settings Indicator */}
+      <QuizSettingsIndicator 
+        settings={settings} 
+        questionsCount={quizWithSettings.questions.length}
+      />
+
       {/* Thêm cảnh báo hết giờ nếu cần thiết - hiện khi còn <= 10% tổng thời gian */}
-      {isTimeRunningOut && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-600 rounded-lg flex items-center gap-2">
-          <span className="text-xl">⏰</span>
-          <span className="font-medium">
-            {isTimeCritical 
-              ? "Chỉ còn ít hơn 1 phút! Hãy hoàn thành ngay." 
-              : "Sắp hết giờ! Chỉ còn 10% thời gian."}
-          </span>
+      {hasTimeLimit && isTimeRunningOut && (
+        <div className="fixed bottom-4 right-4 z-50 max-w-sm">
+          <div className={`p-4 rounded-lg shadow-xl border-2 ${
+            isTimeCritical 
+              ? 'bg-red-100 border-red-500 text-red-900' 
+              : 'bg-amber-100 border-amber-500 text-amber-900'
+          } flex items-center gap-3 animate-pulse`}>
+            <span className="text-2xl">⏰</span>
+            <div>
+              <p className="font-bold">
+                {isTimeCritical 
+                  ? "Chỉ còn ít hơn 1 phút!" 
+                  : "Sắp hết giờ!"}
+              </p>
+              <p className="text-sm">
+                {isTimeCritical
+                  ? "Hãy hoàn thành ngay."
+                  : `Còn ${formattedTime} - Chỉ còn 10% thời gian.`}
+              </p>
+            </div>
+          </div>
         </div>
       )}
     </div>

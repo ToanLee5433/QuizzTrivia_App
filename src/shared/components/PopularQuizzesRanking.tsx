@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Quiz } from '../../features/quiz/types';
 import { Clock, Users, Target, TrendingUp } from 'lucide-react';
 
@@ -13,6 +14,7 @@ interface PopularQuizzesRankingProps {
 }
 
 const PopularQuizzesRanking: React.FC<PopularQuizzesRankingProps> = ({ timeFilter = 'week' }) => {
+  const { t } = useTranslation();
   const [popularQuizzes, setPopularQuizzes] = useState<PopularQuiz[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -55,7 +57,8 @@ const PopularQuizzesRanking: React.FC<PopularQuizzesRankingProps> = ({ timeFilte
   if (loading) {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">🏆 Quiz Phổ Biến</h3>
+        {/* eslint-disable-next-line i18next/no-literal-string */}
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('quiz.popularQuizzesRanking.title')}</h3>
         <div className="animate-pulse space-y-4">
           {[1, 2, 3, 4, 5].map(i => (
             <div key={i} className="flex items-center space-x-4">
@@ -74,7 +77,8 @@ const PopularQuizzesRanking: React.FC<PopularQuizzesRankingProps> = ({ timeFilte
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900">🏆 Quiz Phổ Biến</h3>
+        {/* eslint-disable-next-line i18next/no-literal-string */}
+        <h3 className="text-lg font-semibold text-gray-900">{t('quiz.popularQuizzesRanking.title')}</h3>
         <span className="text-sm text-gray-500 capitalize">
           {timeFilter === 'week' ? 'Tuần này' : timeFilter === 'month' ? 'Tháng này' : 'Tất cả'}
         </span>
@@ -83,8 +87,8 @@ const PopularQuizzesRanking: React.FC<PopularQuizzesRankingProps> = ({ timeFilte
       {popularQuizzes.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           <div className="text-4xl mb-2">📊</div>
-          <p>Chưa có dữ liệu quiz phổ biến</p>
-          <p className="text-sm">Dữ liệu sẽ xuất hiện khi có nhiều người tham gia quiz hơn</p>
+          <p>{t('quiz.popularQuizzesRanking.noData')}</p>
+          <p className="text-sm">{t('quiz.popularQuizzesRanking.noDataDesc')}</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -111,19 +115,19 @@ const PopularQuizzesRanking: React.FC<PopularQuizzesRankingProps> = ({ timeFilte
                 <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
                   <div className="flex items-center space-x-1">
                     <Users className="w-3 h-3" />
-                    <span>{quiz.totalPlayers} người chơi</span>
+                    <span>{t('quiz.popularQuizzesRanking.players', { count: quiz.totalPlayers })}</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <TrendingUp className="w-3 h-3" />
-                    <span>{quiz.attempts} lượt chơi</span>
+                    <span>{t('quiz.popularQuizzesRanking.attempts', { count: quiz.attempts })}</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Target className="w-3 h-3" />
-                    <span>{quiz.averageScore.toFixed(1)}% điểm TB</span>
+                    <span>{t('quiz.popularQuizzesRanking.averageScore', { score: quiz.averageScore.toFixed(1) })}</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Clock className="w-3 h-3" />
-                    <span>{quiz.duration}p</span>
+                    <span>{t('quiz.popularQuizzesRanking.duration', { minutes: quiz.duration })}</span>
                   </div>
                 </div>
               </div>

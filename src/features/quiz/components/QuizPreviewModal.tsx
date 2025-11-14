@@ -30,6 +30,7 @@ export const QuizPreviewModal: React.FC<QuizPreviewModalProps> = ({
         <div className="bg-gradient-to-r from-indigo-600 to-blue-600 p-6 text-white rounded-t-2xl">
           <div className="flex items-center justify-between">
             <div>
+              {/* eslint-disable-next-line i18next/no-literal-string */}
               <h2 className="text-2xl font-bold flex items-center gap-2">
                 👁️ {t('quiz.preview.title') || 'Preview Quiz'}
               </h2>
@@ -41,7 +42,7 @@ export const QuizPreviewModal: React.FC<QuizPreviewModalProps> = ({
               onClick={onClose}
               className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-colors"
             >
-              ✕
+              {t('quiz.previewPage.closeButton')}
             </button>
           </div>
         </div>
@@ -79,12 +80,13 @@ export const QuizPreviewModal: React.FC<QuizPreviewModalProps> = ({
             </div>
             <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
               <p className="text-sm text-orange-600 mb-1">{t('quiz.estimatedTime') || 'Est. Time'}</p>
-              <p className="text-lg font-bold text-orange-900">~{estimatedTime} min</p>
+              <p className="text-lg font-bold text-orange-900">~{estimatedTime} {t('quiz.previewPage.estimatedTimeUnit')}</p>
             </div>
           </div>
 
           {/* Quiz Settings */}
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            {/* eslint-disable-next-line i18next/no-literal-string */}
             <h4 className="font-semibold text-gray-900 mb-3">
               ⚙️ {t('quiz.settings') || 'Settings'}
             </h4>
@@ -167,6 +169,7 @@ export const QuizPreviewModal: React.FC<QuizPreviewModalProps> = ({
           {/* Validation Warnings */}
           {questionCount < 3 && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              {/* eslint-disable-next-line i18next/no-literal-string */}
               <p className="text-yellow-800 flex items-center gap-2">
                 ⚠️ <span className="font-medium">
                   {t('quiz.validation.minQuestions') || 'Recommended: At least 3 questions for a good quiz'}

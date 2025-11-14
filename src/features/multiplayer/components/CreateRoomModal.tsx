@@ -52,7 +52,7 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
       isPrivate,
       password: isPrivate ? password : undefined,
       settings: {
-        	timePerQuestion: timeLimit,
+        timePerQuestion: timeLimit,
         showLeaderboard,
         allowLateJoin: true
       }
@@ -130,7 +130,7 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <Clock className="w-4 h-4 inline mr-2" />
-              {t('multiplayer.timeLimit')} ({MIN_TIME_LIMIT}-{MAX_TIME_LIMIT} giây)
+              {t('multiplayer.timeLimit')} ({t('multiplayer.timeLimitRange', { min: MIN_TIME_LIMIT, max: MAX_TIME_LIMIT })})
             </label>
             <input
               type="number"
@@ -143,13 +143,13 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
               }}
               min={MIN_TIME_LIMIT}
               max={MAX_TIME_LIMIT}
-              placeholder="VD: 30"
+              placeholder={t('placeholders.enterNumber')}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
               disabled={loading}
             />
             <p className="text-xs text-gray-500 mt-1">
-              Từ {MIN_TIME_LIMIT} đến {MAX_TIME_LIMIT} giây cho mỗi câu hỏi (tối đa 5 phút)
+              {t('multiplayer.timeLimitHint', { min: MIN_TIME_LIMIT, max: MAX_TIME_LIMIT })}
             </p>
           </div>
 
@@ -213,13 +213,13 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
           {/* Selected Quiz Info */}
           {selectedQuiz && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-medium text-blue-900 mb-2">
+              <h4 className="text-xs font-medium text-blue-600 mb-1">
                 {t('quiz.selectedQuiz')}
               </h4>
               <div className="text-sm text-blue-800">
                 <div className="font-medium">{selectedQuiz.title}</div>
                 <div className="text-blue-600">
-                  {selectedQuiz.questions?.length || 0} câu hỏi
+                  {t('multiplayer.questionsCount', { count: selectedQuiz.questions?.length || 0 })}
                 </div>
               </div>
             </div>

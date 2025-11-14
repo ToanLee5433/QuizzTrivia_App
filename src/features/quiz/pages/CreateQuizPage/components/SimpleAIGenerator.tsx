@@ -5,7 +5,6 @@
 
 import React, { useState } from 'react';
 import { 
-  Bot, 
   Zap, 
   Loader2, 
   Brain,
@@ -14,8 +13,9 @@ import {
   XCircle
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 import { simpleAIService, SimpleAIConfig } from '../../../services/simpleAIService';
-import { Question } from '../types';
+import { Question } from '../../../types';
 
 interface SimpleAIGeneratorProps {
   content: string;
@@ -30,6 +30,7 @@ export const SimpleAIGenerator: React.FC<SimpleAIGeneratorProps> = ({
   isOpen,
   onClose
 }) => {
+  const { t } = useTranslation();
   const [config, setConfig] = useState<SimpleAIConfig>({
     numQuestions: 5,
     difficulty: 'medium',
@@ -43,7 +44,7 @@ export const SimpleAIGenerator: React.FC<SimpleAIGeneratorProps> = ({
 
   const handleGenerate = async () => {
     if (!content.trim()) {
-      toast.error('Vui lòng nhập nội dung trước khi tạo câu hỏi');
+      toast.error(t('createQuiz.ai.errors.emptyPrompt'));
       return;
     }
 
@@ -52,20 +53,20 @@ export const SimpleAIGenerator: React.FC<SimpleAIGeneratorProps> = ({
       const result = await simpleAIService.generateQuestions(content, config);
 
       if (result.error) {
-        toast.error(`Lỗi: ${result.error}`);
+        toast.error(result.error ?? t('createQuiz.ai.errors.generationFailed'));
         return;
       }
 
       if (result.questions.length === 0) {
-        toast.error('Không thể tạo câu hỏi từ nội dung này');
+        toast.error(t('createQuiz.ai.errors.noQuestions'));
         return;
       }
 
       setGeneratedQuestions(result.questions);
       setStep('review');
-      toast.success(`✨ Đã tạo ${result.questions.length} câu hỏi!`);
+      toast.success(t('createQuiz.ai.success', { count: result.questions.length }));
     } catch (error) {
-      toast.error('Có lỗi xảy ra khi tạo câu hỏi');
+      toast.error(t('createQuiz.ai.errors.generationFailed'));
       console.error(error);
     } finally {
       setGenerating(false);
@@ -74,7 +75,7 @@ export const SimpleAIGenerator: React.FC<SimpleAIGeneratorProps> = ({
 
   const handleApplyQuestions = () => {
     onQuestionsGenerated(generatedQuestions);
-    toast.success(`Đã thêm ${generatedQuestions.length} câu hỏi vào quiz!`);
+    toast.success(t('createQuiz.ai.applied', { count: generatedQuestions.length }));
     onClose();
   };
 
@@ -95,13 +96,15 @@ export const SimpleAIGenerator: React.FC<SimpleAIGeneratorProps> = ({
                 <Brain className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">AI Question Generator</h2>
-                <p className="text-white/80 text-sm">Powered by Google Generative AI</p>
+                <h2 className="text-2xl font-bold text-white">{t('createQuiz.ai.title')}</h2>
+                <p className="text-white/80 text-sm">{t('quizCreation.simpleAI.poweredBy')}</p>
               </div>
             </div>
             <button
+              type="button"
               onClick={onClose}
               className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center transition-colors"
+              aria-label={t('close')}
             >
               <XCircle className="w-6 h-6 text-white" />
             </button>
@@ -118,10 +121,10 @@ export const SimpleAIGenerator: React.FC<SimpleAIGeneratorProps> = ({
                   <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                   <div>
                     <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">
-                      Sử dụng AI miễn phí
+                      {t('quizCreation.simpleAI.bannerTitle')}
                     </h3>
                     <p className="text-sm text-blue-700 dark:text-blue-300">
-                      Firebase Cloud Functions với Google Gemini 2.0 Flash - Tạo câu hỏi chất lượng cao từ nội dung của bạn.
+                      {t('quizCreation.simpleAI.bannerDescription')}
                     </p>
                   </div>
                 </div>
@@ -132,14 +135,17 @@ export const SimpleAIGenerator: React.FC<SimpleAIGeneratorProps> = ({
                 {/* Number of Questions */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Số lượng câu hỏi
+                    {t('quizCreation.simpleAI.fields.numQuestions')}
                   </label>
                   <input
                     type="number"
                     min="1"
-                    max="20"
+                    max="100"
                     value={config.numQuestions}
-                    onChange={(e) => setConfig(prev => ({ ...prev, numQuestions: parseInt(e.target.value) || 5 }))}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) || 1;
+                      setConfig(prev => ({ ...prev, numQuestions: Math.min(Math.max(val, 1), 100) }));
+                    }}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                 </div>
@@ -147,39 +153,39 @@ export const SimpleAIGenerator: React.FC<SimpleAIGeneratorProps> = ({
                 {/* Difficulty */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Độ khó
+                    {t('quizCreation.simpleAI.fields.difficulty')}
                   </label>
                   <select
                     value={config.difficulty}
-                    onChange={(e) => setConfig(prev => ({ ...prev, difficulty: e.target.value as any }))}
+                    onChange={(e) => setConfig(prev => ({ ...prev, difficulty: e.target.value as SimpleAIConfig['difficulty'] }))}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
-                    <option value="easy">😊 Dễ</option>
-                    <option value="medium">🤔 Trung bình</option>
-                    <option value="hard">🔥 Khó</option>
-                    <option value="mixed">🎯 Đa dạng</option>
+                    <option value="easy">{t('quizCreation.difficultyOptions.easy')}</option>
+                    <option value="medium">{t('quizCreation.difficultyOptions.medium')}</option>
+                    <option value="hard">{t('quizCreation.difficultyOptions.hard')}</option>
+                    <option value="mixed">{t('quizCreation.simpleAI.difficultyOptions.mixed')}</option>
                   </select>
                 </div>
 
                 {/* Language */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Ngôn ngữ
+                    {t('quizCreation.simpleAI.fields.language')}
                   </label>
                   <select
                     value={config.language}
-                    onChange={(e) => setConfig(prev => ({ ...prev, language: e.target.value as any }))}
+                    onChange={(e) => setConfig(prev => ({ ...prev, language: e.target.value as SimpleAIConfig['language'] }))}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
-                    <option value="vi">🇻🇳 Tiếng Việt</option>
-                    <option value="en">🇬🇧 English</option>
+                    <option value="vi">{t('quizCreation.simpleAI.languages.vi')}</option>
+                    <option value="en">{t('quizCreation.simpleAI.languages.en')}</option>
                   </select>
                 </div>
 
                 {/* Temperature */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Creativity (Temperature): {config.temperature}
+                    {t('quizCreation.simpleAI.fields.temperature', { value: config.temperature })}
                   </label>
                   <input
                     type="range"
@@ -191,8 +197,8 @@ export const SimpleAIGenerator: React.FC<SimpleAIGeneratorProps> = ({
                     className="w-full"
                   />
                   <div className="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>Chính xác</span>
-                    <span>Sáng tạo</span>
+                    <span>{t('quizCreation.simpleAI.temperatureScale.precise')}</span>
+                    <span>{t('quizCreation.simpleAI.temperatureScale.creative')}</span>
                   </div>
                 </div>
               </div>
@@ -200,7 +206,7 @@ export const SimpleAIGenerator: React.FC<SimpleAIGeneratorProps> = ({
               {/* Content Preview */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Nội dung ({content.length} ký tự)
+                  {t('quizCreation.simpleAI.fields.content', { length: content.length })}
                 </label>
                 <div className="p-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg max-h-40 overflow-y-auto">
                   <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
@@ -215,13 +221,13 @@ export const SimpleAIGenerator: React.FC<SimpleAIGeneratorProps> = ({
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Đã tạo {generatedQuestions.length} câu hỏi
+                  {t('quizCreation.simpleAI.reviewTitle', { count: generatedQuestions.length })}
                 </h3>
                 <button
                   onClick={() => setStep('config')}
                   className="text-sm text-purple-600 hover:text-purple-700 dark:text-purple-400"
                 >
-                  ← Tạo lại
+                  {t('quizCreation.simpleAI.actions.goBack')}
                 </button>
               </div>
 
@@ -258,7 +264,7 @@ export const SimpleAIGenerator: React.FC<SimpleAIGeneratorProps> = ({
                         </div>
                         {question.explanation && (
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 italic">
-                            💡 {question.explanation}
+                            {t('quizCreation.simpleAI.explanationPrefix')} {question.explanation}
                           </p>
                         )}
                       </div>
@@ -266,7 +272,7 @@ export const SimpleAIGenerator: React.FC<SimpleAIGeneratorProps> = ({
                     <button
                       onClick={() => handleRemoveQuestion(question.id)}
                       className="text-red-500 hover:text-red-700 dark:text-red-400 ml-2"
-                      title="Xóa câu hỏi này"
+                      title={t('quizCreation.simpleAI.actions.deleteQuestion')}
                     >
                       <XCircle className="w-5 h-5" />
                     </button>
@@ -281,10 +287,11 @@ export const SimpleAIGenerator: React.FC<SimpleAIGeneratorProps> = ({
         <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900">
           <div className="flex items-center justify-between">
             <button
+              type="button"
               onClick={onClose}
               className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
             >
-              Hủy
+              {t('huy')}
             </button>
 
             {step === 'config' && (
@@ -296,12 +303,12 @@ export const SimpleAIGenerator: React.FC<SimpleAIGeneratorProps> = ({
                 {generating ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    Đang tạo...
+                    {t('createQuiz.ai.generating')}
                   </>
                 ) : (
                   <>
                     <Zap className="w-5 h-5" />
-                    Tạo câu hỏi
+                    {t('createQuiz.ai.generate')}
                   </>
                 )}
               </button>
@@ -314,7 +321,7 @@ export const SimpleAIGenerator: React.FC<SimpleAIGeneratorProps> = ({
                 className="px-6 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
               >
                 <CheckCircle className="w-5 h-5" />
-                Thêm {generatedQuestions.length} câu hỏi
+                {t('quizCreation.simpleAI.actions.addToQuizButton', { count: generatedQuestions.length })}
               </button>
             )}
           </div>

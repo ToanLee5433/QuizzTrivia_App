@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Question } from '../types';
 import { 
   Plus, Trash2, Edit3, Check, X, ArrowUp, ArrowDown, 
@@ -28,7 +29,12 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
   onMove,
   totalQuestions
 }) => {
+  const { t } = useTranslation();
   const [localQuestion, setLocalQuestion] = useState<Question>(question);
+
+  useEffect(() => {
+    setLocalQuestion(question);
+  }, [question]);
 
   const handleSave = () => {
     onUpdate(question.id, localQuestion);
@@ -132,14 +138,14 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                 className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors shadow-sm"
               >
                 <Check className="w-4 h-4" />
-                Save
+                {t('questionEditor.save')}
               </button>
               <button
                 onClick={handleCancel}
                 className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors shadow-sm"
               >
                 <X className="w-4 h-4" />
-                Cancel
+                {t('questionEditor.cancel')}
               </button>
             </div>
           ) : (
@@ -171,12 +177,12 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                 <Type className="w-4 h-4" />
-                Question Text *
+                {t('questionEditor.questionText')}
               </label>
               <textarea
                 value={localQuestion.text}
                 onChange={(e) => setLocalQuestion({ ...localQuestion, text: e.target.value })}
-                placeholder="Enter your question here..."
+                placeholder={t('placeholders.enterQuestionHere')}
                 className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
                 rows={3}
               />
@@ -187,25 +193,25 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                   <List className="w-4 h-4" />
-                  Question Type
+                  {t('questionEditor.questionType')}
                 </label>
                 <select
                   value={localQuestion.type}
                   onChange={(e) => setLocalQuestion({ ...localQuestion, type: e.target.value as any })}
                   className="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="multiple">Multiple Choice</option>
-                  <option value="boolean">True/False</option>
-                  <option value="checkbox">Checkbox</option>
-                  <option value="short_answer">Short Answer</option>
-                  <option value="image">Image Choice</option>
+                  <option value="multiple">{t('questionEditor.types.multiple')}</option>
+                  <option value="boolean">{t('questionEditor.types.boolean')}</option>
+                  <option value="checkbox">{t('questionEditor.types.checkbox')}</option>
+                  <option value="short_answer">{t('questionEditor.types.shortAnswer')}</option>
+                  <option value="image">{t('questionEditor.types.image')}</option>
                 </select>
               </div>
 
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                   <Target className="w-4 h-4" />
-                  Points
+                  {t('questionEditor.points')}
                 </label>
                 <input
                   type="number"
@@ -218,15 +224,15 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-700">Difficulty</label>
+                <label className="text-sm font-semibold text-gray-700">{t('questionEditor.difficulty')}</label>
                 <select
                   value={localQuestion.difficulty || 'medium'}
                   onChange={(e) => setLocalQuestion({ ...localQuestion, difficulty: e.target.value as any })}
                   className="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="easy">🟢 Easy</option>
-                  <option value="medium">🟡 Medium</option>
-                  <option value="hard">🔴 Hard</option>
+                  <option value="easy">{t('aiGenerator.difficulty.easy')}</option>
+                  <option value="medium">{t('aiGenerator.difficulty.medium')}</option>
+                  <option value="hard">{t('aiGenerator.difficulty.hard')}</option>
                 </select>
               </div>
             </div>
@@ -236,7 +242,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                   <List className="w-4 h-4" />
-                  Answer Options *
+                  {t('questionEditor.answerOptions')}
                 </label>
                 <button
                   onClick={addAnswer}
@@ -244,7 +250,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                   className="flex items-center gap-2 px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium disabled:opacity-50"
                 >
                   <Plus className="w-4 h-4" />
-                  Add Answer
+                  {t('questionEditor.addAnswer')}
                 </button>
               </div>
               
@@ -268,7 +274,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
                         onChange={(e) => updateAnswer(answer.id, { isCorrect: e.target.checked })}
                         className="w-5 h-5 text-green-600 rounded focus:ring-green-500"
                       />
-                      <span className="text-green-700">Correct</span>
+                      <span className="text-green-700">{t('questionEditor.correct')}</span>
                     </label>
                     {localQuestion.answers.length > 2 && (
                       <button
@@ -287,12 +293,12 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                 <Lightbulb className="w-4 h-4" />
-                Explanation (Optional)
+                {t('questionEditor.explanation')}
               </label>
               <textarea
                 value={localQuestion.explanation || ''}
                 onChange={(e) => setLocalQuestion({ ...localQuestion, explanation: e.target.value })}
-                placeholder="Explain why this is the correct answer..."
+                placeholder={t('placeholders.explainAnswer')}
                 className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                 rows={3}
               />
@@ -332,7 +338,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
             <div className="flex items-center gap-6 text-sm text-gray-600 bg-gray-50 p-4 rounded-xl">
               <span className="flex items-center gap-1">
                 <Target className="w-4 h-4" />
-                <strong>{question.points}</strong> points
+                <strong>{question.points}</strong> {t('questionEditor.pointsDisplay')}
               </span>
               <span className="flex items-center gap-1">
                 <Type className="w-4 h-4" />
@@ -344,7 +350,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
               {question.explanation && (
                 <span className="flex items-center gap-1">
                   <Lightbulb className="w-4 h-4" />
-                  Has explanation
+                  {t('questionEditor.hasExplanation')}
                 </span>
               )}
             </div>
@@ -354,7 +360,7 @@ export const QuestionEditor: React.FC<QuestionEditorProps> = ({
               <div className="bg-blue-50 p-4 rounded-xl border-l-4 border-blue-400">
                 <h5 className="flex items-center gap-2 font-semibold text-blue-800 mb-2">
                   <Lightbulb className="w-4 h-4" />
-                  Explanation
+                  {t('questionEditor.explanation').replace(' (Optional)', '')}
                 </h5>
                 <SafeHTML content={question.explanation} className="text-blue-700" />
               </div>
