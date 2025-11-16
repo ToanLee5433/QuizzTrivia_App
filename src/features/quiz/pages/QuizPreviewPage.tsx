@@ -108,6 +108,7 @@ const QuizPreviewPage: React.FC = () => {
   const [quizSettings, setQuizSettings] = useState<QuizSettings | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
   const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
+  const [creatorDisplayName, setCreatorDisplayName] = useState<string>('');
 
   // 🔐 Password check
   const isLocked = useMemo(() => {
@@ -148,6 +149,22 @@ const QuizPreviewPage: React.FC = () => {
         
         const quizData = { id: quizDoc.id, ...quizDoc.data() } as Quiz;
         setQuiz(quizData);
+        
+        // Fetch creator's displayName from users collection
+        if (quizData.createdBy) {
+          try {
+            const creatorDoc = await getDoc(doc(db, 'users', quizData.createdBy));
+            if (creatorDoc.exists()) {
+              const creatorData = creatorDoc.data();
+              setCreatorDisplayName(creatorData.displayName || creatorData.email || 'Anonymous');
+            } else {
+              setCreatorDisplayName(quizData.author || 'Anonymous');
+            }
+          } catch (err) {
+            console.error('Error fetching creator info:', err);
+            setCreatorDisplayName(quizData.author || 'Anonymous');
+          }
+        }
         
         // Fetch review stats
         try {
@@ -384,8 +401,8 @@ const QuizPreviewPage: React.FC = () => {
 
   const anonymousLabel = t('quizOverview.meta.anonymous', 'Anonymous');
   const creator = {
-    name: quiz.author || anonymousLabel,
-    avatarUrl: `https://api.dicebear.com/8.x/lorelei/svg?seed=${quiz.authorId || 'anonymous'}`,
+    name: creatorDisplayName || quiz.author || anonymousLabel,
+    avatarUrl: `https://api.dicebear.com/8.x/lorelei/svg?seed=${quiz.createdBy || quiz.authorId || 'anonymous'}`,
     lastUpdated: formatDateLabel(quiz.updatedAt)
   };
 
@@ -939,6 +956,7 @@ const QuizPreviewPage: React.FC = () => {
                 )}
 
                 <div className="space-y-3">
+                  {/* Primary Action: Start Quiz */}
                   <motion.button
                     whileHover={{ scale: 1.03, y: -2 }}
                     whileTap={{ scale: 0.97 }}
@@ -953,28 +971,29 @@ const QuizPreviewPage: React.FC = () => {
                     <span>{isLocked ? t('quizOverview.cta.unlock', 'Unlock Quiz') : t('quizOverview.cta.start', 'Start Quiz')}</span>
                   </motion.button>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => navigate(`/quiz/${quiz.id}/flashcards`)}
-                      disabled={isLocked}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-purple-500 dark:hover:border-purple-500 hover:text-purple-600 dark:hover:text-purple-400 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Brain className="w-5 h-5" />
-                      <span>{t('quizOverview.cta.flashcards', 'Flashcards')}</span>
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setShowSettingsModal(true)}
-                      disabled={isLocked}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Settings className="w-5 h-5" />
-                      <span>{t('quizOverview.cta.settings', 'Settings')}</span>
-                    </motion.button>
-                  </div>
+                  {/* Secondary Actions: Flashcards */}
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => navigate(`/quiz/${quiz.id}/flashcards`)}
+                    disabled={isLocked}
+                    className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-white dark:bg-slate-800 border-2 border-purple-200 dark:border-purple-900 hover:border-purple-500 dark:hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-950/30 text-purple-700 dark:text-purple-300 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Brain className="w-5 h-5" />
+                    <span>{t('quizOverview.cta.flashcards', 'Flashcards')}</span>
+                  </motion.button>
+
+                  {/* Settings */}
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setShowSettingsModal(true)}
+                    disabled={isLocked}
+                    className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Settings className="w-5 h-5" />
+                    <span>{t('quizOverview.cta.settings', 'Settings')}</span>
+                  </motion.button>
                 </div>
               </div>
 

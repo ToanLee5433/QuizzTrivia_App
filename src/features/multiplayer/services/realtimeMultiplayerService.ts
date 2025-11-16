@@ -527,12 +527,27 @@ class RealtimeMultiplayerService {
   async startCountdown(roomId: string, seconds: number) {
     try {
       const countdownRef = ref(rtdb, `rooms/${roomId}/countdown`);
+      const startedAt = Date.now();
       
       await set(countdownRef, {
         remaining: seconds,
-        startedAt: Date.now(),
+        startedAt: startedAt,
+        duration: seconds,
         isActive: true,
       });
+
+      // Update countdown every second
+      const intervalId = setInterval(async () => {
+        const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+        const remaining = Math.max(0, seconds - elapsed);
+        
+        if (remaining > 0) {
+          await update(countdownRef, { remaining });
+        } else {
+          clearInterval(intervalId);
+          await update(countdownRef, { remaining: 0, isActive: false });
+        }
+      }, 1000);
 
       logger.info(`Countdown started: ${seconds} seconds`);
     } catch (error) {
