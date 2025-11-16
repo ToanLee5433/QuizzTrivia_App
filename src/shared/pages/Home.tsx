@@ -108,7 +108,7 @@ const Home: React.FC = () => {
   return (
     <div className="space-y-8">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 rounded-3xl p-8 lg:p-12 text-white shadow-2xl relative overflow-hidden">
+      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 rounded-3xl p-6 lg:p-8 text-white shadow-2xl relative overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 bg-white/5 backdrop-blur-3xl"></div>
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32"></div>
@@ -116,36 +116,36 @@ const Home: React.FC = () => {
         
         <div className="relative max-w-5xl">
           <div className="flex items-center mb-6">
-            <div className="w-16 h-16 lg:w-20 lg:h-20 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center ring-4 ring-white/30 shadow-2xl mr-6">
-              <span className="text-3xl lg:text-4xl">🎯</span>
+            <div className="w-14 h-14 lg:w-16 lg:h-16 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center ring-4 ring-white/30 shadow-2xl mr-4">
+              <span className="text-2xl lg:text-3xl">🎯</span>
             </div>
             <div>
-              <h1 className="text-3xl lg:text-5xl font-bold mb-2 drop-shadow-lg">
+              <h1 className="text-2xl lg:text-4xl font-bold mb-2 drop-shadow-lg">
                 {t('home.hero.welcome', { name: user?.displayName?.split(' ')[0] || 'Quiz Master' })}
               </h1>
-              <p className="text-blue-100 text-lg lg:text-xl">
+              <p className="text-blue-100 text-base lg:text-lg">
                 {t('home.hero.subtitle')}
               </p>
             </div>
           </div>
           
-          <p className="text-xl lg:text-2xl text-blue-100 mb-8 leading-relaxed">
+          <p className="text-lg lg:text-xl text-blue-100 mb-8 leading-relaxed">
             {t('home.hero.description')}
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 lg:gap-6">
             <Link to="/quizzes">
-              <Button className="w-full sm:w-auto bg-white text-blue-600 hover:bg-blue-50 font-bold px-8 py-4 text-lg rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+              <Button className="w-full sm:w-auto bg-white text-blue-600 hover:bg-blue-50 font-bold px-6 py-3 text-base rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
                 <span className="mr-2">📚</span>{t("quizList.exploreQuizzes")}
               </Button>
             </Link>
             <Link to="/multiplayer">
-              <Button className="w-full sm:w-auto bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 font-bold px-8 py-4 text-lg rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 ring-2 ring-white/50">
+              <Button className="w-full sm:w-auto bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 font-bold px-6 py-3 text-base rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 ring-2 ring-white/50">
                 <span className="mr-2">🎮</span>Chơi Multiplayer
               </Button>
             </Link>
             <Link to={ROUTES.CREATOR}>
-              <Button className="w-full sm:w-auto border-2 border-white text-white hover:bg-white hover:text-blue-600 font-bold px-8 py-4 text-lg rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+              <Button className="w-full sm:w-auto border-2 border-white text-white hover:bg-white hover:text-blue-600 font-bold px-6 py-3 text-base rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
                 <span className="mr-2">✨</span>{t("creator.createNewQuiz")}
               </Button>
             </Link>
@@ -226,7 +226,7 @@ const Home: React.FC = () => {
 
       {/* **THÊM MỚI**: Featured/Trending Quizzes */}
       {featuredQuizzes.length > 0 && (
-        <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+        <div className="bg-white rounded-3xl shadow-xl p-6 border border-gray-100">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center">
               <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mr-4 shadow-lg">
@@ -274,7 +274,7 @@ const Home: React.FC = () => {
       )}
 
       {/* **THÊM MỚI**: Quick Actions */}
-      <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+      <div className="bg-white rounded-3xl shadow-xl p-6 border border-gray-100">
         <div className="flex items-center mb-8">
           <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mr-4 shadow-lg">
             <span className="text-2xl">⚡</span>
@@ -337,7 +337,7 @@ const Home: React.FC = () => {
       </div>
 
       {/* Popular Quizzes Section */}
-      <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+      <div className="bg-white rounded-3xl shadow-xl p-6 border border-gray-100">
         <div className="flex items-center mb-8">
           <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mr-4 shadow-lg">
             <span className="text-2xl">🏆</span>

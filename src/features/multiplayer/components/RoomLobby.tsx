@@ -195,7 +195,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                     <Trophy className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-800 mb-1 truncate">
+                    <h1 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-800 mb-1 truncate">
                       {roomData.name}
                     </h1>
                     <p className="text-gray-500 text-xs sm:text-sm font-medium flex items-center gap-1 sm:gap-2">
@@ -255,7 +255,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
                         <Clock className="relative w-6 h-6 text-white" />
                       </div>
                       <div className="text-center">
-                        <div className="text-4xl font-black text-white tabular-nums">
+                        <div className="text-3xl font-black text-white tabular-nums">
                           {countdownData.remaining}
                         </div>
                         <div className="text-sm text-orange-50 font-bold uppercase tracking-wider">

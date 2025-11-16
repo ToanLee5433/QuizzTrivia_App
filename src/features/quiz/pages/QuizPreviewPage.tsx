@@ -515,7 +515,7 @@ const QuizPreviewPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <div className="container max-w-6xl mx-auto px-4 py-8">
+      <div className="container max-w-5xl mx-auto px-4 py-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -558,7 +558,7 @@ const QuizPreviewPage: React.FC = () => {
               </div>
 
               <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
-                <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-3 leading-tight">
+                <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white mb-3 leading-tight">
                   {quiz.title}
                 </h1>
                 {quiz.description && (

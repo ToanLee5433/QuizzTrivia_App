@@ -22,25 +22,25 @@ export const LandingPage: React.FC = () => {
       {/* Hero Section */}
       <div className="flex items-center justify-center min-h-[80vh] px-4">
         <div className="text-center text-white max-w-4xl">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-transparent leading-tight">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-transparent leading-tight">
             {t('landing.hero.title')}
           </h1>
           
-          <p className="text-lg sm:text-xl text-blue-100 mb-6 sm:mb-8 max-w-2xl mx-auto px-4 leading-relaxed">
+          <p className="text-base sm:text-lg text-blue-100 mb-6 sm:mb-8 max-w-2xl mx-auto px-4 leading-relaxed">
             {t('landing.hero.subtitle')}
           </p>
           
           <div className="flex flex-col gap-3 sm:gap-4 justify-center mb-8 sm:mb-12 px-4">
             <Link
               to="/login"
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg transition-all duration-200 transform hover:scale-105 shadow-lg"
+              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 transform hover:scale-105 shadow-lg"
             >
               {t('landing.cta.primary')}
             </Link>
             
             <Link
               to="/login"
-              className="border-2 border-white text-white hover:bg-white hover:text-blue-900 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg transition-all duration-200"
+              className="border-2 border-white text-white hover:bg-white hover:text-blue-900 px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200"
             >
               {t('landing.cta.secondary')}
             </Link>
@@ -49,7 +49,7 @@ export const LandingPage: React.FC = () => {
           {/* Features */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mt-8 sm:mt-12 lg:mt-16 px-4">
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-6">
-              <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">🎯</div>
+              <div className="text-2xl sm:text-3xl mb-3 sm:mb-4">🎯</div>
               <h3 className="text-lg sm:text-xl font-semibold mb-2">{t('landing.features.diversity.title')}</h3>
               <p className="text-blue-100 text-sm sm:text-base">
                 {t('landing.features.diversity.description')}
@@ -57,7 +57,7 @@ export const LandingPage: React.FC = () => {
             </div>
             
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-6">
-              <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">⏱️</div>
+              <div className="text-2xl sm:text-3xl mb-3 sm:mb-4">⏱️</div>
               <h3 className="text-lg sm:text-xl font-semibold mb-2">{t('landing.features.realtime.title')}</h3>
               <p className="text-blue-100 text-sm sm:text-base">
                 {t('landing.features.realtime.description')}
@@ -65,7 +65,7 @@ export const LandingPage: React.FC = () => {
             </div>
             
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-6">
-              <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">🎮</div>
+              <div className="text-2xl sm:text-3xl mb-3 sm:mb-4">🎮</div>
               <h3 className="text-lg sm:text-xl font-semibold mb-2">{t('landing.features.multiplayer.title')}</h3>
               <p className="text-blue-100 text-sm sm:text-base">
                 {t('landing.features.multiplayer.description')}
@@ -73,7 +73,7 @@ export const LandingPage: React.FC = () => {
             </div>
             
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-6">
-              <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">🏆</div>
+              <div className="text-2xl sm:text-3xl mb-3 sm:mb-4">🏆</div>
               <h3 className="text-lg sm:text-xl font-semibold mb-2">{t('landing.features.ranking.title')}</h3>
               <p className="text-blue-100 text-sm sm:text-base">
                 {t('landing.features.ranking.description')}
@@ -88,19 +88,19 @@ export const LandingPage: React.FC = () => {
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 text-center text-white">
             <div>
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-300 mb-1 sm:mb-2">1000+</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-300 mb-1 sm:mb-2">1000+</div>
               <div className="text-blue-100 text-xs sm:text-sm lg:text-base">{t('landing.stats.quizzes')}</div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-purple-300 mb-1 sm:mb-2">10K+</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-purple-300 mb-1 sm:mb-2">10K+</div>
               <div className="text-blue-100 text-xs sm:text-sm lg:text-base">{t('landing.stats.players')}</div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-indigo-300 mb-1 sm:mb-2">50K+</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-indigo-300 mb-1 sm:mb-2">50K+</div>
               <div className="text-blue-100 text-xs sm:text-sm lg:text-base">{t('landing.stats.plays')}</div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-cyan-300 mb-1 sm:mb-2">24/7</div>
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-cyan-300 mb-1 sm:mb-2">24/7</div>
               <div className="text-blue-100 text-xs sm:text-sm lg:text-base">{t('landing.stats.support')}</div>
             </div>
           </div>
