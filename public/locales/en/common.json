@@ -127,7 +127,8 @@
         "rejectFailed": "Cannot reject quiz",
         "reopenFailed": "Cannot reopen quiz",
         "deleteFailed": "Cannot delete quiz"
-      }
+      },
+      "rejectReasonPrompt": "Reason for rejection (optional):"
     },
     "realDataLoadError": "Error loading real data",
     "roleUpdateError": "Error occurred while updating role!",
@@ -304,7 +305,8 @@
         "approvedMessage": "Your edit request for quiz \"{{quizTitle}}\" has been approved by admin. The quiz has been unlocked for editing. After editing, please resubmit for admin approval.",
         "rejectedTitle": "Edit request rejected",
         "rejectedMessage": "Your edit request for quiz \"{{quizTitle}}\" has been rejected by admin. Please contact admin for more details."
-      }
+      },
+      "rejectReasonPrompt": "Reason for rejection (optional):"
     },
     "preview": {
       "title": "Quiz Preview",

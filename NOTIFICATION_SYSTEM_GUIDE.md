@@ -41,6 +41,11 @@ Tự động tạo thông báo khi đạt các mốc:
 - **New Quiz Published** - Thông báo khi có quiz mới trong category yêu thích
 - **Quiz Completed by User** - Tác giả nhận thông báo khi có người làm quiz
 - **Trending Quiz** - Thông báo quiz đang hot
+- **Quiz Approved** - 📝 Creator nhận thông báo khi quiz được admin duyệt
+- **Quiz Rejected** - ❌ Creator nhận thông báo khi quiz bị từ chối (có lý do)
+- **Quiz Reviewed** - ⭐ Creator nhận thông báo khi ai đó review quiz
+- **Edit Request Approved** - ✅ Creator nhận thông báo khi yêu cầu sửa quiz được duyệt
+- **Edit Request Rejected** - ❌ Creator nhận thông báo khi yêu cầu sửa quiz bị từ chối
 
 ### 4. Social Notifications
 - **New Like** - ❤️ Có người like quiz của bạn
@@ -70,6 +75,15 @@ class NotificationService {
   checkAndGenerateAchievements(userId, stats)
   notifyQuizCreator(creatorId, quizId, quizTitle, completedBy)
   notifyTrendingQuiz(userId, quizId, quizTitle, category)
+  
+  // Quiz Approval/Review Notifications (NEW!)
+  notifyQuizApproved(userId, quizId, quizTitle)
+  notifyQuizRejected(userId, quizId, quizTitle, reason?)
+  notifyQuizReviewed(userId, quizId, quizTitle, reviewerName, rating, comment?)
+  notifyEditRequestApproved(userId, quizId, quizTitle)
+  notifyEditRequestRejected(userId, quizId, quizTitle, reason?)
+  notifyAdminNewQuizSubmitted(adminIds[], quizId, quizTitle, creatorName)
+  notifyAdminEditRequest(adminIds[], quizId, quizTitle, creatorName, reason)
 }
 ```
 
@@ -81,7 +95,15 @@ const {
   notifyQuiz,
   notifySocial,
   checkAchievements,
-  notifyQuizCreator
+  notifyQuizCreator,
+  // NEW: Quiz approval/review hooks
+  notifyQuizApproved,
+  notifyQuizRejected,
+  notifyQuizReviewed,
+  notifyEditRequestApproved,
+  notifyEditRequestRejected,
+  notifyAdminNewQuiz,
+  notifyAdminEditRequest
 } = useNotifications();
 ```
 
@@ -220,17 +242,25 @@ await notificationService.createSystemNotification(
 - Notify quiz creator
 - Check milestone achievements
 
-### 2. Quiz Creation (Future)
-- Notify followers when creator publishes new quiz
-- Trending quiz notifications
+### 2. Quiz Approval/Review (✅ **COMPLETED**)
+- ✅ Admin approves quiz → Creator receives notification
+- ✅ Admin rejects quiz → Creator receives notification with reason
+- ✅ User reviews quiz → Creator receives notification with rating & comment
+- ✅ Edit request approved → Creator can edit quiz
+- ✅ Edit request rejected → Creator informed with reason
 
-### 3. Social Features (Future)
+### 3. Admin Panel
+✅ **Integrated** - AdminQuizManagement sends notifications on:
+  - Quiz approval/rejection
+  - Edit request approval/rejection
+
+### 4. Quiz Review System
+✅ **Integrated** - QuizReviewSystem sends notification when user submits review
+
+### 5. Social Features (Future)
 - Like notifications
 - Comment notifications
 - Follow notifications
-
-### 4. Admin Panel
-✅ **Already exists** - System notifications via QuickActions
 
 ## 🚀 Deployment Checklist
 
@@ -246,11 +276,13 @@ match /notifications/{notificationId} {
 ```
 
 ### Code Integration
-1. ✅ NotificationService created
-2. ✅ useNotifications hook created
+1. ✅ NotificationService created (7 new methods for quiz approval/review)
+2. ✅ useNotifications hook created (7 new hooks)
 3. ✅ NotificationCenter component updated
 4. ✅ ResultPage integrated
-5. ✅ i18n translations added
+5. ✅ AdminQuizManagement integrated
+6. ✅ QuizReviewSystem integrated
+7. ✅ i18n translations added (en/vi)
 
 ### Testing
 - [ ] Test real-time subscription

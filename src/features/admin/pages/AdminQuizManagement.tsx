@@ -9,15 +9,14 @@ import {
   getDocs, 
   doc, 
   updateDoc, 
-  deleteDoc, 
-  addDoc,
+  deleteDoc,
   query, 
   orderBy,
-  where,
-  serverTimestamp
+  where
 } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 import { RootState } from '../../../lib/store';
+import { useNotifications } from '../../../hooks/useNotifications';
 import { 
   Search, 
   Eye, 
@@ -71,6 +70,8 @@ const AdminQuizManagement: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { notifyQuizApproved, notifyQuizRejected, notifyEditRequestApproved, notifyEditRequestRejected } = useNotifications();
+  
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [editRequests, setEditRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -267,6 +268,9 @@ const AdminQuizManagement: React.FC = () => {
 
   const handleApprove = async (quizId: string) => {
     try {
+      const quiz = quizzes.find(q => q.id === quizId);
+      if (!quiz) return;
+
       const quizRef = doc(db, 'quizzes', quizId);
       await updateDoc(quizRef, {
         status: 'approved',
@@ -275,11 +279,20 @@ const AdminQuizManagement: React.FC = () => {
         approvedBy: user?.uid
       });
       
-      setQuizzes(prev => prev.map(quiz => 
-        quiz.id === quizId 
-          ? { ...quiz, status: 'approved' as const, isPublished: true }
-          : quiz
+      setQuizzes(prev => prev.map(q => 
+        q.id === quizId 
+          ? { ...q, status: 'approved' as const, isPublished: true }
+          : q
       ));
+
+      // Send notification to quiz creator
+      if (quiz.createdBy) {
+        await notifyQuizApproved(
+          quiz.createdBy,
+          quizId,
+          quiz.title
+        );
+      }
       
       toast.success(t('admin.quizManagement.success.approved'));
     } catch (error) {
@@ -290,19 +303,35 @@ const AdminQuizManagement: React.FC = () => {
 
   const handleReject = async (quizId: string) => {
     try {
+      const quiz = quizzes.find(q => q.id === quizId);
+      if (!quiz) return;
+
+      const reason = prompt(t('admin.quizManagement.rejectReasonPrompt', 'Reason for rejection (optional):'));
+
       const quizRef = doc(db, 'quizzes', quizId);
       await updateDoc(quizRef, {
         status: 'rejected',
         isPublished: false,
         rejectedAt: new Date(),
-        rejectedBy: user?.uid
+        rejectedBy: user?.uid,
+        rejectionReason: reason || undefined
       });
       
-      setQuizzes(prev => prev.map(quiz => 
-        quiz.id === quizId 
-          ? { ...quiz, status: 'rejected' as const, isPublished: false }
-          : quiz
+      setQuizzes(prev => prev.map(q => 
+        q.id === quizId 
+          ? { ...q, status: 'rejected' as const, isPublished: false }
+          : q
       ));
+
+      // Send notification to quiz creator
+      if (quiz.createdBy) {
+        await notifyQuizRejected(
+          quiz.createdBy,
+          quizId,
+          quiz.title,
+          reason || undefined
+        );
+      }
       
       toast.success(t('admin.quizManagement.success.rejected'));
     } catch (error) {
@@ -340,18 +369,12 @@ const AdminQuizManagement: React.FC = () => {
         needsReApproval: true // Flag để biết quiz này cần được duyệt lại sau khi sửa
       });
 
-      // Create notification for the creator
-      await addDoc(collection(db, 'notifications'), {
-        userId: editRequest.requestedBy,
-        type: 'edit_request_approved',
-        title: t('admin.editRequests.notifications.approvedTitle'),
-        message: t('admin.editRequests.notifications.approvedMessage', { 
-          quizTitle: editRequest.quizTitle 
-        }),
-        quizId: quizId,
-        createdAt: serverTimestamp(),
-        read: false
-      });
+      // Send notification using notification service
+      await notifyEditRequestApproved(
+        editRequest.requestedBy,
+        quizId,
+        editRequest.quizTitle
+      );
 
       // Remove from edit requests list
       setEditRequests(prev => prev.filter(req => req.id !== requestId));
@@ -373,26 +396,24 @@ const AdminQuizManagement: React.FC = () => {
         return;
       }
 
+      const reason = prompt(t('admin.editRequests.rejectReasonPrompt', 'Reason for rejection (optional):'));
+
       const requestRef = doc(db, 'editRequests', requestId);
       await updateDoc(requestRef, {
         status: 'rejected',
         reviewedBy: user?.uid,
         reviewedByName: user?.displayName || 'Admin',
-        reviewedAt: new Date()
+        reviewedAt: new Date(),
+        rejectionReason: reason || undefined
       });
 
-      // Create notification for the creator
-      await addDoc(collection(db, 'notifications'), {
-        userId: editRequest.requestedBy,
-        type: 'edit_request_rejected', 
-        title: t('admin.editRequests.notifications.rejectedTitle'),
-        message: t('admin.editRequests.notifications.rejectedMessage', { 
-          quizTitle: editRequest.quizTitle 
-        }),
-        quizId: editRequest.quizId,
-        createdAt: serverTimestamp(),
-        read: false
-      });
+      // Send notification using notification service
+      await notifyEditRequestRejected(
+        editRequest.requestedBy,
+        editRequest.quizId,
+        editRequest.quizTitle,
+        reason || undefined
+      );
 
       // Remove from edit requests list
       setEditRequests(prev => prev.filter(req => req.id !== requestId));

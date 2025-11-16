@@ -2,9 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { RootState } from '../../lib/store';
-import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { toast } from 'react-toastify';
+import { useNotifications } from '../../hooks/useNotifications';
 
 interface QuizReview {
   id: string;
@@ -29,6 +30,7 @@ const QuizReviewSystem: React.FC<QuizReviewSystemProps> = ({
 }) => {
   const { t } = useTranslation();
   const user = useSelector((state: RootState) => state.auth.user);
+  const { notifyQuizReviewed } = useNotifications();
   const [reviews, setReviews] = useState<QuizReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -115,6 +117,28 @@ const QuizReviewSystem: React.FC<QuizReviewSystemProps> = ({
       // Add to local state
       setReviews(prev => [{ ...newReview, id: docRef.id }, ...prev]);
       setHasUserReviewed(true);
+
+      // Get quiz creator and send notification
+      try {
+        const quizDoc = await getDoc(doc(db, 'quizzes', quizId));
+        if (quizDoc.exists()) {
+          const quizData = quizDoc.data();
+          if (quizData.createdBy && quizData.createdBy !== user.uid) {
+            await notifyQuizReviewed(
+              quizData.createdBy,
+              quizId,
+              quizTitle,
+              newReview.userName,
+              userRating,
+              userComment.trim()
+            );
+          }
+        }
+      } catch (notifError) {
+        console.error('Error sending review notification:', notifError);
+        // Don't fail the review submission if notification fails
+      }
+
       setUserRating(0);
       setUserComment('');
       

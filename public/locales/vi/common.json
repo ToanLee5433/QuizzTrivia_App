@@ -127,7 +127,8 @@
         "rejectFailed": "Không thể từ chối quiz",
         "reopenFailed": "Không thể mở lại quiz",
         "deleteFailed": "Không thể xóa quiz"
-      }
+      },
+      "rejectReasonPrompt": "Lý do từ chối (tùy chọn):"
     },
     "realDataLoadError": "Error loading real data",
     "roleUpdateError": "Error occurred while updating role!",
@@ -304,7 +305,8 @@
         "approvedMessage": "Yêu cầu chỉnh sửa quiz \"{{quizTitle}}\" của bạn đã được admin phê duyệt. Quiz đã được gỡ xuống để bạn chỉnh sửa. Sau khi sửa xong, vui lòng nộp lại để admin duyệt.",
         "rejectedTitle": "Yêu cầu chỉnh sửa đã bị từ chối",
         "rejectedMessage": "Yêu cầu chỉnh sửa quiz \"{{quizTitle}}\" của bạn đã bị admin từ chối. Vui lòng liên hệ admin để biết thêm chi tiết."
-      }
+      },
+      "rejectReasonPrompt": "Lý do từ chối (tùy chọn):"
     },
     "preview": {
       "title": "Xem trước Quiz",

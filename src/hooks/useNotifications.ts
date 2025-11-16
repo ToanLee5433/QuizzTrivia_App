@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../lib/store';
 import { notificationService } from '../services/notificationService';
@@ -99,11 +98,103 @@ export const useNotifications = () => {
     );
   };
 
+  /**
+   * Notify when quiz is approved
+   */
+  const notifyQuizApproved = async (
+    userId: string,
+    quizId: string,
+    quizTitle: string
+  ) => {
+    await notificationService.notifyQuizApproved(userId, quizId, quizTitle);
+  };
+
+  /**
+   * Notify when quiz is rejected
+   */
+  const notifyQuizRejected = async (
+    userId: string,
+    quizId: string,
+    quizTitle: string,
+    reason?: string
+  ) => {
+    await notificationService.notifyQuizRejected(userId, quizId, quizTitle, reason);
+  };
+
+  /**
+   * Notify when quiz receives a review
+   */
+  const notifyQuizReviewed = async (
+    userId: string,
+    quizId: string,
+    quizTitle: string,
+    reviewerName: string,
+    rating: number,
+    comment?: string
+  ) => {
+    await notificationService.notifyQuizReviewed(userId, quizId, quizTitle, reviewerName, rating, comment);
+  };
+
+  /**
+   * Notify when edit request is approved
+   */
+  const notifyEditRequestApproved = async (
+    userId: string,
+    quizId: string,
+    quizTitle: string
+  ) => {
+    await notificationService.notifyEditRequestApproved(userId, quizId, quizTitle);
+  };
+
+  /**
+   * Notify when edit request is rejected
+   */
+  const notifyEditRequestRejected = async (
+    userId: string,
+    quizId: string,
+    quizTitle: string,
+    reason?: string
+  ) => {
+    await notificationService.notifyEditRequestRejected(userId, quizId, quizTitle, reason);
+  };
+
+  /**
+   * Notify admins when new quiz is submitted
+   */
+  const notifyAdminNewQuiz = async (
+    adminIds: string[],
+    quizId: string,
+    quizTitle: string
+  ) => {
+    if (!user?.displayName) return;
+    await notificationService.notifyAdminNewQuizSubmitted(adminIds, quizId, quizTitle, user.displayName);
+  };
+
+  /**
+   * Notify admins when edit request is submitted
+   */
+  const notifyAdminEditRequest = async (
+    adminIds: string[],
+    quizId: string,
+    quizTitle: string,
+    reason: string
+  ) => {
+    if (!user?.displayName) return;
+    await notificationService.notifyAdminEditRequest(adminIds, quizId, quizTitle, user.displayName, reason);
+  };
+
   return {
     notifyAchievement,
     notifyQuiz,
     notifySocial,
     checkAchievements,
-    notifyQuizCreator
+    notifyQuizCreator,
+    notifyQuizApproved,
+    notifyQuizRejected,
+    notifyQuizReviewed,
+    notifyEditRequestApproved,
+    notifyEditRequestRejected,
+    notifyAdminNewQuiz,
+    notifyAdminEditRequest
   };
 };

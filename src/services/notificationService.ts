@@ -8,12 +8,11 @@ import {
   updateDoc, 
   doc, 
   serverTimestamp,
-  Timestamp,
   getDocs,
   limit,
   writeBatch
 } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db } from '../firebase/config';
 
 export interface NotificationData {
   id: string;
@@ -305,6 +304,204 @@ class NotificationService {
         label: 'Take Quiz'
       }
     );
+  }
+
+  /**
+   * Notify user when their quiz is approved by admin
+   */
+  async notifyQuizApproved(
+    userId: string,
+    quizId: string,
+    quizTitle: string
+  ): Promise<void> {
+    await this.createQuizNotification(
+      userId,
+      quizId,
+      quizTitle,
+      'Your quiz has been approved by admin and is now public!',
+      {
+        type: 'navigate',
+        path: `/quiz/${quizId}/preview`,
+        label: 'View Quiz'
+      }
+    );
+  }
+
+  /**
+   * Notify user when their quiz is rejected by admin
+   */
+  async notifyQuizRejected(
+    userId: string,
+    quizId: string,
+    quizTitle: string,
+    reason?: string
+  ): Promise<void> {
+    const message = reason 
+      ? `Your quiz was rejected. Reason: ${reason}` 
+      : 'Your quiz was rejected by admin. Please review and resubmit.';
+    
+    await this.createQuizNotification(
+      userId,
+      quizId,
+      quizTitle,
+      message,
+      {
+        type: 'navigate',
+        path: `/my-quizzes`,
+        label: 'View My Quizzes'
+      }
+    );
+  }
+
+  /**
+   * Notify user when they receive a review on their quiz
+   */
+  async notifyQuizReviewed(
+    userId: string,
+    quizId: string,
+    quizTitle: string,
+    reviewerName: string,
+    rating: number,
+    comment?: string
+  ): Promise<void> {
+    const stars = '⭐'.repeat(Math.round(rating));
+    const message = comment
+      ? `${reviewerName} rated your quiz ${stars} (${rating}/5): "${comment}"`
+      : `${reviewerName} gave your quiz ${stars} (${rating}/5)`;
+
+    const notificationsRef = collection(db, 'notifications');
+    await addDoc(notificationsRef, {
+      userId,
+      type: 'quiz',
+      title: `New Review: ${quizTitle}`,
+      message,
+      timestamp: serverTimestamp(),
+      read: false,
+      icon: '⭐',
+      action: {
+        type: 'navigate',
+        path: `/quiz/${quizId}/preview`,
+        label: 'View Quiz'
+      },
+      metadata: {
+        quizId,
+        fromUserName: reviewerName
+      }
+    });
+  }
+
+  /**
+   * Notify user when their edit request is approved
+   */
+  async notifyEditRequestApproved(
+    userId: string,
+    quizId: string,
+    quizTitle: string
+  ): Promise<void> {
+    await this.createQuizNotification(
+      userId,
+      quizId,
+      quizTitle,
+      'Your edit request has been approved. The quiz is now unlocked for editing.',
+      {
+        type: 'navigate',
+        path: `/edit-quiz/${quizId}`,
+        label: 'Edit Now'
+      }
+    );
+  }
+
+  /**
+   * Notify user when their edit request is rejected
+   */
+  async notifyEditRequestRejected(
+    userId: string,
+    quizId: string,
+    quizTitle: string,
+    reason?: string
+  ): Promise<void> {
+    const message = reason
+      ? `Your edit request was rejected. Reason: ${reason}`
+      : 'Your edit request was rejected by admin.';
+
+    await this.createQuizNotification(
+      userId,
+      quizId,
+      quizTitle,
+      message,
+      {
+        type: 'navigate',
+        path: `/my-quizzes`,
+        label: 'View My Quizzes'
+      }
+    );
+  }
+
+  /**
+   * Notify admin when new quiz is submitted for review
+   */
+  async notifyAdminNewQuizSubmitted(
+    adminIds: string[],
+    quizId: string,
+    quizTitle: string,
+    creatorName: string
+  ): Promise<void> {
+    const notificationsRef = collection(db, 'notifications');
+    
+    for (const adminId of adminIds) {
+      await addDoc(notificationsRef, {
+        userId: adminId,
+        type: 'system',
+        title: 'New Quiz Pending Review',
+        message: `${creatorName} submitted "${quizTitle}" for approval`,
+        timestamp: serverTimestamp(),
+        read: false,
+        icon: '📝',
+        action: {
+          type: 'navigate',
+          path: '/admin/quiz-management',
+          label: 'Review Quiz'
+        },
+        metadata: {
+          quizId,
+          fromUserName: creatorName
+        }
+      });
+    }
+  }
+
+  /**
+   * Notify admin when edit request is submitted
+   */
+  async notifyAdminEditRequest(
+    adminIds: string[],
+    quizId: string,
+    quizTitle: string,
+    creatorName: string,
+    reason: string
+  ): Promise<void> {
+    const notificationsRef = collection(db, 'notifications');
+    
+    for (const adminId of adminIds) {
+      await addDoc(notificationsRef, {
+        userId: adminId,
+        type: 'system',
+        title: 'Edit Request Pending',
+        message: `${creatorName} requested to edit "${quizTitle}". Reason: ${reason}`,
+        timestamp: serverTimestamp(),
+        read: false,
+        icon: '✏️',
+        action: {
+          type: 'navigate',
+          path: '/admin/quiz-management',
+          label: 'Review Request'
+        },
+        metadata: {
+          quizId,
+          fromUserName: creatorName
+        }
+      });
+    }
   }
 
   /**
