@@ -1869,8 +1869,16 @@
     "error": "Cannot load notifications",
     "loading": "Loading notifications...",
     "markAllRead": "Mark all as read",
+    "markRead": "Mark read",
     "new": "New",
-    "title": "Notifications"
+    "title": "Notifications",
+    "viewAll": "View all notifications",
+    "types": {
+      "achievement": "Achievement",
+      "quiz": "Quiz",
+      "social": "Social",
+      "system": "System"
+    }
   },
   "offline": {
     "connected": "Connected",

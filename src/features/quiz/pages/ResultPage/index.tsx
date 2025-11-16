@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useResultData, useLeaderboard } from './hooks';
 import { safeNumber } from './utils';
+import { useNotifications } from '../../../../hooks/useNotifications';
 import QuizReviewSystem from '../../../../shared/components/QuizReviewSystem';
 import {
   Confetti,
@@ -15,6 +16,7 @@ import {
 
 export const ResultPage: React.FC = () => {
   const { result, quiz, quizId, isLoading } = useResultData();
+  const { notifyAchievement, checkAchievements, notifyQuizCreator } = useNotifications();
   
   // Tính toán điểm số, kiểm tra hợp lệ
   const correct = safeNumber(result?.correct);
@@ -30,6 +32,60 @@ export const ResultPage: React.FC = () => {
   } : undefined;
   
   const { leaderboard, userRank, loadingStats } = useLeaderboard(quizId, currentResult);
+
+  // Generate notifications based on quiz completion
+  useEffect(() => {
+    if (!result || !quiz) return;
+
+    const generateNotifications = async () => {
+      // Achievement notifications based on score
+      if (percentage === 100) {
+        await notifyAchievement(
+          'Perfect Score!',
+          `You got 100% on "${quiz.title}"`,
+          '💯'
+        );
+      } else if (percentage >= 90) {
+        await notifyAchievement(
+          'Excellent Performance!',
+          `You scored ${percentage}% on "${quiz.title}"`,
+          '⭐'
+        );
+      } else if (percentage >= 80) {
+        await notifyAchievement(
+          'Great Job!',
+          `You scored ${percentage}% on "${quiz.title}"`,
+          '🎯'
+        );
+      }
+
+      // First quiz completion
+      if (correct === total && total > 0) {
+        await notifyAchievement(
+          'First Perfect Score!',
+          'You aced your first quiz!',
+          '🏆'
+        );
+      }
+
+      // Notify quiz creator (if not the same user)
+      if (quiz.createdBy && quiz.createdBy !== result.userId) {
+        await notifyQuizCreator(
+          quiz.createdBy,
+          quiz.id,
+          quiz.title
+        );
+      }
+
+      // Check for other achievements
+      await checkAchievements({
+        quizzesCompleted: 1, // Increment from user stats
+        perfectScores: percentage === 100 ? 1 : 0
+      });
+    };
+
+    generateNotifications().catch(console.error);
+  }, [result, quiz, percentage, correct, total, notifyAchievement, checkAchievements, notifyQuizCreator]);
 
   // Debug logging
   console.log('🎯 ResultPage render:', {

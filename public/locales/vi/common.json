@@ -1815,13 +1815,21 @@
   "nopBaiLuon": "Nộp bài luôn",
   "nopBaiThanhCong": "Nộp bài thành công!",
   "notifications": {
-    "clear": "Clear all",
-    "empty": "No notifications",
-    "error": "Cannot load notifications",
-    "loading": "Loading notifications...",
-    "markAllRead": "Mark all as read",
-    "new": "New",
-    "title": "Thông báo"
+    "clear": "Xóa tất cả",
+    "empty": "Chưa có thông báo",
+    "error": "Không thể tải thông báo",
+    "loading": "Đang tải thông báo...",
+    "markAllRead": "Đánh dấu tất cả đã đọc",
+    "markRead": "Đánh dấu đã đọc",
+    "new": "Mới",
+    "title": "Thông báo",
+    "viewAll": "Xem tất cả thông báo",
+    "types": {
+      "achievement": "Thành tích",
+      "quiz": "Quiz",
+      "social": "Xã hội",
+      "system": "Hệ thống"
+    }
   },
   "offline": {
     "connected": "Connected",
