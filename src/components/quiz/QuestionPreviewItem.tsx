@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { QuizTag } from './QuizTag';
+
+// Component-level translation hook
+const useQuestionTranslation = () => {
+  const { t } = useTranslation();
+  return t;
+};
 
 export interface Answer {
   id: string;
@@ -65,6 +72,7 @@ export const QuestionPreviewItem: React.FC<QuestionPreviewItemProps> = ({
   defaultExpanded = false
 }) => {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const t = useQuestionTranslation();
 
   const getDifficultyColor = () => {
     switch (difficulty) {
@@ -105,7 +113,7 @@ export const QuestionPreviewItem: React.FC<QuestionPreviewItemProps> = ({
                 colorClass={getDifficultyColor()}
               />
               <span className="text-xs text-slate-500 dark:text-slate-400">
-                {points} points
+                {points} {t('common.points', 'points')}
               </span>
             </div>
             <h4 className="text-base font-semibold text-slate-900 dark:text-white">
@@ -133,7 +141,7 @@ export const QuestionPreviewItem: React.FC<QuestionPreviewItemProps> = ({
           {answers.length > 0 && (
             <div className="mb-4">
               <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                Answer Choices:
+                {t('quiz.answerChoices', 'Answer Choices')}:
               </p>
               <div className="space-y-2">
                 {answers.map((answer) => (
@@ -160,7 +168,7 @@ export const QuestionPreviewItem: React.FC<QuestionPreviewItemProps> = ({
           {explanation && (
             <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
               <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 mb-1">
-                Explanation:
+                {t('quiz.explanation', 'Explanation')}:
               </p>
               <p className="text-sm text-slate-700 dark:text-slate-300">
                 {explanation}

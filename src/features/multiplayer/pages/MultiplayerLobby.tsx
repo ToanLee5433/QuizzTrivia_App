@@ -169,24 +169,24 @@ const MultiplayerLobby: React.FC = () => {
             <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform">
               <Zap className="w-6 h-6 text-white" />
             </div>
-            <h3 className="font-bold text-gray-900 mb-2 text-lg">Real-time Competition</h3>
-            <p className="text-sm text-gray-600 leading-relaxed">Cạnh tranh trực tiếp với bạn bè và xem kết quả ngay lập tức</p>
+            <h3 className="font-bold text-gray-900 mb-2 text-lg">{t('multiplayer.lobby.realtimeCompetition')}</h3>
+            <p className="text-sm text-gray-600 leading-relaxed">{t('multiplayer.lobby.realtimeCompetitionDesc')}</p>
           </div>
           
           <div className="group bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:border-pink-300 hover:shadow-md transition-all">
             <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-rose-500 rounded-xl flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform">
               <Users className="w-6 h-6 text-white" />
             </div>
-            <h3 className="font-bold text-gray-900 mb-2 text-lg">Private Rooms</h3>
-            <p className="text-sm text-gray-600 leading-relaxed">Tạo phòng riêng với room code để chơi với người bạn muốn</p>
+            <h3 className="font-bold text-gray-900 mb-2 text-lg">{t('multiplayer.lobby.privateRooms')}</h3>
+            <p className="text-sm text-gray-600 leading-relaxed">{t('multiplayer.lobby.privateRoomsDesc')}</p>
           </div>
           
           <div className="group bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:border-indigo-300 hover:shadow-md transition-all">
             <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-blue-500 rounded-xl flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform">
               <Trophy className="w-6 h-6 text-white" />
             </div>
-            <h3 className="font-bold text-gray-900 mb-2 text-lg">Live Leaderboard</h3>
-            <p className="text-sm text-gray-600 leading-relaxed">Theo dõi bảng xếp hạng trực tiếp trong khi chơi</p>
+            <h3 className="font-bold text-gray-900 mb-2 text-lg">{t('multiplayer.lobby.liveLeaderboard')}</h3>
+            <p className="text-sm text-gray-600 leading-relaxed">{t('multiplayer.lobby.liveLeaderboardDesc')}</p>
           </div>
         </div>
 
@@ -225,7 +225,7 @@ const MultiplayerLobby: React.FC = () => {
               value={categoryFilter} 
               onChange={e => setCategoryFilter(e.target.value)}
             >
-              <option value="all">🏷️ Tất cả danh mục</option>
+              <option value="all">🏷️ {t('filters.allCategories')}</option>
               {categories.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
             
@@ -235,7 +235,7 @@ const MultiplayerLobby: React.FC = () => {
               value={difficultyFilter} 
               onChange={e => setDifficultyFilter(e.target.value)}
             >
-              <option value="all">📊 Tất cả độ khó</option>
+              <option value="all">📊 {t('filters.allDifficulties')}</option>
               {difficulties.map(d => <option key={d} value={d}>
                 {d === 'easy' ? '😊 Dễ' : d === 'medium' ? '😐 Trung bình' : '😤 Khó'}
               </option>)}
@@ -247,12 +247,12 @@ const MultiplayerLobby: React.FC = () => {
             <div className="flex items-center gap-4">
               {/* View Mode Toggle */}
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">Hiển thị:</span>
+                <span className="text-sm text-gray-600">{t('filters.display')}:</span>
                 <div className="flex border border-gray-300 rounded-lg overflow-hidden">
                   <button
                     onClick={() => setViewMode('grid')}
                     className={`p-2 ${viewMode === 'grid' ? 'bg-purple-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-                    title="Lưới"
+                    title={t('filters.grid')}
                   >
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -261,7 +261,7 @@ const MultiplayerLobby: React.FC = () => {
                   <button
                     onClick={() => setViewMode('list')}
                     className={`p-2 ${viewMode === 'list' ? 'bg-purple-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-                    title="Danh sách"
+                    title={t('filters.list')}
                   >
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
@@ -292,8 +292,8 @@ const MultiplayerLobby: React.FC = () => {
             <div className="col-span-full text-center">
               <div className="bg-gray-50 border border-gray-200 rounded-xl p-12">
                 <Gamepad2 className='w-16 h-16 mx-auto text-gray-300 mb-4' />
-                <h3 className="text-xl font-medium text-gray-900 mb-2">Không tìm thấy quiz</h3>
-                <p className="text-gray-600 mb-6">Không có quiz nào phù hợp với bộ lọc hiện tại.</p>
+                <h3 className="text-xl font-medium text-gray-900 mb-2">{t('multiplayer.lobby.noQuizzesFound')}</h3>
+                <p className="text-gray-600 mb-6">{t('multiplayer.lobby.noQuizzesFoundDesc')}</p>
                 <button 
                   onClick={() => {
                     setSearchTerm('');
@@ -302,7 +302,7 @@ const MultiplayerLobby: React.FC = () => {
                   }}
                   className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                 >
-                  🔄 Xóa bộ lọc
+                  🔄 {t('filters.clearFilters')}
                 </button>
               </div>
             </div>
@@ -347,7 +347,7 @@ const MultiplayerLobby: React.FC = () => {
                 <div>
                   <div className="font-bold text-gray-900">{selectedQuiz.title}</div>
                   <div className="text-sm text-gray-600">
-                    {selectedQuiz.questions.length} câu hỏi • {selectedQuiz.difficulty === 'easy' ? 'Dễ' : selectedQuiz.difficulty === 'medium' ? 'Trung bình' : 'Khó'}
+                    {t('multiplayer.questionsCount', { count: selectedQuiz.questions.length })} • {selectedQuiz.difficulty === 'easy' ? t('quiz.difficulty.easy') : selectedQuiz.difficulty === 'medium' ? t('quiz.difficulty.medium') : t('quiz.difficulty.hard')}
                   </div>
                 </div>
               </div>
@@ -356,7 +356,7 @@ const MultiplayerLobby: React.FC = () => {
                 className="flex items-center gap-2 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 text-white px-8 py-3 rounded-xl hover:shadow-xl hover:scale-105 transition-all duration-300 font-bold"
               >
                 <Gamepad2 className="w-5 h-5" />
-                Bắt đầu Multiplayer
+                {t('multiplayer.lobby.startMultiplayer')}
               </button>
             </div>
           </div>

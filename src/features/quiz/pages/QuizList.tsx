@@ -9,7 +9,8 @@ import { Quiz } from '../types';
 import { fetchQuizzes } from '../store';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import PasswordModal from '../../../shared/components/ui/PasswordModal';
+import QuizPasswordModal from '../../../shared/components/ui/QuizPasswordModal';
+import { unlockQuiz } from '../../../lib/services/quizAccessService';
 
 const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: propQuizzes, title }) => {
   // Always call hooks at the top - Fix React Hooks rules
@@ -121,7 +122,28 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
     // 🔒 Check if quiz requires password
     const requiresPassword = quiz.visibility === 'password' || quiz.havePassword === 'password';
     
+    // 🐛 Debug log
+    console.log('🎯 Quiz click:', {
+      id: quiz.id,
+      title: quiz.title,
+      visibility: quiz.visibility,
+      havePassword: quiz.havePassword,
+      hasPwd: !!quiz.pwd,
+      requiresPassword
+    });
+    
     if (requiresPassword) {
+      // Check if quiz has pwd data
+      if (!quiz.pwd || !quiz.pwd.enabled) {
+        console.error('❌ Quiz missing pwd data:', quiz);
+        toast.error(
+          t('passwordModal.missingPasswordData', 
+            'Quiz này được đánh dấu có mật khẩu nhưng thiếu thông tin bảo mật. Vui lòng liên hệ người tạo quiz.'
+          )
+        );
+        return;
+      }
+      
       // Show password modal immediately
       setSelectedQuiz(quiz);
       setShowPasswordModal(true);
@@ -131,12 +153,42 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
     }
   };
   
-  // 🔒 Handle successful password verification
-  const handlePasswordSuccess = () => {
-    if (selectedQuiz) {
-      setShowPasswordModal(false);
-      // Navigate to preview page after successful password entry
-      navigate(`/quiz/${selectedQuiz.id}/preview`);
+  // 🔒 Handle password submission
+  const handlePasswordSubmit = async (password: string): Promise<boolean> => {
+    if (!selectedQuiz || !user) {
+      toast.error(t('quiz.password.loginRequired', 'Vui lòng đăng nhập để truy cập quiz'));
+      return false;
+    }
+
+    try {
+      const success = await unlockQuiz(
+        selectedQuiz.id,
+        user.uid,
+        password,
+        selectedQuiz as any // Quiz type is compatible with QuizMetadata
+      );
+
+      if (success) {
+        toast.success(t('quiz.password.unlocked', '🎉 Đã mở khóa quiz thành công!'));
+        setShowPasswordModal(false);
+        // Navigate to preview page after successful unlock
+        navigate(`/quiz/${selectedQuiz.id}/preview`);
+        return true;
+      }
+
+      return false;
+    } catch (err: any) {
+      console.error('Error unlocking quiz:', err);
+      
+      // Show appropriate error message
+      if (err.message && err.message.includes('thiếu thông tin bảo mật')) {
+        const errorMsg = t('passwordModal.missingPasswordData', 'Quiz này được đánh dấu có mật khẩu nhưng thiếu thông tin bảo mật');
+        toast.error(String(errorMsg));
+      } else {
+        toast.error(t('quiz.password.unlockError', 'Có lỗi xảy ra khi mở khóa quiz'));
+      }
+      
+      return false;
     }
   };
   
@@ -544,12 +596,11 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
       
       {/* 🔒 Password Modal */}
       {selectedQuiz && showPasswordModal && (
-        <PasswordModal
+        <QuizPasswordModal
           isOpen={showPasswordModal}
-          onClose={handlePasswordClose}
-          onSuccess={handlePasswordSuccess}
-          passwordData={selectedQuiz.pwd}
           quizTitle={selectedQuiz.title}
+          onClose={handlePasswordClose}
+          onSubmit={handlePasswordSubmit}
         />
       )}
     </div>

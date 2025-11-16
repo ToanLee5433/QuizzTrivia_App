@@ -51,7 +51,7 @@ const QuizStats: React.FC<QuizStatsProps> = ({ quizzes }) => {
           </div>
         </div>
         <div className="mt-4 flex items-center text-blue-100 text-sm">
-          <span>{averageQuestions} câu hỏi trung bình</span>
+          <span>{t('stats.avgQuestionsPerQuiz', { count: averageQuestions })}</span>
         </div>
       </div>
 
@@ -70,7 +70,7 @@ const QuizStats: React.FC<QuizStatsProps> = ({ quizzes }) => {
         </div>
         <div className="mt-4">
           <div className="flex items-center justify-between text-green-100 text-sm mb-1">
-            <span>Tiến độ</span>
+            <span>{t('stats.progress')}</span>
             <span>{progressPercentage}%</span>
           </div>
           <div className="w-full bg-white/20 rounded-full h-2">
@@ -97,7 +97,7 @@ const QuizStats: React.FC<QuizStatsProps> = ({ quizzes }) => {
         </div>
         <div className="mt-4 flex items-center text-purple-100 text-sm">
           <span>
-            {totalQuizzes > 0 ? Math.round(totalPlayers / totalQuizzes) : 0} trung bình/quiz
+            {t('stats.avgPerQuiz', { value: totalQuizzes > 0 ? Math.round(totalPlayers / totalQuizzes) : 0 })}
           </span>
         </div>
       </div>
@@ -116,13 +116,13 @@ const QuizStats: React.FC<QuizStatsProps> = ({ quizzes }) => {
           </div>
         </div>
         <div className="mt-4 flex items-center text-orange-100 text-sm">
-          <span>Chất lượng tốt</span>
+          <span>{t('stats.goodQuality')}</span>
         </div>
       </div>
 
       {/* Difficulty Distribution */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 md:col-span-2">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Phân bố độ khó</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('stats.difficultyDistribution')}</h3>
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -174,7 +174,7 @@ const QuizStats: React.FC<QuizStatsProps> = ({ quizzes }) => {
 
       {/* Top Categories */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 md:col-span-2">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Danh mục phổ biến</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('stats.popularCategories')}</h3>
         <div className="space-y-3">
           {topCategories.map(([category, count], index) => (
             <div key={category} className="flex items-center justify-between">
@@ -185,7 +185,7 @@ const QuizStats: React.FC<QuizStatsProps> = ({ quizzes }) => {
                 <span className="text-sm text-gray-900 font-medium">{category}</span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-600">{count} quiz</span>
+                <span className="text-sm text-gray-600">{t('stats.quizCount', { count })}</span>
                 <div className="w-16 bg-gray-200 rounded-full h-2">
                   <div 
                     className="bg-blue-500 h-2 rounded-full"
@@ -197,7 +197,7 @@ const QuizStats: React.FC<QuizStatsProps> = ({ quizzes }) => {
           ))}
           {topCategories.length === 0 && (
             <div className="text-center text-gray-500 py-4">
-              Chưa có dữ liệu danh mục
+              {t('stats.noCategoryData')}
             </div>
           )}
         </div>

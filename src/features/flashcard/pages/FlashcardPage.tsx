@@ -346,10 +346,10 @@ const FlashcardPage: React.FC = () => {
         {/* Stats */}
         <div className="mt-6 flex justify-center gap-4 text-sm">
           <div className="px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg font-medium">
-            ✓ {t('flashcard.mastered', 'Đã nhớ')}: {masteredCards.size}
+            <span>✓</span> {t('flashcard.stats.mastered', 'Đã nhớ')}: {masteredCards.size}
           </div>
           <div className="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg font-medium">
-            📝 {t('flashcard.remaining', 'Còn lại')}: {cardQueue.length}
+            <span>📝</span> {t('flashcard.study.cardsRemaining', 'Còn lại')}: {cardQueue.length}
           </div>
         </div>
       </div>

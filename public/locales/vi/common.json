@@ -196,7 +196,15 @@
       "registeredUsers": "Người dùng đã đăng ký",
       "reviews": "Đánh giá",
       "completions": "Hoàn thành",
-      "performanceMetrics": "Số liệu hiệu suất"
+      "performanceMetrics": "Số liệu hiệu suất",
+      "avgQuestionsPerQuiz": "{{count}} câu hỏi trung bình",
+      "progress": "Tiến độ",
+      "avgPerQuiz": "{{value}} trung bình/quiz",
+      "goodQuality": "Chất lượng tốt",
+      "difficultyDistribution": "Phân bố độ khó",
+      "popularCategories": "Danh mục phổ biến",
+      "quizCount": "{{count}} quiz",
+      "noCategoryData": "Chưa có dữ liệu danh mục"
     },
     "sidebar": {
       "title": "Quản trị viên",
@@ -366,8 +374,11 @@
       },
       "difficulty": {
         "easy": "Dễ",
+        "Easy": "Dễ",
         "medium": "Trung bình",
+        "Medium": "Trung bình",
         "hard": "Khó",
+        "Hard": "Khó",
         "title": "Độ khó"
       },
       "status": {
@@ -386,14 +397,16 @@
         "public": "Công khai",
         "private": "Riêng tư",
         "unlisted": "Không công khai",
-        "password": "Bảo vệ bằng mật khẩu"
+        "password": "Mật khẩu"
       },
       "quizType": {
         "standard": "Quiz tiêu chuẩn",
+        "Standard quiz": "Quiz tiêu chuẩn",
         "withMaterials": "Quiz kèm tài liệu"
       },
       "questionTypes": {
-        "multiple": "Trắc nghiệm 1 đáp án",
+        "multiple": "Trắc nghiệm",
+        "Multiple choice": "Trắc nghiệm",
         "boolean": "Đúng/Sai",
         "short_answer": "Tự luận ngắn",
         "image": "Chọn hình ảnh",
@@ -456,7 +469,9 @@
         "updated": "Cập nhật lần cuối",
         "quizType": "Loại quiz",
         "notAvailable": "Không có",
+        "N/A": "Không có",
         "anonymous": "Ẩn danh",
+        "Anonymous": "Ẩn danh",
         "creatorAvatar": "Ảnh đại diện của {{name}}"
       },
       "resources": {
@@ -1708,7 +1723,7 @@
     "roomCode": "Mã phòng",
     "enterRoomCode": "Nhập mã phòng",
     "roomCodeHint": "Nhập mã 6 ký tự từ người tạo phòng",
-    "chat": "Trò chuyện",
+    "chatLabel": "Trò chuyện",
     "starting": "Đang bắt đầu",
     "joining": "Đang tham gia...",
     "password": "Mật khẩu",
@@ -1762,7 +1777,74 @@
     "timeLimitHint": "Từ {{min}} đến {{max}} giây cho mỗi câu hỏi (tối đa 5 phút)",
     "questionsCount": "{{count}} câu hỏi",
     "checkmark": "✓",
-    "secondsShort": "{{value}}s"
+    "secondsShort": "{{value}}s",
+    "chat": {
+      "title": "Trò chuyện",
+      "messageCount": "{{count}} tin nhắn",
+      "noMessages": "Chưa có tin nhắn",
+      "startConversation": "Bắt đầu trò chuyện với đội của bạn!",
+      "placeholder": "Nhập tin nhắn...",
+      "disabled": "Chat đã bị tắt"
+    },
+    "game": {
+      "startingSoon": "Game Sắp Bắt Đầu!",
+      "getReady": "Sẵn sàng trả lời câu hỏi!",
+      "questionResults": "Kết Quả Câu Hỏi",
+      "correct": "✅ Đúng!",
+      "wrong": "❌ Sai!",
+      "youEarned": "Bạn kiếm được",
+      "points": "điểm",
+      "correctAnswer": "Đáp án đúng:",
+      "currentStandings": "Bảng Xếp Hạng Hiện Tại",
+      "you": "Bạn",
+      "correctCount": "{{count}} đúng",
+      "nextQuestionIn": "Câu hỏi tiếp theo trong:",
+      "waitingForOthers": "Đang chờ người chơi khác...",
+      "pts": "điểm",
+      "accuracy": "Độ chính xác",
+      "completeRankings": "Bảng Xếp Hạng Hoàn Chỉnh",
+      "playerStats": "{{correct}}/{{total}} đúng • {{accuracy}}% chính xác • TB: {{avgTime}}s",
+      "totalQuestions": "Tổng Câu Hỏi",
+      "players": "Người Chơi",
+      "yourCorrect": "Câu Đúng Của Bạn",
+      "yourScore": "Điểm Của Bạn",
+      "thanksForPlaying": "Cảm ơn bạn đã chơi!",
+      "playAgain": "Chơi Lại",
+      "viewProfile": "Xem Hồ Sơ",
+      "globalLeaderboard": "Bảng Xếp Hạng Toàn Cầu",
+      "questionProgress": "Câu hỏi {{current}} / {{total}}",
+      "playersCount": "{{count}} người chơi",
+      "amazingPerformance": "Màn trình diễn tuyệt vời từ tất cả người chơi",
+      "submitted": "Đã nộp!",
+      "timeRunningOut": "Thời gian sắp hết!"
+    },
+    "quizSelector": {
+      "title": "Chọn Quiz để chơi Multiplayer",
+      "subtitle": "Chọn một quiz để tạo phòng hoặc tham gia chơi với bạn bè",
+      "loading": "Đang tải danh sách quiz...",
+      "debugInfo": "Thông Tin Debug",
+      "authUser": "Người dùng đã xác thực",
+      "totalInDB": "Tổng Quiz trong DB",
+      "validQuizzes": "Quiz Hợp lệ (có câu hỏi)",
+      "lastFetch": "Lần Tải Cuối",
+      "noQuizzes": "Chưa có quiz nào",
+      "noResults": "Không tìm thấy quiz",
+      "noQuizzesDesc": "Hiện tại chưa có quiz nào được duyệt. Vui lòng quay lại sau hoặc tạo quiz mới!",
+      "tryDifferentFilter": "Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm",
+      "selectQuiz": "Chọn Quiz này",
+      "showingCount": "Hiển thị {{count}} quiz"
+    },
+    "lobby": {
+      "realtimeCompetition": "Cạnh Tranh Trực Tiếp",
+      "realtimeCompetitionDesc": "Cạnh tranh trực tiếp với bạn bè và xem kết quả ngay lập tức",
+      "privateRooms": "Phòng Riêng Tư",
+      "privateRoomsDesc": "Tạo phòng riêng với room code để chơi với người bạn muốn",
+      "liveLeaderboard": "Bảng Xếp Hạng Trực Tiếp",
+      "liveLeaderboardDesc": "Theo dõi bảng xếp hạng trực tiếp trong khi chơi",
+      "noQuizzesFound": "Không tìm thấy quiz",
+      "noQuizzesFoundDesc": "Không có quiz nào phù hợp với bộ lọc hiện tại.",
+      "startMultiplayer": "Bắt đầu Multiplayer"
+    }
   },
   "nPermissionDeniedStorageRulesChuaDeployHoacChuaDun": "PERMISSION DENIED - Storage Rules chưa deploy hoặc chưa đúng!",
   "nav": {
@@ -2166,6 +2248,19 @@
       "attempts": "{{count}} lượt chơi",
       "averageScore": "{{score}}% điểm TB",
       "duration": "{{minutes}}p"
+    },
+    "password": {
+      "title": "Quiz Yêu Cầu Mật Khẩu",
+      "description": "Quiz này được bảo vệ bằng mật khẩu. Vui lòng nhập mật khẩu để tiếp tục.",
+      "label": "Mật khẩu",
+      "placeholder": "Nhập mật khẩu...",
+      "submit": "Xác nhận",
+      "hint": "💡 Liên hệ người tạo quiz nếu bạn chưa có mật khẩu",
+      "checking": "Đang kiểm tra...",
+      "wrong": "Mật khẩu không đúng",
+      "loginRequired": "Vui lòng đăng nhập để truy cập quiz",
+      "unlocked": "🎉 Đã mở khóa quiz thành công!",
+      "unlockError": "Có lỗi xảy ra khi mở khóa quiz"
     },
     "preview": "Xem trước",
     "previewPage": {
@@ -3850,6 +3945,7 @@
     "verifying": "Đang xác minh...",
     "maxAttemptsReached": "⚠️ Bạn đã vượt quá số lần thử cho phép. Vui lòng liên hệ người tạo quiz để được hỗ trợ.",
     "configError": "Lỗi cấu hình mật khẩu. Vui lòng liên hệ người tạo quiz.",
+    "missingPasswordData": "Quiz này được đánh dấu có mật khẩu nhưng thiếu thông tin bảo mật. Vui lòng liên hệ người tạo quiz để cập nhật lại mật khẩu.",
     "verificationError": "Đã xảy ra lỗi trong quá trình xác minh. Vui lòng thử lại."
   },
   "quizCreation": {

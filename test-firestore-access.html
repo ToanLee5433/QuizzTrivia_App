@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firestore Access Test</title>
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+      background: #1a1a1a;
+      color: #00ff00;
+    }
+    h1 { color: #00ffff; }
+    .section {
+      margin: 20px 0;
+      padding: 15px;
+      border: 1px solid #333;
+      background: #0a0a0a;
+    }
+    button {
+      background: #005500;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      padding: 10px 20px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover { background: #007700; }
+    .log {
+      margin: 10px 0;
+      padding: 5px;
+      border-left: 3px solid #00ff00;
+      background: #0d0d0d;
+    }
+    .error { border-left-color: #ff0000; color: #ff6666; }
+    .success { border-left-color: #00ff00; color: #00ff00; }
+    .info { border-left-color: #ffff00; color: #ffff00; }
+    input {
+      background: #0a0a0a;
+      color: #00ff00;
+      border: 1px solid #333;
+      padding: 8px;
+      width: 300px;
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Firestore Access Debug Tool</h1>
+  
+  <div class="section">
+    <h3>Test Configuration</h3>
+    <div>
+      <label>Quiz ID:</label><br>
+      <input type="text" id="quizId" value="kFYJfEMx8YSvJMmxll1C" placeholder="Enter quiz ID">
+    </div>
+    <div>
+      <label>User ID (leave empty to use current user):</label><br>
+      <input type="text" id="userId" placeholder="Auto-detect from auth">
+    </div>
+    <div>
+      <label>Password:</label><br>
+      <input type="password" id="password" value="123" placeholder="Enter password">
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Test Actions</h3>
+    <button onclick="checkAuthState()">1. Check Auth State</button>
+    <button onclick="readQuizMetadata()">2. Read Quiz Metadata</button>
+    <button onclick="checkPassword()">3. Test Password Hash</button>
+    <button onclick="attemptAccessWrite()">4. Attempt Access Write</button>
+    <button onclick="runFullTest()">🚀 Run Full Test</button>
+  </div>
+
+  <div class="section">
+    <h3>Console Output</h3>
+    <div id="output"></div>
+    <button onclick="clearOutput()">Clear</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+    import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
+    // Firebase config (replace with your actual config)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBBZvYbxSyKqh0t8YQ-2nF_jEOQR4IbMFM",
+      authDomain: "datn-quizapp.firebaseapp.com",
+      projectId: "datn-quizapp",
+      storageBucket: "datn-quizapp.firebasestorage.app",
+      messagingSenderId: "1075086042847",
+      appId: "1:1075086042847:web:55ebd80c10b58e0ed88eed"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      if (user) {
+        log(`✅ User signed in: ${user.email} (${user.uid})`, 'success');
+      } else {
+        log('❌ No user signed in', 'error');
+      }
+    });
+
+    function log(message, type = 'info') {
+      const output = document.getElementById('output');
+      const div = document.createElement('div');
+      div.className = `log ${type}`;
+      div.textContent = message;
+      output.appendChild(div);
+      console.log(message);
+    }
+
+    function clearOutput() {
+      document.getElementById('output').innerHTML = '';
+    }
+
+    async function generateProofHash(salt, password) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(salt + password);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    window.checkAuthState = function() {
+      clearOutput();
+      if (currentUser) {
+        log(`🔐 Auth State:`, 'info');
+        log(`  Email: ${currentUser.email}`, 'info');
+        log(`  UID: ${currentUser.uid}`, 'info');
+        log(`  Email Verified: ${currentUser.emailVerified}`, 'info');
+        log(`  Provider: ${currentUser.providerData[0]?.providerId}`, 'info');
+      } else {
+        log('❌ Not authenticated', 'error');
+      }
+    };
+
+    window.readQuizMetadata = async function() {
+      const quizId = document.getElementById('quizId').value;
+      if (!quizId) {
+        log('❌ Please enter a quiz ID', 'error');
+        return;
+      }
+
+      try {
+        log(`📖 Reading quiz metadata: ${quizId}`, 'info');
+        const quizRef = doc(db, 'quizzes', quizId);
+        const quizSnap = await getDoc(quizRef);
+
+        if (!quizSnap.exists()) {
+          log('❌ Quiz not found', 'error');
+          return;
+        }
+
+        const data = quizSnap.data();
+        log('✅ Quiz metadata:', 'success');
+        log(`  Title: ${data.title}`, 'info');
+        log(`  Status: ${data.status}`, 'info');
+        log(`  Visibility: ${data.visibility}`, 'info');
+        log(`  havePassword: ${data.havePassword}`, 'info');
+        log(`  createdBy: ${data.createdBy}`, 'info');
+        
+        if (data.pwd) {
+          log('  📝 Password Data:', 'info');
+          log(`    enabled: ${data.pwd.enabled}`, 'info');
+          log(`    algo: ${data.pwd.algo}`, 'info');
+          log(`    salt: ${data.pwd.salt?.substring(0, 16)}...`, 'info');
+          log(`    hash: ${data.pwd.hash?.substring(0, 16)}...`, 'info');
+        } else {
+          log('  ❌ No pwd field found', 'error');
+        }
+      } catch (error) {
+        log(`❌ Error: ${error.code} - ${error.message}`, 'error');
+      }
+    };
+
+    window.checkPassword = async function() {
+      const quizId = document.getElementById('quizId').value;
+      const password = document.getElementById('password').value;
+
+      if (!quizId || !password) {
+        log('❌ Please enter quiz ID and password', 'error');
+        return;
+      }
+
+      try {
+        const quizRef = doc(db, 'quizzes', quizId);
+        const quizSnap = await getDoc(quizRef);
+
+        if (!quizSnap.exists()) {
+          log('❌ Quiz not found', 'error');
+          return;
+        }
+
+        const data = quizSnap.data();
+        if (!data.pwd) {
+          log('❌ No password data', 'error');
+          return;
+        }
+
+        log('🔐 Generating proof hash...', 'info');
+        const proofHash = await generateProofHash(data.pwd.salt, password);
+        const expectedHash = data.pwd.hash;
+
+        log(`  Generated: ${proofHash.substring(0, 32)}...`, 'info');
+        log(`  Expected:  ${expectedHash.substring(0, 32)}...`, 'info');
+        
+        if (proofHash === expectedHash) {
+          log('✅ Password hash matches!', 'success');
+        } else {
+          log('❌ Password hash does NOT match', 'error');
+        }
+      } catch (error) {
+        log(`❌ Error: ${error.code} - ${error.message}`, 'error');
+      }
+    };
+
+    window.attemptAccessWrite = async function() {
+      if (!currentUser) {
+        log('❌ Not authenticated', 'error');
+        return;
+      }
+
+      const quizId = document.getElementById('quizId').value;
+      const userId = document.getElementById('userId').value || currentUser.uid;
+      const password = document.getElementById('password').value;
+
+      if (!quizId || !password) {
+        log('❌ Please enter quiz ID and password', 'error');
+        return;
+      }
+
+      try {
+        // Get quiz metadata
+        const quizRef = doc(db, 'quizzes', quizId);
+        const quizSnap = await getDoc(quizRef);
+
+        if (!quizSnap.exists()) {
+          log('❌ Quiz not found', 'error');
+          return;
+        }
+
+        const data = quizSnap.data();
+        if (!data.pwd) {
+          log('❌ No password data', 'error');
+          return;
+        }
+
+        // Generate proof hash
+        log('🔐 Generating proof hash...', 'info');
+        const proofHash = await generateProofHash(data.pwd.salt, password);
+        
+        log('✅ Hash generated successfully', 'success');
+        log(`  Proof hash: ${proofHash.substring(0, 32)}...`, 'info');
+        log(`  User ID: ${userId}`, 'info');
+        log(`  Current user ID: ${currentUser.uid}`, 'info');
+        log(`  Match: ${userId === currentUser.uid}`, userId === currentUser.uid ? 'success' : 'error');
+
+        // Attempt to write access document
+        const accessPath = `quizzes/${quizId}/access/${userId}`;
+        log(`📝 Attempting to write to: ${accessPath}`, 'info');
+
+        const accessRef = doc(db, 'quizzes', quizId, 'access', userId);
+        await setDoc(accessRef, {
+          proofHash,
+          unlockedAt: serverTimestamp(),
+          userId
+        });
+
+        log('✅✅✅ ACCESS DOCUMENT CREATED SUCCESSFULLY! ✅✅✅', 'success');
+        log('🎉 Password authentication is working!', 'success');
+      } catch (error) {
+        log(`❌ ERROR: ${error.code}`, 'error');
+        log(`  Message: ${error.message}`, 'error');
+        log(`  Name: ${error.name}`, 'error');
+        
+        if (error.code === 'permission-denied') {
+          log('', 'error');
+          log('🔍 Permission denied details:', 'error');
+          log('  This means Firestore rules are rejecting the write', 'error');
+          log('  Check:', 'error');
+          log('    1. User is authenticated: ' + (currentUser ? '✅' : '❌'), 'error');
+          log('    2. User ID matches: ' + (userId === currentUser?.uid ? '✅' : '❌'), 'error');
+          log('    3. Quiz status is approved: ' + (data.status === 'approved' ? '✅' : '❌'), 'error');
+          log('    4. Hash matches: ' + (proofHash === data.pwd.hash ? '✅' : '❌'), 'error');
+        }
+      }
+    };
+
+    window.runFullTest = async function() {
+      clearOutput();
+      log('🚀 Starting full diagnostic test...', 'info');
+      log('', 'info');
+      
+      await checkAuthState();
+      log('', 'info');
+      
+      await readQuizMetadata();
+      log('', 'info');
+      
+      await checkPassword();
+      log('', 'info');
+      
+      await attemptAccessWrite();
+    };
+
+    // Make functions available globally
+    window.log = log;
+    window.clearOutput = clearOutput;
+    window.generateProofHash = generateProofHash;
+  </script>
+</body>
+</html>

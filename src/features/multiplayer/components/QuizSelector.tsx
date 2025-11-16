@@ -148,9 +148,9 @@ const QuizSelector: React.FC<QuizSelectorProps> = ({ onSelectQuiz, onBack }) => 
 
   const getDifficultyLabel = (difficulty: string) => {
     switch (difficulty) {
-      case 'easy': return 'Dễ';
-      case 'medium': return 'Trung bình';
-      case 'hard': return 'Khó';
+      case 'easy': return t('quiz.difficulty.easy');
+      case 'medium': return t('quiz.difficulty.medium');
+      case 'hard': return t('quiz.difficulty.hard');
       default: return difficulty;
     }
   };
@@ -164,17 +164,17 @@ const QuizSelector: React.FC<QuizSelectorProps> = ({ onSelectQuiz, onBack }) => 
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h1 className="text-3xl font-bold text-white mb-2">
-                  🎮 Chọn Quiz để chơi Multiplayer
+                  🎮 {t('multiplayer.quizSelector.title')}
                 </h1>
                 <p className="text-purple-200">
-                  Chọn một quiz để tạo phòng hoặc tham gia chơi với bạn bè
+                  {t('multiplayer.quizSelector.subtitle')}
                 </p>
               </div>
               <button
                 onClick={onBack}
                 className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors"
               >
-                ← Quay lại
+                ← {t('common.back')}
               </button>
             </div>
 
@@ -212,7 +212,7 @@ const QuizSelector: React.FC<QuizSelectorProps> = ({ onSelectQuiz, onBack }) => 
             <div className="flex items-center justify-center py-20">
               <div className="text-center">
                 <Loader2 className="w-12 h-12 text-white animate-spin mx-auto mb-4" />
-                <p className="text-white">Đang tải danh sách quiz...</p>
+                <p className="text-white">{t('multiplayer.quizSelector.loading')}</p>
               </div>
             </div>
           ) : (
@@ -220,12 +220,12 @@ const QuizSelector: React.FC<QuizSelectorProps> = ({ onSelectQuiz, onBack }) => 
               {/* Debug Info Panel */}
               {debugInfo && (
                 <div className="bg-yellow-500/20 backdrop-blur-md rounded-lg border border-yellow-500/40 p-4 mb-6">
-                  <h3 className="text-white font-bold mb-2">🔍 Debug Information:</h3>
+                  <h3 className="text-white font-bold mb-2">🔍 {t('multiplayer.quizSelector.debugInfo')}</h3>
                   <div className="text-sm text-yellow-100 space-y-1">
-                    <p>✅ Auth User: {debugInfo.authUser}</p>
-                    <p>📊 Total Quizzes in DB: {debugInfo.totalFromDb}</p>
-                    <p>✅ Valid Quizzes (with questions): {debugInfo.validQuizzes}</p>
-                    <p>⏰ Last Fetch: {new Date(debugInfo.timestamp).toLocaleTimeString()}</p>
+                    <p>✅ {t('multiplayer.quizSelector.authUser')}: {debugInfo.authUser}</p>
+                    <p>📊 {t('multiplayer.quizSelector.totalInDB')}: {debugInfo.totalFromDb}</p>
+                    <p>✅ {t('multiplayer.quizSelector.validQuizzes')}: {debugInfo.validQuizzes}</p>
+                    <p>⏰ {t('multiplayer.quizSelector.lastFetch')}: {new Date(debugInfo.timestamp).toLocaleTimeString()}</p>
                   </div>
                 </div>
               )}
@@ -234,12 +234,12 @@ const QuizSelector: React.FC<QuizSelectorProps> = ({ onSelectQuiz, onBack }) => 
                 <div className="bg-white/10 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 p-12 text-center">
                   <BookOpen className="w-16 h-16 text-white/50 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-white mb-2">
-                    {quizzes.length === 0 ? 'Chưa có quiz nào' : 'Không tìm thấy quiz'}
+                    {quizzes.length === 0 ? t('multiplayer.quizSelector.noQuizzes') : t('multiplayer.quizSelector.noResults')}
                   </h3>
                   <p className="text-purple-200 mb-4">
                     {quizzes.length === 0 
-                      ? 'Hiện tại chưa có quiz nào được duyệt. Vui lòng quay lại sau hoặc tạo quiz mới!'
-                      : 'Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm'
+                      ? t('multiplayer.quizSelector.noQuizzesDesc')
+                      : t('multiplayer.quizSelector.tryDifferentFilter')
                     }
                   </p>
                   {quizzes.length === 0 && (
@@ -247,7 +247,7 @@ const QuizSelector: React.FC<QuizSelectorProps> = ({ onSelectQuiz, onBack }) => 
                       onClick={onBack}
                       className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg transition-all"
                     >
-                      ← Quay lại
+                      ← {t('common.back')}
                     </button>
                   )}
                 </div>
@@ -290,11 +290,11 @@ const QuizSelector: React.FC<QuizSelectorProps> = ({ onSelectQuiz, onBack }) => 
                     <div className="flex items-center gap-4 text-sm text-purple-200 mb-4">
                       <div className="flex items-center gap-1">
                         <BookOpen className="w-4 h-4" />
-                        <span>{quiz.questions?.length || 0} câu</span>
+                        <span>{t('multiplayer.questionsCount', { count: quiz.questions?.length || 0 })}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
-                        <span>{quiz.duration || 15} phút</span>
+                        <span>{t('common.minutesShort', { value: quiz.duration || 15 })}</span>
                       </div>
                     </div>
 
@@ -310,14 +310,14 @@ const QuizSelector: React.FC<QuizSelectorProps> = ({ onSelectQuiz, onBack }) => 
                       )}
                       {quiz.quizType && (
                         <span className="px-2 py-1 rounded-lg text-xs font-medium bg-purple-100 text-purple-600">
-                          {quiz.quizType === 'with-materials' ? '📚 Có tài liệu' : '⚡ Nhanh'}
+                          {quiz.quizType === 'with-materials' ? `📚 ${t('quiz.withMaterials')}` : `⚡ ${t('quiz.quick')}`}
                         </span>
                       )}
                     </div>
 
                     {/* Play Button */}
                     <button className="mt-4 w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 transform group-hover:scale-105">
-                      🎮 Chọn Quiz này
+                      🎮 {t('multiplayer.quizSelector.selectQuiz')}
                     </button>
                   </div>
                 </div>
@@ -331,7 +331,7 @@ const QuizSelector: React.FC<QuizSelectorProps> = ({ onSelectQuiz, onBack }) => 
           {!loading && filteredQuizzes.length > 0 && (
             <div className="mt-6 text-center">
               <p className="text-purple-200">
-                Hiển thị {filteredQuizzes.length} quiz
+                {t('multiplayer.quizSelector.showingCount', { count: filteredQuizzes.length })}
               </p>
             </div>
           )}

@@ -43,16 +43,6 @@ const QuizTypeStep: React.FC<QuizTypeStepProps> = ({ selectedType, onTypeSelect 
     },
   ]), [t]);
 
-  const statsData = useMemo(
-    () => ({
-      'with-materials': { completion: 78, rating: 4.8, duration: 25 },
-      standard: { completion: 92, rating: 4.5, duration: 8 },
-    }),
-    []
-  );
-
-  const currentStats = selectedType ? statsData[selectedType] : null;
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -200,29 +190,6 @@ const QuizTypeStep: React.FC<QuizTypeStepProps> = ({ selectedType, onTypeSelect 
         </div>
       </div>
 
-      {/* Statistics */}
-      {currentStats && (
-        <div className="max-w-5xl mx-auto grid grid-cols-3 gap-4 pt-4">
-          <div className="bg-white rounded-xl p-4 border border-gray-200 text-center">
-            <div className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              {t('createQuiz.type.stats.completionValue', { value: currentStats.completion })}
-            </div>
-            <div className="text-sm text-gray-600 mt-1">{t('createQuiz.type.stats.completionLabel')}</div>
-          </div>
-          <div className="bg-white rounded-xl p-4 border border-gray-200 text-center">
-            <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-              {t('createQuiz.type.stats.ratingValue', { value: currentStats.rating })}
-            </div>
-            <div className="text-sm text-gray-600 mt-1">{t('createQuiz.type.stats.ratingLabel')}</div>
-          </div>
-          <div className="bg-white rounded-xl p-4 border border-gray-200 text-center">
-            <div className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-green-600 bg-clip-text text-transparent">
-              {t('createQuiz.type.stats.durationValue', { value: currentStats.duration })}
-            </div>
-            <div className="text-sm text-gray-600 mt-1">{t('createQuiz.type.stats.durationLabel')}</div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -196,7 +196,15 @@
       "registeredUsers": "Registered Users",
       "reviews": "Reviews",
       "completions": "Completions",
-      "performanceMetrics": "Performance Metrics"
+      "performanceMetrics": "Performance Metrics",
+      "avgQuestionsPerQuiz": "{{count}} questions average",
+      "progress": "Progress",
+      "avgPerQuiz": "{{value}} average/quiz",
+      "goodQuality": "Good quality",
+      "difficultyDistribution": "Difficulty Distribution",
+      "popularCategories": "Popular Categories",
+      "quizCount": "{{count}} quiz",
+      "noCategoryData": "No category data"
     },
     "sidebar": {
       "title": "Admin Panel",
@@ -366,8 +374,11 @@
       },
       "difficulty": {
         "easy": "Easy",
+        "Easy": "Easy",
         "medium": "Medium",
+        "Medium": "Medium",
         "hard": "Hard",
+        "Hard": "Hard",
         "title": "Difficulty"
       },
       "status": {
@@ -386,14 +397,16 @@
         "public": "Public",
         "private": "Private",
         "unlisted": "Unlisted",
-        "password": "Password protected"
+        "password": "password"
       },
       "quizType": {
         "standard": "Standard quiz",
+        "Standard quiz": "Standard quiz",
         "withMaterials": "With study materials"
       },
       "questionTypes": {
         "multiple": "Multiple choice",
+        "Multiple choice": "Multiple choice",
         "boolean": "True / False",
         "short_answer": "Short answer",
         "image": "Image choice",
@@ -456,7 +469,9 @@
         "updated": "Last updated",
         "quizType": "Quiz type",
         "notAvailable": "N/A",
+        "N/A": "N/A",
         "anonymous": "Anonymous",
+        "Anonymous": "Anonymous",
         "creatorAvatar": "{{name}}'s avatar"
       },
       "resources": {
@@ -1750,7 +1765,7 @@
     "roomCode": "Room Code",
     "enterRoomCode": "Enter room code",
     "roomCodeHint": "Enter 6-character code from room creator",
-    "chat": "Chat",
+    "chatLabel": "Chat",
     "starting": "Starting",
     "joining": "Joining...",
     "password": "Password",
@@ -1804,7 +1819,70 @@
     "timeLimitHint": "From {{min}} to {{max}} seconds per question (max 5 minutes)",
     "questionsCount": "{{count}} questions",
     "checkmark": "✓",
-    "secondsShort": "{{value}}s"
+    "secondsShort": "{{value}}s",
+    "chat": {
+      "messagesCount": "{{count}} messages",
+      "emptyState": "Start a conversation with your team!"
+    },
+    "game": {
+      "startingSoon": "Game Starting Soon!",
+      "getReady": "Get ready to answer questions!",
+      "questionResults": "Question Results",
+      "correct": "✅ Correct!",
+      "wrong": "❌ Wrong!",
+      "youEarned": "You earned",
+      "points": "points",
+      "correctAnswer": "Correct Answer:",
+      "currentStandings": "Current Standings",
+      "you": "You",
+      "correctCount": "{{count}} correct",
+      "nextQuestionIn": "Next question in:",
+      "waitingForOthers": "Waiting for other players...",
+      "pts": "pts",
+      "accuracy": "Accuracy",
+      "completeRankings": "Complete Rankings",
+      "playerStats": "{{correct}}/{{total}} correct • {{accuracy}}% accuracy • Avg: {{avgTime}}s",
+      "totalQuestions": "Total Questions",
+      "players": "Players",
+      "yourCorrect": "Your Correct",
+      "yourScore": "Your Score",
+      "thanksForPlaying": "Thanks for playing!",
+      "playAgain": "Play Again",
+      "viewProfile": "View Profile",
+      "globalLeaderboard": "Global Leaderboard",
+      "questionProgress": "Question {{current}} of {{total}}",
+      "playersCount": "{{count}} players",
+      "amazingPerformance": "Amazing performance by all players",
+      "submitted": "Submitted!",
+      "timeRunningOut": "Time is running out!"
+    },
+    "quizSelector": {
+      "title": "Select a Quiz for Multiplayer",
+      "subtitle": "Choose a quiz to create a room or play with friends",
+      "loading": "Loading quiz list...",
+      "debugInfo": "Debug Information",
+      "authUser": "Authenticated User",
+      "totalInDB": "Total Quizzes in DB",
+      "validQuizzes": "Valid Quizzes (with questions)",
+      "lastFetch": "Last Fetch",
+      "noQuizzes": "No quizzes available",
+      "noResults": "No quizzes found",
+      "noQuizzesDesc": "There are no approved quizzes yet. Please check back later or create a new quiz!",
+      "tryDifferentFilter": "Try changing filters or search keywords",
+      "selectQuiz": "Select this Quiz",
+      "showingCount": "Showing {{count}} quizzes"
+    },
+    "lobby": {
+      "realtimeCompetition": "Real-time Competition",
+      "realtimeCompetitionDesc": "Compete live with friends and see results instantly",
+      "privateRooms": "Private Rooms",
+      "privateRoomsDesc": "Create private rooms with room codes to play with specific friends",
+      "liveLeaderboard": "Live Leaderboard",
+      "liveLeaderboardDesc": "Track live rankings while playing",
+      "noQuizzesFound": "No quizzes found",
+      "noQuizzesFoundDesc": "No quizzes match the current filters.",
+      "startMultiplayer": "Start Multiplayer"
+    }
   },
   "moTaNganGonVeNoiDungQuiz": "Description ngắn gọn về nội dung Quiz...",
   "moTaQuiz": "Description Quiz *",
@@ -2215,6 +2293,19 @@
       "attempts": "{{count}} attempts",
       "averageScore": "{{score}}% avg",
       "duration": "{{minutes}}m"
+    },
+    "password": {
+      "title": "Quiz Requires Password",
+      "description": "This quiz is password protected. Please enter the password to continue.",
+      "label": "Password",
+      "placeholder": "Enter password...",
+      "submit": "Confirm",
+      "hint": "💡 Contact the quiz creator if you don't have the password",
+      "checking": "Checking...",
+      "wrong": "Incorrect password",
+      "loginRequired": "Please login to access quiz",
+      "unlocked": "🎉 Quiz unlocked successfully!",
+      "unlockError": "Error occurred while unlocking quiz"
     },
     "preview": "Preview",
     "previewPage": {
@@ -3828,6 +3919,7 @@
     "verifying": "Verifying...",
     "maxAttemptsReached": "⚠️ You have exceeded the maximum number of attempts. Please contact the quiz creator for assistance.",
     "configError": "Password configuration error. Please contact the quiz creator.",
+    "missingPasswordData": "This quiz is marked as password-protected but missing security information. Please contact the quiz creator to update the password.",
     "verificationError": "An error occurred during verification. Please try again."
   },
   "quizCreation": {

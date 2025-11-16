@@ -16,7 +16,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import {
-  Clock, Target, Users, Lock, Unlock,
+  Clock, Target, Users,
   BookOpen, Play, AlertCircle, Star, Brain,
   ArrowLeft, Settings, FileText, Video, Image as ImageIcon, Music, Link as LinkIcon, Presentation, Trophy, ChevronRight, ChevronDown,
   Eye, Activity, Percent, Share2, Repeat, ShieldCheck, Globe
@@ -26,7 +26,6 @@ import { db } from '../../../lib/firebase/config';
 import { Quiz, Question } from '../types';
 import { reviewService } from '../services/reviewService';
 import { QuizReviewStats } from '../types/review';
-import PasswordModal from '../../../shared/components/ui/PasswordModal';
 import RichTextViewer from '../../../shared/components/ui/RichTextViewer';
 import QuizSettingsModal, { QuizSettings } from '../components/QuizSettingsModal';
 
@@ -101,23 +100,11 @@ const QuizPreviewPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reviewStats, setReviewStats] = useState<QuizReviewStats | null>(null);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [passwordVerified, setPasswordVerified] = useState(false);
-  const [pendingAction, setPendingAction] = useState<'start' | 'resume' | null>(null);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [quizSettings, setQuizSettings] = useState<QuizSettings | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
   const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
   const [creatorDisplayName, setCreatorDisplayName] = useState<string>('');
-
-  // 🔐 Password check
-  const isLocked = useMemo(() => {
-    if (!quiz) return false;
-    return (
-      (quiz.visibility === 'password' || quiz.havePassword === 'password') &&
-      !passwordVerified
-    );
-  }, [quiz, passwordVerified]);
 
   const shareUrl = useMemo(() => {
     if (!quiz) return '';
@@ -185,21 +172,15 @@ const QuizPreviewPage: React.FC = () => {
   }, [id, t]);
 
   // 🎯 Handle start quiz
-  const handleStartQuiz = (action: 'start' | 'resume' = 'start') => {
+  const handleStartQuiz = () => {
     if (!quiz) return;
-
-    if (isLocked) {
-      setPendingAction(action);
-      setShowPasswordModal(true);
-      return;
-    }
 
     // Save settings to pass to quiz page
     if (quizSettings && quiz.id) {
       localStorage.setItem(`quiz_settings_${quiz.id}`, JSON.stringify(quizSettings));
     }
 
-    // Navigate to quiz page
+    // Navigate to quiz page (password already unlocked at QuizList)
     navigate(`/quiz/${quiz.id}`);
   };
 
@@ -208,17 +189,6 @@ const QuizPreviewPage: React.FC = () => {
     setQuizSettings(settings);
     if (quiz?.id) {
       localStorage.setItem(`quiz_settings_${quiz.id}`, JSON.stringify(settings));
-    }
-  };
-
-  // 🔓 Handle password success
-  const handlePasswordSuccess = () => {
-    setShowPasswordModal(false);
-    setPasswordVerified(true);
-    
-    if (pendingAction && quiz) {
-      navigate(`/quiz/${quiz.id}`);
-      setPendingAction(null);
     }
   };
 
@@ -510,7 +480,7 @@ const QuizPreviewPage: React.FC = () => {
     },
     {
       label: t('quizOverview.access.security', 'Security'),
-      value: isLocked
+      value: (quiz.visibility === 'password' || quiz.havePassword === 'password')
         ? t('quizOverview.access.password', 'Password protected')
         : t('quizOverview.access.open', 'Open access'),
       icon: ShieldCheck
@@ -947,28 +917,17 @@ const QuizPreviewPage: React.FC = () => {
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 text-center">
                   {t('quizOverview.cta.title', 'Ready to Start?')}
                 </h3>
-                
-                {isLocked && (
-                  <div className="mb-4 text-center text-sm text-amber-700 dark:text-amber-400 flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-950/50 rounded-lg">
-                    <Lock className="w-4 h-4 flex-shrink-0" />
-                    <span>{t('quizOverview.access.locked', 'This quiz is password protected')}</span>
-                  </div>
-                )}
 
                 <div className="space-y-3">
                   {/* Primary Action: Start Quiz */}
                   <motion.button
                     whileHover={{ scale: 1.03, y: -2 }}
                     whileTap={{ scale: 0.97 }}
-                    onClick={() => handleStartQuiz('start')}
-                    className={`w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-xl ${
-                      isLocked
-                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white'
-                        : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white'
-                    }`}
+                    onClick={handleStartQuiz}
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
                   >
-                    {isLocked ? <Unlock className="w-6 h-6" /> : <Play className="w-6 h-6" />}
-                    <span>{isLocked ? t('quizOverview.cta.unlock', 'Unlock Quiz') : t('quizOverview.cta.start', 'Start Quiz')}</span>
+                    <Play className="w-6 h-6" />
+                    <span>{t('quizOverview.cta.start', 'Start Quiz')}</span>
                   </motion.button>
 
                   {/* Secondary Actions: Flashcards */}
@@ -976,8 +935,7 @@ const QuizPreviewPage: React.FC = () => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => navigate(`/quiz/${quiz.id}/flashcards`)}
-                    disabled={isLocked}
-                    className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-white dark:bg-slate-800 border-2 border-purple-200 dark:border-purple-900 hover:border-purple-500 dark:hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-950/30 text-purple-700 dark:text-purple-300 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-white dark:bg-slate-800 border-2 border-purple-200 dark:border-purple-900 hover:border-purple-500 dark:hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-950/30 text-purple-700 dark:text-purple-300 rounded-xl font-semibold transition-all"
                   >
                     <Brain className="w-5 h-5" />
                     <span>{t('quizOverview.cta.flashcards', 'Flashcards')}</span>
@@ -988,8 +946,7 @@ const QuizPreviewPage: React.FC = () => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setShowSettingsModal(true)}
-                    disabled={isLocked}
-                    className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-semibold transition-all"
                   >
                     <Settings className="w-5 h-5" />
                     <span>{t('quizOverview.cta.settings', 'Settings')}</span>
@@ -1060,19 +1017,6 @@ const QuizPreviewPage: React.FC = () => {
       </div>
 
       {/* Modals */}
-      {quiz && showPasswordModal && (
-        <PasswordModal
-          isOpen={showPasswordModal}
-          onClose={() => {
-            setShowPasswordModal(false);
-            setPendingAction(null);
-          }}
-          onSuccess={handlePasswordSuccess}
-          passwordData={quiz.pwd}
-          quizTitle={quiz.title}
-        />
-      )}
-
       {quiz && showSettingsModal && (
         <QuizSettingsModal
           isOpen={showSettingsModal}

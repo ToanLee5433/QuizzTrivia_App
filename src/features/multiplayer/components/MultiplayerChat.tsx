@@ -63,7 +63,7 @@ const MultiplayerChat: React.FC<MultiplayerChatProps> = ({
             {t('multiplayer.chat.title')}
           </h3>
           <span className="text-xs text-blue-100">
-            {messages.length} messages
+            {t('multiplayer.chat.messageCount', { count: messages.length })}
           </span>
         </div>
       </div>
@@ -79,7 +79,7 @@ const MultiplayerChat: React.FC<MultiplayerChatProps> = ({
               {t('multiplayer.chat.noMessages')}
             </p>
             <p className="text-gray-400 text-xs mt-1">
-              Start a conversation with your team!
+              {t('multiplayer.chat.startConversation')}
             </p>
           </div>
         ) : (

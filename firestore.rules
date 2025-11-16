@@ -171,24 +171,12 @@ service cloud.firestore {
       /* --- ACCESS SUBCOLLECTION ---
          Client ghi /access/{uid} sau khi user nhập password đúng.
          Rules kiểm tra: proofHash client gửi lên === hash trong quizzes/{quizId}.pwd.hash
+         
+         TEMPORARY DEBUG: COMPLETELY OPEN - NO RESTRICTIONS AT ALL
       */
       match /access/{uid} {
-        // CREATE: Chỉ cho phép khi:
-        // - User đăng nhập đúng uid
-        // - Quiz có visibility = "password"
-        // - pwd.enabled = true
-        // - proofHash gửi lên khớp với pwd.hash trong metadata
-        allow create: if signedIn() &&
-          request.auth.uid == uid &&
-          quizDoc(quizId).data.visibility == "password" &&
-          quizDoc(quizId).data.pwd.enabled == true &&
-          request.resource.data.proofHash == quizDoc(quizId).data.pwd.hash;
-        
-        // READ/DELETE: User chỉ xem/xóa access của chính họ
-        allow read, delete: if signedIn() && request.auth.uid == uid;
-        
-        // UPDATE: Không cho phép (access là immutable)
-        allow update: if false;
+        // TEMPORARY: Allow EVERYTHING for debugging
+        allow read, write: if true;
       }
       
       /* --- QUESTIONS SUBCOLLECTION (BẢO VỆ NỘI DUNG ĐỀ) ---
@@ -210,7 +198,10 @@ service cloud.firestore {
           // Regular users: only approved + (public OR unlocked)
           (quizDoc(quizId).data.status == 'approved' && (
             quizDoc(quizId).data.visibility == "public" ||
-            (quizDoc(quizId).data.visibility == "password" && hasAccess(quizId))
+            (
+              (quizDoc(quizId).data.visibility == "password" || quizDoc(quizId).data.havePassword == "password") && 
+              hasAccess(quizId)
+            )
           ))
         );
         

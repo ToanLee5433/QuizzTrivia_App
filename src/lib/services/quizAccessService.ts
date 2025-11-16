@@ -4,7 +4,7 @@
  */
 
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { db, auth } from '../firebase/config';
 import { generateProofHash } from '../utils/passwordHash';
 
 export interface QuizPasswordData {
@@ -17,7 +17,8 @@ export interface QuizPasswordData {
 export interface QuizMetadata {
   id: string;
   title: string;
-  visibility: 'public' | 'password';
+  visibility?: 'public' | 'password';
+  havePassword?: 'public' | 'password';
   pwd?: QuizPasswordData;
   createdBy: string;
   [key: string]: any;
@@ -56,28 +57,90 @@ export async function unlockQuiz(
   quizMetadata: QuizMetadata
 ): Promise<boolean> {
   console.log('🔓 Attempting to unlock quiz:', quizId);
+  console.log('🔍 Quiz metadata:', {
+    id: quizMetadata.id,
+    visibility: quizMetadata.visibility,
+    havePassword: quizMetadata.havePassword,
+    status: quizMetadata.status,
+    hasPwd: !!quizMetadata.pwd
+  });
 
-  // Validate quiz has password protection
-  if (quizMetadata.visibility !== 'password') {
+  // Validate quiz has password protection (check both old and new fields)
+  const isPasswordProtected = 
+    quizMetadata.visibility === 'password' || 
+    quizMetadata.havePassword === 'password';
+  
+  if (!isPasswordProtected) {
+    console.error('❌ Quiz is not password-protected:', {
+      visibility: quizMetadata.visibility,
+      havePassword: quizMetadata.havePassword
+    });
     throw new Error('Quiz is not password-protected');
   }
 
   if (!quizMetadata.pwd || !quizMetadata.pwd.enabled) {
-    throw new Error('Quiz password data is missing or disabled');
+    console.error('❌ Quiz password data is missing or disabled:', quizMetadata.pwd);
+    console.error('📋 Quiz info:', {
+      id: quizMetadata.id,
+      title: quizMetadata.title,
+      havePassword: quizMetadata.havePassword,
+      visibility: quizMetadata.visibility,
+      createdBy: quizMetadata.createdBy
+    });
+    throw new Error(
+      'Quiz này được đánh dấu có mật khẩu nhưng thiếu thông tin bảo mật. ' +
+      'Vui lòng liên hệ người tạo quiz để cập nhật lại mật khẩu.'
+    );
   }
 
   const { salt, hash: expectedHash } = quizMetadata.pwd;
+  
+  // Declare outside try to access in catch
+  let proofHash: string = '';
 
   try {
+    // CRITICAL DEBUG: Verify auth state before attempting write
+    const currentUser = auth.currentUser;
+    console.log('🔐 Auth check:', {
+      isSignedIn: !!currentUser,
+      currentUserId: currentUser?.uid,
+      targetUserId: userId,
+      userIdMatch: currentUser?.uid === userId,
+      userEmail: currentUser?.email,
+      userRole: quizMetadata.createdBy === currentUser?.uid ? 'creator' : 'user'
+    });
+    
+    if (!currentUser) {
+      throw new Error('User not authenticated - please sign in first');
+    }
+    
+    if (currentUser.uid !== userId) {
+      throw new Error(`User ID mismatch: current=${currentUser.uid}, target=${userId}`);
+    }
+    
     // Generate proof hash from user input
-    const proofHash = await generateProofHash(salt, password);
+    proofHash = await generateProofHash(salt, password);
     
     console.log('🔍 Proof hash generated:', proofHash.substring(0, 16) + '...');
     console.log('🔍 Expected hash:', expectedHash.substring(0, 16) + '...');
+    console.log('🔍 Hash match:', proofHash === expectedHash);
+    console.log('🔍 Quiz pwd data:', {
+      enabled: quizMetadata.pwd.enabled,
+      algo: quizMetadata.pwd.algo,
+      hasSalt: !!quizMetadata.pwd.salt,
+      hasHash: !!quizMetadata.pwd.hash
+    });
 
     // Create access document with proof hash
     // Firestore rules will verify proofHash === expectedHash
     const accessRef = doc(db, 'quizzes', quizId, 'access', userId);
+    
+    console.log('🔓 Attempting to create access doc at:', accessRef.path);
+    console.log('🔓 Access data:', {
+      proofHash: proofHash.substring(0, 16) + '...',
+      userId,
+      timestamp: 'serverTimestamp()'
+    });
     
     await setDoc(accessRef, {
       proofHash,
@@ -89,10 +152,23 @@ export async function unlockQuiz(
     return true;
   } catch (error: any) {
     console.error('❌ Error unlocking quiz:', error);
+    console.error('❌ Error details:', {
+      code: error.code,
+      message: error.message,
+      name: error.name,
+      stack: error.stack?.split('\n')[0]
+    });
     
     // If permission denied, password is wrong
     if (error.code === 'permission-denied') {
       console.log('🔒 Wrong password - Firestore rules rejected access creation');
+      console.log('🔍 Debugging info:', {
+        quizId,
+        userId,
+        accessPath: `quizzes/${quizId}/access/${userId}`,
+        proofHashLength: proofHash?.length || 0,
+        expectedHashLength: expectedHash.length
+      });
       return false;
     }
     

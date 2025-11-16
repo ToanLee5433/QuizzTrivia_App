@@ -537,7 +537,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
               </h1>
               {selectedQuiz && (
                 <p className="text-sm text-purple-200">
-                  🎯 {selectedQuiz.title} • {selectedQuiz.questions?.length || 0} câu hỏi
+                  🎯 {selectedQuiz.title} • {t('multiplayer.questionsCount', { count: selectedQuiz.questions?.length || 0 })}
                 </p>
               )}
             </div>

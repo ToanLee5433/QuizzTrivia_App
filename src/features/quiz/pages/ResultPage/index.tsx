@@ -69,7 +69,7 @@ export const ResultPage: React.FC = () => {
       }
 
       // Notify quiz creator (if not the same user)
-      if (quiz.createdBy && quiz.createdBy !== result.userId) {
+      if (quiz.createdBy && result && 'userId' in result && quiz.createdBy !== result.userId) {
         await notifyQuizCreator(
           quiz.createdBy,
           quiz.id,

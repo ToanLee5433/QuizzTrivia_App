@@ -332,7 +332,7 @@ const CreateQuizPage: React.FC = () => {
         imageUrl: quiz.imageUrl || null,
         isPublic: quiz.isPublic !== undefined ? quiz.isPublic : false,
         allowRetake: quiz.allowRetake !== undefined ? quiz.allowRetake : true,
-        status: 'draft'
+        status: 'pending' // 📤 Đẩy lên chờ admin duyệt
       };
 
       const cleanQuizData = deepCleanValue(baseQuizData) as Record<string, unknown>;
@@ -495,9 +495,9 @@ const CreateQuizPage: React.FC = () => {
           <span className="font-medium">{t('createQuiz.backToCreator')}</span>
         </button>
 
-        {/* Header */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 mb-4">
+        {/* Header - Sticky Navigation */}
+        <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-md rounded-2xl shadow-md border border-gray-200 p-4 sm:p-6 mb-6">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-gray-900 mb-3 sm:mb-4">
             ✨ {t('createQuiz.title')}
           </h1>
           
@@ -522,7 +522,7 @@ const CreateQuizPage: React.FC = () => {
               return displayStepKeys.map((stepKey, idx) => (
                 <div key={stepKey} className="flex items-center flex-shrink-0">
                   <div className={`
-                    w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold
+                    w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-xs sm:text-sm font-bold
                     transition-all duration-300 transform
                     ${idx <= step 
                       ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg scale-110' 
@@ -532,14 +532,14 @@ const CreateQuizPage: React.FC = () => {
                     {idx < step ? '✓' : idx + 1}
                   </div>
                   <span className={`
-                    ml-2 text-sm whitespace-nowrap
+                    ml-1 sm:ml-2 text-xs sm:text-sm whitespace-nowrap hidden sm:inline
                     ${idx <= step ? 'text-purple-600 font-semibold' : 'text-gray-500'}
                   `}>
                     {t(stepKey)}
                   </span>
                   {idx < displayStepKeys.length - 1 && (
                     <div className={`
-                      w-12 sm:w-16 h-1 mx-2 sm:mx-4 rounded-full transition-all duration-300
+                      w-6 sm:w-12 md:w-16 h-1 mx-1 sm:mx-2 md:mx-4 rounded-full transition-all duration-300
                       ${idx < step ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-gray-200'}
                     `} />
                   )}

@@ -83,7 +83,7 @@ const EditQuizPageAdvanced: React.FC = () => {
         setQuestions(quizData.questions || []);
       } else {
         toast.error(t('editQuiz.notFound'));
-        navigate('/admin/stats-test');
+        navigate('/creator/my');
       }
     } catch (error) {
       console.error('Error loading quiz:', error);
@@ -148,7 +148,7 @@ const EditQuizPageAdvanced: React.FC = () => {
       }
 
       await updateQuiz(id, updatedQuiz);
-      navigate('/admin/stats-test');
+      navigate('/creator/my');
     } catch (error) {
       console.error('Error updating quiz:', error);
       toast.error(t('editQuiz.updateFailed'));
@@ -220,7 +220,7 @@ const EditQuizPageAdvanced: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('editQuiz.notFoundTitle')}</h2>
           <p className="text-gray-600 mb-6">{t('editQuiz.notFoundDesc')}</p>
           <button
-            onClick={() => navigate('/admin/stats-test')}
+            onClick={() => navigate('/creator/my')}
             className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
           >
             {t('editQuiz.backToAdmin')}
@@ -243,7 +243,7 @@ const EditQuizPageAdvanced: React.FC = () => {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => navigate('/admin/stats-test')}
+              onClick={() => navigate('/creator/my')}
               className="p-3 text-gray-600 hover:text-gray-900 hover:bg-white rounded-2xl transition-all shadow-sm"
             >
               <ArrowLeft className="w-6 h-6" />

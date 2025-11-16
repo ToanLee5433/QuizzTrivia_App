@@ -1,4 +1,5 @@
 import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MultiplayerServiceInterface } from '../services/enhancedMultiplayerService';
 import { Clock, Users, CheckCircle, AlertCircle } from 'lucide-react';
 import { doc, onSnapshot, collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -124,6 +125,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
   currentUserName,
   multiplayerService
 }) => {
+  const { t } = useTranslation();
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [locked, setLocked] = useState(false);
   const [showResults, setShowResults] = useState(false);
@@ -584,28 +586,28 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
         {/* Game Start Countdown Phase */}
         {currentRoomStatus === 'starting' && gameStartCountdown !== null && gameStartCountdown >= 0 && (
           <div className="bg-white rounded-2xl shadow-xl p-8 text-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Game Starting Soon!</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">{t('multiplayer.game.startingSoon')}</h2>
             <div className="text-6xl font-bold text-purple-600 mb-4">{gameStartCountdown}</div>
-            <p className="text-gray-600">Get ready to answer questions!</p>
+            <p className="text-gray-600">{t('multiplayer.game.getReady')}</p>
           </div>
         )}
 
         {/* Question Results Phase */}
         {currentGamePhase === 'results' && questionResults && (
           <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">Question Results</h3>
+            <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">{t('multiplayer.game.questionResults')}</h3>
             
             {/* Your Result */}
             <div className="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
               <div className="text-center">
                 <div className={`text-2xl font-bold mb-2 ${questionResults.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
-                  {questionResults.isCorrect ? '✅ Correct!' : '❌ Wrong!'}
+                  {questionResults.isCorrect ? t('multiplayer.game.correct') : t('multiplayer.game.wrong')}
                 </div>
                 <div className="text-lg text-gray-700 mb-2">
-                  You earned <span className="font-bold text-blue-600">+{questionResults.points}</span> points
+                  {t('multiplayer.game.youEarned')} <span className="font-bold text-blue-600">+{questionResults.points}</span> {t('multiplayer.game.points')}
                 </div>
                 <div className="text-sm text-gray-600">
-                  Correct Answer: <span className="font-semibold">{finalQuestion.options?.[questionResults.correctAnswer] || 'N/A'}</span>
+                  {t('multiplayer.game.correctAnswer')} <span className="font-semibold">{finalQuestion.options?.[questionResults.correctAnswer] || 'N/A'}</span>
                 </div>
                 {questionResults.explanation && (
                   <SafeHTML content={questionResults.explanation} className="text-xs text-gray-500 mt-2" />
@@ -615,7 +617,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
 
             {/* Live Leaderboard */}
             <div className="mb-4">
-              <h4 className="font-semibold text-gray-700 mb-3 text-center">Current Standings</h4>
+              <h4 className="font-semibold text-gray-700 mb-3 text-center">{t('multiplayer.game.currentStandings')}</h4>
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {(currentRoomData?.players || [])
                   .map((player: Player) => ({
@@ -659,7 +661,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
                         </div>
                         <div className={`text-right ${isCurrentUser ? 'text-blue-700' : 'text-gray-700'}`}>
                           <div className="font-bold text-sm">{player.score}</div>
-                          <div className="text-xs text-gray-500">pts</div>
+                          <div className="text-xs text-gray-500">{t('multiplayer.game.pts')}</div>
                         </div>
                       </div>
                     );
@@ -670,7 +672,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
             {nextQuestionCountdown !== null && (
               <div className="mt-4 text-center">
                 {nextQuestionCountdown > 0 ? (
-                  <p className="text-gray-600">Câu hỏi tiếp theo trong: <span className="font-bold text-blue-600">{nextQuestionCountdown}s</span></p>
+                  <p className="text-gray-600">{t('multiplayer.game.nextQuestionIn')} <span className="font-bold text-blue-600">{t('multiplayer.secondsShort', { value: nextQuestionCountdown })}</span></p>
                 ) : (
                   <p className="text-gray-600">Đang chờ người chơi khác...</p>
                 )}
@@ -692,7 +694,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
                 <h1 className="text-5xl font-black text-white mb-2 bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
                   GAME COMPLETE!
                 </h1>
-                <p className="text-xl text-blue-200">Amazing performance by all players</p>
+                <p className="text-xl text-blue-200">{t('multiplayer.game.amazingPerformance')}</p>
               </div>
 
               {/* Champion Podium */}
@@ -751,24 +753,24 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
                             </div>
                             <div className={`text-lg font-semibold mb-2 ${isCurrentUser ? 'text-blue-700' : 'text-gray-700'}`}>
                               {player?.username || player?.name || 'Player'}
-                              {isCurrentUser && <div className="text-sm text-blue-600 font-medium">(You)</div>}
+                              {isCurrentUser && <div className="text-sm text-blue-600 font-medium">({t('multiplayer.game.you')})</div>}
                             </div>
                             
                             {/* Score Display */}
                             <div className="bg-white rounded-xl p-4 mb-3 shadow-inner">
                               <div className="text-3xl font-black text-gray-800">{score}</div>
-                              <div className="text-sm text-gray-600 font-medium">POINTS</div>
+                              <div className="text-sm text-gray-600 font-medium">{t('common.points').toUpperCase()}</div>
                             </div>
                             
                             {/* Stats */}
                             <div className="grid grid-cols-2 gap-2 text-xs">
                               <div className="bg-white rounded-lg p-2">
                                 <div className="font-bold text-green-600">{correctAnswers}</div>
-                                <div className="text-gray-600">Correct</div>
+                                <div className="text-gray-600">{t('common.correct')}</div>
                               </div>
                               <div className="bg-white rounded-lg p-2">
                                 <div className="font-bold text-blue-600">{accuracy}%</div>
-                                <div className="text-gray-600">Accuracy</div>
+                                <div className="text-gray-600">{t('multiplayer.game.accuracy')}</div>
                               </div>
                             </div>
                           </div>
@@ -781,7 +783,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
               {/* Complete Leaderboard */}
               <div className="bg-white rounded-3xl shadow-2xl p-8 mb-8">
                 <h2 className="text-3xl font-black text-gray-800 mb-6 text-center">
-                  🏅 COMPLETE RANKINGS
+                  🏅 {t('multiplayer.game.completeRankings').toUpperCase()}
                 </h2>
                 
                 <div className="space-y-3">
@@ -830,10 +832,10 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
                               <div>
                                 <div className={`text-xl font-bold ${isCurrentUser ? 'text-blue-700' : 'text-gray-800'}`}>
                                   {player?.username || player?.name || 'Player'}
-                                  {isCurrentUser && <span className="ml-2 text-sm bg-blue-500 text-white px-2 py-1 rounded-full">YOU</span>}
+                                  {isCurrentUser && <span className="ml-2 text-sm bg-blue-500 text-white px-2 py-1 rounded-full">{t('multiplayer.game.you').toUpperCase()}</span>}
                                 </div>
                                 <div className="text-sm text-gray-600">
-                                  {correctAnswers}/{totalQuestions} correct • {accuracy}% accuracy • Avg: {avgTimePerQuestion}s
+                                  {t('multiplayer.game.playerStats', { correct: correctAnswers, total: totalQuestions, accuracy, avgTime: avgTimePerQuestion })}
                                 </div>
                               </div>
                             </div>
@@ -843,7 +845,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
                               <div className={`text-3xl font-black ${isCurrentUser ? 'text-blue-700' : 'text-gray-800'}`}>
                                 {score}
                               </div>
-                              <div className="text-sm text-gray-600 font-medium">POINTS</div>
+                              <div className="text-sm text-gray-600 font-medium">{t('common.points').toUpperCase()}</div>
                             </div>
                           </div>
                         </div>
@@ -857,50 +859,50 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
                 <div className="bg-white rounded-2xl p-6 text-center shadow-xl">
                   <div className="text-3xl mb-2">📝</div>
                   <div className="text-2xl font-bold text-gray-800">{processedQuestions.length}</div>
-                  <div className="text-sm text-gray-600 font-medium">Total Questions</div>
+                  <div className="text-sm text-gray-600 font-medium">{t('multiplayer.game.totalQuestions')}</div>
                 </div>
                 <div className="bg-white rounded-2xl p-6 text-center shadow-xl">
                   <div className="text-3xl mb-2">👥</div>
                   <div className="text-2xl font-bold text-gray-800">{Object.keys(playerScores).length}</div>
-                  <div className="text-sm text-gray-600 font-medium">Players</div>
+                  <div className="text-sm text-gray-600 font-medium">{t('multiplayer.game.players')}</div>
                 </div>
                 <div className="bg-white rounded-2xl p-6 text-center shadow-xl">
                   <div className="text-3xl mb-2">✅</div>
                   <div className="text-2xl font-bold text-gray-800">
                     {playerAnswers[currentUser?.uid || '']?.filter(a => a.isCorrect).length || 0}
                   </div>
-                  <div className="text-sm text-gray-600 font-medium">Your Correct</div>
+                  <div className="text-sm text-gray-600 font-medium">{t('multiplayer.game.yourCorrect')}</div>
                 </div>
                 <div className="bg-white rounded-2xl p-6 text-center shadow-xl">
                   <div className="text-3xl mb-2">🎯</div>
                   <div className="text-2xl font-bold text-gray-800">
                     {playerScores[currentUser?.uid || ''] || 0}
                   </div>
-                  <div className="text-sm text-gray-600 font-medium">Your Score</div>
+                  <div className="text-sm text-gray-600 font-medium">{t('multiplayer.game.yourScore')}</div>
                 </div>
               </div>
 
               {/* Action Buttons */}
               <div className="text-center">
-                <p className="text-xl text-blue-200 mb-6">Thanks for playing! 🎉</p>
+                <p className="text-xl text-blue-200 mb-6">{t('multiplayer.game.thanksForPlaying')} 🎉</p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <button 
                     onClick={() => window.location.href = '/multiplayer'}
                     className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-purple-700 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 shadow-2xl hover:shadow-purple-500/25"
                   >
-                    🎮 Play Again
+                    🎮 {t('multiplayer.game.playAgain')}
                   </button>
                   <button 
                     onClick={() => window.location.href = '/profile'}
                     className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-gray-700 hover:to-gray-800 transform hover:scale-105 transition-all duration-200 shadow-2xl"
                   >
-                    👤 View Profile
+                    👤 {t('multiplayer.game.viewProfile')}
                   </button>
                   <button 
                     onClick={() => window.location.href = '/leaderboard'}
                     className="bg-gradient-to-r from-green-600 to-teal-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-green-700 hover:to-teal-700 transform hover:scale-105 transition-all duration-200 shadow-2xl"
                   >
-                    🏆 Global Leaderboard
+                    🏆 {t('multiplayer.game.globalLeaderboard')}
                   </button>
                 </div>
               </div>
@@ -920,11 +922,11 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
               <div className="bg-gradient-to-r from-purple-500 to-blue-600 text-white px-3 sm:px-4 py-2 rounded-xl font-bold text-sm sm:text-base text-center">
-                Question {currentQuestionIndex + 1} of {processedQuestions.length}
+                {t('multiplayer.game.questionProgress', { current: currentQuestionIndex + 1, total: processedQuestions.length })}
               </div>
               <div className="flex items-center gap-2 text-gray-600 justify-center sm:justify-start">
                 <Users size={18} />
-                <span className="text-sm sm:text-base">{currentRoomData?.players?.length || 0} players</span>
+                <span className="text-sm sm:text-base">{t('multiplayer.game.playersCount', { count: currentRoomData?.players?.length || 0 })}</span>
               </div>
             </div>
             
@@ -932,7 +934,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
               {locked && (
                 <div className="flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-xl font-medium text-sm">
                   <CheckCircle size={16} />
-                  <span>Submitted!</span>
+                  <span>{t('multiplayer.game.submitted')}</span>
                 </div>
               )}
               
@@ -941,7 +943,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
                   timeLeft <= 5 ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
                 }`}>
                   <Clock size={16} />
-                  <span>{timeLeft}s</span>
+                  <span>{t('multiplayer.secondsShort', { value: timeLeft })}</span>
                 </div>
                 
                 <div className="relative w-12 h-12 sm:w-16 sm:h-16">
@@ -971,7 +973,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
             <div className="bg-orange-100 border-l-4 border-orange-500 p-4 rounded-r-lg mb-4">
               <div className="flex items-center gap-2 text-orange-700">
                 <AlertCircle size={18} />
-                <span className="font-medium">Time is running out!</span>
+                <span className="font-medium">{t('multiplayer.game.timeRunningOut')}</span>
               </div>
             </div>
           )}
@@ -1053,7 +1055,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
               {locked && (
                 <div className="flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-xl font-medium">
                   <CheckCircle size={16} />
-                  <span>Submitted!</span>
+                  <span>{t('multiplayer.game.submitted')}</span>
                 </div>
               )}
             </div>

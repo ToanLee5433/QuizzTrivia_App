@@ -28,7 +28,7 @@ i18n
     },
 
     backend: {
-      loadPath: `/locales/{{lng}}/{{ns}}.json?v=${Date.now()}`,
+      loadPath: `/locales/{{lng}}/{{ns}}.json?v=1731754800000`,
       addPath: '/locales/{{lng}}/{{ns}}.json'
     },
 
@@ -65,6 +65,6 @@ if (import.meta.env.DEV) {
   });
 }
 
-// Cache buster: 1755030000000
-// Force reload external files only: 1755030000000
+// Cache buster: 1731754800000 - Updated for quizOverview i18n fixes
+// Force reload external files only: 1731754800000
 export default i18n;
