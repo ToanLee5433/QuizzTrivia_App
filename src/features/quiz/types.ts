@@ -88,6 +88,9 @@ export interface Quiz {
   id: string;
   title: string;
   description: string;
+  author?: string;
+  authorId?: string;
+  coverImage?: string;
   category: string;
   difficulty: 'easy' | 'medium' | 'hard';
   questions: Question[];

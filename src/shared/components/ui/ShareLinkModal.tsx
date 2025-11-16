@@ -85,7 +85,6 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
                 <Share2 className="w-6 h-6" />
               </div>
               <div>
-                {/* eslint-disable-next-line i18next/no-literal-string */}
                 <h3 className="text-xl font-bold">{t('shareLinkModal.title')}</h3>
                 <p className="text-sm text-white/80 mt-1">{t('shareLinkModal.subtitle')}</p>
               </div>
@@ -195,7 +194,6 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
 
           {/* Info Box */}
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-            {/* eslint-disable-next-line i18next/no-literal-string */}
             <h5 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
               {t('shareLinkModal.guideTitle')}
             </h5>

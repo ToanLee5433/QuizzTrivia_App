@@ -327,7 +327,6 @@ export const ResultPage: React.FC = () => {
         <div className="text-center mb-8">
           <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
             {result.isTimeUp && (
-              /* eslint-disable-next-line i18next/no-literal-string */
               <div className="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-lg mb-6">
                 {t('resultPage.timeUpAlert')}
               </div>
@@ -351,7 +350,6 @@ export const ResultPage: React.FC = () => {
               </div>
               {/* Hiển thị thời gian làm bài */}
               {typeof result.timeSpent === 'number' && (
-                /* eslint-disable-next-line i18next/no-literal-string */
                 <div className="text-md text-gray-500 mt-2">
                   {t('resultPage.timeTaken')} <span className="font-semibold text-blue-700">{formatTime(safeNumber(result.timeSpent))}</span>
                 </div>
@@ -466,7 +464,6 @@ export const ResultPage: React.FC = () => {
                             </span>
                             <span>{answer.text}</span>
                             {answer.isCorrect && (
-                              /* eslint-disable-next-line i18next/no-literal-string */
                               <span className="ml-auto text-green-600 font-medium">
                                 {t('resultPage.correctAnswer')}
                               </span>
@@ -496,7 +493,6 @@ export const ResultPage: React.FC = () => {
 
         {/* Leaderboard */}
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-          {/* eslint-disable-next-line i18next/no-literal-string */}
           <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('resultPage.leaderboard')}</h2>
           {loadingStats ? (
             <div className="flex justify-center items-center h-24">
@@ -537,7 +533,6 @@ export const ResultPage: React.FC = () => {
                   </div>
                   <div className="text-right">
                     <div className="font-bold text-xl text-gray-900">{safeNumber(entry.score)}%</div>
-                    {/* eslint-disable-next-line i18next/no-literal-string */}
                     <div className="text-sm text-gray-500">
                       ⏱️ {formatTime(safeNumber(entry.timeSpent))}
                     </div>
@@ -558,7 +553,6 @@ export const ResultPage: React.FC = () => {
             </div>
           ) : (
             <div className="text-center py-12 text-gray-500">
-              {/* eslint-disable-next-line i18next/no-literal-string */}
               <div className="text-6xl mb-4">🏆</div>
               <p className="text-lg">{t('resultPage.noResultsYet')}</p>
               <p>{t('resultPage.beFirst')}</p>

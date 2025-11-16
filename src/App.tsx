@@ -33,8 +33,8 @@ const LeaderboardPage = React.lazy(() => import('./features/quiz/pages/Leaderboa
 const CreateQuizPage = React.lazy(() => import('./features/quiz/pages/CreateQuizPage'));
 
 // Offline Management
-// const OfflineSettingsPage = React.lazy(() => import('./pages/OfflineSettingsPage'));
-// import { OfflineStatusIndicator } from './components/OfflineStatusIndicator';
+import { OfflineIndicator } from './components/OfflineIndicator';
+const OfflineQueuePage = React.lazy(() => import('./pages/OfflineQueuePage'));
 const EditQuizPageAdvanced = React.lazy(() => import('./features/quiz/pages/EditQuizPageAdvanced'));
 const CreatorLayout = React.lazy(() => import('./features/creator/layouts/CreatorLayout'));
 
@@ -44,6 +44,9 @@ const MultiplayerLobby = React.lazy(() => import('./features/multiplayer/pages/M
 const MultiplayerPage = React.lazy(() => import('./features/multiplayer/pages/MultiplayerPage'));
 const MyQuizzesPage = React.lazy(() => import('./features/quiz/pages/MyQuizzesPage'));
 const QuizDetailedStats = React.lazy(() => import('./features/quiz/pages/QuizDetailedStats'));
+
+// Flashcard Feature
+const FlashcardPage = React.lazy(() => import('./features/flashcard/pages/FlashcardPage'));
 
 // Stage 4: Admin Features - All lazy loaded for better performance
 const Admin = React.lazy(() => import('./features/admin/pages/Admin'));
@@ -71,6 +74,7 @@ import RoleBasedRedirect from './shared/components/RoleBasedRedirect';
 import ScrollToTop from './shared/components/ScrollToTop';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { initializeAutoSync, cleanupAutoSync } from './shared/services/autoSync';
 
 const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const dispatch = useDispatch();
@@ -193,6 +197,9 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
           console.log('📝 Dispatching loginSuccess with:', authUser);
           dispatch(loginSuccess(authUser));
           
+          // Initialize auto-sync for this user
+          initializeAutoSync(user.uid);
+          
           // Force re-render để cập nhật UI ngay lập tức
           setTimeout(() => {
             console.log('🔄 Force state refresh for UI update');
@@ -215,6 +222,9 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
           console.log('📝 Dispatching fallback loginSuccess with:', authUser);
           dispatch(loginSuccess(authUser));
           
+          // Initialize auto-sync for fallback user too
+          initializeAutoSync(user.uid);
+          
           // Force re-render cho fallback cũng cần
           setTimeout(() => {
             console.log('🔄 Force state refresh for fallback user');
@@ -223,6 +233,8 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         }
       } else {
         dispatch(logout());
+        // Cleanup auto-sync on logout
+        cleanupAutoSync();
       }
       dispatch(authCheckComplete());
     });
@@ -297,7 +309,7 @@ const AppContent: React.FC = () => {
 
   return (
     <div>
-      {/* <OfflineStatusIndicator /> */}
+      <OfflineIndicator className="fixed top-4 right-4 z-50" />
       <Routes>
         {/* Stage 1: Landing Routes */}
         <Route path="/landing" element={<LandingPage />} />
@@ -366,6 +378,14 @@ const AppContent: React.FC = () => {
           <ProtectedRoute>
             <Suspense fallback={<LoadingFallback />}>
               <QuizReviewsPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/quiz/:id/flashcards" element={
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingFallback />}>
+              <FlashcardPage />
             </Suspense>
           </ProtectedRoute>
         } />
@@ -529,8 +549,7 @@ const AppContent: React.FC = () => {
         <Route path="/offline" element={
           <ProtectedRoute>
             <Suspense fallback={<LoadingFallback />}>
-              {/* <OfflineQuizManager /> */}
-              <div>{t('features.offlineComingSoon')}</div>
+              <OfflineQueuePage />
             </Suspense>
           </ProtectedRoute>
         } />

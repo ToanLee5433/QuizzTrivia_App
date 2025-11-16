@@ -5,6 +5,10 @@ import { Provider } from 'react-redux'
 import { store } from './lib/store'
 import './lib/i18n' // Import i18n configuration
 import './index.css'
+import { registerServiceWorker } from './lib/services/swManager'
+
+// Register Service Worker for offline support
+registerServiceWorker();
 
 // =====================================================
 // SUPPRESS REACTQUILL FINDDOMNODE WARNING

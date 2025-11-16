@@ -57,7 +57,6 @@ const PopularQuizzesRanking: React.FC<PopularQuizzesRankingProps> = ({ timeFilte
   if (loading) {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        {/* eslint-disable-next-line i18next/no-literal-string */}
         <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('quiz.popularQuizzesRanking.title')}</h3>
         <div className="animate-pulse space-y-4">
           {[1, 2, 3, 4, 5].map(i => (
@@ -77,7 +76,6 @@ const PopularQuizzesRanking: React.FC<PopularQuizzesRankingProps> = ({ timeFilte
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <div className="flex items-center justify-between mb-6">
-        {/* eslint-disable-next-line i18next/no-literal-string */}
         <h3 className="text-lg font-semibold text-gray-900">{t('quiz.popularQuizzesRanking.title')}</h3>
         <span className="text-sm text-gray-500 capitalize">
           {timeFilter === 'week' ? 'Tuần này' : timeFilter === 'month' ? 'Tháng này' : 'Tất cả'}
