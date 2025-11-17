@@ -68,18 +68,36 @@ export const reviewService = {
 
       const querySnapshot = await getDocs(q);
       
-      const reviews = querySnapshot.docs.map(doc => {
-        const data = doc.data();
+      // Fetch reviews and enrich with photoURL from users collection
+      const reviews = await Promise.all(querySnapshot.docs.map(async reviewDoc => {
+        const data = reviewDoc.data();
+        let userAvatar = data.userAvatar || '';
+        
+        // If userAvatar is empty/null, try to fetch from users collection
+        if (!userAvatar && data.userId) {
+          try {
+            const userDocRef = doc(db, 'users', data.userId);
+            const userDocSnap = await getDoc(userDocRef);
+            if (userDocSnap.exists()) {
+              const userData = userDocSnap.data();
+              userAvatar = userData.photoURL || '';
+              console.log('🖼️ Fetched photoURL for review:', { userId: data.userId, photoURL: userAvatar });
+            }
+          } catch (err) {
+            console.warn('⚠️ Could not fetch user photoURL:', err);
+          }
+        }
+        
         const review = {
-          id: doc.id,
+          id: reviewDoc.id,
           ...data,
-          userAvatar: data.userAvatar || '',
+          userAvatar: userAvatar,
           createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt) || new Date(),
           updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt) || new Date()
         } as QuizReview;
-        console.log('📸 Review loaded:', { id: doc.id, userName: review.userName, userAvatar: review.userAvatar, hasAvatar: !!review.userAvatar });
+        console.log('📸 Review loaded:', { id: reviewDoc.id, userName: review.userName, userAvatar: review.userAvatar, hasAvatar: !!review.userAvatar });
         return review;
-      });
+      }));
 
       // Sort in memory by newest first
       reviews.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());

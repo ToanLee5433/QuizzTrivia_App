@@ -53,12 +53,29 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
         });
         toast.success('Cập nhật đánh giá thành công!');
       } else {
+        // Fetch fresh user data from Firestore to get latest photoURL
+        let userPhotoURL = user.photoURL || '';
+        try {
+          const { doc, getDoc } = await import('firebase/firestore');
+          const { db } = await import('../../../lib/firebase/config');
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            userPhotoURL = userData.photoURL || '';
+            console.log('🖼️ [ReviewForm] Fetched photoURL from Firestore:', userPhotoURL);
+          }
+        } catch (err) {
+          console.warn('⚠️ [ReviewForm] Could not fetch photoURL, using auth photoURL:', err);
+        }
+        
+        console.log('🎨 [ReviewForm] Creating review with photoURL:', userPhotoURL);
+        
         // Create new review
         await reviewService.createReview({
           quizId,
           rating,
           comment
-        }, user.uid, user.displayName || user.email || '', user.photoURL || undefined);
+        }, user.uid, user.displayName || user.email || '', userPhotoURL);
         toast.success('Gửi đánh giá thành công!');
       }
       

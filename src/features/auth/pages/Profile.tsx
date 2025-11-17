@@ -202,10 +202,26 @@ const Profile: React.FC = () => {
     
     setSaving(true);
     try {
+      // Update Firebase Auth profile
       await updateProfile(auth.currentUser, {
         displayName: displayName,
         photoURL: avatarUrl
       });
+      
+      console.log('✅ Updated Firebase Auth profile');
+      
+      // **FIX: Also update Firestore users collection**
+      const { doc, updateDoc } = await import('firebase/firestore');
+      const { db } = await import('../../../lib/firebase/config');
+      
+      await updateDoc(doc(db, 'users', user.uid), {
+        displayName: displayName,
+        photoURL: avatarUrl,
+        updatedAt: new Date()
+      });
+      
+      console.log('✅ Updated Firestore users collection with photoURL:', avatarUrl);
+      
       toast.success(t('profile.profileUpdateSuccess'));
     } catch (error) {
       console.error('Error updating profile:', error);

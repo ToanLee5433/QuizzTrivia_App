@@ -104,15 +104,44 @@ const QuizReviewSystem: React.FC<QuizReviewSystemProps> = ({
     try {
       setSubmitting(true);
       
+      // Fetch fresh user data from Firestore to get latest photoURL
+      let userPhotoURL = user.photoURL || '';
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          userPhotoURL = userData.photoURL || '';
+          console.log('🖼️ Fetched photoURL from Firestore:', userPhotoURL);
+        }
+      } catch (err) {
+        console.warn('⚠️ Could not fetch user photoURL from Firestore, using auth photoURL:', err);
+      }
+      
+      console.log('🎨 Creating review with user data:', {
+        uid: user.uid,
+        displayName: user.displayName,
+        email: user.email,
+        authPhotoURL: user.photoURL,
+        firestorePhotoURL: userPhotoURL,
+        willUsePhotoURL: userPhotoURL,
+        hasPhotoURL: !!userPhotoURL
+      });
+      
       const newReview: Omit<QuizReview, 'id'> = {
         quizId,
         userId: user.uid,
         userName: user.displayName || user.email || 'Người dùng ẩn danh',
-        userAvatar: user.photoURL || undefined,
+        userAvatar: userPhotoURL,
         rating: userRating,
         comment: userComment.trim(),
         createdAt: new Date()
       };
+      
+      console.log('📝 Review object to save:', {
+        userName: newReview.userName,
+        userAvatar: newReview.userAvatar,
+        hasAvatar: !!newReview.userAvatar
+      });
 
       const docRef = await addDoc(collection(db, 'quizReviews'), newReview);
       
