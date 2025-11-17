@@ -12,6 +12,7 @@ interface QuizReview {
   quizId: string;
   userId: string;
   userName: string;
+  userAvatar?: string;
   rating: number; // 1-5 stars
   comment: string;
   createdAt: Date;
@@ -107,6 +108,7 @@ const QuizReviewSystem: React.FC<QuizReviewSystemProps> = ({
         quizId,
         userId: user.uid,
         userName: user.displayName || user.email || 'Người dùng ẩn danh',
+        userAvatar: user.photoURL || undefined,
         rating: userRating,
         comment: userComment.trim(),
         createdAt: new Date()

@@ -13,6 +13,7 @@ export interface LeaderboardEntry {
   userId: string;
   userName: string;
   userEmail: string;
+  userPhotoURL?: string;
   score: number;
   correctAnswers: number;
   totalQuestions: number;

@@ -1,20 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../../lib/store';
 import { toast } from 'react-toastify';
 import { LeaderboardEntry } from '../types';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../../../../lib/firebase/config';
 
 export const useLeaderboard = (quizId: string | null, currentResult?: any) => {
   const { user } = useSelector((state: RootState) => state.auth);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [userRank, setUserRank] = useState<number | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
+  const isFetchingRef = useRef(false);
+  const currentResultRef = useRef(currentResult);
+  
+  // Update ref when currentResult changes
+  useEffect(() => {
+    currentResultRef.current = currentResult;
+  }, [currentResult]);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
-      if (!quizId) return;
+      if (!quizId || isFetchingRef.current) return;
       
       try {
+        isFetchingRef.current = true;
         setLoadingStats(true);
         console.log('📊 Fetching leaderboard for quiz:', quizId);
         
@@ -28,36 +38,54 @@ export const useLeaderboard = (quizId: string | null, currentResult?: any) => {
         const leaderboardData = quizResults;
         
         // Add current result to leaderboard if provided
-        if (currentResult && user) {
-          console.log('➕ Adding current result to leaderboard:', currentResult);
+        const currentResultValue = currentResultRef.current;
+        if (currentResultValue && user) {
+          console.log('➕ Adding current result to leaderboard:', currentResultValue);
           const currentEntry = {
             id: 'current-attempt',
             userId: user.uid,
             userName: user.displayName || user.email?.split('@')[0] || 'Bạn',
             userEmail: user.email || '',
             quizId: quizId,
-            score: currentResult.score?.percentage || 0,
-            correctAnswers: currentResult.correct || 0,
-            totalQuestions: currentResult.total || 0,
-            timeSpent: currentResult.timeSpent || 0,
+            score: currentResultValue.score?.percentage || 0,
+            correctAnswers: currentResultValue.correct || 0,
+            totalQuestions: currentResultValue.total || 0,
+            timeSpent: currentResultValue.timeSpent || 0,
             answers: [],
             completedAt: new Date() // Just completed
           };
           leaderboardData.push(currentEntry);
         }
         
-        // Transform QuizResult data to LeaderboardEntry format
-        const transformedLeaderboard: LeaderboardEntry[] = leaderboardData.map((result: any) => ({
-          id: result.id,
-          userId: result.userId,
-          userName: result.userName,
-          userEmail: result.userEmail,
-          score: result.score,
-          correctAnswers: result.correctAnswers,
-          totalQuestions: result.totalQuestions,
-          timeSpent: result.timeSpent,
-          completedAt: result.completedAt instanceof Date ? result.completedAt : new Date(result.completedAt)
-        }));
+        // Transform QuizResult data to LeaderboardEntry format with photoURL
+        const transformedLeaderboard: LeaderboardEntry[] = await Promise.all(
+          leaderboardData.map(async (result: any) => {
+            let userPhotoURL = '';
+            if (result.userId) {
+              try {
+                const userDoc = await getDoc(doc(db, 'users', result.userId));
+                if (userDoc.exists()) {
+                  userPhotoURL = userDoc.data().photoURL || '';
+                }
+              } catch (err) {
+                console.error('Error fetching user photo:', err);
+              }
+            }
+            
+            return {
+              id: result.id,
+              userId: result.userId,
+              userName: result.userName,
+              userEmail: result.userEmail,
+              userPhotoURL,
+              score: result.score,
+              correctAnswers: result.correctAnswers,
+              totalQuestions: result.totalQuestions,
+              timeSpent: result.timeSpent,
+              completedAt: result.completedAt instanceof Date ? result.completedAt : new Date(result.completedAt)
+            };
+          })
+        );
         
         // Sort by score (descending) then by time (ascending) for same scores
         const sortedLeaderboard = transformedLeaderboard.sort((a, b) => {
@@ -83,11 +111,12 @@ export const useLeaderboard = (quizId: string | null, currentResult?: any) => {
         toast.error('Không thể tải bảng xếp hạng!');
       } finally {
         setLoadingStats(false);
+        isFetchingRef.current = false;
       }
     };
 
     fetchLeaderboard();
-  }, [quizId, user, currentResult]);
+  }, [quizId, user]);
 
   return {
     leaderboard,

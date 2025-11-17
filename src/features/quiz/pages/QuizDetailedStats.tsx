@@ -104,7 +104,7 @@ interface Stats {
   scoreDistribution: { range: string; count: number }[];
   dailyAttempts: { date: string; count: number }[];
   questionStats: { questionId: string; correctRate: number; question: string }[];
-  topPerformers: { userName: string; score: number; date: string }[];
+  topPerformers: { userName: string; score: number; date: string; photoURL?: string }[];
 }
 
 const QuizDetailedStats: React.FC = () => {
@@ -203,7 +203,7 @@ const QuizDetailedStats: React.FC = () => {
       }
 
       // Calculate stats
-      const calculatedStats = calculateStats(results, quizData);
+      const calculatedStats = await calculateStats(results, quizData);
       setStats(calculatedStats);
       
     } catch (error) {
@@ -221,7 +221,7 @@ const QuizDetailedStats: React.FC = () => {
     }
   }, [id, user, timeRange, fetchQuizAndStats]);
 
-  const calculateStats = (results: QuizResult[], quizData: Quiz): Stats => {
+  const calculateStats = async (results: QuizResult[], quizData: Quiz): Promise<Stats> => {
     // Default score ranges
     const defaultScoreDistribution = [
       { range: '0-20%', count: 0 },
@@ -323,15 +323,31 @@ const QuizDetailedStats: React.FC = () => {
       };
     }).sort((a, b) => a.correctRate - b.correctRate);
 
-    // Top performers
-    const topPerformers = completedResults
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10)
-      .map(r => ({
-        userName: r.userName || 'Anonymous',
-        score: Math.round((r.score / r.totalQuestions) * 100),
-        date: r.completedAt?.toDate ? r.completedAt.toDate().toLocaleDateString('vi-VN') : 'N/A'
-      }));
+    // Top performers - fetch user photos
+    const topPerformersData = await Promise.all(
+      completedResults
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 10)
+        .map(async (r) => {
+          let photoURL = '';
+          if (r.userId) {
+            try {
+              const userDoc = await getDoc(doc(db, 'users', r.userId));
+              if (userDoc.exists()) {
+                photoURL = userDoc.data().photoURL || '';
+              }
+            } catch (err) {
+              console.error('Error fetching user photo:', err);
+            }
+          }
+          return {
+            userName: r.userName || 'Anonymous',
+            score: Math.round((r.score / r.totalQuestions) * 100),
+            date: r.completedAt?.toDate ? r.completedAt.toDate().toLocaleDateString('vi-VN') : 'N/A',
+            photoURL
+          };
+        })
+    );
 
     return {
       totalViews: quizData.views || 0,
@@ -347,7 +363,7 @@ const QuizDetailedStats: React.FC = () => {
       scoreDistribution,
       dailyAttempts,
       questionStats,
-      topPerformers
+      topPerformers: topPerformersData
     };
   };
 
@@ -754,6 +770,19 @@ const QuizDetailedStats: React.FC = () => {
                       }`}>
                         {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
                       </div>
+                      {performer.photoURL ? (
+                        <img 
+                          src={performer.photoURL} 
+                          alt={performer.userName}
+                          className="w-10 h-10 rounded-full object-cover border-2 border-yellow-300"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                          <span className="text-white font-semibold text-sm">
+                            {performer.userName.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
                       <div>
                         <p className="font-semibold text-gray-900">{performer.userName}</p>
                         <p className="text-sm text-gray-600">{performer.date}</p>

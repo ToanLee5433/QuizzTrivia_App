@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, ThumbsUp, Flag, Calendar, User, MoreVertical } from 'lucide-react';
+import { Star, ThumbsUp, Flag, Calendar, MoreVertical } from 'lucide-react';
 import { QuizReview } from '../types/review';
 
 interface ReviewListProps {
@@ -113,17 +113,19 @@ const ReviewList: React.FC<ReviewListProps> = ({
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                  {review.userAvatar ? (
-                    <img
-                      src={review.userAvatar}
-                      alt={review.userName}
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  ) : (
-                    <User className="w-5 h-5 text-white" />
-                  )}
-                </div>
+                {review.userAvatar && review.userAvatar.trim() ? (
+                  <img
+                    src={review.userAvatar}
+                    alt={review.userName}
+                    className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+                  />
+                ) : (
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-semibold">
+                      {(review.userName || 'U').charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
                 <div>
                   <h4 className="font-semibold text-gray-900">{review.userName || 'Người dùng ẩn danh'}</h4>
                   <div className="flex items-center space-x-2 text-sm text-gray-500">

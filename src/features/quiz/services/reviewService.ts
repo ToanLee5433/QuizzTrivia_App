@@ -21,13 +21,13 @@ export const reviewService = {
   // Create a new review
   async createReview(reviewData: CreateReviewData, userId: string, userName: string, userAvatar?: string): Promise<string> {
     try {
-      console.log('Creating review with data:', { reviewData, userId, userName, userAvatar });
+      console.log('🎨 Creating review with data:', { reviewData, userId, userName, userAvatar });
       
       const reviewDoc = {
         ...reviewData,
         userId,
         userName,
-        userAvatar: userAvatar || null,
+        userAvatar: userAvatar || '',
         createdAt: new Date(),
         updatedAt: new Date(),
         helpful: [],
@@ -70,13 +70,16 @@ export const reviewService = {
       
       const reviews = querySnapshot.docs.map(doc => {
         const data = doc.data();
-        return {
+        const review = {
           id: doc.id,
           ...data,
+          userAvatar: data.userAvatar || '',
           createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt) || new Date(),
           updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt) || new Date()
-        };
-      }) as QuizReview[];
+        } as QuizReview;
+        console.log('📸 Review loaded:', { id: doc.id, userName: review.userName, userAvatar: review.userAvatar, hasAvatar: !!review.userAvatar });
+        return review;
+      });
 
       // Sort in memory by newest first
       reviews.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());

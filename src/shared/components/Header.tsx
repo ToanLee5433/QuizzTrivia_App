@@ -10,7 +10,7 @@ import { logout } from '../../features/auth/store';
 import { toast } from 'react-toastify';
 import NotificationCenter from './NotificationCenter';
 import LanguageSwitcher from './LanguageSwitcher';
-import { User, LogOut, Settings, Crown, Zap, Home, BookOpen, Heart, Trophy, UserCircle, Plus, ChevronDown } from 'lucide-react';
+import { LogOut, Settings, Crown, Zap, Home, BookOpen, Heart, Trophy, UserCircle, Plus, ChevronDown } from 'lucide-react';
 
 interface HeaderProps {
   user?: any;
@@ -190,13 +190,23 @@ const Header: React.FC<HeaderProps> = () => {
                         : 'bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30'
                     }`}
                   >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ring-2 shadow-sm transition-all duration-300 ${
-                      scrolled
-                        ? 'bg-gradient-to-br from-blue-500 to-purple-600 ring-blue-200 group-hover:ring-blue-300'
-                        : 'bg-white/30 ring-white/40 group-hover:ring-white/60'
-                    }`}>
-                      <User className="w-4 h-4 text-white" />
-                    </div>
+                    {user?.photoURL ? (
+                      <img 
+                        src={user.photoURL} 
+                        alt={user?.displayName || 'User'}
+                        className="w-8 h-8 rounded-full object-cover ring-2 shadow-sm transition-all duration-300 ring-white/40 group-hover:ring-white/60"
+                      />
+                    ) : (
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ring-2 shadow-sm transition-all duration-300 ${
+                        scrolled
+                          ? 'bg-gradient-to-br from-blue-500 to-purple-600 ring-blue-200 group-hover:ring-blue-300'
+                          : 'bg-white/30 ring-white/40 group-hover:ring-white/60'
+                      }`}>
+                        <span className="text-white font-semibold text-sm">
+                          {(user?.displayName || user?.email || 'U').charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
                     <div className="hidden lg:block text-left">
                       <p className={`text-sm font-semibold truncate max-w-24 xl:max-w-32 transition-colors leading-tight ${
                         scrolled ? 'text-gray-900' : 'text-white'
@@ -224,9 +234,19 @@ const Header: React.FC<HeaderProps> = () => {
                       {/* User Info Header */}
                       <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-3">
                         <div className="flex items-center space-x-3">
-                          <div className="w-11 h-11 bg-white/20 backdrop-blur-md rounded-lg flex items-center justify-center ring-2 ring-white/50 shadow-md flex-shrink-0">
-                            <User className="w-5 h-5 text-white" />
-                          </div>
+                          {user?.photoURL ? (
+                            <img 
+                              src={user.photoURL} 
+                              alt={user?.displayName || 'User'}
+                              className="w-11 h-11 rounded-lg object-cover ring-2 ring-white/50 shadow-md flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-11 h-11 bg-white/20 backdrop-blur-md rounded-lg flex items-center justify-center ring-2 ring-white/50 shadow-md flex-shrink-0">
+                              <span className="text-white font-bold text-lg">
+                                {(user?.displayName || user?.email || 'U').charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                          )}
                           <div className="flex-1 min-w-0">
                             <p className="font-bold text-white text-sm truncate">{user?.displayName || user?.email}</p>
                             <p className="text-xs text-blue-100 truncate">{user?.email}</p>

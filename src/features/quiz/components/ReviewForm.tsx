@@ -58,7 +58,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
           quizId,
           rating,
           comment
-        }, user.uid, user.displayName || user.email || '');
+        }, user.uid, user.displayName || user.email || '', user.photoURL || undefined);
         toast.success('Gửi đánh giá thành công!');
       }
       

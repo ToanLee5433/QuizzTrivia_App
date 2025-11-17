@@ -10,6 +10,7 @@ interface UserStat {
   userId: string;
   displayName: string;
   email?: string;
+  photoURL?: string;
   totalScore: number;
   totalAttempts: number;
   averageScore: number;
@@ -135,6 +136,7 @@ const LeaderboardPage: React.FC = () => {
               userId,
               displayName: userData.displayName || result.userName || t('leaderboard.anonymous'),
               email: userData.email || result.userEmail,
+              photoURL: userData.photoURL || '',
               totalScore: 0,
               totalAttempts: 0,
               averageScore: 0,
@@ -407,13 +409,21 @@ const LeaderboardPage: React.FC = () => {
                     {filteredUsers.slice(0, 3).map((user, idx) => (
                       <div key={user.userId} className={`text-center ${idx === 0 ? 'order-2' : idx === 1 ? 'order-1' : 'order-3'}`}>
                         <div className={`relative mb-4 ${idx === 0 ? 'transform scale-110' : ''}`}>
-                          <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white mx-auto ${
-                            idx === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' :
-                            idx === 1 ? 'bg-gradient-to-br from-gray-400 to-gray-600' :
-                            'bg-gradient-to-br from-orange-400 to-orange-600'
-                          }`}>
-                            {user.displayName.charAt(0).toUpperCase()}
-                          </div>
+                          {user.photoURL ? (
+                            <img 
+                              src={user.photoURL} 
+                              alt={user.displayName}
+                              className="w-16 h-16 rounded-full object-cover border-4 border-white shadow-lg mx-auto"
+                            />
+                          ) : (
+                            <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white mx-auto ${
+                              idx === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' :
+                              idx === 1 ? 'bg-gradient-to-br from-gray-400 to-gray-600' :
+                              'bg-gradient-to-br from-orange-400 to-orange-600'
+                            }`}>
+                              {user.displayName.charAt(0).toUpperCase()}
+                            </div>
+                          )}
                           <div className="absolute -top-3 -right-2">
                             {getBadgeIcon(user.badge)}
                           </div>
@@ -442,9 +452,17 @@ const LeaderboardPage: React.FC = () => {
                     <div className="flex justify-center gap-4">
                       {filteredUsers.slice(3, 5).map((user, idx) => (
                         <div key={user.userId} className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 flex items-center gap-3 min-w-64">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
-                            {user.displayName.charAt(0).toUpperCase()}
-                          </div>
+                          {user.photoURL ? (
+                            <img 
+                              src={user.photoURL} 
+                              alt={user.displayName}
+                              className="w-10 h-10 rounded-full object-cover border-2 border-blue-200"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
+                              {user.displayName.charAt(0).toUpperCase()}
+                            </div>
+                          )}
                           <div className="flex-1">
                             <div className="font-semibold text-gray-900 flex items-center gap-2">
                               #{idx + 4} {user.displayName}

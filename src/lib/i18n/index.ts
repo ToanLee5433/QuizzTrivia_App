@@ -3,6 +3,8 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import Backend from 'i18next-http-backend';
 
+const CACHE_BUSTER = import.meta.env.DEV ? Date.now() : 1731754800000;
+
 // i18n configuration - using external locale files only
 
 i18n
@@ -28,7 +30,7 @@ i18n
     },
 
     backend: {
-      loadPath: `/locales/{{lng}}/{{ns}}.json?v=1731754800000`,
+      loadPath: `/locales/{{lng}}/{{ns}}.json?v=${CACHE_BUSTER}`,
       addPath: '/locales/{{lng}}/{{ns}}.json'
     },
 
@@ -42,8 +44,8 @@ i18n
     // Avoid Suspense requirement globally since not all trees are wrapped
     react: { useSuspense: false },
 
-    // Optionally record missing keys while developing
-    saveMissing: import.meta.env.DEV
+    // Avoid overriding runtime resources with fallback strings
+    saveMissing: false
   });
 
 // Helpful development logs for i18n lifecycle
@@ -65,6 +67,6 @@ if (import.meta.env.DEV) {
   });
 }
 
-// Cache buster: 1731754800000 - Updated for quizOverview i18n fixes
+// Cache buster reference: 1731754800000 (prod fallback)
 // Force reload external files only: 1731754800000
 export default i18n;

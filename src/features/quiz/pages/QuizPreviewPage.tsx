@@ -87,7 +87,7 @@ const OverviewSkeleton: React.FC = () => (
 );
 
 const QuizPreviewPage: React.FC = () => {
-  const { t, i18n } = useTranslation();
+  const { t, i18n, ready } = useTranslation('common', { useSuspense: false });
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const activeLocale = useMemo(
@@ -105,6 +105,7 @@ const QuizPreviewPage: React.FC = () => {
   const [linkCopied, setLinkCopied] = useState(false);
   const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
   const [creatorDisplayName, setCreatorDisplayName] = useState<string>('');
+  const [creatorPhotoURL, setCreatorPhotoURL] = useState<string>('');
 
   const shareUrl = useMemo(() => {
     if (!quiz) return '';
@@ -137,19 +138,22 @@ const QuizPreviewPage: React.FC = () => {
         const quizData = { id: quizDoc.id, ...quizDoc.data() } as Quiz;
         setQuiz(quizData);
         
-        // Fetch creator's displayName from users collection
+        // Fetch creator's displayName and photoURL from users collection
         if (quizData.createdBy) {
           try {
             const creatorDoc = await getDoc(doc(db, 'users', quizData.createdBy));
             if (creatorDoc.exists()) {
               const creatorData = creatorDoc.data();
               setCreatorDisplayName(creatorData.displayName || creatorData.email || 'Anonymous');
+              setCreatorPhotoURL(creatorData.photoURL || '');
             } else {
               setCreatorDisplayName(quizData.author || 'Anonymous');
+              setCreatorPhotoURL('');
             }
           } catch (err) {
             console.error('Error fetching creator info:', err);
             setCreatorDisplayName(quizData.author || 'Anonymous');
+            setCreatorPhotoURL('');
           }
         }
         
@@ -329,6 +333,11 @@ const QuizPreviewPage: React.FC = () => {
     return t(`quizOverview.resources.type.${type}`, t(`quizOverview.resources.type.default`, 'Resource'));
   };
 
+  // Ensure namespace is loaded before rendering to avoid missing-key fallbacks
+  if (!ready) {
+    return <OverviewSkeleton />;
+  }
+
   // ⏳ Loading state
   if (loading) {
     return <OverviewSkeleton />;
@@ -372,7 +381,7 @@ const QuizPreviewPage: React.FC = () => {
   const anonymousLabel = t('quizOverview.meta.anonymous', 'Anonymous');
   const creator = {
     name: creatorDisplayName || quiz.author || anonymousLabel,
-    avatarUrl: `https://api.dicebear.com/8.x/lorelei/svg?seed=${quiz.createdBy || quiz.authorId || 'anonymous'}`,
+    avatarUrl: creatorPhotoURL || '/images/default-avatar.png',
     lastUpdated: formatDateLabel(quiz.updatedAt)
   };
 
@@ -582,11 +591,19 @@ const QuizPreviewPage: React.FC = () => {
                 
                 <div className="flex flex-wrap items-center justify-between gap-4 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
                   <div className="flex items-center gap-3">
-                    <img 
-                      src={creator.avatarUrl} 
-                      alt={t('quizOverview.meta.creatorAvatar', '{{name}}\'s avatar', { name: creator.name })} 
-                      className="w-10 h-10 rounded-full bg-slate-200" 
-                    />
+                    {creatorPhotoURL ? (
+                      <img 
+                        src={creatorPhotoURL} 
+                        alt={t('quizOverview.meta.creatorAvatar', '{{name}}\'s avatar', { name: creator.name })} 
+                        className="w-10 h-10 rounded-full object-cover bg-slate-200" 
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                        <span className="text-white font-semibold">
+                          {(creator.name || 'A').charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
                     <div>
                       <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{creator.name}</p>
                       <p className="text-xs text-slate-500 dark:text-slate-400">

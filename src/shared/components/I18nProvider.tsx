@@ -6,35 +6,35 @@ interface I18nProviderProps {
   children: React.ReactNode;
 }
 
+const REQUIRED_NAMESPACE = 'common';
+
 const I18nProvider: React.FC<I18nProviderProps> = ({ children }) => {
-  const [isReady, setIsReady] = useState(i18n.isInitialized);
-  
-  // Call useTranslation to ensure the hook is initialized, but don't use the return value
-  useTranslation();
+  const { ready } = useTranslation(REQUIRED_NAMESPACE, { useSuspense: false });
+  const [initialized, setInitialized] = useState(i18n.isInitialized);
 
   useEffect(() => {
     if (i18n.isInitialized) {
-      setIsReady(true);
+      setInitialized(true);
       return;
     }
 
-    const handleReady = () => {
-      console.log('✅ i18n is ready');
-      setIsReady(true);
+    const handleInitialized = () => {
+      setInitialized(true);
     };
 
-    // Listen for initialization
-    i18n.on('initialized', handleReady);
-    i18n.on('loaded', handleReady);
-
-    // Cleanup
+    i18n.on('initialized', handleInitialized);
     return () => {
-      i18n.off('initialized', handleReady);
-      i18n.off('loaded', handleReady);
+      i18n.off('initialized', handleInitialized);
     };
   }, []);
 
-  if (!isReady) {
+  useEffect(() => {
+    if (initialized && !ready) {
+      i18n.loadNamespaces([REQUIRED_NAMESPACE]);
+    }
+  }, [initialized, ready]);
+
+  if (!initialized || !ready) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">

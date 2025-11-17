@@ -11,7 +11,7 @@ interface QuickReviewSectionProps {
   quizTitle: string;
 }
 
-const QuickReviewSection: React.FC<QuickReviewSectionProps> = ({ quizId, quizTitle }) => {
+const QuickReviewSection: React.FC<QuickReviewSectionProps> = ({ quizId }) => {
   const { t } = useTranslation();
 
   const user = useSelector((state: RootState) => state.auth.user);
@@ -72,26 +72,11 @@ const QuickReviewSection: React.FC<QuickReviewSectionProps> = ({ quizId, quizTit
 
       {/* Review Form Modal */}
       {showReviewForm && user && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-screen overflow-auto m-4">
-            <div className="flex justify-between items-center p-6 border-b border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900">{t('quickReview.reviewTitle', { quizTitle })}</h3>
-              <button
-                onClick={() => setShowReviewForm(false)}
-                className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-6">
-              <ReviewForm
-                quizId={quizId}
-                onReviewSubmitted={handleReviewSubmitted}
-                onClose={() => setShowReviewForm(false)}
-              />
-            </div>
-          </div>
-        </div>
+        <ReviewForm
+          quizId={quizId}
+          onReviewSubmitted={handleReviewSubmitted}
+          onClose={() => setShowReviewForm(false)}
+        />
       )}
     </div>
   );

@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
 import { Quiz } from '../types';
 import Button from '../../../shared/components/ui/Button';
 import { getQuizResults, getQuizResultById, getQuizById } from '../services/quizService';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../../lib/firebase/config';
 import { toast } from 'react-toastify';
 import QuickReviewSection from '../../../shared/components/QuickReviewSection';
 import { quizStatsService } from '../../../services/quizStatsService';
@@ -28,6 +30,7 @@ interface LeaderboardEntry {
   userId: string;
   userName: string;
   userEmail: string;
+  userPhotoURL?: string;
   score: number;
   correctAnswers: number;
   totalQuestions: number;
@@ -240,31 +243,49 @@ export const ResultPage: React.FC = () => {
     }
   }, [result, quiz, user]);
 
-  useEffect(() => {
-    const fetchLeaderboard = async () => {
-      if (!quizId) return;
-      
-      try {
-        setLoadingStats(true);
-        console.log('📊 Fetching leaderboard for quiz:', quizId);
-        const results = await getQuizResults(quizId);
+  const userId = useMemo(() => user?.uid, [user?.uid]);
+  const isFetchingRef = React.useRef(false);
+
+  const fetchLeaderboard = useCallback(async () => {
+    if (!quizId || isFetchingRef.current) return; // Prevent duplicate calls
+    
+    try {
+      isFetchingRef.current = true;
+      setLoadingStats(true);
+      console.log('📊 Fetching leaderboard for quiz:', quizId);
+      const results = await getQuizResults(quizId);
         console.log('📊 Raw results from Firebase:', results);
         
         // Transform results to leaderboard entries with user info
-        const leaderboardData: LeaderboardEntry[] = results.map((result: any) => {
+        const leaderboardData: LeaderboardEntry[] = await Promise.all(results.map(async (result: any) => {
           console.log('🔍 Processing result:', result);
+          
+          // Fetch user photo from users collection
+          let userPhotoURL = '';
+          if (result.userId) {
+            try {
+              const userDoc = await getDoc(doc(db, 'users', result.userId));
+              if (userDoc.exists()) {
+                userPhotoURL = userDoc.data().photoURL || '';
+              }
+            } catch (err) {
+              console.error('Error fetching user photo:', err);
+            }
+          }
+          
           return {
             id: result.id,
             userId: result.userId,
             userName: result.userName || result.userEmail?.split('@')[0] || 'Anonymous',
             userEmail: result.userEmail || '',
+            userPhotoURL,
             score: result.score,
             correctAnswers: result.correctAnswers,
             totalQuestions: result.totalQuestions,
             timeSpent: result.timeSpent || 0,
             completedAt: result.completedAt?.toDate?.() || new Date(result.completedAt)
           };
-        });
+        }));
 
         console.log('📊 Leaderboard data processed:', leaderboardData);
 
@@ -280,8 +301,8 @@ export const ResultPage: React.FC = () => {
         setLeaderboard(sortedLeaderboard.slice(0, 10)); // Top 10
 
         // Find current user's rank
-        if (user) {
-          const userResultIndex = sortedLeaderboard.findIndex(r => r.userId === user.uid);
+        if (userId) {
+          const userResultIndex = sortedLeaderboard.findIndex(r => r.userId === userId);
           setUserRank(userResultIndex >= 0 ? userResultIndex + 1 : null);
           console.log('👤 User rank:', userResultIndex >= 0 ? userResultIndex + 1 : 'Not found');
         }
@@ -292,11 +313,13 @@ export const ResultPage: React.FC = () => {
         toast.error('Không thể tải bảng xếp hạng!');
       } finally {
         setLoadingStats(false);
+        isFetchingRef.current = false;
       }
-    };
+  }, [quizId, userId]);
 
+  useEffect(() => {
     fetchLeaderboard();
-  }, [quizId, user]);
+  }, [fetchLeaderboard]);
 
   if (!result || !quiz) {
     return (
@@ -519,6 +542,19 @@ export const ResultPage: React.FC = () => {
                     }`}>
                       {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
                     </div>
+                    {entry.userPhotoURL ? (
+                      <img 
+                        src={entry.userPhotoURL} 
+                        alt={entry.userName}
+                        className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                        <span className="text-white font-semibold text-sm">
+                          {entry.userName.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
                     <div>
                       <div className="font-medium text-gray-900">
                         {entry.userName}

@@ -55,6 +55,19 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                 }`}>
                   {entry.id === 'current-attempt' ? '�' : getRankDisplay(index)}
                 </div>
+                {entry.userPhotoURL ? (
+                  <img 
+                    src={entry.userPhotoURL} 
+                    alt={entry.userName}
+                    className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                    <span className="text-white font-semibold text-lg">
+                      {entry.userName.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
                 <div>
                   <div className="font-medium text-gray-900">
                     {entry.userName}

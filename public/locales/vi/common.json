@@ -1762,6 +1762,7 @@
     "you": "BẠN",
     "waiting": "Đang chờ",
     "waitingForPlayer": "Đang chờ người chơi...",
+    "avgScore": "Điểm trung bình",
     "errorBoundary": {
       "title": "Oops! Something went wrong",
       "message": "The multiplayer game encountered an unexpected error. Don't worry, your progress might be saved.",
@@ -1926,7 +1927,10 @@
     "sync": "Sync",
     "syncing": "Syncing...",
     "title": "Offline Quizzes",
-    "totalPlays": "Total Plays"
+    "totalPlays": "Total Plays",
+    "indicator": {
+      "syncing": "Đang đồng bộ..."
+    }
   },
   "ok": "Đồng ý",
   "open": "Mở",
@@ -3810,9 +3814,27 @@
     "submitError": "Lỗi khi gửi đánh giá",
     "deleteSuccess": "Đã xóa đánh giá",
     "deleteError": "Lỗi khi xóa đánh giá",
+    "loading": "Đang tải đánh giá...",
+    "questions": "câu hỏi",
+    "refreshReviews": "Làm mới đánh giá",
+    "writeReview": "Viết đánh giá",
+    "peopleReviewed": "người đã đánh giá",
+    "positiveReviews": "Đánh giá tích cực",
+    "userReviews": "{{count}} đánh giá",
+    "noReviewsYet": "Chưa có đánh giá",
     "empty": {
       "title": "Chưa có đánh giá nào",
-      "description": "Hãy là người đầu tiên đánh giá quiz này"
+      "description": "Hãy là người đầu tiên đánh giá quiz này",
+      "notFound": "Không tìm thấy quiz",
+      "notFoundDesc": "Quiz này có thể đã bị xóa hoặc không tồn tại",
+      "noReviews": "Chưa có đánh giá nào",
+      "noReviewsDesc": "Hãy là người đầu tiên đánh giá quiz này!",
+      "writeFirstReview": "Viết đánh giá đầu tiên"
+    },
+    "errors": {
+      "notFound": "Không tìm thấy quiz",
+      "loadFailed": "Không thể tải đánh giá",
+      "pageLoadFailed": "Không thể tải trang đánh giá"
     },
     "form": {
       "rating": "Đánh giá của bạn",
