@@ -3,7 +3,34 @@
     "rooms": {
       "$roomId": {
         ".read": "auth != null",
-        ".write": "auth != null",
+        
+        "gameState": {
+          ".read": "auth != null",
+          ".write": "auth != null && data.child('hostId').val() === auth.uid"
+        },
+        
+        "answers": {
+          "$questionIndex": {
+            "$userId": {
+              ".read": "auth != null",
+              ".write": false
+            }
+          }
+        },
+        
+        "leaderboard": {
+          "$userId": {
+            ".read": "auth != null",
+            ".write": false
+          }
+        },
+        
+        "submissions": {
+          "$userId": {
+            ".read": "auth != null && auth.uid === $userId",
+            ".write": "auth != null && auth.uid === $userId"
+          }
+        },
         
         "presence": {
           "$userId": {

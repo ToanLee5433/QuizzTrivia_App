@@ -65,11 +65,11 @@ export const QuizPreviewModal: React.FC<QuizPreviewModalProps> = ({
               <p className="text-2xl font-bold text-blue-900">{questionCount}</p>
             </div>
             <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-              <p className="text-sm text-purple-600 mb-1">{t('quiz.difficulty') || 'Difficulty'}</p>
+              <p className="text-sm text-purple-600 mb-1">{t('buildOverview.difficulty') || 'Difficulty'}</p>
               <p className="text-lg font-bold text-purple-900">
-                {quiz.difficulty === 'easy' ? '🟢 Easy' :
-                 quiz.difficulty === 'medium' ? '🟡 Medium' :
-                 quiz.difficulty === 'hard' ? '🔴 Hard' : '❓'}
+                {quiz.difficulty === 'easy' ? `🟢 ${t('quiz.difficulty.easy')}` :
+                 quiz.difficulty === 'medium' ? `🟡 ${t('quiz.difficulty.medium')}` :
+                 quiz.difficulty === 'hard' ? `🔴 ${t('quiz.difficulty.hard')}` : '❓'}
               </p>
             </div>
             <div className="bg-green-50 p-4 rounded-lg border border-green-200">

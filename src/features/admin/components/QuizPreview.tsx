@@ -64,7 +64,7 @@ const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, isOpen, onClose }) => {
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-600">{quiz.difficulty}</div>
-            <div className="text-sm text-gray-600">{t('quiz.difficulty')}</div>
+            <div className="text-sm text-gray-600">{t('buildOverview.difficulty')}</div>
           </div>
           <div className="text-center">
             <div className={`text-2xl font-bold ${

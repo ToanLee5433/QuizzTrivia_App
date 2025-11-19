@@ -9,6 +9,18 @@ import { RootState } from '../../../lib/store';
 import { toast } from 'react-toastify';
 import SafeHTML from '../../../shared/components/ui/SafeHTML';
 import { logger } from '../utils/logger';
+import gameStateService, { GameStateData, LeaderboardEntry } from '../services/gameStateService';
+import QuestionTimer from './QuestionTimer';
+import LiveLeaderboard from './LiveLeaderboard';
+import HostControlPanel from './HostControlPanel';
+import AnswerResultAnimation from './AnswerResultAnimation';
+import SoundSettings from './SoundSettings';
+import { GameAnnouncements } from './GameAnnouncements';
+import { AnswerOptions } from './AnswerOptions';
+import soundService from '../services/soundService';
+import { useHostTransfer } from '../hooks/useHostTransfer';
+import { useReconnection } from '../hooks/useReconnection';
+import { usePerformanceMonitoring } from '../hooks/usePerformanceMonitoring';
 
 
 // Type definitions
@@ -136,6 +148,12 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
   const [realtimeGameData, setRealtimeGameData] = useState<GameData | null>(gameData);
   const [realtimeRoomData, setRealtimeRoomData] = useState<RoomData | null>(roomData);
   
+  // Real-time game state sync
+  const [syncedGameState, setSyncedGameState] = useState<GameStateData | null>(null);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [showResultAnimation, setShowResultAnimation] = useState(false);
+  const [previousRank, setPreviousRank] = useState<number>(0);
+  
   // Client-side game state for fast performance
   const [playerScores, setPlayerScores] = useState<{[playerId: string]: number}>({});
   const [playerAnswers, setPlayerAnswers] = useState<{[playerId: string]: PlayerAnswer[]}>({});
@@ -161,6 +179,13 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
   // Get current game phase
   const gamePhase = currentGameData?.phase || 'question';
   const roomStatus = currentRoomData?.status || 'waiting';
+  const currentRoomStatus = realtimeRoomData?.status || roomStatus;
+  const currentGamePhase = realtimeGameData?.phase || gamePhase;
+  
+  // ✅ Production Features: Auto host transfer, reconnection, performance monitoring
+  useHostTransfer(roomData?.id || '', currentRoomData?.quiz?.id || '', currentRoomStatus === 'playing');
+  const { isReconnecting } = useReconnection(roomData?.id || '', currentUser?.uid || '', currentUserName || '', true);
+  usePerformanceMonitoring(roomData?.id || '', currentUser?.uid || '');
 
   // Real-time Firestore listener
   useEffect(() => {
@@ -272,6 +297,30 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
     };
   }, [roomData?.id, gameStartCountdown, timePerQuestion]);
 
+  // Listen to real-time game state sync
+  useEffect(() => {
+    if (!roomData?.id) return;
+
+    const unsubscribe = gameStateService.listenToGameState(roomData.id, (state) => {
+      setSyncedGameState(state);
+      logger.info('[MultiplayerQuiz] Game state updated', { state });
+    });
+
+    return () => unsubscribe();
+  }, [roomData?.id]);
+
+  // Listen to real-time leaderboard
+  useEffect(() => {
+    if (!roomData?.id) return;
+
+    const unsubscribe = gameStateService.listenToLeaderboard(roomData.id, (entries) => {
+      setLeaderboard(entries);
+      logger.info('[MultiplayerQuiz] Leaderboard updated', { count: entries.length });
+    });
+
+    return () => unsubscribe();
+  }, [roomData?.id]);
+
   // Sync all players' scores and answers from server data
   useEffect(() => {
     if (!currentRoomData?.questionAnswers) return;
@@ -317,8 +366,18 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
         });
       }, 1000);
     } else if (gameStartCountdown === 0) {
-      // Countdown finished - game should start
+      // Countdown finished - trigger game start if room still in 'starting' status
       setGameStartCountdown(null);
+      
+      // CRITICAL FIX: If room is still 'starting' after countdown, force start the game
+      // This handles cases where the host's setTimeout failed (refresh, disconnect, etc.)
+      if (realtimeRoomData?.status === 'starting' && realtimeRoomData?.id && multiplayerService) {
+        logger.info('Countdown finished but room still starting - triggering game start');
+        multiplayerService.startGame(realtimeRoomData.id).catch((error: Error) => {
+          logger.error('Failed to start game after countdown', error);
+          toast.error('Failed to start game. Please try again.');
+        });
+      }
     }
     
     return () => {
@@ -327,7 +386,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
         gameStartRef.current = null;
       }
     };
-  }, [gameStartCountdown]);
+  }, [gameStartCountdown, realtimeRoomData?.status, realtimeRoomData?.id, multiplayerService]);
 
   // Question timer countdown effect
   useEffect(() => {
@@ -344,8 +403,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
   }, [questionTimeLeft, realtimeGameData?.phase]);
 
   // Get current game phase from room data
-  const currentGamePhase = realtimeGameData?.phase || gamePhase;
-  const currentRoomStatus = realtimeRoomData?.status || roomStatus;
+  // (Already defined above with hooks)
 
   // Save final results to server when game finishes
   // Convert quiz format from Firestore to multiplayer format (using index-based answers)
@@ -376,6 +434,35 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
     });
   }, [currentGameData?.questions]);
 
+  // Initialize game state when game starts (host only)
+  useEffect(() => {
+    if (!roomData?.id || !currentUser?.uid || !currentRoomData) return;
+    
+    // Check if this user is the host and game just started
+    const isHost = currentRoomData.players?.find((p: Player) => p.id === currentUser.uid)?.isReady === true;
+    const isGameStarting = currentRoomStatus === 'playing' && currentGamePhase === 'question';
+    
+    if (isHost && isGameStarting && processedQuestions.length > 0 && !syncedGameState) {
+      logger.info('[MultiplayerQuiz] Host initializing game state', {
+        roomId: roomData.id,
+        hostId: currentUser.uid,
+        totalQuestions: processedQuestions.length,
+        timePerQuestion,
+      });
+      
+      gameStateService.initializeGameState(
+        roomData.id,
+        currentUser.uid,
+        processedQuestions.length,
+        timePerQuestion
+      ).then(() => {
+        logger.info('[MultiplayerQuiz] Game state initialized successfully');
+      }).catch((error: Error) => {
+        logger.error('[MultiplayerQuiz] Failed to initialize game state', error);
+      });
+    }
+  }, [roomData?.id, currentUser?.uid, currentRoomStatus, currentGamePhase, processedQuestions.length, syncedGameState, currentRoomData, timePerQuestion]);
+
   useEffect(() => {
     const saveFinalResults = async () => {
       if (currentGamePhase === 'finished' && currentUser?.uid && currentRoomData?.id) {
@@ -386,8 +473,8 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
           const totalQuestions = processedQuestions.length;
           const percentage = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
 
-          // Save to quiz_results collection
-          await addDoc(collection(db, 'quiz_results'), {
+          // Save to quizResults collection (match Firestore rules)
+          await addDoc(collection(db, 'quizResults'), {
             userId: currentUser.uid,
             quizId: currentRoomData.quiz?.id || currentRoomData.id,
             quizTitle: currentRoomData.quiz?.title || 'Multiplayer Quiz',
@@ -517,11 +604,70 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
         await multiplayerService.submitAnswer(currentRoomData.id, finalQuestion.id, indexToSubmit, timeSpent);
       }
       
+      // Submit to game state service for real-time sync
+      if (roomData?.id) {
+        await gameStateService.submitAnswer(
+          roomData.id,
+          currentQuestionIndex,
+          currentUser.uid,
+          indexToSubmit ?? -1,
+          isCorrect,
+          timeSpent,
+          points
+        );
+        
+        // Update leaderboard with new score
+        const currentLeaderboard = [...leaderboard];
+        const userEntry = currentLeaderboard.find(e => e.userId === currentUser.uid);
+        
+        if (userEntry) {
+          userEntry.score += points;
+          userEntry.correctAnswers += isCorrect ? 1 : 0;
+          if (isCorrect) {
+            userEntry.streak = (userEntry.streak || 0) + 1;
+          } else {
+            userEntry.streak = 0;
+          }
+        } else {
+          currentLeaderboard.push({
+            userId: currentUser.uid,
+            username: currentUser.displayName || currentUserName,
+            score: points,
+            correctAnswers: isCorrect ? 1 : 0,
+            rank: 0,
+            streak: isCorrect ? 1 : 0,
+            avatar: currentUser.photoURL || undefined,
+          });
+        }
+        
+        // Sort and update ranks
+        currentLeaderboard.sort((a, b) => b.score - a.score);
+        currentLeaderboard.forEach((entry, idx) => {
+          entry.rank = idx + 1;
+        });
+        
+        await gameStateService.updateLeaderboard(roomData.id, currentLeaderboard);
+        logger.info('[MultiplayerQuiz] Leaderboard updated after answer submission', { 
+          userId: currentUser.uid, 
+          points, 
+          isCorrect,
+          newScore: userEntry ? userEntry.score : points 
+        });
+      }
+      
       // Set waiting state
       setWaitingForOthers(true);
       
-      // Show results after 1 second
+      // Play sound effect
+      soundService.play(isCorrect ? 'correct' : 'wrong');
+      
+      // Show animation first
+      const userRankBefore = leaderboard.findIndex(e => e.userId === currentUser.uid);
+      setShowResultAnimation(true);
+      
+      // Show results after animation (2 seconds)
       setTimeout(() => {
+        setShowResultAnimation(false);
         setQuestionResults({
           isCorrect,
           correctAnswer: finalQuestion.correct,
@@ -530,7 +676,11 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
           explanation: finalQuestion.explanation || ''
         });
         setShowResults(true);
-      }, 1000);
+        
+        // Calculate rank change
+        const userRankAfter = leaderboard.findIndex(e => e.userId === currentUser.uid);
+        setPreviousRank(userRankBefore - userRankAfter);
+      }, 2000);
       
     } catch (error) {
       console.error('Error submitting answer:', error);
@@ -568,20 +718,45 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
     // Auto-submit immediately after selection (like MultiplayerGameSimple)
     setTimeout(() => handleSubmit(answerIndex), 100);
   };
-  
-  // Calculate progress percentage with proper pathLength
-  const progressPercent = useMemo(() => {
-    return Math.max(0, Math.min(100, Math.round((timeLeft / timePerQuestion) * 100)));
-  }, [timeLeft, timePerQuestion]);
 
-  // SVG circle properties for accurate progress
-  const radius = 16;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
+  // Check if current user is host
+  const isHost = currentRoomData?.players?.some((p: Player) => p.id === currentUser?.uid && p.isReady);
 
   return (
+    <>
+      {/* ✅ Accessibility: Screen reader announcements */}
+      <GameAnnouncements
+        gameState={syncedGameState}
+        roomId={roomData?.id || ''}
+      />
+      
+      {isReconnecting && (
+        <div className="fixed top-20 right-4 bg-yellow-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center gap-2">
+          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+          <span>Reconnecting...</span>
+        </div>
+      )}
+      
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-100 p-2 sm:p-4 lg:p-6">
-      <div className="max-w-4xl mx-auto">
+      <div className="flex gap-4 max-w-7xl mx-auto">
+        {/* Main Content */}
+        <div className="flex-1 max-w-4xl">
+        
+        {/* Host Control Panel */}
+        {isHost && roomData?.id && currentRoomStatus === 'playing' && (
+          <HostControlPanel
+            roomId={roomData.id}
+            currentQuestionIndex={currentQuestionIndex}
+            totalQuestions={processedQuestions.length}
+            isHost={isHost}
+            timePerQuestion={timePerQuestion}
+          />
+        )}
+        
+        {/* Sound Settings */}
+        {currentRoomStatus === 'waiting' && (
+          <SoundSettings />
+        )}
         
         {/* Game Start Countdown Phase */}
         {currentRoomStatus === 'starting' && gameStartCountdown !== null && gameStartCountdown >= 0 && (
@@ -938,34 +1113,28 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
                 </div>
               )}
               
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl font-bold text-sm sm:text-base ${
-                  timeLeft <= 5 ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
-                }`}>
-                  <Clock size={16} />
-                  <span>{t('multiplayer.secondsShort', { value: timeLeft })}</span>
-                </div>
-                
-                <div className="relative w-12 h-12 sm:w-16 sm:h-16">
-                  <svg className="w-12 h-12 sm:w-16 sm:h-16 transform -rotate-90" viewBox="0 0 36 36">
-                    <circle cx="18" cy="18" r="16" fill="none" stroke="#e5e7eb" strokeWidth="3"/>
-                    <circle 
-                      cx="18" cy="18" r="16" fill="none" 
-                      stroke={timeLeft <= 5 ? "#ef4444" : "#3b82f6"}
-                      strokeWidth="3" 
-                      strokeLinecap="round"
-                      strokeDasharray={circumference}
-                      strokeDashoffset={strokeDashoffset}
-                      className="transition-all duration-1000"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className={`text-xs font-bold ${timeLeft <= 5 ? 'text-red-600' : 'text-blue-600'}`}>
-                      {progressPercent}%
-                    </span>
+              {/* Question Timer Component */}
+              {syncedGameState?.questionStartTime && syncedGameState?.timeLimit ? (
+                <QuestionTimer
+                  startTime={syncedGameState.questionStartTime}
+                  timeLimit={syncedGameState.timeLimit}
+                  onTimeUp={() => {
+                    if (!locked) {
+                      handleSubmit(selectedIndex ?? undefined);
+                    }
+                  }}
+                  isPaused={locked}
+                />
+              ) : (
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl font-bold text-sm sm:text-base ${
+                    timeLeft <= 5 ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
+                  }`}>
+                    <Clock size={16} />
+                    <span>{t('multiplayer.secondsShort', { value: timeLeft })}</span>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
           
@@ -1009,36 +1178,17 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
           
           {/* Show options if available */}
           {finalQuestion.options && finalQuestion.options.length > 0 ? (
-            <div className="grid gap-3 sm:gap-4 mb-6 sm:mb-8">
-              {finalQuestion.options.map((option: string, idx: number) => {
-                const isSelected = selectedIndex === idx;
-                const optionLabels = ['A', 'B', 'C', 'D'];
-                
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => handleSelect(idx)}
-                    className={`group relative px-4 sm:px-6 py-3 sm:py-4 rounded-2xl text-left transition-all duration-200 transform hover:scale-105 ${
-                      isSelected 
-                        ? 'border-2 border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg' 
-                        : 'border-2 border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
-                    } ${locked ? 'opacity-60 cursor-not-allowed transform-none' : ''}`}
-                    disabled={locked}
-                  >
-                    <div className="flex items-center gap-3 sm:gap-4">
-                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-bold text-xs sm:text-sm ${
-                        isSelected 
-                          ? 'bg-blue-500 text-white' 
-                          : 'bg-gray-100 text-gray-600 group-hover:bg-gray-200'
-                      }`}>
-                        {optionLabels[idx] || idx + 1}
-                      </div>
-                      <span className="font-medium text-gray-800 text-sm sm:text-base">{option}</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+            <AnswerOptions
+              options={finalQuestion.options.map((text: string, idx: number) => ({ 
+                id: idx, 
+                text 
+              }))}
+              selectedAnswer={selectedIndex}
+              onSelect={handleSelect}
+              disabled={locked}
+              correctAnswer={showResults ? questionResults?.correctAnswer : undefined}
+              showResults={showResults}
+            />
           ) : (
             <div className="bg-red-100 p-4 rounded-lg">
               <p className="text-red-700">❌ No options available for this question</p>
@@ -1096,8 +1246,8 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
                       <Clock size={20} />
                       <span className="font-semibold">
                         {nextQuestionCountdown > 0 
-                          ? `Câu hỏi tiếp theo trong ${nextQuestionCountdown} giây...`
-                          : "Đang chờ người chơi khác..."
+                          ? `${t('multiplayer.game.nextQuestionIn')} ${nextQuestionCountdown} ${t('multiplayer.timer.seconds')}...`
+                          : t('multiplayer.game.waitingForOthers')
                         }
                       </span>
                     </div>
@@ -1109,8 +1259,34 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
         )}
         </>
         )}
+        </div>
+        
+        {/* Sidebar - Live Leaderboard */}
+        {currentUser?.uid && roomData?.id && (currentRoomStatus === 'playing' || currentGamePhase === 'results') && (
+          <div className="hidden lg:block w-80">
+            <div className="sticky top-6">
+              <LiveLeaderboard 
+                roomId={roomData.id} 
+                currentUserId={currentUser.uid}
+                showTop={5}
+              />
+            </div>
+          </div>
+        )}
       </div>
+      
+      {/* Answer Result Animation Overlay */}
+      {showResultAnimation && questionResults && (
+        <AnswerResultAnimation
+          isCorrect={questionResults.isCorrect}
+          points={questionResults.points}
+          rankChange={previousRank}
+          explanation={questionResults.explanation}
+          onAnimationComplete={() => setShowResultAnimation(false)}
+        />
+      )}
     </div>
+    </>
   );
 };
 

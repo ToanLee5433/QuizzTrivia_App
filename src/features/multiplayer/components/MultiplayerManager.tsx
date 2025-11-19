@@ -19,6 +19,10 @@ import GameResults from './GameResults';
 import RealtimeChat from './RealtimeChat';
 import MobileChatModal from './MobileChatModal';
 
+// Import modern components
+import ModernMultiplayerWrapper from './ModernMultiplayerWrapper';
+import { isFeatureEnabled } from '../config/featureFlags';
+
 // Import services
 import { getMultiplayerService, MultiplayerServiceInterface } from '../services/enhancedMultiplayerService';
 
@@ -41,6 +45,7 @@ interface MultiplayerManagerProps {
   selectedQuiz?: Quiz;
   currentUserId: string;
   currentUserName: string;
+  currentUserPhoto?: string; // Avatar from Firebase Auth
   onBackToLobby: () => void;
   onQuizComplete: (results: GameResultsType) => void;
   initialRoomId?: string;
@@ -50,6 +55,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
   selectedQuiz: initialSelectedQuiz,
   currentUserId,
   currentUserName,
+  currentUserPhoto,
   onBackToLobby,
   onQuizComplete,
   initialRoomId
@@ -79,7 +85,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
     const connectToService = async () => {
       try {
         setConnectionStatus('connecting');
-        await service.connect(currentUserId, currentUserName);
+        await service.connect(currentUserId, currentUserName, currentUserPhoto);
         setConnectionStatus('connected');
         setState(prev => ({ ...prev, isConnected: true }));
         
@@ -105,7 +111,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
     return () => {
       service.disconnect();
     };
-  }, [currentUserId, currentUserName, t]);
+  }, [currentUserId, currentUserName, currentUserPhoto, t]);
   // Handlers are intentionally omitted from dependencies to prevent infinite loop from re-subscription
 
   // Try resuming room from state (if page reload)
@@ -167,16 +173,26 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
   }, [connectionStatus, isReconnecting, multiplayerService, currentUserId, currentUserName, t]);
 
   const handleGameStart = useCallback((gameData: any) => {
-    logger.debug('Game Start Event Received', {
-      hasQuestions: gameData?.questions?.length || 0
+    logger.info('🎮 MultiplayerManager: Game Start Event Received', {
+      hasQuestions: gameData?.questions?.length || 0,
+      questionsCount: gameData?.questionsCount,
+      roomId: gameData?.roomId,
+      currentState: state.currentState
     });
     
-    setState(prev => ({ 
-      ...prev, 
-      currentState: 'game', 
-      gameData 
-    }));
-  }, []);
+    setState(prev => {
+      logger.info('🎮 Changing state to GAME', {
+        previousState: prev.currentState,
+        newState: 'game'
+      });
+      
+      return { 
+        ...prev, 
+        currentState: 'game', 
+        gameData 
+      };
+    });
+  }, [state.currentState]);
 
   const handleNextQuestion = useCallback((gameData: any) => {
     setState(prev => ({ 
@@ -432,6 +448,23 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
         );
 
       case 'lobby':
+        // Use modern UI if enabled, otherwise fallback to old UI
+        if (isFeatureEnabled('ENABLE_MODERN_UI')) {
+          return (
+            <ModernMultiplayerWrapper
+              roomData={state.roomData}
+              currentUserId={currentUserId}
+              currentUserName={currentUserName}
+              gameData={state.gameData}
+              gamePhase="lobby"
+              onLeaveRoom={handleLeaveRoom}
+              onBackToLobby={onBackToLobby}
+              multiplayerService={multiplayerService ?? undefined}
+            />
+          );
+        }
+        
+        // Fallback to old UI
         return (
           <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50">
             {/* Main Lobby - Full width on mobile, flex-1 on desktop */}
@@ -476,6 +509,23 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
         );
 
       case 'game':
+        // Use modern UI if enabled
+        if (isFeatureEnabled('ENABLE_MODERN_UI')) {
+          return (
+            <ModernMultiplayerWrapper
+              roomData={state.roomData}
+              currentUserId={currentUserId}
+              currentUserName={currentUserName}
+              gameData={state.gameData}
+              gamePhase="game"
+              onLeaveRoom={handleLeaveRoom}
+              onBackToLobby={onBackToLobby}
+              multiplayerService={multiplayerService ?? undefined}
+            />
+          );
+        }
+        
+        // Fallback to old UI
         return (
           <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50">
             {/* Game Area - Full width on mobile */}
@@ -504,6 +554,23 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
         );
 
       case 'results':
+        // Use modern UI if enabled
+        if (isFeatureEnabled('ENABLE_MODERN_UI')) {
+          return (
+            <ModernMultiplayerWrapper
+              roomData={state.roomData}
+              currentUserId={currentUserId}
+              currentUserName={currentUserName}
+              gameData={state.gameData}
+              gamePhase="results"
+              onLeaveRoom={handleLeaveRoom}
+              onBackToLobby={onBackToLobby}
+              multiplayerService={multiplayerService ?? undefined}
+            />
+          );
+        }
+        
+        // Fallback to old UI
         return (
           <GameResults
             players={state.results?.players as any || []}

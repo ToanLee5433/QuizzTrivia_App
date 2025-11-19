@@ -47,6 +47,7 @@ export interface Room {
 export interface Player {
   id: string;
   username: string;
+  photoURL?: string; // Avatar from Firebase Auth
   isReady: boolean;
   isOnline: boolean;
   // Removed isHost - all players are equal
@@ -96,7 +97,7 @@ export interface GameData {
 // Service Interface
 export interface MultiplayerServiceInterface {
   // Connection
-  connect(userId: string, username: string): Promise<void>;
+  connect(userId: string, username: string, photoURL?: string): Promise<void>;
   disconnect(): Promise<void>;
   
   // Room Management
@@ -149,15 +150,17 @@ class SimpleEventEmitter {
 export class FirestoreMultiplayerService extends SimpleEventEmitter implements MultiplayerServiceInterface {
   private userId: string = '';
   private username: string = '';
+  private userPhotoURL: string = '';
   private currentRoomId: string | null = null;
   private unsubscribeFunctions: (() => void)[] = [];
 
   // Connection
-  async connect(userId: string, username: string): Promise<void> {
+  async connect(userId: string, username: string, photoURL?: string): Promise<void> {
     this.userId = userId;
     this.username = username;
-    logger.success('Connected to Firestore Multiplayer Service', { userId, username });
-    this.emit('connected', { userId, username });
+    this.userPhotoURL = photoURL || '';
+    logger.success('Connected to Firestore Multiplayer Service', { userId, username, photoURL });
+    this.emit('connected', { userId, username, photoURL });
   }
 
   async disconnect(): Promise<void> {
@@ -193,6 +196,7 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
       const player: Player = {
         id: this.userId,
         username: this.username,
+        ...(this.userPhotoURL && { photoURL: this.userPhotoURL }),
         isReady: false,
         isOnline: true,
         // Removed isHost - all players are equal
@@ -325,6 +329,7 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
       const player: Player = {
         id: this.userId,
         username: this.username,
+        ...(this.userPhotoURL && { photoURL: this.userPhotoURL }),
         isReady: false,
         isOnline: true,
         // Removed isHost - all players are equal
@@ -469,12 +474,51 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
   }
 
   // Game Control
-  async startGame(roomId: string): Promise<void> {
+  async startGame(roomId: string, skipCountdown: boolean = false): Promise<void> {
     try {
+      const roomRef = doc(db, 'multiplayer_rooms', roomId);
+      const roomSnap = await getDoc(roomRef);
+      
+      if (!roomSnap.exists()) {
+        throw new Error('Room not found');
+      }
+      
+      const roomData = roomSnap.data();
+      
+      // If skipCountdown is true, start game immediately
+      if (skipCountdown) {
+        logger.info('⏩ SKIP COUNTDOWN - Starting game immediately', { roomId });
+        await this.actuallyStartGame(roomId);
+        logger.success('✅ Game started with skipCountdown', { roomId });
+        return;
+      }
+      
+      // If room is already starting, check if countdown expired
+      if (roomData.status === 'starting' && roomData.gameStartAt) {
+        const startTime = new Date(roomData.gameStartAt.seconds * 1000);
+        const elapsed = Date.now() - startTime.getTime();
+        
+        // If countdown already expired, start game immediately
+        if (elapsed >= 5000) {
+          logger.info('Countdown already expired - starting game immediately');
+          await this.actuallyStartGame(roomId);
+          return;
+        }
+        
+        // Otherwise, room is already in countdown - do nothing
+        logger.info('Room already in countdown phase');
+        return;
+      }
+      
+      // If room is already playing, do nothing
+      if (roomData.status === 'playing') {
+        logger.info('Game already started');
+        return;
+      }
+      
       logger.info('Starting 5-second game countdown...');
       
       // First, set room status to 'starting' with countdown timer
-      const roomRef = doc(db, 'multiplayer_rooms', roomId);
       await updateDoc(roomRef, {
         status: 'starting',
         gameStartAt: serverTimestamp(),
@@ -510,9 +554,10 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
       const roomData = roomSnap.data();
       let questions = [];
       
+      // Check for embedded quiz questions first
       if (roomData.quiz && roomData.quiz.questions && roomData.quiz.questions.length > 0) {
-        logger.success('Using embedded quiz questions', { count: questions.length });
         questions = roomData.quiz.questions;
+        logger.success('Using embedded quiz questions', { count: questions.length });
       } else if (roomData.quizId) {
         try {
           logger.debug('Fetching quiz from Firestore', { quizId: roomData.quizId });
@@ -580,6 +625,13 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
         questionEndAt: new Date(Date.now() + (timePerQuestion * 1000))
       };
       
+      logger.info('🎮 UPDATING ROOM TO PLAYING STATUS', { 
+        roomId, 
+        questionsCount: questions.length,
+        status: 'playing',
+        hasGameData: true 
+      });
+      
       // Update room with game data and playing status
       await updateDoc(roomRef, {
         status: 'playing',
@@ -590,14 +642,22 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
         gameStartDelay: null
       });
       
+      logger.success('✅ ROOM STATUS UPDATED TO PLAYING', { roomId });
+      
       const emitData = {
         ...gameData,
         roomId,
         questionsCount: questions.length
       };
       
-      logger.success('Game actually started', { roomId, questionsCount: questions.length });
+      logger.info('📡 EMITTING game:start EVENT', { 
+        roomId, 
+        questionsCount: questions.length
+      });
+      
       this.emit('game:start', emitData);
+      
+      logger.success('✅ Game actually started - event emitted', { roomId, questionsCount: questions.length });
     } catch (error) {
       logger.error('Error starting game', error);
       throw error;

@@ -191,6 +191,24 @@ const LeaderboardPage: React.FC = () => {
           totalAttempts++;
         });
 
+        // Add all users to leaderboard (including those without quiz results)
+        usersMap.forEach((userData, userId) => {
+          if (!userStats.has(userId)) {
+            userStats.set(userId, {
+              userId,
+              displayName: userData.displayName || userData.email?.split('@')[0] || t('leaderboard.anonymous'),
+              email: userData.email,
+              photoURL: userData.photoURL || '',
+              totalScore: 0,
+              totalAttempts: 0,
+              averageScore: 0,
+              perfectScores: 0,
+              recentActivity: new Date().toLocaleDateString('vi-VN'),
+              badge: 'beginner'
+            });
+          }
+        });
+
         // Calculate user averages and assign badges
         userStats.forEach(userStat => {
           userStat.averageScore = userStat.totalAttempts > 0 ? userStat.totalScore / userStat.totalAttempts : 0;

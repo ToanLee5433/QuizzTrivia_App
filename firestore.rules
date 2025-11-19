@@ -48,39 +48,42 @@ service cloud.firestore {
       allow read: if signedIn();
       
       // Allow authenticated users to create new rooms
-      allow create: if signedIn();
+      allow create: if signedIn() && request.resource.data.hostId == request.auth.uid;
       
-      // Allow any authenticated player in the room to update room game state
-      allow update: if signedIn() && 
-        exists(/databases/$(database)/documents/multiplayer_rooms/$(roomId)/players/$(request.auth.uid));
+      // Only host can update room settings (not game state)
+      allow update: if signedIn() && resource.data.hostId == request.auth.uid;
       
-      // Only room creator can delete (more secure than allowing any user)
-      allow delete: if signedIn() && isOwner();
+      // Only room host can delete
+      allow delete: if signedIn() && resource.data.hostId == request.auth.uid;
       
       // Players subcollection
       match /players/{playerId} {
         allow read: if signedIn();
         allow create: if signedIn() && request.auth.uid == playerId;
-        allow update: if signedIn() && request.auth.uid == playerId;
-        allow delete: if signedIn() &&
-          exists(/databases/$(database)/documents/multiplayer_rooms/$(roomId)/players/$(request.auth.uid));
+        // Players can only update their own ready status
+        allow update: if signedIn() && 
+                       playerId == request.auth.uid && 
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isReady', 'updatedAt']);
+        allow delete: if signedIn() && request.auth.uid == playerId;
       }
       
       // Messages subcollection
       match /messages/{messageId} {
         allow read: if signedIn();
-        allow create: if signedIn() && (
-          request.resource.data.userId == request.auth.uid ||
-          request.resource.data.type == 'system'
-        );
-        allow update, delete: if false;
+        allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+        allow update, delete: if false; // Messages are immutable
       }
       
-      // Game state subcollection
-      match /gameState/{stateId} {
+      // Answers subcollection - READ ONLY for clients (Cloud Functions write)
+      match /answers/{questionIndex}/{userId} {
         allow read: if signedIn();
-        allow write: if signedIn() &&
-          exists(/databases/$(database)/documents/multiplayer_rooms/$(roomId)/players/$(request.auth.uid));
+        allow write: if false; // Only Cloud Functions can write answers
+      }
+      
+      // Leaderboard - READ ONLY for clients (Cloud Functions write)
+      match /leaderboard/{userId} {
+        allow read: if signedIn();
+        allow write: if false; // Only Cloud Functions can write leaderboard
       }
     }
 

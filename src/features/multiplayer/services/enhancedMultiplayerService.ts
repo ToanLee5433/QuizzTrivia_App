@@ -5,6 +5,7 @@ export interface Player {
   id: string;
   name: string;
   avatar?: string;
+  photoURL?: string; // Firebase Auth photoURL
   isHost: boolean;
   isReady: boolean;
   score: number;
@@ -58,14 +59,14 @@ export interface ChatMessage {
 }
 
 export interface MultiplayerServiceInterface {
-  connect(userId: string, userName: string): Promise<void>;
+  connect(userId: string, userName: string, photoURL?: string): Promise<void>;
   disconnect(): void;
   resumeRoom(roomId: string): Promise<{ room: Room } | null>;
   setPresence(roomId: string, isOnline: boolean): Promise<void>;
   createRoom(roomConfig: Partial<Room>, selectedQuiz?: any): Promise<{ room: Room; player: Player }>;
   joinRoom(roomCode: string, password?: string): Promise<{ room: Room; player: Player }>;
   leaveRoom(roomId: string): Promise<void>;
-  startGame(roomId: string): Promise<void>;
+  startGame(roomId: string, skipCountdown?: boolean): Promise<void>;
   submitAnswer(roomId: string, questionId: string, answer: any, timeRemaining: number): Promise<void>;
   advanceToNextQuestion(roomId: string): Promise<void>;
   sendChatMessage(roomId: string, message: string): Promise<void>;

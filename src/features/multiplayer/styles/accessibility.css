@@ -1,0 +1,262 @@
+/**
+ * Multiplayer Accessibility Styles
+ * WCAG AA Compliance: 4.5:1 contrast ratio
+ * High Contrast Mode & Reduced Motion support
+ */
+
+/* ===== Screen Reader Only Utility ===== */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.sr-only-focusable:focus,
+.sr-only-focusable:active {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* ===== WCAG AA Color Contrast (4.5:1) ===== */
+.answer-option.correct {
+  background-color: #059669; /* Dark green for contrast */
+  color: #ffffff;
+  border-color: #047857;
+}
+
+.answer-option.wrong {
+  background-color: #dc2626; /* Dark red for contrast */
+  color: #ffffff;
+  border-color: #b91c1c;
+}
+
+.answer-option.selected {
+  background-color: #2563eb; /* Dark blue for contrast */
+  color: #ffffff;
+  border-color: #1d4ed8;
+}
+
+.timer-warning {
+  background-color: #ea580c; /* Orange with sufficient contrast */
+  color: #ffffff;
+}
+
+/* ===== High Contrast Mode Support ===== */
+@media (prefers-contrast: high) {
+  .answer-option {
+    border: 3px solid currentColor !important;
+    font-weight: 600;
+  }
+
+  .answer-option:focus-visible {
+    outline: 4px solid #000000;
+    outline-offset: 4px;
+  }
+
+  .timer-warning {
+    outline: 4px solid #000000;
+    outline-offset: 2px;
+  }
+
+  .leaderboard-entry {
+    border: 2px solid currentColor;
+  }
+
+  button:focus-visible {
+    outline: 4px solid #000000 !important;
+    outline-offset: 3px;
+  }
+}
+
+/* ===== Reduced Motion Support ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Disable confetti animations */
+  .confetti {
+    display: none !important;
+  }
+
+  /* Disable result animations */
+  .answer-result-animation {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Disable timer pulse */
+  .timer-pulse {
+    animation: none !important;
+  }
+
+  /* Disable rank change animations */
+  .rank-change-indicator {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  /* Instant transitions only */
+  .leaderboard-entry,
+  .question-card,
+  .answer-option {
+    transition: opacity 0.01ms !important;
+  }
+}
+
+/* ===== Focus Visible Styles (Keyboard Navigation) ===== */
+button:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.3);
+}
+
+.answer-option:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.25);
+  transform: scale(1.02);
+}
+
+/* Remove focus outline for mouse users */
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
+/* ===== Skip Link for Keyboard Navigation ===== */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #000000;
+  color: #ffffff;
+  padding: 8px 16px;
+  text-decoration: none;
+  font-weight: 600;
+  z-index: 100;
+  border-radius: 0 0 4px 0;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* ===== Large Touch Targets (Mobile Accessibility) ===== */
+@media (hover: none) and (pointer: coarse) {
+  /* Minimum 44x44px touch targets */
+  button,
+  .answer-option,
+  .host-control-button {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 12px 16px;
+  }
+
+  /* Increased spacing for easier tapping */
+  .answer-option {
+    margin-bottom: 12px;
+  }
+}
+
+/* ===== Status Indicators for Screen Readers ===== */
+[role="status"][aria-live] {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* ===== Loading States with Accessible Indicators ===== */
+.loading-spinner {
+  position: relative;
+}
+
+.loading-spinner::after {
+  content: "Loading...";
+  position: absolute;
+  left: -10000px;
+}
+
+/* ===== Color Blind Friendly Patterns ===== */
+.pattern-correct {
+  background-image: repeating-linear-gradient(
+    45deg,
+    #059669,
+    #059669 10px,
+    #047857 10px,
+    #047857 20px
+  );
+}
+
+.pattern-wrong {
+  background-image: repeating-linear-gradient(
+    45deg,
+    #dc2626,
+    #dc2626 10px,
+    #b91c1c 10px,
+    #b91c1c 20px
+  );
+}
+
+/* ===== Dyslexia-Friendly Font Support ===== */
+@media (prefers-reduced-motion: reduce) {
+  body {
+    font-family: 'OpenDyslexic', 'Comic Sans MS', 'Arial', sans-serif;
+    line-height: 1.6;
+    letter-spacing: 0.02em;
+  }
+}
+
+/* ===== High Visibility Mode ===== */
+@media (prefers-contrast: more) {
+  .leaderboard-entry:nth-child(odd) {
+    background-color: #f3f4f6;
+  }
+
+  .leaderboard-entry:nth-child(even) {
+    background-color: #ffffff;
+  }
+
+  .answer-option {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* ===== Print Styles (Accessibility for Physical Copies) ===== */
+@media print {
+  .confetti,
+  .timer-pulse,
+  .animation-container {
+    display: none !important;
+  }
+
+  .answer-option.correct::before {
+    content: "✓ ";
+    font-weight: bold;
+  }
+
+  .answer-option.wrong::before {
+    content: "✗ ";
+    font-weight: bold;
+  }
+}

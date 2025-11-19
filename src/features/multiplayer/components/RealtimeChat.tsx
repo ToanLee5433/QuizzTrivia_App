@@ -60,9 +60,9 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
     );
 
     setIsLoading(true);
-    const newMessages: ChatMessage[] = [];
+    let isInitialLoad = true;
 
-    onChildAdded(chatQuery, (snapshot) => {
+    const unsubscribe = onChildAdded(chatQuery, (snapshot) => {
       const messageData = snapshot.val();
       const messageId = snapshot.key;
       
@@ -76,7 +76,6 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
           type: messageData.type || 'user'
         };
 
-        newMessages.push(message);
         setMessages(prev => {
           // Avoid duplicates
           const exists = prev.find(m => m.id === message.id);
@@ -93,19 +92,29 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
         });
       }
       
-      setIsLoading(false);
+      if (isInitialLoad) {
+        isInitialLoad = false;
+        setIsLoading(false);
+      }
     });
 
     return () => {
       logger.debug('💬 RealtimeChat: Cleaning up listener');
+      if (unsubscribe) unsubscribe();
       off(chatQuery);
     };
   }, [roomId]);
 
-  // Auto-scroll when messages change
+  // Auto-scroll when messages change (debounced)
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
+    if (messages.length > 0) {
+      const timeoutId = setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [messages.length, scrollToBottom]);
 
   // Send message to Realtime Database
   const sendMessage = async () => {
@@ -166,7 +175,7 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-blue-600 to-purple-600">
         <h3 className="text-lg font-bold text-white flex items-center gap-2">
-          💬 {t('multiplayer.chat')}
+          💬 {t('multiplayer.chat.title')}
           {messages.length > 0 && (
             <span className="text-xs bg-white/20 px-2 py-1 rounded-full">
               {messages.length}
@@ -187,8 +196,8 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
       {/* Messages Container */}
       <div
         ref={chatContainerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50"
-        style={{ maxHeight: isMobile ? 'calc(100vh - 140px)' : '400px' }}
+        className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 sm:space-y-3 bg-gray-50"
+        style={{ maxHeight: isMobile ? 'calc(100vh - 140px)' : 'calc(100vh - 200px)', minHeight: '300px' }}
       >
         {isLoading && messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-400">
@@ -251,7 +260,7 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
       </div>
 
       {/* Input Area */}
-      <div className="p-4 border-t bg-white">
+      <div className="p-3 sm:p-4 border-t bg-white">
         <div className="flex gap-2">
           <input
             ref={inputRef}
@@ -262,12 +271,12 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
             placeholder={t('multiplayer.typeMessage')}
             maxLength={MAX_MESSAGE_LENGTH}
             disabled={isSending}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
           />
           <button
             onClick={sendMessage}
             disabled={!messageInput.trim() || isSending}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center min-w-[44px] sm:gap-2"
             aria-label="Send message"
           >
             {isSending ? (

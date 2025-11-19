@@ -68,6 +68,7 @@ const MultiplayerPage: React.FC = () => {
           selectedQuiz={state?.selectedQuiz} // Now optional
           currentUserId={user.uid}
           currentUserName={user.displayName || user.email || 'User'}
+          currentUserPhoto={user.photoURL || undefined}
           onBackToLobby={() => navigate('/multiplayer')}
           onQuizComplete={() => {
             // Don't auto-redirect - let players see final results

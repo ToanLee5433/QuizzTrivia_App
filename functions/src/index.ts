@@ -336,3 +336,13 @@ export const sendOTP = functions.https.onCall(async (data, context) => {
 // 🤖 RAG (Retrieval-Augmented Generation) Functions
 // ============================================================
 export { askRAG, askRAGHealth } from './rag/ask';
+
+// ============================================================
+// 🎮 Multiplayer Functions (Security & Anti-Cheat)
+// ============================================================
+export {
+  validateAnswer,
+  getPlayerQuestions,
+  checkRateLimit,
+  archiveCompletedRooms,
+} from './multiplayer/index';

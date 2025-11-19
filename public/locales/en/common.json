@@ -1882,6 +1882,34 @@
       "noQuizzesFound": "No quizzes found",
       "noQuizzesFoundDesc": "No quizzes match the current filters.",
       "startMultiplayer": "Start Multiplayer"
+    },
+    "sound": {
+      "title": "Sound",
+      "volume": "Volume",
+      "enableSound": "Enable Sound",
+      "disableSound": "Disable Sound"
+    },
+    "timer": {
+      "seconds": "seconds",
+      "timeUp": "Time's up!"
+    },
+    "host": {
+      "hostControl": "Host Control",
+      "questionProgress": "Question {{current}}/{{total}}",
+      "answersReceived": "Answers Received",
+      "pause": "Pause",
+      "resume": "Resume",
+      "skipQuestion": "Skip Question",
+      "endGame": "End Game",
+      "confirmEndGame": "Are you sure you want to end the game early?"
+    },
+    "results": {
+      "correct": "CORRECT!",
+      "wrong": "WRONG!",
+      "points": "points",
+      "explanation": "Explanation",
+      "rankUp": "Rank up {{count}}! ⬆️",
+      "rankDown": "Rank down {{count}} ⬇️"
     }
   },
   "moTaNganGonVeNoiDungQuiz": "Description ngắn gọn về nội dung Quiz...",
