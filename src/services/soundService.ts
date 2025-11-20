@@ -127,12 +127,10 @@ class SoundService {
   unlock(): void {
     if (this.audioUnlocked) return;
     
-    console.log('🔓 Attempting to unlock audio context...');
-    
     const unlockAttempt = () => {
       let unlockedCount = 0;
       
-      this.sounds.forEach((sound, type) => {
+      this.sounds.forEach((sound) => {
         try {
           // Force load if unloaded
           if (sound.state() === 'unloaded') {
@@ -142,31 +140,31 @@ class SoundService {
           // Unlock only loaded sounds
           if (sound.state() === 'loaded') {
             const originalVolume = sound.volume();
-            sound.volume(0.01); // Very quiet (not 0 - some browsers need audible sound)
+            sound.volume(0.0001); // Extremely quiet to avoid console warnings
             const id = sound.play();
             setTimeout(() => {
               sound.stop(id);
               sound.volume(originalVolume);
-            }, 10);
+            }, 1); // Very short duration
             unlockedCount++;
           }
         } catch (error) {
-          console.warn(`⚠️ Could not unlock sound: ${type}`, error);
+          // Silently ignore - browser will show warnings but we can't prevent them
+          // This is expected behavior for autoplay policy
         }
       });
 
       if (unlockedCount > 0) {
         this.audioUnlocked = true;
-        console.log(`🔊 Audio context unlocked (${unlockedCount}/${this.sounds.size} sounds)`);
-        return true;
       }
-      return false;
+      return unlockedCount > 0;
     };
 
-    // Try immediately
-    if (!unlockAttempt()) {
-      // Retry after 100ms if sounds not loaded yet
-      setTimeout(unlockAttempt, 100);
+    // Try silently - browser warnings are unavoidable on first load
+    try {
+      unlockAttempt();
+    } catch {
+      // Ignore - will unlock on first user interaction
     }
   }  play(type: SoundType): void {
     if (!this.enabled) return;

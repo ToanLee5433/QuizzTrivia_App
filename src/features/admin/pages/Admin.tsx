@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { RootState } from '../../../lib/store';
 import AdminLayout from '../components/AdminLayout';
 import { toast } from 'react-toastify';
-import { collection, addDoc, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, updateDoc, doc, query, where } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 
 const Admin: React.FC = () => {
@@ -21,13 +21,14 @@ const Admin: React.FC = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // Đồng bộ logic với /home: dùng dữ liệu thực, đếm toàn bộ quiz và người dùng đang hoạt động
-        const [quizzesSnap, usersSnap] = await Promise.all([
-          getDocs(collection(db, 'quizzes')),
-          getDocs(collection(db, 'users'))
+        // Đồng bộ logic với /home: dùng dữ liệu thực, chỉ đếm quiz approved (bỏ drafts)
+        const [quizzesSnap, usersSnap, quizResultsSnap] = await Promise.all([
+          getDocs(query(collection(db, 'quizzes'), where('status', '==', 'approved'))),
+          getDocs(collection(db, 'users')),
+          getDocs(collection(db, 'quizResults'))
         ]);
 
-        // Tổng số quiz = tất cả document trong 'quizzes'
+        // Tổng số quiz = chỉ quiz có status 'approved' (không bao gồm draft)
         const totalQuizzes = quizzesSnap.size;
 
         // Chỉ đếm người dùng hoạt động (isActive !== false và isDeleted !== true)
@@ -38,8 +39,11 @@ const Admin: React.FC = () => {
         // Người tạo: role 'creator' hoặc 'admin' trong nhóm active
         const totalCreators = activeUsers.filter(u => u?.role === 'creator' || u?.role === 'admin').length;
 
-        // Chưa có dữ liệu quiz results => để 0 cho khớp với /home
-        const completedQuizzes = 0;
+        // Đếm số quiz đã hoàn thành từ quizResults collection
+        const completedQuizzes = quizResultsSnap.docs.filter(doc => {
+          const data = doc.data();
+          return data.completed === true || data.score !== undefined;
+        }).length;
 
         setStats({
           totalQuizzes,

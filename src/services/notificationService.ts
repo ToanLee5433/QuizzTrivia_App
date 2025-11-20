@@ -505,6 +505,120 @@ class NotificationService {
   }
 
   /**
+   * Notify user when they're granted admin role
+   */
+  async notifyRoleGranted(
+    userId: string,
+    role: 'admin' | 'creator',
+    grantedBy: string
+  ): Promise<void> {
+    const roleNames = {
+      admin: 'Administrator',
+      creator: 'Quiz Creator'
+    };
+    const roleIcons = {
+      admin: '👑',
+      creator: '✨'
+    };
+
+    const notificationsRef = collection(db, 'notifications');
+    await addDoc(notificationsRef, {
+      userId,
+      type: 'system',
+      title: `New Role Granted: ${roleNames[role]}`,
+      message: `Congratulations! You have been granted ${roleNames[role]} privileges by ${grantedBy}. You now have access to additional features.`,
+      timestamp: serverTimestamp(),
+      read: false,
+      icon: roleIcons[role],
+      action: role === 'admin' ? {
+        type: 'navigate',
+        path: '/admin',
+        label: 'Go to Admin Dashboard'
+      } : {
+        type: 'navigate',
+        path: '/creator/create-quiz',
+        label: 'Create Your First Quiz'
+      },
+      metadata: {
+        role,
+        grantedBy
+      }
+    });
+  }
+
+  /**
+   * Notify quiz creator when quiz deleted by admin
+   */
+  async notifyQuizDeleted(
+    userId: string,
+    quizTitle: string,
+    reason?: string
+  ): Promise<void> {
+    const message = reason
+      ? `Your quiz "${quizTitle}" was deleted by admin. Reason: ${reason}`
+      : `Your quiz "${quizTitle}" was deleted by admin.`;
+
+    const notificationsRef = collection(db, 'notifications');
+    await addDoc(notificationsRef, {
+      userId,
+      type: 'system',
+      title: 'Quiz Deleted',
+      message,
+      timestamp: serverTimestamp(),
+      read: false,
+      icon: '🗑️',
+      action: {
+        type: 'navigate',
+        path: '/my-quizzes',
+        label: 'View My Quizzes'
+      },
+      metadata: {
+        deletedQuiz: quizTitle
+      }
+    });
+  }
+
+  /**
+   * Notify quiz creator of popularity milestone
+   */
+  async notifyPopularityMilestone(
+    userId: string,
+    quizId: string,
+    quizTitle: string,
+    milestone: number
+  ): Promise<void> {
+    const milestoneLabels: {[key: number]: string} = {
+      10: 'Getting Started',
+      50: 'Popular',
+      100: 'Trending',
+      500: 'Viral',
+      1000: 'Legendary'
+    };
+
+    const label = milestoneLabels[milestone] || 'Popular';
+
+    const notificationsRef = collection(db, 'notifications');
+    await addDoc(notificationsRef, {
+      userId,
+      type: 'achievement',
+      title: `🎉 ${label} Quiz!`,
+      message: `Your quiz "${quizTitle}" has reached ${milestone}+ plays! Keep creating amazing content!`,
+      timestamp: serverTimestamp(),
+      read: false,
+      icon: milestone >= 1000 ? '🏆' : milestone >= 500 ? '🔥' : milestone >= 100 ? '⭐' : '🎯',
+      action: {
+        type: 'navigate',
+        path: `/quiz/${quizId}/stats`,
+        label: 'View Stats'
+      },
+      metadata: {
+        quizId,
+        milestone
+      }
+    });
+  }
+
+  /**
    * Clean up method
    */
   unsubscribeAll(): void {

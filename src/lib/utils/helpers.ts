@@ -17,7 +17,15 @@ export const formatDuration = (minutes: number): string => {
  * @param date - Date object or timestamp to format
  * @param format - 'short' (dd/mm/yyyy), 'long' (dd/mm/yyyy HH:mm), 'full' (dd tháng mm năm yyyy HH:mm)
  */
-export const formatDate = (date: Date | number | string, format: 'short' | 'long' | 'full' = 'long'): string => {
+export const formatDate = (date: any, format: 'short' | 'long' | 'full' = 'long'): string => {
+  // Handle Firestore Timestamp objects
+  if (date && typeof date === 'object' && 'toDate' in date) {
+    return formatDate(date.toDate(), format);
+  }
+  if (date && typeof date === 'object' && 'seconds' in date) {
+    return formatDate(new Date(date.seconds * 1000), format);
+  }
+  
   const dateObj = date instanceof Date ? date : new Date(date);
   
   if (format === 'short') {

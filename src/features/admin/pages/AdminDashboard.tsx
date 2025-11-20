@@ -66,12 +66,12 @@ const AdminDashboard: React.FC = () => {
     // Count ALL users (including admins for admin dashboard)
     const totalUsers = users.length;
     
-    // Count ALL quizzes regardless of status
-    const totalQuizzes = quizzes.length;
-    
-    // Count quizzes by status for meaningful metrics
+    // Count ONLY approved quizzes (exclude drafts and rejected quizzes)
     const approvedQuizzes = quizzes.filter(q => q.status === 'approved').length;
     const publishedQuizzes = quizzes.filter(q => q.status === 'published').length;
+    const totalQuizzes = approvedQuizzes; // Only count approved quizzes
+    
+    // Count quizzes by status for meaningful metrics
     const pendingQuizzes = quizzes.filter(q => q.status === 'pending').length;
     const completedQuizzes = approvedQuizzes + publishedQuizzes; // Available for users
     

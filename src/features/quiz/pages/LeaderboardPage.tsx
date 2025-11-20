@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 import { FaCrown, FaUserCircle, FaTrophy, FaMedal, FaAward, FaFire, FaStar } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
 import { formatDate } from '../../../lib/utils/helpers';
+import { toast } from 'react-toastify';
 
 interface UserStat {
   userId: string;
@@ -47,6 +49,7 @@ interface OverallStats {
 const LeaderboardPage: React.FC = () => {
   // Safe translation hook with error handling
   const { t, ready } = useTranslation();
+  const navigate = useNavigate();
   
   const [topUsers, setTopUsers] = useState<UserStat[]>([]);
   const [topQuizzes, setTopQuizzes] = useState<QuizStat[]>([]);
@@ -64,18 +67,26 @@ const LeaderboardPage: React.FC = () => {
   // Calculate comprehensive leaderboard data - Move before conditional return
   useEffect(() => {
     if (!ready) return; // Skip if i18n not ready
+    if (!user) {
+      console.warn('⚠️ User not authenticated, redirecting...');
+      setLoading(false);
+      return;
+    }
     
     const fetchLeaderboardData = async () => {
       setLoading(true);
       try {
-        console.log('🏆 Fetching leaderboard data...');
+        console.log('🏆 Fetching leaderboard data for user:', user.uid);
         
         // Get all quiz results
         const resultsQuery = query(collection(db, 'quizResults'), orderBy('completedAt', 'desc'));
         const resultsSnapshot = await getDocs(resultsQuery);
         
-        // Get all quizzes
-        const quizzesQuery = query(collection(db, 'quizzes'), where('isPublished', '==', true));
+        // Get all APPROVED quizzes (matching Firestore rules)
+        const quizzesQuery = query(
+          collection(db, 'quizzes'), 
+          where('status', '==', 'approved')
+        );
         const quizzesSnapshot = await getDocs(quizzesQuery);
         
         // Get all users
@@ -117,7 +128,7 @@ const LeaderboardPage: React.FC = () => {
         });
 
         // Calculate user statistics
-        const userStats = new Map<string, UserStat>();
+        const userStats = new Map<string, UserStat & { lastActivityDate: Date }>();
         const quizStats = new Map<string, QuizStat>();
         let totalScore = 0;
         let totalAttempts = 0;
@@ -143,21 +154,31 @@ const LeaderboardPage: React.FC = () => {
               averageScore: 0,
               perfectScores: 0,
               recentActivity: formatDate(completedAt, 'short'),
+              lastActivityDate: completedAt, // Track actual Date for activeToday calculation
               badge: 'beginner'
             });
           }
 
           const userStat = userStats.get(userId)!;
           userStat.totalAttempts++;
-          userStat.totalScore += result.score || 0;
           
-          if (result.score === 100) {
+          // Normalize score to 0-100 percentage BEFORE adding to totalScore
+          // Multiplayer: use percentage field (0-100), Single-player: use score field (0-100)
+          const normalizedScore = (result as any).mode === 'multiplayer' 
+            ? ((result as any).percentage || 0)
+            : (result.score || 0);
+          
+          userStat.totalScore += normalizedScore;
+          
+          if (normalizedScore === 100) {
             userStat.perfectScores++;
             perfectScoresCount++;
           }
           
-          if (completedAt > new Date(userStat.recentActivity)) {
+          // Update most recent activity
+          if (completedAt > userStat.lastActivityDate) {
             userStat.recentActivity = formatDate(completedAt, 'short');
+            userStat.lastActivityDate = completedAt;
           }
 
           // Quiz statistics
@@ -182,19 +203,21 @@ const LeaderboardPage: React.FC = () => {
           const quizStat = quizStats.get(quizId)!;
           quizStat.totalAttempts++;
           quizStat.totalCompletions++;
-          quizStat.averageScore = ((quizStat.averageScore * (quizStat.totalAttempts - 1)) + (result.score || 0)) / quizStat.totalAttempts;
+          
+          quizStat.averageScore = ((quizStat.averageScore * (quizStat.totalAttempts - 1)) + normalizedScore) / quizStat.totalAttempts;
           
           if (completedAt > new Date(quizStat.recentActivity)) {
             quizStat.recentActivity = formatDate(completedAt, 'short');
           }
 
-          totalScore += result.score || 0;
+          totalScore += normalizedScore;
           totalAttempts++;
         });
 
         // Add all users to leaderboard (including those without quiz results)
         usersMap.forEach((userData, userId) => {
           if (!userStats.has(userId)) {
+            const longAgo = new Date(2020, 0, 1); // Users without activity won't count as activeToday
             userStats.set(userId, {
               userId,
               displayName: userData.displayName || userData.email?.split('@')[0] || t('leaderboard.anonymous'),
@@ -204,7 +227,8 @@ const LeaderboardPage: React.FC = () => {
               totalAttempts: 0,
               averageScore: 0,
               perfectScores: 0,
-              recentActivity: formatDate(new Date(), 'short'),
+              recentActivity: formatDate(longAgo, 'short'),
+              lastActivityDate: longAgo,
               badge: 'beginner'
             });
           }
@@ -257,10 +281,9 @@ const LeaderboardPage: React.FC = () => {
           setCurrentUserRank(userIndex >= 0 ? userIndex + 1 : null);
         }
 
-        // Calculate overall statistics
+        // Calculate overall statistics - count users who completed quizzes today
         const activeToday = Array.from(userStats.values()).filter(u => {
-          const lastActivity = new Date(u.recentActivity);
-          return lastActivity >= today;
+          return u.lastActivityDate >= today;
         }).length;
 
         setStats({
@@ -274,8 +297,25 @@ const LeaderboardPage: React.FC = () => {
 
         console.log('✅ Leaderboard data processed successfully');
         
-      } catch (error) {
+      } catch (error: any) {
         console.error('❌ Error fetching leaderboard data:', error);
+        console.error('❌ Error code:', error?.code);
+        console.error('❌ Error message:', error?.message);
+        
+        // Set empty data to prevent UI crash
+        setTopUsers([]);
+        setTopQuizzes([]);
+        setStats({
+          totalUsers: 0,
+          totalQuizzes: 0,
+          totalAttempts: 0,
+          averageScore: 0,
+          activeToday: 0,
+          perfectScoresCount: 0
+        });
+        
+        // Show user-friendly error message
+        toast.error(t('leaderboard.loadError') || 'Cannot load leaderboard data. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -590,7 +630,7 @@ const LeaderboardPage: React.FC = () => {
                     <span className="text-gray-500 text-sm capitalize">{quiz.category}</span>
                   </div>
                   
-                  <div className="space-y-2">
+                  <div className="space-y-2 mb-4">
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600 text-sm">{t('leaderboard.plays')}:</span>
                       <span className="font-semibold text-blue-600">{quiz.totalAttempts}</span>
@@ -604,6 +644,15 @@ const LeaderboardPage: React.FC = () => {
                       <span className="text-gray-500 text-xs">{quiz.recentActivity}</span>
                     </div>
                   </div>
+                  
+                  {/* Navigation Button */}
+                  <button
+                    onClick={() => navigate(`/quiz/${quiz.id}`)}
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2.5 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+                  >
+                    <FaFire className="w-4 h-4" />
+                    {t('leaderboard.playNow')}
+                  </button>
                 </div>
               ))
             )}

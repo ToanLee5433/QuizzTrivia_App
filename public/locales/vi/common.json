@@ -552,7 +552,7 @@
         "minutes": "phút",
         "required": "Bắt buộc",
         "tip": "Xem tài liệu này trước khi làm quiz để đạt kết quả tốt hơn.",
-        "estimated": "~{{minutes}} phút",
+        "estimated": "{{minutes}} phút",
         "type": {
           "video": "Video",
           "pdf": "PDF",
@@ -565,6 +565,9 @@
       },
       "cover": {
         "alt": "Ảnh bìa của {{title}}"
+      },
+      "actions": {
+        "backToQuizzes": "Quay lại danh sách Quiz"
       },
       "cta": {
         "title": "Sẵn sàng bắt đầu?",
@@ -599,9 +602,6 @@
         "description": "Quiz bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.",
         "notFound": "Không tìm thấy quiz",
         "loadFailed": "Không thể tải quiz"
-      },
-      "actions": {
-        "backToQuizzes": "Quay lại danh sách Quiz"
       }
     },
     "quizSettings": {
@@ -1726,6 +1726,7 @@
     "viewMore": "Xem thêm",
     "yourPosition": "Vị trí của bạn",
     "viewAllCount": "Xem tất cả",
+    "playNow": "Chơi ngay",
     "badges": {
       "legendary": "Huyền thoại",
       "expert": "Chuyên gia",

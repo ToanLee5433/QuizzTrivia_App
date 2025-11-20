@@ -557,7 +557,7 @@
         "minutes": "min",
         "required": "Required",
         "tip": "Review these materials before taking the quiz for better results.",
-        "estimated": "~{{minutes}} min",
+        "estimated": "{{minutes}} min",
         "type": {
           "video": "Video",
           "pdf": "PDF",
@@ -570,6 +570,9 @@
       },
       "cover": {
         "alt": "{{title}} cover image"
+      },
+      "actions": {
+        "backToQuizzes": "Back to Quizzes"
       },
       "cta": {
         "title": "Ready to Start?",
@@ -604,9 +607,6 @@
         "description": "The quiz you are looking for does not exist or has been removed.",
         "notFound": "Quiz not found",
         "loadFailed": "Failed to load quiz"
-      },
-      "actions": {
-        "backToQuizzes": "Back to Quizzes"
       }
     },
     "quizSettings": {
@@ -1759,6 +1759,7 @@
     "viewMore": "View more",
     "yourPosition": "Your position",
     "viewAllCount": "View All",
+    "playNow": "Play Now",
     "badges": {
       "legendary": "Legendary",
       "expert": "Expert",

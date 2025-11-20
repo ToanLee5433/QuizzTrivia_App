@@ -87,6 +87,16 @@ const MyQuizzesPage: React.FC = () => {
       for (const docSnap of snapshot.docs) {
         const data = docSnap.data();
         
+        // Debug: Log password field values
+        if (data.havePassword) {
+          console.log('🔍 Quiz password field:', {
+            id: docSnap.id,
+            title: data.title,
+            havePassword: data.havePassword,
+            type: typeof data.havePassword
+          });
+        }
+        
         // Load edit requests for this quiz
         const editRequestsQuery = query(
           collection(db, 'editRequests'),
@@ -100,14 +110,40 @@ const MyQuizzesPage: React.FC = () => {
           approvedAt: doc.data().approvedAt?.toDate()
         })) as EditRequest[];
         
+        // Load quiz results to calculate real stats
+        const resultsQuery = query(
+          collection(db, 'quizResults'),
+          where('quizId', '==', docSnap.id)
+        );
+        const resultsSnapshot = await getDocs(resultsQuery);
+        
+        // Calculate real stats from quiz results
+        const results = resultsSnapshot.docs.map(doc => doc.data());
+        const completions = results.filter(r => r.completed === true || r.score !== undefined).length;
+        
+        // Calculate average score, normalizing to 0-100 percentage
+        // For multiplayer: use percentage field (0-100)
+        // For single-player: use score field (already 0-100)
+        const totalScore = results.reduce((sum, r) => {
+          if (r.mode === 'multiplayer') {
+            // Multiplayer has separate percentage field
+            return sum + (r.percentage || 0);
+          } else {
+            // Single-player score is already percentage
+            return sum + (r.score || 0);
+          }
+        }, 0);
+        const averageScore = results.length > 0 ? totalScore / results.length : 0;
+        const attempts = results.length;
+        
         loadedQuizzes.push({
           id: docSnap.id,
           ...data,
-          // Ensure stats are included
+          // Use calculated stats from quiz results
           views: data.stats?.views || data.views || 0,
-          attempts: data.stats?.attempts || data.attempts || 0,
-          completions: data.stats?.completions || data.completions || 0,
-          averageScore: data.stats?.averageScore || data.averageScore || 0,
+          attempts: attempts,
+          completions: completions,
+          averageScore: averageScore,
           createdAt: data.createdAt && typeof data.createdAt.toDate === 'function' 
             ? data.createdAt.toDate() 
             : data.createdAt instanceof Date 
@@ -366,8 +402,10 @@ const MyQuizzesPage: React.FC = () => {
   const totalViews = quizzes.reduce((sum, q) => sum + (q.views || 0), 0);
   const totalAttempts = quizzes.reduce((sum, q) => sum + (q.attempts || 0), 0);
   const totalCompletions = quizzes.reduce((sum, q) => sum + (q.completions || 0), 0);
-  const averageScore = quizzes.length > 0
-    ? quizzes.reduce((sum, q) => sum + (q.averageScore || 0), 0) / quizzes.length
+  // Calculate average score only from quizzes that have attempts (at least 1 person has taken the quiz)
+  const quizzesWithAttempts = quizzes.filter(q => (q.attempts || 0) > 0);
+  const averageScore = quizzesWithAttempts.length > 0
+    ? quizzesWithAttempts.reduce((sum, q) => sum + (q.averageScore || 0), 0) / quizzesWithAttempts.length
     : 0;
 
   if (!user || (user.role !== 'creator' && user.role !== 'admin')) {

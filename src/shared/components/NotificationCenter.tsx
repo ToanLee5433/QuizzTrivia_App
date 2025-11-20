@@ -88,15 +88,16 @@ const NotificationCenter: React.FC = () => {
   if (!user) return null;
 
   return (
-    <div className="relative z-[100]">
+    <div className="relative z-[9999]">
       {/* Notification Bell */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors"
+        className="relative p-2 text-gray-600 hover:text-gray-900 transition-all duration-300 hover:scale-110"
+        aria-label="Notifications"
       >
-        <span className="text-xl">🔔</span>
+        <span className="text-2xl">🔔</span>
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse shadow-lg">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -104,23 +105,34 @@ const NotificationCenter: React.FC = () => {
 
       {/* Notification Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-[200]">
+        <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 z-[10000] overflow-hidden">
           {/* Header */}
-          <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">{t("notifications.title")}</h3>
+          <div className="px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="text-2xl">🔔</span>
+              <h3 className="text-lg font-bold text-white">{t("notifications.title")}</h3>
+              {unreadCount > 0 && (
+                <span className="bg-white text-blue-600 px-2 py-0.5 rounded-full text-xs font-bold">
+                  {unreadCount}
+                </span>
+              )}
+            </div>
             <div className="flex items-center space-x-2">
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="text-sm text-blue-600 hover:text-blue-800"
-                >{t("notifications.markAllRead")}
+                  className="text-sm text-white hover:text-blue-100 font-medium transition-colors px-3 py-1 rounded-lg hover:bg-white/20"
+                  title={t("notifications.markAllRead")}
+                >
+                  ✓ {t("notifications.markAllRead")}
                 </button>
               )}
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-white hover:text-blue-100 transition-colors p-1"
+                aria-label="Close"
               >
-                <span className="text-lg">&times;</span>
+                <span className="text-2xl">&times;</span>
               </button>
             </div>
           </div>
@@ -247,7 +259,7 @@ const NotificationCenter: React.FC = () => {
       {/* Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40"
+          className="fixed inset-0 z-[9998] bg-black/20 backdrop-blur-sm"
           onClick={() => setIsOpen(false)}
         />
       )}

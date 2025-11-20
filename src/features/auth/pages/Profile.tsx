@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import ImageUploader from '../../../components/ImageUploader';
 import { ImageUploadResult } from '../../../services/imageUploadService';
+import { formatDate } from '../../../lib/utils/helpers';
 
 const Profile: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -423,7 +424,9 @@ const Profile: React.FC = () => {
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-gray-900">{user.displayName || user.email}</h1>
               <p className="text-gray-600">{user.email}</p>
-              <p className="text-sm text-gray-500 mt-1">{t('profile.memberSince')} {new Date().toLocaleDateString(i18n.language)}</p>
+              <p className="text-sm text-gray-500 mt-1">
+                {t('profile.memberSince')} {user.createdAt ? formatDate(new Date(user.createdAt), 'long') : formatDate(new Date(), 'long')}
+              </p>
             </div>
             <button
               onClick={() => setTab('settings')}

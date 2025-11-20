@@ -50,9 +50,10 @@ const Home: React.FC = () => {
       setStatsLoading(true);
       
       // Lấy dữ liệu thực từ Firebase - CHỈ QUIZ APPROVED
-      const [quizzesSnapshot, usersSnapshot] = await Promise.all([
+      const [quizzesSnapshot, usersSnapshot, quizResultsSnapshot] = await Promise.all([
         getDocs(query(collection(db, 'quizzes'), where('status', '==', 'approved'))),
-        getDocs(collection(db, 'users'))
+        getDocs(collection(db, 'users')),
+        getDocs(collection(db, 'quizResults'))
       ]);
       
       // Đếm chỉ users ACTIVE (không bị xoá và isActive = true)
@@ -67,8 +68,11 @@ const Home: React.FC = () => {
         user.role === 'creator' || user.role === 'admin'
       );
       
-      // Quiz hoàn thành tạm thời = 0 vì chưa có data về quiz results
-      const completedQuizzes = 0;
+      // Đếm số quiz đã hoàn thành từ quizResults collection
+      const completedQuizzes = quizResultsSnapshot.docs.filter(doc => {
+        const data = doc.data();
+        return data.completed === true || data.score !== undefined;
+      }).length;
       
       setStats({
         totalQuizzes: quizzesSnapshot.size,

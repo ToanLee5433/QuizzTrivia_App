@@ -71,13 +71,16 @@ const AdminStats: React.FC = () => {
     const quizCreatorIds = new Set(quizzes.map((q: any) => q.createdBy).filter(Boolean));
     const totalCreators = Math.max(creatorUsers, quizCreatorIds.size);
     
+    // Count only approved quizzes (exclude drafts)
+    const approvedQuizzes = quizzes.filter((q: any) => q.status === 'approved').length;
+    
     // More realistic completion estimates based on actual quiz count
     const estimatedCompletions = Math.floor(publishedQuizzes * 2.5); // Average 2.5 attempts per published quiz
     
     return {
       totalUsers: users.length,
       activeUsers: Math.floor(users.length * 0.65), // More conservative estimate
-      totalQuizzes: quizzes.length,
+      totalQuizzes: approvedQuizzes, // Only count approved quizzes (exclude drafts)
       publishedQuizzes: publishedQuizzes, // Quizzes available to users
       totalCreators: totalCreators, // Users who have created quizzes
       completedQuizzes: estimatedCompletions, // Quiz completion attempts

@@ -143,6 +143,9 @@ export const useQuizData = () => {
     setError(null);
 
     try {
+      // Strategy: Check Redux first for performance (avoid Firestore read)
+      // Redux contains quiz metadata but NOT questions/resources
+      // Load questions from Firestore if missing
       const foundQuiz = quizzes.find(q => q.id === id);
 
       if (foundQuiz) {
@@ -175,8 +178,21 @@ export const useQuizData = () => {
             const quizWithResources: Quiz = enrichedMetadata.resources
               ? { ...foundQuiz, resources: enrichedMetadata.resources }
               : foundQuiz;
-            setQuiz(quizWithResources);
-            dispatch(setCurrentQuiz(quizWithResources));
+            
+            // Convert Timestamps/Dates to ISO strings for Redux serialization
+            const serializableQuiz = {
+              ...quizWithResources,
+              createdAt: quizWithResources.createdAt instanceof Date ? quizWithResources.createdAt.toISOString() : 
+                (quizWithResources.createdAt as any)?.toDate?.()?.toISOString() || new Date().toISOString(),
+              updatedAt: quizWithResources.updatedAt instanceof Date ? quizWithResources.updatedAt.toISOString() : 
+                (quizWithResources.updatedAt as any)?.toDate?.()?.toISOString() || new Date().toISOString(),
+              approvedAt: quizWithResources.approvedAt ? 
+                (quizWithResources.approvedAt instanceof Date ? quizWithResources.approvedAt.toISOString() : 
+                  (quizWithResources.approvedAt as any)?.toDate?.()?.toISOString() || new Date().toISOString()) : undefined
+            };
+            
+            setQuiz(serializableQuiz);
+            dispatch(setCurrentQuiz(serializableQuiz));
 
             if (user) {
               quizStatsService.trackView(id, user.uid);
@@ -200,8 +216,83 @@ export const useQuizData = () => {
         }
 
         setNeedsPassword(false);
-        setQuiz(foundQuiz);
-        dispatch(setCurrentQuiz(foundQuiz));
+        
+        // Check if quiz has questions, if not, load them from Firestore
+        if (!foundQuiz.questions || foundQuiz.questions.length === 0) {
+          console.log('⚠️ Quiz from Redux has no questions, loading from Firestore...');
+          
+          // Check status before loading questions
+          if (foundQuiz.status !== 'approved') {
+            console.error('❌ Quiz not approved:', foundQuiz.status);
+            setError('Quiz này đang chờ phê duyệt hoặc chưa có câu hỏi. Vui lòng quay lại sau!');
+            setLoading(false);
+            return;
+          }
+          
+          try {
+            const questionsRef = collection(db, 'quizzes', id, 'questions');
+            const questionsSnap = await getDocs(questionsRef);
+            
+            const questions = questionsSnap.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            })) as Question[];
+            
+            console.log('✅ Loaded questions from Firestore:', questions.length);
+            
+            if (questions.length === 0) {
+              setError('Quiz này chưa có câu hỏi. Vui lòng quay lại sau!');
+              setLoading(false);
+              return;
+            }
+            
+            // Update quiz with questions
+            const quizWithQuestions = { ...foundQuiz, questions };
+            
+            // Convert Timestamps/Dates to ISO strings for Redux serialization
+            const serializableQuiz = {
+              ...quizWithQuestions,
+              createdAt: quizWithQuestions.createdAt instanceof Date ? quizWithQuestions.createdAt.toISOString() : 
+                (quizWithQuestions.createdAt as any)?.toDate?.()?.toISOString() || new Date().toISOString(),
+              updatedAt: quizWithQuestions.updatedAt instanceof Date ? quizWithQuestions.updatedAt.toISOString() : 
+                (quizWithQuestions.updatedAt as any)?.toDate?.()?.toISOString() || new Date().toISOString(),
+              approvedAt: quizWithQuestions.approvedAt ? 
+                (quizWithQuestions.approvedAt instanceof Date ? quizWithQuestions.approvedAt.toISOString() : 
+                  (quizWithQuestions.approvedAt as any)?.toDate?.()?.toISOString() || new Date().toISOString()) : undefined
+            };
+            
+            setQuiz(serializableQuiz);
+            dispatch(setCurrentQuiz(serializableQuiz));
+            
+          } catch (questionsError) {
+            console.error('❌ Error loading questions:', questionsError);
+            if (isPermissionDeniedError(questionsError)) {
+              setError('Không có quyền truy cập câu hỏi của quiz này');
+            } else {
+              setError('Không thể tải câu hỏi. Vui lòng thử lại sau!');
+            }
+            setLoading(false);
+            return;
+          }
+        } else {
+          // Quiz already has questions from Redux
+          console.log('✅ Quiz has questions from Redux:', foundQuiz.questions.length);
+          
+          // Convert Timestamps/Dates to ISO strings for Redux serialization
+          const serializableQuiz = {
+            ...foundQuiz,
+            createdAt: foundQuiz.createdAt instanceof Date ? foundQuiz.createdAt.toISOString() : 
+              (foundQuiz.createdAt as any)?.toDate?.()?.toISOString() || new Date().toISOString(),
+            updatedAt: foundQuiz.updatedAt instanceof Date ? foundQuiz.updatedAt.toISOString() : 
+              (foundQuiz.updatedAt as any)?.toDate?.()?.toISOString() || new Date().toISOString(),
+            approvedAt: foundQuiz.approvedAt ? 
+              (foundQuiz.approvedAt instanceof Date ? foundQuiz.approvedAt.toISOString() : 
+                (foundQuiz.approvedAt as any)?.toDate?.()?.toISOString() || new Date().toISOString()) : undefined
+          };
+          
+          setQuiz(serializableQuiz);
+          dispatch(setCurrentQuiz(serializableQuiz));
+        }
 
         if (user) {
           quizStatsService.trackView(id, user.uid);
@@ -223,9 +314,17 @@ export const useQuizData = () => {
         return;
       }
 
-      console.log('✅ Loaded metadata:', metadata.title, 'visibility:', metadata.visibility);
+      console.log('✅ Loaded metadata:', metadata.title, 'visibility:', metadata.visibility, 'status:', metadata.status);
       const enrichedMetadata = enhanceMetadata(metadata);
       setQuizMetadata(enrichedMetadata);
+
+      // Check quiz status before loading questions
+      if (metadata.status !== 'approved') {
+        console.error('❌ Quiz not approved:', metadata.status);
+        setError('Quiz này đang chờ phê duyệt hoặc chưa có câu hỏi. Vui lòng quay lại sau!');
+        setLoading(false);
+        return;
+      }
 
       try {
         const questionsRef = collection(db, 'quizzes', id, 'questions');
@@ -243,9 +342,21 @@ export const useQuizData = () => {
           questions
         } as Quiz;
 
+        // Convert Timestamps/Dates to ISO strings for Redux serialization
+        const serializableQuiz = {
+          ...completeQuiz,
+          createdAt: completeQuiz.createdAt instanceof Date ? completeQuiz.createdAt.toISOString() : 
+            (completeQuiz.createdAt as any)?.toDate?.()?.toISOString() || new Date().toISOString(),
+          updatedAt: completeQuiz.updatedAt instanceof Date ? completeQuiz.updatedAt.toISOString() : 
+            (completeQuiz.updatedAt as any)?.toDate?.()?.toISOString() || new Date().toISOString(),
+          approvedAt: completeQuiz.approvedAt ? 
+            (completeQuiz.approvedAt instanceof Date ? completeQuiz.approvedAt.toISOString() : 
+              (completeQuiz.approvedAt as any)?.toDate?.()?.toISOString() || new Date().toISOString()) : undefined
+        };
+
         setNeedsPassword(false);
-        setQuiz(completeQuiz);
-        dispatch(setCurrentQuiz(completeQuiz));
+        setQuiz(serializableQuiz);
+        dispatch(setCurrentQuiz(serializableQuiz));
 
         if (user) {
           quizStatsService.trackView(id, user.uid);
