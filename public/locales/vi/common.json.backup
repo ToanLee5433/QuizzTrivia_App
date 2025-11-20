@@ -444,6 +444,166 @@
         "hard": "Khó"
       }
     },
+    "quizOverview": {
+      "breadcrumb": {
+        "quizzes": "Các Quiz"
+      },
+      "difficulty": {
+        "easy": "Dễ",
+        "medium": "Trung bình",
+        "hard": "Khó",
+        "title": "Độ khó"
+      },
+      "status": {
+        "locked": "Yêu cầu mật khẩu",
+        "approved": "Đã duyệt",
+        "draft": "Bản nháp",
+        "pending": "Đang chờ duyệt",
+        "rejected": "Bị từ chối",
+        "archived": "Đã lưu trữ"
+      },
+      "badges": {
+        "featured": "Nổi bật",
+        "status": "Trạng thái"
+      },
+      "visibility": {
+        "public": "Công khai",
+        "private": "Riêng tư",
+        "unlisted": "Không công khai",
+        "password": "Mật khẩu"
+      },
+      "quizType": {
+        "standard": "Quiz tiêu chuẩn",
+        "Standard quiz": "Quiz tiêu chuẩn",
+        "withMaterials": "Quiz kèm tài liệu"
+      },
+      "questionTypes": {
+        "multiple": "Trắc nghiệm",
+        "Multiple choice": "Trắc nghiệm",
+        "boolean": "Đúng/Sai",
+        "short_answer": "Tự luận ngắn",
+        "image": "Chọn hình ảnh",
+        "checkbox": "Trắc nghiệm nhiều đáp án",
+        "rich_content": "Nội dung phong phú",
+        "audio": "Nghe hiểu âm thanh",
+        "ordering": "Sắp xếp thứ tự",
+        "matching": "Ghép cặp",
+        "fill_blanks": "Điền vào chỗ trống",
+        "unknown": "Câu hỏi"
+      },
+      "stats": {
+        "reviews": "{{count}} đánh giá",
+        "players": "{{count}} người chơi",
+        "totalPlayers": "Tổng người chơi",
+        "avgScore": "Điểm trung bình",
+        "title": "Thống kê",
+        "lastUpdated": "Cập nhật lần cuối"
+      },
+      "insights": {
+        "title": "Thông tin nổi bật",
+        "titleSub": "Tổng quan hiệu suất",
+        "views": "Lượt xem",
+        "viewsSub": "Tổng cộng",
+        "attempts": "Lượt làm",
+        "retakeAllowed": "Cho phép làm lại",
+        "singleAttempt": "Chỉ 1 lần",
+        "avgScore": "Điểm TB",
+        "outOfHundred": "Trên thang 100",
+        "completion": "Hoàn thành",
+        "completionSub": "Tỉ lệ hoàn thành"
+      },
+      "sections": {
+        "overview": "Tổng quan Quiz",
+        "questionsPreview": "Xem trước câu hỏi",
+        "questionsFull": "Tất cả câu hỏi",
+        "totalQuestions": "{{countFormatted}} câu hỏi",
+        "questionDifficulty": "Độ khó",
+        "answerCount": "{{countFormatted}} đáp án",
+        "answersLabel": "Các lựa chọn trả lời",
+        "expandQuestion": "Xem chi tiết",
+        "collapseQuestion": "Ẩn chi tiết",
+        "explanationLabel": "Giải thích",
+        "answerPlaceholder": "Chưa có nội dung đáp án",
+        "correctAnswer": "Đáp án đúng",
+        "noAnswers": "Chưa có đáp án nào cho câu hỏi này.",
+        "emptyQuestion": "Câu hỏi chưa có tiêu đề",
+        "moreQuestions": "và {{count}} câu hỏi nữa..."
+      },
+      "facts": {
+        "minutes": "phút",
+        "questions": "câu hỏi",
+        "players": "người chơi",
+        "points": "điểm",
+        "total": "tổng cộng"
+      },
+      "meta": {
+        "category": "Chủ đề",
+        "created": "Ngày tạo",
+        "updated": "Cập nhật lần cuối",
+        "quizType": "Loại quiz",
+        "notAvailable": "Không có",
+        "N/A": "Không có",
+        "anonymous": "Ẩn danh",
+        "creatorAvatar": "Ảnh đại diện của {{name}}"
+      },
+      "resources": {
+        "title": "Tài liệu học tập",
+        "items": "mục",
+        "minutes": "phút",
+        "required": "Bắt buộc",
+        "tip": "Xem tài liệu này trước khi làm quiz để đạt kết quả tốt hơn.",
+        "estimated": "{{minutes}} phút",
+        "type": {
+          "video": "Video",
+          "pdf": "PDF",
+          "image": "Hình ảnh",
+          "audio": "Âm thanh",
+          "link": "Liên kết",
+          "slides": "Slide",
+          "default": "Tài liệu"
+        }
+      },
+      "cover": {
+        "alt": "Ảnh bìa của {{title}}"
+      },
+      "actions": {
+        "backToQuizzes": "Quay lại danh sách Quiz"
+      },
+      "cta": {
+        "title": "Sẵn sàng bắt đầu?",
+        "start": "Bắt đầu Quiz",
+        "unlock": "Mở khóa Quiz",
+        "retake": "Làm lại Quiz",
+        "settings": "Cài đặt Quiz",
+        "flashcards": "Học với Flashcard"
+      },
+      "access": {
+        "title": "Quyền truy cập & chia sẻ",
+        "subtitle": "Tùy chỉnh cách người chơi tham gia",
+        "visibility": "Quyền hiển thị",
+        "security": "Bảo mật",
+        "password": "Bảo vệ bằng mật khẩu",
+        "open": "Mở cho tất cả",
+        "retake": "Chính sách làm lại",
+        "retakeAllowed": "Cho phép làm lại",
+        "retakeDisabled": "Chỉ 1 lần",
+        "type": "Chế độ",
+        "shareLabel": "Liên kết chia sẻ",
+        "copyLink": "Sao chép liên kết",
+        "copied": "Đã sao chép!",
+        "noShareLink": "Liên kết chia sẻ sẽ có sau khi xuất bản",
+        "locked": "Quiz này được bảo vệ bằng mật khẩu",
+        "unlockRequired": "Nhập mật khẩu để bắt đầu",
+        "ready": "Sẵn sàng bắt đầu",
+        "noRestrictions": "Không có hạn chế"
+      },
+      "errors": {
+        "title": "Không tìm thấy Quiz",
+        "description": "Quiz bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.",
+        "notFound": "Không tìm thấy quiz",
+        "loadFailed": "Không thể tải quiz"
+      }
+    },
     "quizSettings": {
       "title": "Cài đặt Quiz",
       "subtitle": "Tùy chỉnh trải nghiệm làm quiz của bạn",
@@ -1722,12 +1882,7 @@
     "typeMessage": "Nhập tin nhắn...",
     "yourResult": "Kết quả của bạn",
     "chat": {
-      "title": "Trò chuyện",
-      "messageCount": "{{count}} tin nhắn",
-      "noMessages": "Chưa có tin nhắn",
-      "startConversation": "Bắt đầu trò chuyện với đội của bạn!",
-      "placeholder": "Nhập tin nhắn...",
-      "disabled": "Chat đã bị tắt"
+      "title": "Trò chuyện"
     },
     "errorBoundary": {
       "title": "Oops! Something went wrong",
@@ -1790,6 +1945,14 @@
     "questionsCount": "{{count}} câu hỏi",
     "checkmark": "✓",
     "secondsShort": "{{value}}s",
+    "chat": {
+      "title": "Trò chuyện",
+      "messageCount": "{{count}} tin nhắn",
+      "noMessages": "Chưa có tin nhắn",
+      "startConversation": "Bắt đầu trò chuyện với đội của bạn!",
+      "placeholder": "Nhập tin nhắn...",
+      "disabled": "Chat đã bị tắt"
+    },
     "quizSelector": {
       "title": "Chọn Quiz để chơi Multiplayer",
       "subtitle": "Chọn một quiz để tạo phòng hoặc tham gia chơi với bạn bè",
@@ -1853,7 +2016,8 @@
       "freezeTime": "Đóng băng",
       "freezeTimeDesc": "Dừng thời gian 5 giây",
       "used": "Đã dùng"
-    }
+    },
+    "kickPlayer": "Đuổi người chơi"
   },
   "nPermissionDeniedStorageRulesChuaDeployHoacChuaDun": "PERMISSION DENIED - Storage Rules chưa deploy hoặc chưa đúng!",
   "nav": {
@@ -4560,165 +4724,5 @@
     "noCategoryData": "Không có dữ liệu danh mục",
     "popularCategories": "Danh mục phổ biến",
     "progress": "Tiến độ"
-  },
-  "quizOverview": {
-    "breadcrumb": {
-      "quizzes": "Các Quiz"
-    },
-    "difficulty": {
-      "easy": "Dễ",
-      "medium": "Trung bình",
-      "hard": "Khó",
-      "title": "Độ khó"
-    },
-    "status": {
-      "locked": "Yêu cầu mật khẩu",
-      "approved": "Đã duyệt",
-      "draft": "Bản nháp",
-      "pending": "Đang chờ duyệt",
-      "rejected": "Bị từ chối",
-      "archived": "Đã lưu trữ"
-    },
-    "badges": {
-      "featured": "Nổi bật",
-      "status": "Trạng thái"
-    },
-    "visibility": {
-      "public": "Công khai",
-      "private": "Riêng tư",
-      "unlisted": "Không công khai",
-      "password": "Mật khẩu"
-    },
-    "quizType": {
-      "standard": "Quiz tiêu chuẩn",
-      "Standard quiz": "Quiz tiêu chuẩn",
-      "withMaterials": "Quiz kèm tài liệu"
-    },
-    "questionTypes": {
-      "multiple": "Trắc nghiệm",
-      "Multiple choice": "Trắc nghiệm",
-      "boolean": "Đúng/Sai",
-      "short_answer": "Tự luận ngắn",
-      "image": "Chọn hình ảnh",
-      "checkbox": "Trắc nghiệm nhiều đáp án",
-      "rich_content": "Nội dung phong phú",
-      "audio": "Nghe hiểu âm thanh",
-      "ordering": "Sắp xếp thứ tự",
-      "matching": "Ghép cặp",
-      "fill_blanks": "Điền vào chỗ trống",
-      "unknown": "Câu hỏi"
-    },
-    "stats": {
-      "reviews": "{{count}} đánh giá",
-      "players": "{{count}} người chơi",
-      "totalPlayers": "Tổng người chơi",
-      "avgScore": "Điểm trung bình",
-      "title": "Thống kê",
-      "lastUpdated": "Cập nhật lần cuối"
-    },
-    "insights": {
-      "title": "Thông tin nổi bật",
-      "titleSub": "Tổng quan hiệu suất",
-      "views": "Lượt xem",
-      "viewsSub": "Tổng cộng",
-      "attempts": "Lượt làm",
-      "retakeAllowed": "Cho phép làm lại",
-      "singleAttempt": "Chỉ 1 lần",
-      "avgScore": "Điểm TB",
-      "outOfHundred": "Trên thang 100",
-      "completion": "Hoàn thành",
-      "completionSub": "Tỉ lệ hoàn thành"
-    },
-    "sections": {
-      "overview": "Tổng quan Quiz",
-      "questionsPreview": "Xem trước câu hỏi",
-      "questionsFull": "Tất cả câu hỏi",
-      "totalQuestions": "{{countFormatted}} câu hỏi",
-      "questionDifficulty": "Độ khó",
-      "answerCount": "{{countFormatted}} đáp án",
-      "answersLabel": "Các lựa chọn trả lời",
-      "expandQuestion": "Xem chi tiết",
-      "collapseQuestion": "Ẩn chi tiết",
-      "explanationLabel": "Giải thích",
-      "answerPlaceholder": "Chưa có nội dung đáp án",
-      "correctAnswer": "Đáp án đúng",
-      "noAnswers": "Chưa có đáp án nào cho câu hỏi này.",
-      "emptyQuestion": "Câu hỏi chưa có tiêu đề",
-      "moreQuestions": "và {{count}} câu hỏi nữa..."
-    },
-    "facts": {
-      "minutes": "phút",
-      "questions": "câu hỏi",
-      "players": "người chơi",
-      "points": "điểm",
-      "total": "tổng cộng"
-    },
-    "meta": {
-      "category": "Chủ đề",
-      "created": "Ngày tạo",
-      "updated": "Cập nhật lần cuối",
-      "quizType": "Loại quiz",
-      "notAvailable": "Không có",
-      "N/A": "Không có",
-      "anonymous": "Ẩn danh",
-      "creatorAvatar": "Ảnh đại diện của {{name}}"
-    },
-    "resources": {
-      "title": "Tài liệu học tập",
-      "items": "mục",
-      "minutes": "phút",
-      "required": "Bắt buộc",
-      "tip": "Xem tài liệu này trước khi làm quiz để đạt kết quả tốt hơn.",
-      "estimated": "{{minutes}} phút",
-      "type": {
-        "video": "Video",
-        "pdf": "PDF",
-        "image": "Hình ảnh",
-        "audio": "Âm thanh",
-        "link": "Liên kết",
-        "slides": "Slide",
-        "default": "Tài liệu"
-      }
-    },
-    "cover": {
-      "alt": "Ảnh bìa của {{title}}"
-    },
-    "actions": {
-      "backToQuizzes": "Quay lại danh sách Quiz"
-    },
-    "cta": {
-      "title": "Sẵn sàng bắt đầu?",
-      "start": "Bắt đầu Quiz",
-      "unlock": "Mở khóa Quiz",
-      "retake": "Làm lại Quiz",
-      "settings": "Cài đặt Quiz",
-      "flashcards": "Học với Flashcard"
-    },
-    "access": {
-      "title": "Quyền truy cập & chia sẻ",
-      "subtitle": "Tùy chỉnh cách người chơi tham gia",
-      "visibility": "Quyền hiển thị",
-      "security": "Bảo mật",
-      "password": "Bảo vệ bằng mật khẩu",
-      "open": "Mở cho tất cả",
-      "retake": "Chính sách làm lại",
-      "retakeAllowed": "Cho phép làm lại",
-      "retakeDisabled": "Chỉ 1 lần",
-      "type": "Chế độ",
-      "shareLabel": "Liên kết chia sẻ",
-      "copyLink": "Sao chép liên kết",
-      "copied": "Đã sao chép!",
-      "noShareLink": "Liên kết chia sẻ sẽ có sau khi xuất bản",
-      "locked": "Quiz này được bảo vệ bằng mật khẩu",
-      "unlockRequired": "Nhập mật khẩu để bắt đầu",
-      "ready": "Sẵn sàng bắt đầu",
-      "noRestrictions": "Không có hạn chế"
-    },
-    "errors": {
-      "title": "Không tìm thấy Quiz",
-      "description": "Quiz bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.",
-      "notFound": "Không tìm thấy quiz",
-      "loadFailed": "Không thể tải quiz"
-    }
   }
 }

@@ -444,6 +444,171 @@
         "hard": "Hard"
       }
     },
+    "quizOverview": {
+      "breadcrumb": {
+        "quizzes": "Quizzes"
+      },
+      "difficulty": {
+        "easy": "Easy",
+        "Easy": "Easy",
+        "medium": "Medium",
+        "Medium": "Medium",
+        "hard": "Hard",
+        "Hard": "Hard",
+        "title": "Difficulty"
+      },
+      "status": {
+        "locked": "Password Protected",
+        "approved": "Approved",
+        "draft": "Draft",
+        "pending": "Pending review",
+        "rejected": "Rejected",
+        "archived": "Archived"
+      },
+      "badges": {
+        "featured": "Featured",
+        "status": "Status"
+      },
+      "visibility": {
+        "public": "Public",
+        "private": "Private",
+        "unlisted": "Unlisted",
+        "password": "password"
+      },
+      "quizType": {
+        "standard": "Standard quiz",
+        "Standard quiz": "Standard quiz",
+        "withMaterials": "With study materials"
+      },
+      "questionTypes": {
+        "multiple": "Multiple choice",
+        "Multiple choice": "Multiple choice",
+        "boolean": "True / False",
+        "short_answer": "Short answer",
+        "image": "Image choice",
+        "checkbox": "Multiple answers",
+        "rich_content": "Rich content",
+        "audio": "Audio comprehension",
+        "ordering": "Ordering",
+        "matching": "Matching pairs",
+        "fill_blanks": "Fill in the blanks",
+        "unknown": "Question"
+      },
+      "stats": {
+        "reviews": "{{count}} reviews",
+        "players": "{{count}} players",
+        "totalPlayers": "Total Players",
+        "avgScore": "Average Score",
+        "title": "Statistics",
+        "lastUpdated": "Last updated"
+      },
+      "insights": {
+        "title": "Key insights",
+        "titleSub": "Performance overview",
+        "views": "Views",
+        "viewsSub": "All-time",
+        "attempts": "Attempts",
+        "retakeAllowed": "Retakes allowed",
+        "singleAttempt": "Single attempt",
+        "avgScore": "Avg. Score",
+        "outOfHundred": "Out of 100",
+        "completion": "Completion",
+        "completionSub": "Completion rate"
+      },
+      "sections": {
+        "overview": "Quiz Overview",
+        "questionsPreview": "Questions Preview",
+        "questionsFull": "All questions",
+        "totalQuestions": "{{countFormatted}} questions",
+        "questionDifficulty": "Difficulty",
+        "answerCount": "{{countFormatted}} answers",
+        "answersLabel": "Answer choices",
+        "expandQuestion": "Show details",
+        "collapseQuestion": "Hide details",
+        "explanationLabel": "Explanation",
+        "answerPlaceholder": "No answer text provided",
+        "correctAnswer": "Correct answer",
+        "defaultImageLabel": "Question Image",
+        "noAnswers": "No answers provided for this question.",
+        "emptyQuestion": "Untitled question",
+        "moreQuestions": "and {{count}} more questions..."
+      },
+      "facts": {
+        "minutes": "minutes",
+        "questions": "questions",
+        "players": "players",
+        "points": "pts",
+        "total": "total"
+      },
+      "meta": {
+        "category": "Category",
+        "created": "Created on",
+        "updated": "Last updated",
+        "quizType": "Quiz type",
+        "notAvailable": "N/A",
+        "N/A": "N/A",
+        "anonymous": "Anonymous",
+        "Anonymous": "Anonymous",
+        "creatorAvatar": "{{name}}'s avatar"
+      },
+      "resources": {
+        "title": "Learning Materials",
+        "items": "items",
+        "minutes": "min",
+        "required": "Required",
+        "tip": "Review these materials before taking the quiz for better results.",
+        "estimated": "{{minutes}} min",
+        "type": {
+          "video": "Video",
+          "pdf": "PDF",
+          "image": "Image",
+          "audio": "Audio",
+          "link": "Link",
+          "slides": "Slides",
+          "default": "Resource"
+        }
+      },
+      "cover": {
+        "alt": "{{title}} cover image"
+      },
+      "actions": {
+        "backToQuizzes": "Back to Quizzes"
+      },
+      "cta": {
+        "title": "Ready to Start?",
+        "start": "Start Quiz",
+        "unlock": "Unlock Quiz",
+        "retake": "Retake Quiz",
+        "settings": "Quiz Settings",
+        "flashcards": "Study with Flashcards"
+      },
+      "access": {
+        "title": "Access & Sharing",
+        "subtitle": "Control how players join",
+        "visibility": "Visibility",
+        "security": "Security",
+        "password": "Password protected",
+        "open": "Open access",
+        "retake": "Retake policy",
+        "retakeAllowed": "Retakes allowed",
+        "retakeDisabled": "Single attempt",
+        "type": "Mode",
+        "shareLabel": "Share link",
+        "copyLink": "Copy share link",
+        "copied": "Copied!",
+        "noShareLink": "Share link will be available after publishing",
+        "locked": "This quiz is password protected",
+        "unlockRequired": "Enter password to start",
+        "ready": "Ready to start",
+        "noRestrictions": "No restrictions"
+      },
+      "errors": {
+        "title": "Quiz Not Found",
+        "description": "The quiz you are looking for does not exist or has been removed.",
+        "notFound": "Quiz not found",
+        "loadFailed": "Failed to load quiz"
+      }
+    },
     "quizSettings": {
       "title": "Quiz Settings",
       "subtitle": "Customize your quiz experience",
@@ -4065,6 +4230,7 @@
     "detectedBlanks": "Detected Blanks",
     "blankNumber": "Blank #{{number}}",
     "caseSensitive": "Case Sensitive",
+
     "fillBlanksHint": "Use {{answer}} syntax to mark blanks. Example: The capital of France is {{Paris}}",
     "save": "Save",
     "cancel": "Cancel",
@@ -4448,171 +4614,6 @@
       "upload": "Upload",
       "import": "Import",
       "export": "Export"
-    }
-  },
-  "quizOverview": {
-    "breadcrumb": {
-      "quizzes": "Quizzes"
-    },
-    "difficulty": {
-      "easy": "Easy",
-      "Easy": "Easy",
-      "medium": "Medium",
-      "Medium": "Medium",
-      "hard": "Hard",
-      "Hard": "Hard",
-      "title": "Difficulty"
-    },
-    "status": {
-      "locked": "Password Protected",
-      "approved": "Approved",
-      "draft": "Draft",
-      "pending": "Pending review",
-      "rejected": "Rejected",
-      "archived": "Archived"
-    },
-    "badges": {
-      "featured": "Featured",
-      "status": "Status"
-    },
-    "visibility": {
-      "public": "Public",
-      "private": "Private",
-      "unlisted": "Unlisted",
-      "password": "password"
-    },
-    "quizType": {
-      "standard": "Standard quiz",
-      "Standard quiz": "Standard quiz",
-      "withMaterials": "With study materials"
-    },
-    "questionTypes": {
-      "multiple": "Multiple choice",
-      "Multiple choice": "Multiple choice",
-      "boolean": "True / False",
-      "short_answer": "Short answer",
-      "image": "Image choice",
-      "checkbox": "Multiple answers",
-      "rich_content": "Rich content",
-      "audio": "Audio comprehension",
-      "ordering": "Ordering",
-      "matching": "Matching pairs",
-      "fill_blanks": "Fill in the blanks",
-      "unknown": "Question"
-    },
-    "stats": {
-      "reviews": "{{count}} reviews",
-      "players": "{{count}} players",
-      "totalPlayers": "Total Players",
-      "avgScore": "Average Score",
-      "title": "Statistics",
-      "lastUpdated": "Last updated"
-    },
-    "insights": {
-      "title": "Key insights",
-      "titleSub": "Performance overview",
-      "views": "Views",
-      "viewsSub": "All-time",
-      "attempts": "Attempts",
-      "retakeAllowed": "Retakes allowed",
-      "singleAttempt": "Single attempt",
-      "avgScore": "Avg. Score",
-      "outOfHundred": "Out of 100",
-      "completion": "Completion",
-      "completionSub": "Completion rate"
-    },
-    "sections": {
-      "overview": "Quiz Overview",
-      "questionsPreview": "Questions Preview",
-      "questionsFull": "All questions",
-      "totalQuestions": "{{countFormatted}} questions",
-      "questionDifficulty": "Difficulty",
-      "answerCount": "{{countFormatted}} answers",
-      "answersLabel": "Answer choices",
-      "expandQuestion": "Show details",
-      "collapseQuestion": "Hide details",
-      "explanationLabel": "Explanation",
-      "answerPlaceholder": "No answer text provided",
-      "correctAnswer": "Correct answer",
-      "defaultImageLabel": "Question Image",
-      "noAnswers": "No answers provided for this question.",
-      "emptyQuestion": "Untitled question",
-      "moreQuestions": "and {{count}} more questions..."
-    },
-    "facts": {
-      "minutes": "minutes",
-      "questions": "questions",
-      "players": "players",
-      "points": "pts",
-      "total": "total"
-    },
-    "meta": {
-      "category": "Category",
-      "created": "Created on",
-      "updated": "Last updated",
-      "quizType": "Quiz type",
-      "notAvailable": "N/A",
-      "N/A": "N/A",
-      "anonymous": "Anonymous",
-      "Anonymous": "Anonymous",
-      "creatorAvatar": "{{name}}'s avatar"
-    },
-    "resources": {
-      "title": "Learning Materials",
-      "items": "items",
-      "minutes": "min",
-      "required": "Required",
-      "tip": "Review these materials before taking the quiz for better results.",
-      "estimated": "{{minutes}} min",
-      "type": {
-        "video": "Video",
-        "pdf": "PDF",
-        "image": "Image",
-        "audio": "Audio",
-        "link": "Link",
-        "slides": "Slides",
-        "default": "Resource"
-      }
-    },
-    "cover": {
-      "alt": "{{title}} cover image"
-    },
-    "actions": {
-      "backToQuizzes": "Back to Quizzes"
-    },
-    "cta": {
-      "title": "Ready to Start?",
-      "start": "Start Quiz",
-      "unlock": "Unlock Quiz",
-      "retake": "Retake Quiz",
-      "settings": "Quiz Settings",
-      "flashcards": "Study with Flashcards"
-    },
-    "access": {
-      "title": "Access & Sharing",
-      "subtitle": "Control how players join",
-      "visibility": "Visibility",
-      "security": "Security",
-      "password": "Password protected",
-      "open": "Open access",
-      "retake": "Retake policy",
-      "retakeAllowed": "Retakes allowed",
-      "retakeDisabled": "Single attempt",
-      "type": "Mode",
-      "shareLabel": "Share link",
-      "copyLink": "Copy share link",
-      "copied": "Copied!",
-      "noShareLink": "Share link will be available after publishing",
-      "locked": "This quiz is password protected",
-      "unlockRequired": "Enter password to start",
-      "ready": "Ready to start",
-      "noRestrictions": "No restrictions"
-    },
-    "errors": {
-      "title": "Quiz Not Found",
-      "description": "The quiz you are looking for does not exist or has been removed.",
-      "notFound": "Quiz not found",
-      "loadFailed": "Failed to load quiz"
     }
   }
 }
