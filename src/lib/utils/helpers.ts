@@ -13,16 +13,41 @@ export const formatDuration = (minutes: number): string => {
 };
 
 /**
- * Format a date to Vietnamese locale
+ * Format a date to Vietnamese locale with various formats
+ * @param date - Date object or timestamp to format
+ * @param format - 'short' (dd/mm/yyyy), 'long' (dd/mm/yyyy HH:mm), 'full' (dd tháng mm năm yyyy HH:mm)
  */
-export const formatDate = (date: Date): string => {
+export const formatDate = (date: Date | number | string, format: 'short' | 'long' | 'full' = 'long'): string => {
+  const dateObj = date instanceof Date ? date : new Date(date);
+  
+  if (format === 'short') {
+    return new Intl.DateTimeFormat('vi-VN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(dateObj);
+  }
+  
+  if (format === 'long') {
+    return new Intl.DateTimeFormat('vi-VN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).format(dateObj);
+  }
+  
+  // format === 'full'
   return new Intl.DateTimeFormat('vi-VN', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-  }).format(date);
+    hour12: false
+  }).format(dateObj);
 };
 
 /**

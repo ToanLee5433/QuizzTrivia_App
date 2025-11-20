@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { RootState } from '../../../../lib/store';
 import { useQuizData, useQuizSession, useQuizTimer, useQuizNavigation } from './hooks';
 import Timer from './components/Timer';
@@ -113,7 +114,7 @@ interface QuizPageContentProps {
 }
 
 const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
   const {
     session,
     updateAnswer,
@@ -150,7 +151,40 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
     answers: session.answers
   });
 
-  const currentQuestion = quiz.questions[session.currentQuestionIndex];
+  const currentQuestion = quiz.questions?.[session.currentQuestionIndex];
+
+  // If no questions available (draft/pending quiz), show message
+  if (!quiz.questions || quiz.questions.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
+        <div className="text-center bg-white p-8 rounded-lg shadow-lg max-w-md">
+          <div className="text-yellow-500 mb-4">
+            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Quiz chưa sẵn sàng</h2>
+          <p className="text-gray-600 mb-6">
+            Quiz này đang chờ phê duyệt hoặc chưa có câu hỏi. Vui lòng quay lại sau!
+          </p>
+          <button
+            onClick={() => navigate('/creator/my-quizzes')}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Quay lại danh sách
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentQuestion) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   if (session.isCompleted) {
     return (

@@ -14,6 +14,7 @@ import {
   getCountFromServer
 } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
+import { formatDate } from '../../../lib/utils/helpers';
 import { 
   Users, 
   UserCheck, 
@@ -473,7 +474,7 @@ const CreatorManagement: React.FC = () => {
                         {creator.lastLoginAt ? (
                           <div className="flex items-center">
                             <Calendar className="w-4 h-4 mr-1" />
-                            {creator.lastLoginAt.toLocaleDateString('vi-VN')}
+                            {formatDate(creator.lastLoginAt, 'long')}
                           </div>
                         ) : (
                           t('creatorManagement.notLoggedIn')
@@ -555,7 +556,7 @@ const CreatorManagement: React.FC = () => {
                       </h4>
                       <p className="text-gray-600">{selectedCreator.email}</p>
                       <p className="text-sm text-gray-500">
-                        {t('creatorManagement.joinedOn')}: {selectedCreator.createdAt.toLocaleDateString('vi-VN')}
+                        {t('creatorManagement.joinedOn')}: {formatDate(selectedCreator.createdAt, 'long')}
                       </p>
                     </div>
                   </div>

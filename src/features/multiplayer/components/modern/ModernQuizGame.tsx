@@ -13,6 +13,9 @@ import {
   Trophy,
   Shield
 } from 'lucide-react';
+import soundService from '../../services/soundService';
+import musicService from '../../services/musicService';
+import { MemeOverlay } from '../MemeOverlay';
 
 // interface Answer {
 //   id: number;
@@ -100,6 +103,7 @@ const ModernQuizGame: React.FC<ModernQuizGameProps> = ({
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
+          soundService.play('timeup'); // 🔊 Time's up sound
           return 0;
         }
         return prev - 1;
@@ -109,18 +113,31 @@ const ModernQuizGame: React.FC<ModernQuizGameProps> = ({
     return () => clearInterval(timer);
   }, [isAnswered, timeLeft, isTimeFrozen]);
 
+  // Play game start sound on first mount + ensure game music is playing
+  useEffect(() => {
+    soundService.play('start'); // 🔊 Game start sound
+    
+    // 🎵 Ensure game music is playing (in case user joined mid-game)
+    if (!musicService.isPlaying('game')) {
+      musicService.play('game', true);
+    }
+  }, []);
+
   // Show result after answering
   useEffect(() => {
     if (isAnswered && correctAnswer !== undefined) {
       setShowResult(true);
       
-      // Confetti for correct answer
+      // Play sound + confetti for correct answer
       if (isCorrect) {
+        soundService.play('correct'); // 🔊 Correct answer sound
         confetti({
           particleCount: 100,
           spread: 70,
           origin: { y: 0.6 }
         });
+      } else {
+        soundService.play('wrong'); // 🔊 Wrong answer sound
       }
 
       // Reset for next question
@@ -135,17 +152,34 @@ const ModernQuizGame: React.FC<ModernQuizGameProps> = ({
     }
   }, [isAnswered, correctAnswer, isCorrect, timeLimit]);
 
-  // Haptic feedback at 5 seconds
+  // Haptic feedback at 5 seconds + tick sound
   useEffect(() => {
-    if (timeLeft === 5 && 'vibrate' in navigator) {
-      navigator.vibrate(200);
+    if (timeLeft === 5) {
+      soundService.play('tick'); // 🔊 Warning tick at 5s
+      if ('vibrate' in navigator) {
+        navigator.vibrate(200);
+      }
     }
   }, [timeLeft]);
+
+  // 🔊 Transition sound when moving to next question
+  useEffect(() => {
+    if (questionIndex > 0) {
+      soundService.play('transition'); // 🔊 Next question transition
+    }
+  }, [questionIndex]);
+
+  // 🤔 Show thinking meme when not answered and time > 5s
+  const showThinkingMeme = !isAnswered && timeLeft > 5 && timeLeft < (timeLimit - 5);
+  
+  // 🎉 Show result meme after answering
+  const showResultMeme = isAnswered && showResult;
 
   const handleAnswerSelect = (index: number) => {
     if (isAnswered || selectedAnswer !== null) return;
     
     setSelectedAnswer(index);
+    soundService.play('click'); // 🔊 Click sound
     
     // Haptic feedback
     if ('vibrate' in navigator) {
@@ -158,6 +192,8 @@ const ModernQuizGame: React.FC<ModernQuizGameProps> = ({
 
   const handleUsePowerUp = (type: string) => {
     if (!onUsePowerUp) return;
+
+    soundService.play('powerup'); // 🔊 Power-up sound
 
     switch (type) {
       case '50-50':
@@ -187,6 +223,14 @@ const ModernQuizGame: React.FC<ModernQuizGameProps> = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900 relative overflow-hidden">
+      {/* 🤔 Thinking Meme - Floating */}
+      <MemeOverlay 
+        type="thinking" 
+        show={showThinkingMeme}
+        position="top-right"
+        size="medium"
+      />
+
       {/* Animated Background */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-20 left-20 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
@@ -378,6 +422,15 @@ const ModernQuizGame: React.FC<ModernQuizGameProps> = ({
           >
             {isCorrect ? (
               <>
+                {/* 🎉 Success Meme */}
+                <MemeOverlay 
+                  type="success"
+                  show={showResultMeme}
+                  position="center"
+                  size="large"
+                  className="mb-6"
+                />
+
                 {/* Correct Answer */}
                 <motion.div
                   initial={{ scale: 0, rotate: -180 }}
@@ -430,6 +483,15 @@ const ModernQuizGame: React.FC<ModernQuizGameProps> = ({
               </>
             ) : (
               <>
+                {/* 😢 Fail Meme */}
+                <MemeOverlay 
+                  type="fail"
+                  show={showResultMeme}
+                  position="center"
+                  size="large"
+                  className="mb-6"
+                />
+
                 {/* Wrong Answer */}
                 <motion.div
                   initial={{ scale: 0, rotate: 180 }}

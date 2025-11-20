@@ -21,10 +21,13 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({
   error
 }) => {
   const { t } = useTranslation();
-  const [roomCode, setRoomCode] = useState('');
+  
+  // ⚡ Auto-fill room code từ URL (nếu có)
+  const pendingCode = (window as any).__pendingRoomCode || '';
+  const [roomCode, setRoomCode] = useState(pendingCode);
   const [password, setPassword] = useState('');
-  const [showPasswordField, setShowPasswordField] = useState(false);
-  const [step, setStep] = useState<'code' | 'password'>('code');
+  const [showPasswordField, setShowPasswordField] = useState(!!pendingCode);
+  const [step, setStep] = useState<'code' | 'password'>(pendingCode ? 'password' : 'code');
   const [checkingCode, setCheckingCode] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -52,8 +55,20 @@ const JoinRoomModal: React.FC<JoinRoomModalProps> = ({
     setPassword('');
     setShowPasswordField(false);
     setStep('code');
+    // Clear pending code
+    (window as any).__pendingRoomCode = undefined;
     onClose();
   };
+
+  // ⚡ Auto-focus password field khi có pending code
+  React.useEffect(() => {
+    if (isOpen && pendingCode && step === 'password') {
+      const passwordInput = document.querySelector('input[type="password"]') as HTMLInputElement;
+      if (passwordInput) {
+        setTimeout(() => passwordInput.focus(), 100);
+      }
+    }
+  }, [isOpen, pendingCode, step]);
 
   // Handle specific errors
   React.useEffect(() => {

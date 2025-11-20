@@ -14,7 +14,8 @@ const MultiplayerPage: React.FC = () => {
   const navigate = useNavigate();
   const state = location.state as LocationState;
   const searchParams = new URLSearchParams(location.search);
-  const initialRoomId = searchParams.get('roomId') || undefined;
+  // ✅ Get room code from URL (for join links)
+  const initialRoomCode = searchParams.get('code') || undefined;
   const { user } = useSelector((state: any) => state.auth);
   
   // Use useEffect for navigation to avoid React warnings
@@ -74,7 +75,7 @@ const MultiplayerPage: React.FC = () => {
             // Don't auto-redirect - let players see final results
             // navigate('/leaderboard')
           }}
-          initialRoomId={initialRoomId}
+          initialRoomCode={initialRoomCode}
         />
       </div>
     </MultiplayerErrorBoundary>

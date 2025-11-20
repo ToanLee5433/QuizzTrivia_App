@@ -88,7 +88,8 @@ const ModernLobby: React.FC<ModernLobbyProps> = ({
   const allReady = useMemo(() => players.length >= 2 && players.every(p => p.isReady), [players]);
   const currentPlayer = players.find(p => p.id === currentUserId);
   
-  const joinUrl = `${window.location.origin}/multiplayer/join?code=${roomData?.code}`;
+  // ✅ Join URL thống nhất: /multiplayer/game?code=XXX
+  const joinUrl = `${window.location.origin}/multiplayer/game?code=${roomData?.code}`;
 
   // Generate QR Code
   useEffect(() => {

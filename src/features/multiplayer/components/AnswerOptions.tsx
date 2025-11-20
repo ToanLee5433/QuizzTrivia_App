@@ -19,6 +19,7 @@ const cn = (...inputs: (string | Record<string, boolean> | undefined | false)[])
 interface AnswerOption {
   text: string;
   id: number;
+  eliminated?: boolean; // New: Mark eliminated options from 50/50 power-up
 }
 
 interface AnswerOptionsProps {
@@ -144,6 +145,7 @@ export function AnswerOptions({
       {options.map((option, index) => {
         const state = getOptionState(index);
         const isFocused = keyboardUsed && focusedIndex === index;
+        const isEliminated = option.eliminated || false;
 
         return (
           <button
@@ -153,23 +155,23 @@ export function AnswerOptions({
             aria-checked={selectedAnswer === index}
             aria-label={getAriaLabel(option, index)}
             tabIndex={isFocused ? 0 : -1}
-            disabled={disabled}
+            disabled={disabled || isEliminated}
             onFocus={() => setFocusedIndex(index)}
-            onClick={() => !disabled && onSelect(index)}
+            onClick={() => !disabled && !isEliminated && onSelect(index)}
             className={cn(
               // Base styles
-              'w-full text-left p-4 rounded-lg border-2 transition-all duration-200',
+              'w-full text-left p-4 rounded-lg border-2 transition-all duration-300 relative',
               'focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/50',
               
               // State styles
               {
                 // Default state
                 'border-gray-300 bg-white hover:border-blue-400 hover:bg-blue-50':
-                  state === 'default' && !disabled,
+                  state === 'default' && !disabled && !isEliminated,
 
                 // Selected state
                 'border-blue-500 bg-blue-50 ring-2 ring-blue-200':
-                  state === 'selected' && !disabled,
+                  state === 'selected' && !disabled && !isEliminated,
 
                 // Correct answer
                 'border-green-600 bg-green-50 ring-2 ring-green-200':
@@ -179,14 +181,23 @@ export function AnswerOptions({
                 'border-red-600 bg-red-50 ring-2 ring-red-200':
                   state === 'wrong',
 
+                // Eliminated by 50/50 power-up
+                'opacity-30 cursor-not-allowed border-gray-200 bg-gray-100': isEliminated,
+
                 // Disabled
-                'opacity-50 cursor-not-allowed': disabled,
+                'opacity-50 cursor-not-allowed': disabled && !isEliminated,
 
                 // Keyboard focus
-                'ring-4 ring-blue-500/50 scale-[1.02]': isFocused,
+                'ring-4 ring-blue-500/50 scale-[1.02]': isFocused && !isEliminated,
               }
             )}
           >
+            {/* Eliminated X Overlay */}
+            {isEliminated && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-200/80 rounded-lg">
+                <div className="text-6xl font-bold text-red-500">✕</div>
+              </div>
+            )}
             <div className="flex items-center gap-3">
               {/* Option number badge */}
               <div

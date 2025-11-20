@@ -5,6 +5,7 @@ import { updateQuiz } from '../api';
 import { Quiz } from '../types';
 import { toast } from 'react-toastify';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { formatDate } from '../../../lib/utils/helpers';
 
 import { useTranslation } from 'react-i18next';
 const EditQuizPage: React.FC = () => {
@@ -251,14 +252,14 @@ const EditQuizPage: React.FC = () => {
             <div>
               <span className="font-medium text-gray-700">Ngày tạo:</span>
               <span className="ml-2 text-gray-600">
-                {quiz.createdAt ? new Date(quiz.createdAt).toLocaleDateString('vi-VN') : 'N/A'}
+                {quiz.createdAt ? formatDate(quiz.createdAt, 'long') : 'N/A'}
               </span>
             </div>
             
             <div>
               <span className="font-medium text-gray-700">Lần sửa cuối:</span>
               <span className="ml-2 text-gray-600">
-                {quiz.updatedAt ? new Date(quiz.updatedAt).toLocaleDateString('vi-VN') : 'Chưa sửa'}
+                {quiz.updatedAt ? formatDate(quiz.updatedAt, 'long') : 'Chưa sửa'}
               </span>
             </div>
           </div>

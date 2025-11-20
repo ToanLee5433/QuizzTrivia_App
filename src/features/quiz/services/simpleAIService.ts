@@ -56,12 +56,14 @@ class SimpleAIService {
         content: prompt,
         numQuestions: config.numQuestions || 5,
         difficulty: config.difficulty || 'medium',
-        language: config.language || 'vi'
+        language: config.language || 'vi',
+        questionTypes: config.questionTypes // ⚡ Pass question types to AI
       };
 
       const firebaseConfig: FirebaseAIConfig = {
         temperature: config.temperature || 0.7,
-        model: 'gemini-2.0-flash-exp' as const
+        model: 'gemini-2.0-flash-exp' as const,
+        maxTokens: Math.max(2000, (config.numQuestions || 5) * 300) // ⚡ Dynamic: ~300 tokens per question
       };
 
       const questions = await FirebaseAIService.generateQuestions(
@@ -69,16 +71,9 @@ class SimpleAIService {
         options
       );
 
-      // 🆕 Filter by question types if specified
-      let filteredQuestions = questions;
-      if (config.questionTypes && config.questionTypes.length > 0) {
-        filteredQuestions = questions.filter(q => 
-          config.questionTypes!.includes(q.type)
-        );
-      }
-
+      // AI now generates correct question types directly
       return {
-        questions: filteredQuestions,
+        questions: questions,
         error: undefined
       };
     } catch (error) {

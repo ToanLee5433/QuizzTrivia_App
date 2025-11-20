@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Trophy, TrendingUp, TrendingDown, Minus, Crown, Medal, Award } from 'lucide-react';
 import { gameStateService, LeaderboardEntry } from '../services/gameStateService';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 interface LiveLeaderboardProps {
   roomId: string;
@@ -16,6 +17,7 @@ const LiveLeaderboard: React.FC<LiveLeaderboardProps> = ({
   compact = false,
   showTop = 5,
 }) => {
+  const { t } = useTranslation();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [previousRanks, setPreviousRanks] = useState<Map<string, number>>(new Map());
 
@@ -120,7 +122,7 @@ const LiveLeaderboard: React.FC<LiveLeaderboardProps> = ({
             <div className="flex items-center justify-between p-2 rounded-lg bg-blue-100 border-2 border-blue-500">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-gray-600">#{currentUser.rank}</span>
-                <span className="font-medium text-sm">You</span>
+                <span className="font-medium text-sm">{t('common.you', 'You')}</span>
               </div>
               <span className="font-bold text-blue-600">{currentUser.score}</span>
             </div>
@@ -138,7 +140,7 @@ const LiveLeaderboard: React.FC<LiveLeaderboardProps> = ({
           <Trophy className="w-8 h-8 text-yellow-300" />
           <h2 className="text-2xl font-black">LEADERBOARD</h2>
         </div>
-        <div className="text-sm opacity-75">{leaderboard.length} players</div>
+        <div className="text-sm opacity-75">{t('multiplayer.leaderboard.playersCount', '{{count}} players', { count: leaderboard.length })}</div>
       </div>
 
       <div className="space-y-3">
@@ -188,11 +190,11 @@ const LiveLeaderboard: React.FC<LiveLeaderboardProps> = ({
                       <div className="font-bold text-lg truncate">
                         {player.username}
                         {isCurrentUser && (
-                          <span className="ml-2 text-sm opacity-75">(You)</span>
+                          <span className="ml-2 text-sm opacity-75">({t('common.you', 'You')})</span>
                         )}
                       </div>
                       <div className="flex items-center gap-2 text-sm opacity-75">
-                        <span>✓ {player.correctAnswers} correct</span>
+                        <span>{t('multiplayer.leaderboard.correctAnswers', '✓ {{count}} correct', { count: player.correctAnswers })}</span>
                         {player.streak > 1 && (
                           <span className="bg-orange-500 text-white px-2 py-0.5 rounded-full font-bold text-xs">
                             🔥 {player.streak} streak

@@ -615,6 +615,80 @@ class RealtimeMultiplayerService {
   }
 
   /**
+   * ✅ INSTANT REALTIME ANSWER SUBMISSION & LEADERBOARD UPDATE
+   * Directly writes to RTDB - NO Cloud Function delay!
+   */
+  async submitAnswerRealtime(
+    roomId: string, 
+    userId: string, 
+    questionIndex: number, 
+    answer: number,
+    isCorrect: boolean,
+    points: number,
+    timeToAnswer: number
+  ) {
+    try {
+      const timestamp = Date.now();
+      
+      // 1. Save answer immediately
+      const answerRef = ref(rtdb, `rooms/${roomId}/answers/${questionIndex}/${userId}`);
+      await set(answerRef, {
+        answer,
+        isCorrect,
+        points,
+        timestamp,
+        timeToAnswer,
+        validated: true,
+      });
+
+      // 2. Update leaderboard immediately
+      const leaderboardRef = ref(rtdb, `rooms/${roomId}/leaderboard/${userId}`);
+      const leaderboardSnap = await get(leaderboardRef);
+      const currentData = leaderboardSnap.val() || { score: 0, correctAnswers: 0, streak: 0 };
+
+      const newStreak = isCorrect ? (currentData.streak || 0) + 1 : 0;
+      
+      await set(leaderboardRef, {
+        score: (currentData.score || 0) + points,
+        correctAnswers: (currentData.correctAnswers || 0) + (isCorrect ? 1 : 0),
+        streak: newStreak,
+        lastAnswered: timestamp,
+      });
+
+      // 3. Mark player as answered
+      await this.markPlayerAnswered(roomId, userId, questionIndex);
+
+      logger.success(`✅ Answer submitted realtime: ${isCorrect ? 'CORRECT' : 'WRONG'} (+${points} pts)`);
+    } catch (error) {
+      logger.error('Failed to submit answer realtime:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Listen to leaderboard changes in realtime
+   */
+  listenToLeaderboard(roomId: string, callback: (leaderboard: Record<string, any>) => void) {
+    const leaderboardRef = ref(rtdb, `rooms/${roomId}/leaderboard`);
+    
+    const unsubscribe = onValue(leaderboardRef, (snapshot) => {
+      const leaderboard = snapshot.val() || {};
+      logger.debug(`Leaderboard updated: ${Object.keys(leaderboard).length} players`);
+      callback(leaderboard);
+    }, (error) => {
+      logger.error('Leaderboard listener error:', error);
+    });
+
+    const listenerKey = `leaderboard_${roomId}`;
+    this.listeners.set(listenerKey, { ref: leaderboardRef, unsubscribe });
+    
+    return () => {
+      off(leaderboardRef);
+      this.listeners.delete(listenerKey);
+    };
+  }
+
+  /**
    * Listen to game status changes
    */
   listenToGameStatus(roomId: string, callback: (status: string) => void) {

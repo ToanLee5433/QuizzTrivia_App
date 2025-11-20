@@ -109,7 +109,7 @@ export const generateQuestions = functions.https.onCall(async (data, context) =>
         temperature: config?.temperature || 0.7,
         topP: 0.8,
         topK: 40,
-        maxOutputTokens: config?.maxTokens || 2000,
+        maxOutputTokens: config?.maxTokens || 8000, // ⚡ Increased to support more questions
       },
     });
 
@@ -124,18 +124,56 @@ export const generateQuestions = functions.https.onCall(async (data, context) =>
 
     const generatedText = result.text();
     
+    console.log('📥 Raw AI response (first 500 chars):', generatedText?.substring(0, 500));
+    
     // Parse JSON từ response
     let parsedQuestions;
     try {
       if (!generatedText) {
         throw new Error('AI không trả về text response');
       }
-      const cleanText = generatedText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+      // Clean markdown code blocks and whitespace
+      let cleanText = generatedText
+        .replace(/```json\s*/g, '')
+        .replace(/```\s*/g, '')
+        .trim();
+
+      console.log('🧹 Cleaned text (first 500 chars):', cleanText.substring(0, 500));
+
       const parsed = JSON.parse(cleanText);
-      parsedQuestions = parsed.questions || [];
+      
+      // Support both array format and {questions: []} format
+      if (Array.isArray(parsed)) {
+        parsedQuestions = parsed;
+      } else if (parsed.questions && Array.isArray(parsed.questions)) {
+        parsedQuestions = parsed.questions;
+      } else {
+        parsedQuestions = [];
+      }
+
+      console.log(`✅ Successfully parsed ${parsedQuestions.length} questions`);
+
+      if (!Array.isArray(parsedQuestions)) {
+        console.error('❌ parsed.questions is not an array:', typeof parsedQuestions);
+        throw new Error('questions field is not an array');
+      }
+
+      if (parsedQuestions.length === 0) {
+        console.error('❌ No questions in parsed response');
+        throw new Error('AI returned 0 questions');
+      }
+
     } catch (parseError) {
-      console.error('Error parsing JSON:', parseError);
-      throw new Error('Không thể phân tích câu hỏi từ AI');
+      console.error('❌ Error parsing JSON:', parseError);
+      console.error('Raw response:', generatedText);
+      
+      // Return detailed error for debugging
+      throw new Error(
+        `Không thể phân tích câu hỏi từ AI. ` +
+        `Parse error: ${parseError instanceof Error ? parseError.message : 'Unknown'}. ` +
+        `Response preview: ${generatedText?.substring(0, 200) || 'empty'}`
+      );
     }
 
     // Log cho debugging
@@ -345,4 +383,5 @@ export {
   getPlayerQuestions,
   checkRateLimit,
   archiveCompletedRooms,
+  kickPlayer,
 } from './multiplayer/index';

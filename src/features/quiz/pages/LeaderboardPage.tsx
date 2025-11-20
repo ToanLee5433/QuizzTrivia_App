@@ -5,6 +5,7 @@ import { db } from '../../../lib/firebase/config';
 import { FaCrown, FaUserCircle, FaTrophy, FaMedal, FaAward, FaFire, FaStar } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
+import { formatDate } from '../../../lib/utils/helpers';
 
 interface UserStat {
   userId: string;
@@ -141,7 +142,7 @@ const LeaderboardPage: React.FC = () => {
               totalAttempts: 0,
               averageScore: 0,
               perfectScores: 0,
-              recentActivity: completedAt.toLocaleDateString('vi-VN'),
+              recentActivity: formatDate(completedAt, 'short'),
               badge: 'beginner'
             });
           }
@@ -156,7 +157,7 @@ const LeaderboardPage: React.FC = () => {
           }
           
           if (completedAt > new Date(userStat.recentActivity)) {
-            userStat.recentActivity = completedAt.toLocaleDateString('vi-VN');
+            userStat.recentActivity = formatDate(completedAt, 'short');
           }
 
           // Quiz statistics
@@ -174,7 +175,7 @@ const LeaderboardPage: React.FC = () => {
               totalCompletions: 0,
               createdBy: quizData.createdBy,
               isPublished: quizData.isPublished,
-              recentActivity: completedAt.toLocaleDateString('vi-VN')
+              recentActivity: formatDate(completedAt, 'short')
             });
           }
 
@@ -184,7 +185,7 @@ const LeaderboardPage: React.FC = () => {
           quizStat.averageScore = ((quizStat.averageScore * (quizStat.totalAttempts - 1)) + (result.score || 0)) / quizStat.totalAttempts;
           
           if (completedAt > new Date(quizStat.recentActivity)) {
-            quizStat.recentActivity = completedAt.toLocaleDateString('vi-VN');
+            quizStat.recentActivity = formatDate(completedAt, 'short');
           }
 
           totalScore += result.score || 0;
@@ -203,7 +204,7 @@ const LeaderboardPage: React.FC = () => {
               totalAttempts: 0,
               averageScore: 0,
               perfectScores: 0,
-              recentActivity: new Date().toLocaleDateString('vi-VN'),
+              recentActivity: formatDate(new Date(), 'short'),
               badge: 'beginner'
             });
           }

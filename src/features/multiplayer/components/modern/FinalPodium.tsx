@@ -13,6 +13,9 @@ import {
   Sparkles,
   Crown
 } from 'lucide-react';
+import soundService from '../../services/soundService';
+import musicService from '../../services/musicService';
+import { MemeOverlay } from '../MemeOverlay';
 
 interface Player {
   id: string;
@@ -46,16 +49,42 @@ const FinalPodium: React.FC<FinalPodiumProps> = ({
   onBackToLobby
 }) => {
   // const { t } = useTranslation();
-  const [showFullLeaderboard, setShowFullLeaderboard] = useState(false);
+  const [showFullLeaderboard, setShowFullLeaderboard] = useState(true); // Show all players by default
+  const [showWinnerMeme, setShowWinnerMeme] = useState<boolean>(false);
   
-  // Sort players by rank
-  const sortedPlayers = [...players].sort((a, b) => a.rank - b.rank);
+  // Sort players by rank (score descending)
+  const sortedPlayers = [...players].sort((a, b) => {
+    // Sort by score first (higher is better)
+    if (b.score !== a.score) return b.score - a.score;
+    // Then by accuracy
+    if (b.accuracy !== a.accuracy) return b.accuracy - a.accuracy;
+    // Then by avg time (faster is better)
+    return a.avgTimePerQuestion - b.avgTimePerQuestion;
+  });
+  
   const top3 = sortedPlayers.slice(0, 3);
   const winner = top3[0];
   const currentPlayer = players.find(p => p.id === currentPlayerId);
+  
+  console.log('🏆 FinalPodium - All players:', sortedPlayers.map(p => ({
+    username: p.username,
+    score: p.score,
+    rank: p.rank
+  })));
 
   // Confetti celebration
   useEffect(() => {
+    // 🔊 Play victory + applause sounds
+    soundService.play('victory');
+    setTimeout(() => soundService.play('applause'), 500);
+
+    // 🎵 Crossfade to victory music
+    musicService.crossfade('victory', 2000);
+
+    // 🎉 Show winner meme after 1.5s
+    setTimeout(() => setShowWinnerMeme(true), 1500);
+    setTimeout(() => setShowWinnerMeme(false), 5000);
+
     // Initial burst
     confetti({
       particleCount: 200,
@@ -82,14 +111,9 @@ const FinalPodium: React.FC<FinalPodiumProps> = ({
       });
     }, 2000);
 
-    // Victory music
-    const audio = new Audio('/sounds/victory.mp3');
-    audio.volume = 0.3;
-    audio.play().catch(() => {});
-
     return () => {
       clearInterval(interval);
-      audio.pause();
+      // Sounds managed by soundService
     };
   }, []);
 
@@ -477,6 +501,14 @@ const FinalPodium: React.FC<FinalPodiumProps> = ({
           </button>
         </motion.div>
       </div>
+
+      {/* 🎉 Winner Meme Overlay */}
+      <MemeOverlay 
+        type="winner" 
+        show={showWinnerMeme}
+        position="center"
+        size="large"
+      />
     </div>
   );
 };

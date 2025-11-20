@@ -48,6 +48,12 @@ export const SimpleAIGenerator: React.FC<SimpleAIGeneratorProps> = ({
       return;
     }
 
+    // Validate numQuestions
+    if (!config.numQuestions || config.numQuestions < 1 || config.numQuestions > 30) {
+      toast.error('⚠️ Number of questions must be between 1-30');
+      return;
+    }
+
     setGenerating(true);
     try {
       const result = await simpleAIService.generateQuestions(content, config);
@@ -141,13 +147,27 @@ export const SimpleAIGenerator: React.FC<SimpleAIGeneratorProps> = ({
                     type="number"
                     min="1"
                     max="100"
-                    value={config.numQuestions}
+                    value={config.numQuestions || ''}
                     onChange={(e) => {
-                      const val = parseInt(e.target.value) || 1;
-                      setConfig(prev => ({ ...prev, numQuestions: Math.min(Math.max(val, 1), 100) }));
+                      const val = e.target.value;
+                      if (val === '') {
+                        setConfig(prev => ({ ...prev, numQuestions: '' as any }));
+                      } else {
+                        const num = parseInt(val);
+                        if (!isNaN(num)) {
+                          setConfig(prev => ({ ...prev, numQuestions: num }));
+                        }
+                      }
                     }}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                      config.numQuestions && (config.numQuestions < 1 || config.numQuestions > 30)
+                        ? 'border-red-500 dark:border-red-500'
+                        : 'border-gray-300 dark:border-gray-600'
+                    }`}
                   />
+                  {config.numQuestions && (config.numQuestions < 1 || config.numQuestions > 30) && (
+                    <p className="text-sm text-red-600 dark:text-red-400 mt-1">⚠️ Must be 1-30</p>
+                  )}
                 </div>
 
                 {/* Difficulty */}

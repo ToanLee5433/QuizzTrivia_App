@@ -6,6 +6,7 @@ import { collection, addDoc, query, where, getDocs, doc, getDoc } from 'firebase
 import { db } from '../../firebase/config';
 import { toast } from 'react-toastify';
 import { useNotifications } from '../../hooks/useNotifications';
+import { formatDate } from '../../lib/utils/helpers';
 
 interface QuizReview {
   id: string;
@@ -299,7 +300,7 @@ const QuizReviewSystem: React.FC<QuizReviewSystemProps> = ({
                   <StarRating rating={review.rating} readonly />
                 </div>
                 <span className="text-sm text-gray-500">
-                  {review.createdAt.toLocaleDateString('vi-VN')}
+                  {formatDate(review.createdAt, 'long')}
                 </span>
               </div>
               <p className="text-gray-700 leading-relaxed">{review.comment}</p>

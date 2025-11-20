@@ -20,6 +20,7 @@ interface RealtimeChatProps {
   currentUsername: string;
   isMobile?: boolean;
   onClose?: () => void;
+  transparent?: boolean;
 }
 
 const MAX_MESSAGE_LENGTH = 500;
@@ -30,7 +31,8 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
   currentUserId,
   currentUsername,
   isMobile = false,
-  onClose
+  onClose,
+  transparent = false
 }) => {
   const { t } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -167,17 +169,35 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
 
   // Container classes based on mobile/desktop
   const containerClasses = isMobile
-    ? 'fixed inset-0 bg-white z-50 flex flex-col'
-    : 'flex flex-col h-full bg-white rounded-lg shadow-lg';
+    ? 'fixed inset-0 bg-gray-900 z-50 flex flex-col'
+    : transparent
+      ? 'flex flex-col h-full bg-black/20 backdrop-blur-xl rounded-3xl border border-white/10 overflow-hidden'
+      : 'flex flex-col h-full bg-white rounded-lg shadow-lg';
+
+  const headerClasses = transparent
+    ? 'flex items-center justify-between p-4 border-b border-white/10 bg-white/5'
+    : 'flex items-center justify-between p-4 border-b bg-gradient-to-r from-blue-600 to-purple-600';
+
+  const messagesContainerClasses = transparent
+    ? 'flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent'
+    : 'flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 sm:space-y-3 bg-gray-50';
+
+  const inputContainerClasses = transparent
+    ? 'p-3 sm:p-4 border-t border-white/10 bg-white/5'
+    : 'p-3 sm:p-4 border-t bg-white';
+
+  const inputClasses = transparent
+    ? 'flex-1 px-4 py-2.5 bg-black/20 border border-white/10 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all'
+    : 'flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed';
 
   return (
     <div className={containerClasses}>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-blue-600 to-purple-600">
-        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+      <div className={headerClasses}>
+        <h3 className={`text-lg font-bold flex items-center gap-2 ${transparent ? 'text-white' : 'text-white'}`}>
           💬 {t('multiplayer.chat.title')}
           {messages.length > 0 && (
-            <span className="text-xs bg-white/20 px-2 py-1 rounded-full">
+            <span className="text-xs bg-white/20 px-2 py-1 rounded-full text-white">
               {messages.length}
             </span>
           )}
@@ -196,7 +216,7 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
       {/* Messages Container */}
       <div
         ref={chatContainerRef}
-        className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 sm:space-y-3 bg-gray-50"
+        className={messagesContainerClasses}
         style={{ maxHeight: isMobile ? 'calc(100vh - 140px)' : 'calc(100vh - 200px)', minHeight: '300px' }}
       >
         {isLoading && messages.length === 0 ? (
@@ -205,7 +225,7 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
             <span className="ml-2">{t('common.loading')}</span>
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-400 text-center">
+          <div className={`flex items-center justify-center h-full text-center ${transparent ? 'text-white/40' : 'text-gray-400'}`}>
             <div>
               <p className="text-sm">{t('multiplayer.noMessages')}</p>
               <p className="text-xs mt-1">{t('multiplayer.startConversation')}</p>
@@ -219,7 +239,7 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
             if (isSystemMessage) {
               return (
                 <div key={msg.id} className="flex justify-center">
-                  <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs max-w-[80%] text-center">
+                  <div className="bg-blue-500/20 text-blue-200 px-3 py-1 rounded-full text-xs max-w-[80%] text-center border border-blue-500/30">
                     {msg.message}
                   </div>
                 </div>
@@ -232,21 +252,23 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
                 className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[70%] ${
+                  className={`max-w-[85%] ${
                     isOwnMessage
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-900 border border-gray-200'
-                  } rounded-lg px-3 py-2 shadow-sm`}
+                      ? 'bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/20'
+                      : transparent
+                        ? 'bg-white/10 backdrop-blur-md text-white border border-white/10'
+                        : 'bg-white text-gray-900 border border-gray-200'
+                  } rounded-2xl px-4 py-2.5 shadow-sm`}
                 >
                   {!isOwnMessage && (
-                    <div className="text-xs font-semibold text-blue-600 mb-1">
+                    <div className={`text-xs font-bold mb-1 ${transparent ? 'text-purple-300' : 'text-blue-600'}`}>
                       {msg.username}
                     </div>
                   )}
-                  <div className="text-sm break-words">{msg.message}</div>
+                  <div className="text-sm break-words leading-relaxed">{msg.message}</div>
                   <div
-                    className={`text-xs mt-1 ${
-                      isOwnMessage ? 'text-blue-200' : 'text-gray-400'
+                    className={`text-[10px] mt-1 text-right ${
+                      isOwnMessage ? 'text-white/60' : transparent ? 'text-white/40' : 'text-gray-400'
                     }`}
                   >
                     {formatTime(msg.timestamp)}
@@ -260,7 +282,7 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
       </div>
 
       {/* Input Area */}
-      <div className="p-3 sm:p-4 border-t bg-white">
+      <div className={inputContainerClasses}>
         <div className="flex gap-2">
           <input
             ref={inputRef}
@@ -271,12 +293,12 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
             placeholder={t('multiplayer.typeMessage')}
             maxLength={MAX_MESSAGE_LENGTH}
             disabled={isSending}
-            className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className={inputClasses}
           />
           <button
             onClick={sendMessage}
             disabled={!messageInput.trim() || isSending}
-            className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center min-w-[44px] sm:gap-2"
+            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-purple-500/30 flex items-center justify-center min-w-[48px]"
             aria-label="Send message"
           >
             {isSending ? (
@@ -287,7 +309,7 @@ const RealtimeChat: React.FC<RealtimeChatProps> = ({
           </button>
         </div>
         {messageInput.length > 0 && (
-          <div className="text-xs text-gray-400 mt-1 text-right">
+          <div className={`text-xs mt-1 text-right ${transparent ? 'text-white/40' : 'text-gray-400'}`}>
             {messageInput.length}/{MAX_MESSAGE_LENGTH}
           </div>
         )}

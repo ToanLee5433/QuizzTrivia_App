@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Lock, Users, Clock, Settings } from 'lucide-react';
+import { toast } from 'react-toastify';
 import type { Quiz, RoomConfig } from '../types/index';
 
 interface CreateRoomModalProps {
@@ -43,6 +44,18 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
     e.preventDefault();
     
     if (!roomName.trim()) {
+      return;
+    }
+
+    // Validate time limit
+    if (timeLimit < MIN_TIME_LIMIT || timeLimit > MAX_TIME_LIMIT) {
+      toast.error(t('multiplayer.timeLimitRange', { min: MIN_TIME_LIMIT, max: MAX_TIME_LIMIT }));
+      return;
+    }
+
+    // Validate max players
+    if (maxPlayers < MIN_PLAYERS || maxPlayers > MAX_PLAYERS) {
+      toast.error(t('multiplayer.playersRange', { min: MIN_PLAYERS, max: MAX_PLAYERS }));
       return;
     }
 
@@ -134,20 +147,32 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
             </label>
             <input
               type="number"
-              value={timeLimit}
+              value={timeLimit || ''}
               onChange={(e) => {
-                const value = parseInt(e.target.value);
-                if (value >= MIN_TIME_LIMIT && value <= MAX_TIME_LIMIT) {
-                  setTimeLimit(value);
+                const val = e.target.value;
+                if (val === '') {
+                  setTimeLimit('' as any);
+                } else {
+                  const num = parseInt(val);
+                  if (!isNaN(num)) {
+                    setTimeLimit(num);
+                  }
                 }
               }}
               min={MIN_TIME_LIMIT}
               max={MAX_TIME_LIMIT}
               placeholder={t('placeholders.enterNumber')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                timeLimit && (timeLimit < MIN_TIME_LIMIT || timeLimit > MAX_TIME_LIMIT)
+                  ? 'border-red-500'
+                  : 'border-gray-300'
+              }`}
               required
               disabled={loading}
             />
+            {timeLimit && (timeLimit < MIN_TIME_LIMIT || timeLimit > MAX_TIME_LIMIT) && (
+              <p className="text-sm text-red-600 mt-1">⚠️ {t('multiplayer.timeLimitRange', { min: MIN_TIME_LIMIT, max: MAX_TIME_LIMIT })}</p>
+            )}
             <p className="text-xs text-gray-500 mt-1">
               {t('multiplayer.timeLimitHint', { min: MIN_TIME_LIMIT, max: MAX_TIME_LIMIT })}
             </p>

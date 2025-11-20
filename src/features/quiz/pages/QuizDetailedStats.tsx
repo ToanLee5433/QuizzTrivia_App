@@ -5,6 +5,7 @@ import { RootState } from '../../../lib/store';
 import { ROUTES } from '../../../config/routes';
 import { doc, getDoc, collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
+import { formatDate } from '../../../lib/utils/helpers';
 import { 
   TrendingUp, 
   Users, 
@@ -343,7 +344,7 @@ const QuizDetailedStats: React.FC = () => {
           return {
             userName: r.userName || 'Anonymous',
             score: Math.round((r.score / r.totalQuestions) * 100),
-            date: r.completedAt?.toDate ? r.completedAt.toDate().toLocaleDateString('vi-VN') : 'N/A',
+            date: r.completedAt?.toDate ? formatDate(r.completedAt.toDate(), 'long') : 'N/A',
             photoURL
           };
         })

@@ -15,7 +15,7 @@ import { RootState } from '../../lib/store';
 import { useTranslation } from 'react-i18next';
 
 export function ChatbotButton() {
-  const { t } = useTranslation();
+  const { t } = useTranslation('common');
   const { user } = useSelector((state: RootState) => state.auth);
   const [isOpen, setIsOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);

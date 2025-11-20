@@ -5,6 +5,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
+import { ref, get } from 'firebase/database';
+import { rtdb } from '../../../lib/firebase/config';
 import ModernLobby from './modern/ModernLobby';
 import ModernQuizGame from './modern/ModernQuizGame';
 import FinalPodium from './modern/FinalPodium';
@@ -35,6 +37,7 @@ const ModernMultiplayerWrapper: React.FC<ModernMultiplayerWrapperProps> = ({
 }) => {
   const [powerUps, setPowerUps] = useState<any[]>([]);
   const [isHost, setIsHost] = useState(false);
+  const [finalLeaderboard, setFinalLeaderboard] = useState<any[]>([]);
 
   // Determine if current user is host
   useEffect(() => {
@@ -51,6 +54,45 @@ const ModernMultiplayerWrapper: React.FC<ModernMultiplayerWrapperProps> = ({
       });
     }
   }, [roomData, currentUserId]);
+
+  // ⚡ Fetch final leaderboard directly from RTDB for results phase
+  useEffect(() => {
+    if (gamePhase === 'results' && roomData?.code) {
+      const fetchFinalLeaderboard = async () => {
+        try {
+          const leaderboardRef = ref(rtdb, `rooms/${roomData.code}/leaderboard`);
+          const snapshot = await get(leaderboardRef);
+          const data = snapshot.val();
+          
+          if (data) {
+            const players = Object.values(data) as any[];
+            
+            // ⚡ Sort by score descending
+            players.sort((a, b) => {
+              if (b.score !== a.score) return b.score - a.score;
+              if (b.correctAnswers !== a.correctAnswers) return b.correctAnswers - a.correctAnswers;
+              return a.username.localeCompare(b.username);
+            });
+            
+            // ⚡ Update ranks
+            players.forEach((player, index) => {
+              player.rank = index + 1;
+            });
+            
+            logger.success(`🏆 Final leaderboard loaded: ${players.length} players`);
+            setFinalLeaderboard(players);
+          } else {
+            logger.warn('⚠️ No leaderboard data found in RTDB');
+            setFinalLeaderboard([]);
+          }
+        } catch (error) {
+          logger.error('Failed to fetch final leaderboard:', error);
+        }
+      };
+      
+      fetchFinalLeaderboard();
+    }
+  }, [gamePhase, roomData?.code]);
 
   // Initialize power-ups when game starts
   useEffect(() => {
@@ -208,7 +250,7 @@ const ModernMultiplayerWrapper: React.FC<ModernMultiplayerWrapperProps> = ({
       {gamePhase === 'results' && gameData && (
         <FinalPodium
           key="results"
-          players={gameData.finalPlayers || []}
+          players={finalLeaderboard.length > 0 ? finalLeaderboard : (gameData.leaderboard || gameData.finalPlayers || [])}
           currentPlayerId={currentUserId}
           onPlayAgain={handlePlayAgain}
           onViewReport={handleViewReport}

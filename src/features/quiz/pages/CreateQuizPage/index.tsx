@@ -114,25 +114,24 @@ const CreateQuizPage: React.FC = () => {
 
   // Thêm câu hỏi mới
   const addQuestion = () => {
+    const newQuestion = {
+      id: generateId(),
+      text: '',
+      type: 'multiple' as const,
+      answers: [
+        { id: generateId(), text: '', isCorrect: true },
+        { id: generateId(), text: '', isCorrect: false },
+        { id: generateId(), text: '', isCorrect: false },
+        { id: generateId(), text: '', isCorrect: false },
+      ],
+      points: 1,
+      correctAnswer: '',
+      acceptedAnswers: [],
+    };
+    
     setQuiz(q => ({
       ...q,
-      questions: [
-        ...q.questions,
-        {
-          id: generateId(),
-          text: '',
-          type: 'multiple',
-          answers: [
-            { id: generateId(), text: '', isCorrect: true },
-            { id: generateId(), text: '', isCorrect: false },
-            { id: generateId(), text: '', isCorrect: false },
-            { id: generateId(), text: '', isCorrect: false },
-          ],
-          points: 1,
-          correctAnswer: '',
-          acceptedAnswers: [],
-        },
-      ],
+      questions: [newQuestion, ...q.questions], // Add to beginning
     }));
   };
 
@@ -193,30 +192,50 @@ const CreateQuizPage: React.FC = () => {
         return !!quiz.quizType;
       case 'info': { // Quiz Info step (includes password now)
         const basicInfoValid = !!(quiz.title && quiz.description && quiz.category && quiz.difficulty);
+        const durationValid = quiz.duration >= 5 && quiz.duration <= 120;
         const passwordValid = quiz.havePassword === 'password'
           ? !!(quiz.password && quiz.password.length >= 6)
           : true;
-        return basicInfoValid && passwordValid;
+        
+        return basicInfoValid && durationValid && passwordValid;
       }
       case 'resources': // Resources step - Only for with-materials type
         return !!(quiz.resources && quiz.resources.length > 0);
       case 'questions': // Questions step
-        return quiz.questions.length > 0 && quiz.questions.every(q => {
+        if (quiz.questions.length === 0) {
+          return false;
+        }
+        
+        const invalidQuestion = quiz.questions.find(q => {
           // Kiểm tra text câu hỏi
-          if (!q.text) return false;
+          if (!q.text) return true;
+          
+          // Kiểm tra points (must be 1-100)
+          if (!q.points || q.points < 1 || q.points > 100) return true;
           
           // Kiểm tra theo từng loại câu hỏi
           switch (q.type) {
             case 'short_answer':
-              return !!q.correctAnswer;
+              return !q.correctAnswer;
             case 'boolean':
             case 'multiple':
+            case 'checkbox':
             case 'image':
-              return q.answers.some(a => a.isCorrect) && q.answers.every(a => a.text);
+            case 'audio':
+            case 'video':
+              return !q.answers.some(a => a.isCorrect) || !q.answers.every(a => a.text);
+            case 'ordering':
+              return !q.orderingItems || q.orderingItems.length < 2;
+            case 'matching':
+              return !q.matchingPairs || q.matchingPairs.length < 2;
+            case 'fill_blanks':
+              return !q.textWithBlanks || !q.blanks || q.blanks.length === 0;
             default:
-              return false;
+              return false; // Allow other types
           }
         });
+        
+        return !invalidQuestion;
       case 'review': // Review step
         return true;
       default:
@@ -332,7 +351,7 @@ const CreateQuizPage: React.FC = () => {
         imageUrl: quiz.imageUrl || null,
         isPublic: quiz.isPublic !== undefined ? quiz.isPublic : false,
         allowRetake: quiz.allowRetake !== undefined ? quiz.allowRetake : true,
-        status: 'pending' // 📤 Đẩy lên chờ admin duyệt
+        status: 'pending' // 📤 Submit for admin approval
       };
 
       const cleanQuizData = deepCleanValue(baseQuizData) as Record<string, unknown>;
@@ -472,6 +491,82 @@ const CreateQuizPage: React.FC = () => {
   };
 
   const nextStep = () => {
+    const actualStep = (() => {
+      if (!quiz.quizType) return 'type';
+      if (quiz.quizType === 'standard') {
+        if (step === 0) return 'type';
+        if (step === 1) return 'info';
+        if (step === 2) return 'questions';
+        if (step === 3) return 'review';
+      } else {
+        if (step === 0) return 'type';
+        if (step === 1) return 'info';
+        if (step === 2) return 'resources';
+        if (step === 3) return 'questions';
+        if (step === 4) return 'review';
+      }
+      return 'unknown';
+    })();
+
+    // Show specific error messages when clicking Next
+    if (actualStep === 'info') {
+      const basicInfoValid = !!(quiz.title && quiz.description && quiz.category && quiz.difficulty);
+      const durationValid = quiz.duration >= 5 && quiz.duration <= 120;
+      const passwordValid = quiz.havePassword === 'password'
+        ? !!(quiz.password && quiz.password.length >= 6)
+        : true;
+      
+      if (!basicInfoValid) {
+        toast.error(t('createQuiz.completeAllInfo'));
+        return;
+      }
+      if (!durationValid) {
+        toast.error(t('quizCreation.from5to120minutes'));
+        return;
+      }
+      if (!passwordValid) {
+        toast.error(t('quizCreation.passwordMinLength'));
+        return;
+      }
+    }
+
+    if (actualStep === 'questions') {
+      if (quiz.questions.length === 0) {
+        toast.error(t('createQuiz.addQuestionFirst'));
+        return;
+      }
+      
+      const invalidQuestion = quiz.questions.find(q => {
+        if (!q.text) return true;
+        if (!q.points || q.points < 1 || q.points > 100) return true;
+        
+        switch (q.type) {
+          case 'short_answer':
+            return !q.correctAnswer;
+          case 'boolean':
+          case 'multiple':
+          case 'checkbox':
+          case 'image':
+          case 'audio':
+          case 'video':
+            return !q.answers.some(a => a.isCorrect) || !q.answers.every(a => a.text);
+          case 'ordering':
+            return !q.orderingItems || q.orderingItems.length < 2;
+          case 'matching':
+            return !q.matchingPairs || q.matchingPairs.length < 2;
+          case 'fill_blanks':
+            return !q.textWithBlanks || !q.blanks || q.blanks.length === 0;
+          default:
+            return false; // Allow other types
+        }
+      });
+      
+      if (invalidQuestion) {
+        toast.error('⚠️ Please check all questions have valid text, points (1-100), and answers');
+        return;
+      }
+    }
+
     if (validateStep(step)) {
       setStep(prev => Math.min(prev + 1, maxStepIndex));
     } else {

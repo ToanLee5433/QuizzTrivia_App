@@ -48,7 +48,7 @@ interface MultiplayerManagerProps {
   currentUserPhoto?: string; // Avatar from Firebase Auth
   onBackToLobby: () => void;
   onQuizComplete: (results: GameResultsType) => void;
-  initialRoomId?: string;
+  initialRoomCode?: string; // Room code from URL
 }
 
 const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
@@ -58,7 +58,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
   currentUserPhoto,
   onBackToLobby,
   onQuizComplete,
-  initialRoomId
+  initialRoomCode
 }) => {
   const { t } = useTranslation();
   const [selectedQuiz] = useState<Quiz | undefined>(initialSelectedQuiz);
@@ -81,15 +81,19 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
     const service = getMultiplayerService();
     setMultiplayerService(service);
     
-    // Connect to service
+    // ⚡ OPTIMIZATION: Connect service immediately (synchronous operation)
     const connectToService = async () => {
       try {
         setConnectionStatus('connecting');
+        
+        // ⚡ Connect is synchronous, just sets userId/username
         await service.connect(currentUserId, currentUserName, currentUserPhoto);
+        
+        // ⚡ Set connected IMMEDIATELY (don't wait for listeners)
         setConnectionStatus('connected');
         setState(prev => ({ ...prev, isConnected: true }));
         
-        // Set up event listeners
+        // Set up event listeners (can be done after connection status update)
         service.on('room:updated', handleRoomUpdate);
         service.on('players:updated', handlePlayersUpdate);
         // messages:updated listener removed - RealtimeChat handles this directly
@@ -114,16 +118,54 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
   }, [currentUserId, currentUserName, currentUserPhoto, t]);
   // Handlers are intentionally omitted from dependencies to prevent infinite loop from re-subscription
 
-  // Try resuming room from state (if page reload)
+  // ✅ Auto-join room from URL parameter (for QR code / share link) - OPTIMIZED
   useEffect(() => {
-    const previousRoomId = initialRoomId || state.roomId || (state.roomData?.id as string | undefined);
-    if (!previousRoomId || !multiplayerService || connectionStatus !== 'connected') return;
-    // Mark presence online and resume streams
-    multiplayerService.setPresence(previousRoomId, true).catch(() => {});
-    multiplayerService.resumeRoom(previousRoomId).catch(() => {});
-    // Set UI state to lobby immediately while streams resume
-    setState(prev => ({ ...prev, currentState: 'lobby', roomId: previousRoomId }));
-  }, [multiplayerService, connectionStatus, initialRoomId, state.roomId, state.roomData?.id]);
+    if (!initialRoomCode || !multiplayerService || connectionStatus !== 'connected') return;
+    if (state.currentState !== 'mode-selection') return; // Already joined/joining
+
+    const autoJoinRoom = async () => {
+      try {
+        console.log('🔗 Auto-joining room from URL code:', initialRoomCode);
+        
+        // ⚡ OPTIMIZATION: Try joining directly first (fast path)
+        // If password required, joinRoom will throw 'room_requires_password' error
+        console.log('🚀 Attempting direct join (optimistic approach)');
+        setState(prev => ({ ...prev, isConnecting: true })); // Show loading immediately
+        
+        try {
+          const result = await multiplayerService.joinRoom(initialRoomCode);
+          if (result) {
+            handleRoomJoined(result.room.id, result.room);
+          }
+        } catch (error: any) {
+          // If password required, show join modal with pre-filled code
+          if (error.message === 'room_requires_password') {
+            console.log('🔒 Room requires password, showing join modal');
+            setState(prev => ({ 
+              ...prev, 
+              currentState: 'join-room',
+              isConnecting: false 
+            }));
+            // Store room code for join modal to use
+            (window as any).__pendingRoomCode = initialRoomCode;
+          } else {
+            // Other errors (room not found, full, etc.)
+            throw error;
+          }
+        }
+      } catch (error: any) {
+        console.error('❌ Auto-join failed:', error);
+        toast.error(error.message || t('multiplayer.errors.joinRoomFailed'));
+        setState(prev => ({ 
+          ...prev, 
+          currentState: 'mode-selection',
+          isConnecting: false 
+        }));
+      }
+    };
+
+    autoJoinRoom();
+  }, [initialRoomCode, multiplayerService, connectionStatus, state.currentState, t]);
 
   // Event handlers
   const handleRoomUpdate = useCallback((roomData: any) => {
@@ -213,10 +255,24 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
   const handlePlayersUpdate = useCallback((players: any[]) => {
     logger.debug('Players updated', { count: players.length, playerIds: players.map(p => p.id) });
     setState(prev => {
-      // Ensure we merge players into existing roomData
+      // If no roomData yet, just store players temporarily
       if (!prev.roomData) {
-        logger.warn('Received players update but no roomData exists');
-        return prev;
+        logger.debug('Players update received before roomData, storing temporarily');
+        // Store players in state for when roomData arrives
+        return {
+          ...prev,
+          roomData: {
+            id: prev.roomId || '',
+            code: '',
+            name: '',
+            players,
+            maxPlayers: 0,
+            isPrivate: false,
+            status: 'waiting' as const,
+            settings: { timePerQuestion: 30, showAnswers: true, allowLateJoin: true, autoStart: false },
+            createdAt: new Date()
+          }
+        };
       }
       
       return {
@@ -277,6 +333,9 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
   };
 
   const handleRoomCreated = (roomId: string, roomData: any) => {
+    // ✅ Update URL with room code to prevent reload from redirecting
+    window.history.pushState({}, '', `/multiplayer/game?code=${roomData.code}`);
+    
     setState(prev => ({ 
       ...prev, 
       currentState: 'lobby',
@@ -287,6 +346,9 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
   };
 
   const handleRoomJoined = (roomId: string, roomData: any) => {
+    // ✅ Update URL with room code to prevent reload from redirecting
+    window.history.pushState({}, '', `/multiplayer/game?code=${roomData.code}`);
+    
     setState(prev => ({ 
       ...prev, 
       currentState: 'lobby',
@@ -338,6 +400,19 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
   const renderCurrentState = () => {
     switch (state.currentState) {
       case 'mode-selection':
+        // ⚡ Show loading spinner during auto-join from URL
+        if (state.isConnecting && initialRoomCode) {
+          return (
+            <div className="fixed inset-0 bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center z-50">
+              <div className="text-center">
+                <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600 mb-4"></div>
+                <p className="text-xl font-semibold text-gray-700">{t('multiplayer.joiningRoom', 'Đang tham gia phòng...')}</p>
+                <p className="text-sm text-gray-500 mt-2">{t('multiplayer.roomCode', 'Mã phòng')}: {initialRoomCode}</p>
+              </div>
+            </div>
+          );
+        }
+        
         return (
           <GameModeSelector
             isOpen={true}
@@ -509,7 +584,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
         );
 
       case 'game':
-        // Use modern UI if enabled
+        // Use modern UI if enabled (CHAT HIDDEN DURING GAME)
         if (isFeatureEnabled('ENABLE_MODERN_UI')) {
           return (
             <ModernMultiplayerWrapper

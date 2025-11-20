@@ -21,9 +21,10 @@ export type QuestionType =
   | 'checkbox'      // Multiple choice (multiple answers)
   | 'rich_content'  // Rich text content question
   | 'audio'         // Audio listening comprehension
+  | 'video'         // Video watching comprehension
   | 'ordering'      // Order items in correct sequence
   | 'matching'      // Match pairs (drag & drop)
-  | 'fill_blanks';  // Fill in the blanks (cloze test)
+  | 'fill_blanks';  // Fill in the blanks (cloze test / Essay)
 
 // For ordering questions
 export interface OrderingItem {

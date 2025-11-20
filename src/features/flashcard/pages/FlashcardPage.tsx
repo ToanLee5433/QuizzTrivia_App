@@ -33,6 +33,8 @@ interface CardData {
   nextReview?: Date;
   repetitions: number;
   reviewCount: number; // Số lần đã xem lại
+  frontMedia?: { type: 'image' | 'audio' | 'video'; url: string } | null;
+  backMedia?: { type: 'image' | 'audio' | 'video'; url: string } | null;
 }
 
 const FlashcardPage: React.FC = () => {
@@ -67,23 +69,46 @@ const FlashcardPage: React.FC = () => {
         const quizData = { id: quizDoc.id, ...quizDoc.data() } as Quiz;
         setQuiz(quizData);
 
-        // Convert questions to flashcards
+        // Convert questions to flashcards (support all question types)
         const flashcards: CardData[] = quizData.questions.map((q, index) => {
-          // Get question text, prefer plain text over rich text
-          let questionText = q.text || '';
-          
-          // If rich text exists and plain text is empty, strip HTML from rich text
-          if (!questionText && q.richText) {
-            questionText = q.richText.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+          // Helpers
+          const stripRich = (text: string | undefined) => (text || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+
+          const questionText = q.text && q.text.trim() ? q.text : stripRich(q.richText || '');
+
+          // Build front text - ONLY question, no options
+          let front = questionText || 'No question';
+          let back = getAnswerText(q);
+          let frontMedia = null as any;
+          let backMedia = null as any;
+
+          // Media for audio/video question types
+          if (q.type === 'audio' && q.audioUrl) {
+            frontMedia = { type: 'audio', url: q.audioUrl };
           }
-          
+          if (q.type === 'video' && q.videoUrl) {
+            frontMedia = { type: 'video', url: q.videoUrl };
+          }
+
+          // For image questions, add image to front media
+          if (q.type === 'image' && q.imageUrl) {
+            frontMedia = { type: 'image', url: q.imageUrl };
+          }
+
+          // Rich content: strip HTML for front
+          if (q.type === 'rich_content' && q.richText) {
+            front = stripRich(q.richText || q.text);
+          }
+
           return {
             id: q.id || `card-${index}`,
-            question: questionText || 'No question',
-            answer: getAnswerText(q),
+            question: front,
+            answer: back,
             difficulty: quizData.difficulty || 'medium',
             repetitions: 0,
-            reviewCount: 0
+            reviewCount: 0,
+            frontMedia,
+            backMedia
           };
         });
 
@@ -104,39 +129,62 @@ const FlashcardPage: React.FC = () => {
 
   // Get answer text from question
   const getAnswerText = (question: any): string => {
-    // Multiple choice, checkbox, image - find correct answer(s) from answers array
-    if (question.type === 'multiple' || question.type === 'checkbox' || question.type === 'image') {
+    const stripRich = (text: string | undefined) => (text || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+
+    // Multiple choice, checkbox, image, audio, video - find correct answer(s) from answers array
+    if (['multiple', 'checkbox', 'image', 'audio', 'video'].includes(question.type)) {
       const correctAnswers = question.answers?.filter((ans: any) => ans.isCorrect) || [];
       if (correctAnswers.length > 0) {
-        return correctAnswers.map((ans: any) => ans.text || ans.richText).join(', ');
+        // Just show answer text, no labels
+        return correctAnswers.map((ans: any) => {
+          const text = ans.text || stripRich(ans.richText) || '';
+          return text;
+        }).filter(Boolean).join(', ');
       }
     }
     
     // Boolean type
     if (question.type === 'boolean') {
       const correctAnswer = question.answers?.find((ans: any) => ans.isCorrect);
-      return correctAnswer?.text || 'N/A';
+      return correctAnswer?.text || (correctAnswer?.isCorrect ? 'True' : 'False');
     }
     
-    // Short answer, fill blanks - use correctAnswer field
-    if (question.type === 'short_answer' || question.type === 'fill_blanks') {
-      return question.correctAnswer || 'N/A';
+    // Short answer
+    if (question.type === 'short_answer') {
+      return question.correctAnswer || (question.acceptedAnswers && question.acceptedAnswers.length > 0 ? question.acceptedAnswers.join(', ') : 'No answer provided');
+    }
+    
+    // Fill blanks
+    if (question.type === 'fill_blanks') {
+      if (question.blanks && question.blanks.length > 0) {
+        return question.blanks.map((b: any) => b.correctAnswer).filter(Boolean).join(', ');
+      }
+      return question.correctAnswer || 'No answer provided';
     }
     
     // Ordering - show correct order
-    if (question.type === 'ordering' && question.orderingItems) {
-      const sorted = [...question.orderingItems].sort((a: any, b: any) => a.correctOrder - b.correctOrder);
-      return sorted.map((item: any) => item.text).join(' → ');
+    if (question.type === 'ordering' && question.orderingItems && question.orderingItems.length > 0) {
+      const sorted = [...question.orderingItems].sort((a: any, b: any) => (a.correctOrder || 0) - (b.correctOrder || 0));
+      return sorted.map((item: any, i: number) => `${i + 1}. ${item.text || ''}`).join(' → ');
     }
     
-    // Matching - show pairs
-    if (question.type === 'matching' && question.matchingPairs) {
-      return question.matchingPairs.map((pair: any) => `${pair.left} ↔ ${pair.right}`).join(', ');
+    // Matching - show correct pairs
+    if (question.type === 'matching' && question.matchingPairs && question.matchingPairs.length > 0) {
+      return question.matchingPairs.map((pair: any) => `${pair.left} ↔ ${pair.right}`).join('\n');
+    }
+    
+    // Rich content
+    if (question.type === 'rich_content') {
+      return question.explanation || stripRich(question.richText) || stripRich(question.text) || 'See question content';
     }
     
     // Fallback: try to find any correct answer
     const correctAnswer = question.answers?.find((ans: any) => ans.isCorrect);
-    return correctAnswer?.text || correctAnswer?.richText || question.correctAnswer || 'N/A';
+    if (correctAnswer) {
+      return correctAnswer.text || stripRich(correctAnswer.richText) || 'Correct';
+    }
+    
+    return question.correctAnswer || question.explanation || 'Answer not available';
   };
 
   // Handle card rating with spaced repetition
@@ -279,6 +327,7 @@ const FlashcardPage: React.FC = () => {
 
           <SessionHeader
             deckTitle={quiz?.title || t('flashcard.session', 'Flashcard Session')}
+            coverImage={quiz?.imageUrl || quiz?.coverImage}
             cardsRemaining={cardQueue.length}
             totalCards={cards.length}
             elapsedTime={0}
@@ -301,8 +350,10 @@ const FlashcardPage: React.FC = () => {
           <FlashCardComponent
             card={{
               id: currentCard.id,
-              front: currentCard.question,
-              back: currentCard.answer,
+                front: currentCard.question,
+                back: currentCard.answer,
+                frontMedia: currentCard.frontMedia || undefined,
+                backMedia: currentCard.backMedia || undefined,
               deckId: id || '',
               difficulty: currentCard.difficulty,
               createdAt: new Date(),
@@ -326,7 +377,7 @@ const FlashcardPage: React.FC = () => {
         {!isFlipped && (
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              {t('flashcard.clickToFlip', 'Click the card to reveal the answer')}
+              {t('flashcard.card.clickToFlip', 'Click the card to reveal the answer')}
             </p>
           </div>
         )}

@@ -19,7 +19,7 @@ export const validateAnswer = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('unauthenticated', 'Must be logged in');
   }
 
-  const { roomId, questionIndex, answer, clientTimestamp } = data;
+  const { roomId, questionIndex, answer } = data;
   const userId = context.auth.uid;
 
   try {
@@ -176,7 +176,7 @@ export const getPlayerQuestions = functions.https.onCall(async (data, context) =
       const shuffledIndices = shuffleArray(indices, rng);
       
       // Reorder options
-      const shuffledOptions = shuffledIndices.map((i: number) => originalOptions[i]);
+      const shuffledOptions = shuffledIndices.map((i) => originalOptions[i as number]);
       
       // Find new position of correct answer
       const newCorrectAnswer = shuffledIndices.indexOf(correctAnswer);
@@ -241,6 +241,74 @@ export const checkRateLimit = functions.https.onCall(async (data, context) => {
     functions.logger.error('Rate limit check error', {
       userId,
       roomId,
+      error: error.message,
+    });
+    throw error;
+  }
+});
+
+/**
+ * Kick a player from a multiplayer room
+ * Only the host can kick players
+ */
+export const kickPlayer = functions.https.onCall(async (data, context) => {
+  // 1. Verify authentication
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'Must be logged in');
+  }
+
+  const { roomId, playerIdToKick } = data;
+  const hostId = context.auth.uid;
+
+  if (!roomId || !playerIdToKick) {
+    throw new functions.https.HttpsError('invalid-argument', 'Missing required parameters');
+  }
+
+  if (hostId === playerIdToKick) {
+    throw new functions.https.HttpsError('invalid-argument', 'Cannot kick yourself');
+  }
+
+  try {
+    // 2. Verify the requester is the host
+    const roomRef = rtdb.ref(`rooms/${roomId}`);
+    const roomSnap = await roomRef.once('value');
+    const roomData = roomSnap.val();
+
+    if (!roomData) {
+      throw new functions.https.HttpsError('not-found', 'Room not found');
+    }
+
+    if (roomData.hostId !== hostId) {
+      throw new functions.https.HttpsError('permission-denied', 'Only the host can kick players');
+    }
+
+    // 3. Remove player from room
+    await rtdb.ref(`rooms/${roomId}/players/${playerIdToKick}`).remove();
+    
+    // 4. Add system message to chat
+    await rtdb.ref(`rooms/${roomId}/chat`).push({
+      userId: 'system',
+      username: 'System',
+      message: `A player has been removed from the room`,
+      timestamp: Date.now(),
+      type: 'system'
+    });
+
+    functions.logger.info('Player kicked', {
+      roomId,
+      hostId,
+      kickedPlayerId: playerIdToKick,
+    });
+
+    return {
+      success: true,
+      message: 'Player kicked successfully',
+    };
+  } catch (error: any) {
+    functions.logger.error('Kick player error', {
+      roomId,
+      hostId,
+      playerIdToKick,
       error: error.message,
     });
     throw error;

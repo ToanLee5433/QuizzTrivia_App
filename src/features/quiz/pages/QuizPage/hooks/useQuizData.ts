@@ -103,6 +103,20 @@ const enhanceMetadata = (metadata: QuizMetadata): QuizPageMetadata => {
     base.resources = normalizedResources;
   }
 
+  // Convert Firestore Timestamps to serializable format
+  if (base.stats && typeof base.stats === 'object') {
+    const stats = base.stats as any;
+    if (stats.lastUpdated?.toDate) {
+      stats.lastUpdated = stats.lastUpdated.toDate().toISOString();
+    }
+  }
+  if ((base.createdAt as any)?.toDate) {
+    base.createdAt = (base.createdAt as any).toDate().toISOString();
+  }
+  if ((base.updatedAt as any)?.toDate) {
+    base.updatedAt = (base.updatedAt as any).toDate().toISOString();
+  }
+
   return base as QuizPageMetadata;
 };
 

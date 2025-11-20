@@ -42,13 +42,18 @@ export function FlashCard({
           <div className="w-full h-full bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center justify-center border-2 border-gray-200">
             {/* Front Media */}
             {showMedia && card.frontMedia && (
-              <div className="mb-6">
+              <div className="mb-6 w-full">
                 {card.frontMedia.type === 'image' ? (
                   <img
                     src={card.frontMedia.url}
                     alt={t('flashcard.card.frontImage')}
                     className="max-w-full max-h-32 rounded-lg object-contain"
                   />
+                ) : card.frontMedia.type === 'video' ? (
+                  <video controls className="w-full max-h-40 rounded-lg object-contain">
+                    <source src={card.frontMedia.url} />
+                    {t('flashcard.card.videoNotSupported')}
+                  </video>
                 ) : (
                   <audio controls className="w-full">
                     <source src={card.frontMedia.url} />
@@ -87,13 +92,18 @@ export function FlashCard({
           <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-xl p-8 flex flex-col items-center justify-center border-2 border-blue-400">
             {/* Back Media */}
             {showMedia && card.backMedia && (
-              <div className="mb-6">
+              <div className="mb-6 w-full">
                 {card.backMedia.type === 'image' ? (
                   <img
                     src={card.backMedia.url}
                     alt={t('flashcard.card.backImage')}
                     className="max-w-full max-h-32 rounded-lg object-contain"
                   />
+                ) : card.backMedia.type === 'video' ? (
+                  <video controls className="w-full max-h-40 rounded-lg object-contain">
+                    <source src={card.backMedia.url} />
+                    {t('flashcard.card.videoNotSupported')}
+                  </video>
                 ) : (
                   <audio controls className="w-full">
                     <source src={card.backMedia.url} />

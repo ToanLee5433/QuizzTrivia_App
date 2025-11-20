@@ -27,6 +27,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import SafeHTML from '../../../shared/components/ui/SafeHTML';
 import { Quiz as BaseQuiz } from '../types';
+import { formatDate } from '../../../lib/utils/helpers';
 
 type CreatorQuiz = Omit<BaseQuiz, 'havePassword'> & {
   havePassword?: 'public' | 'password';
@@ -699,7 +700,7 @@ const MyQuizzesPage: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
-                        {quiz.createdAt.toLocaleDateString('vi-VN')}
+                        {formatDate(quiz.createdAt, 'long')}
                       </td>
                       <td className="px-6 py-4 text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">

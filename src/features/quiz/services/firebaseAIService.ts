@@ -1,7 +1,7 @@
 // Firebase AI Service using Google Generative AI (Gemini)
 // Service để tạo câu hỏi tự động bằng AI
 
-import { Question } from '../types';
+import { Question, QuestionType } from '../types';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getAuth } from 'firebase/auth';
 
@@ -17,7 +17,7 @@ export interface QuestionGenerationOptions {
   numQuestions?: number;
   difficulty?: 'easy' | 'medium' | 'hard' | 'mixed';
   language?: 'vi' | 'en';
-  questionTypes?: ('multiple' | 'true-false' | 'fill-in-blank')[];
+  questionTypes?: QuestionType[];
 }
 
 /**
@@ -35,7 +35,8 @@ export class FirebaseAIService {
       customPrompt, 
       numQuestions = 5, 
       difficulty = 'mixed', 
-      language = 'vi' 
+      language = 'vi',
+      questionTypes
     } = options;
 
     // Kiểm tra xác thực
@@ -46,8 +47,18 @@ export class FirebaseAIService {
 
     try {
       // Tạo system prompt
-      const systemPrompt = customPrompt || this.getDefaultPrompt(numQuestions, difficulty, language);
+      const systemPrompt = customPrompt || this.getDefaultPrompt(numQuestions, difficulty, language, questionTypes);
       
+      console.log('🚀 Calling Firebase Function generateQuestions...');
+      console.log('📤 Request:', {
+        promptLength: systemPrompt.length,
+        contentLength: content.length,
+        numQuestions,
+        difficulty,
+        language,
+        model: config.model || 'gemini-2.0-flash-exp'
+      });
+
       // Gọi Firebase Function
       const generateQuestions = httpsCallable(this.functions, 'generateQuestions');
       
@@ -57,19 +68,42 @@ export class FirebaseAIService {
         config: {
           model: config.model || 'gemini-2.0-flash-exp',
           temperature: config.temperature || 0.7,
-          maxTokens: config.maxTokens || 2000
+          maxTokens: config.maxTokens || 8000 // ⚡ Increased from 2000 to 8000
         }
       });
 
       const data = result.data as any;
       
+      console.log('📥 Firebase Function response:', data);
+
+      if (!data || typeof data !== 'object') {
+        console.error('❌ Invalid response type:', typeof data);
+        throw new Error('Firebase Function trả về response không hợp lệ');
+      }
+
       if (!data.success) {
-        throw new Error(data.error || 'AI generation failed');
+        const errorMsg = data.error || 'AI generation failed';
+        console.error('❌ Firebase Function returned error:', errorMsg);
+        
+        // Show detailed error to help debugging
+        throw new Error(errorMsg);
+      }
+
+      if (!data.questions) {
+        console.error('❌ No questions in response:', data);
+        throw new Error('Firebase Function không trả về questions array');
       }
 
       return this.parseQuestionsFromResponse(data.questions);
     } catch (error) {
-      console.error('Firebase AI Service Error:', error);
+      console.error('❌ Firebase AI Service Error:', error);
+      if (error instanceof Error) {
+        console.error('Error details:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        });
+      }
       throw new Error(`Không thể tạo câu hỏi: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -77,40 +111,178 @@ export class FirebaseAIService {
   /**
    * Tạo prompt mặc định cho việc generate câu hỏi
    */
-  private static getDefaultPrompt(numQuestions: number, difficulty: string, language: string): string {
+  private static getDefaultPrompt(
+    numQuestions: number, 
+    difficulty: string, 
+    language: string,
+    questionTypes?: QuestionType[]
+  ): string {
     const lang = language === 'vi' ? 'tiếng Việt' : 'English';
     
-    return `
-Bạn là một chuyên gia tạo câu hỏi trắc nghiệm chất lượng cao. Hãy tạo ${numQuestions} câu hỏi trắc nghiệm bằng ${lang} dựa trên nội dung được cung cấp.
+    // Map question types
+    const typeMap: Record<QuestionType, string> = {
+      'multiple': 'trắc nghiệm (4 đáp án, chọn 1)',
+      'boolean': 'đúng/sai (2 đáp án)',
+      'short_answer': 'trả lời ngắn/điền từ (nhập text)',
+      'checkbox': 'chọn nhiều đáp án (có thể chọn nhiều đáp án đúng)',
+      'ordering': 'sắp xếp thứ tự',
+      'matching': 'ghép cặp',
+      'fill_blanks': 'điền vào chỗ trống/viết văn',
+      'image': 'chọn ảnh',
+      'audio': 'nghe audio',
+      'video': 'xem video',
+      'rich_content': 'nội dung phong phú'
+    };
+    
+    const typesDescription = questionTypes && questionTypes.length > 0
+      ? `\n- Loại câu hỏi yêu cầu: ${questionTypes.map(t => typeMap[t] || t).join(', ')}\n- Phân bố đều các loại câu hỏi này trong ${numQuestions} câu\n- Đối với checkbox: có thể có nhiều đáp án isCorrect: true\n- Đối với ordering: trả về orderingItems với correctOrder\n- Đối với matching: trả về matchingPairs với left và right\n- Đối với fill_blanks: trả về textWithBlanks và blanks\n- Đối với short_answer: trả về correctAnswer và acceptedAnswers`
+      : '- Loại: Câu hỏi trắc nghiệm (multiple choice)';
+    
+    return `Generate ${numQuestions} quiz questions in ${lang} for the following topic.
+Difficulty level: ${difficulty}
+- Language: Use ${lang} for all questions and answers
+- Format: Return ONLY valid JSON array, no markdown, no code blocks
+${typesDescription}
 
-Yêu cầu:
-- Mỗi câu hỏi có 4 đáp án (A, B, C, D)
-- Chỉ có 1 đáp án đúng
-- Câu hỏi phải liên quan trực tiếp đến nội dung
-- Độ khó: ${difficulty}
-- Bao gồm giải thích cho đáp án đúng
-- Đảm bảo câu hỏi có tính phân biệt cao
+Structure requirements:
+1. ALL questions MUST have "type" field
+2. Multiple choice (type: "multiple"): 4 answers, exactly one isCorrect: true
+3. Boolean (type: "boolean"): 2 answers (Đúng/Sai or True/False), one isCorrect: true
+4. Checkbox (type: "checkbox"): 4+ answers, CAN have MULTIPLE isCorrect: true
+5. Short answer (type: "short_answer"): correctAnswer string, acceptedAnswers array
+6. Ordering (type: "ordering"): orderingItems with correctOrder array
+7. Matching (type: "matching"): matchingPairs with left/right arrays
 
-Trả về định dạng JSON chính xác như sau:
-{
-  "questions": [
-    {
-      "text": "Câu hỏi ở đây",
-      "answers": [
-        {"text": "Đáp án A", "isCorrect": true},
-        {"text": "Đáp án B", "isCorrect": false},
-        {"text": "Đáp án C", "isCorrect": false},
-        {"text": "Đáp án D", "isCorrect": false}
-      ],
-      "explanation": "Giải thích tại sao đáp án A đúng",
-      "points": 10,
-      "difficulty": "${difficulty}"
+Example formats:
+[
+  {
+    "type": "multiple",
+    "question": "Thủ đô của Việt Nam là gì?",
+    "answers": [
+      {"text": "Hà Nội", "isCorrect": true},
+      {"text": "TP HCM", "isCorrect": false},
+      {"text": "Đà Nẵng", "isCorrect": false},
+      {"text": "Huế", "isCorrect": false}
+    ],
+    "explanation": "Hà Nội là thủ đô của Việt Nam"
+  },
+  {
+    "type": "boolean",
+    "question": "Trái đất quay quanh mặt trời?",
+    "answers": [
+      {"text": "Đúng", "isCorrect": true},
+      {"text": "Sai", "isCorrect": false}
+    ],
+    "explanation": "Trái đất quay quanh mặt trời trong 365 ngày"
+  },
+  {
+    "type": "checkbox",
+    "question": "Những thành phố nào là trực thuộc trung ương?",
+    "answers": [
+      {"text": "Hà Nội", "isCorrect": true},
+      {"text": "TP HCM", "isCorrect": true},
+      {"text": "Đà Nẵng", "isCorrect": true},
+      {"text": "Nha Trang", "isCorrect": false}
+    ],
+    "explanation": "Có 5 thành phố trực thuộc trung ương"
+  },
+  {
+    "type": "short_answer",
+    "question": "Ai là tác giả của Truyện Kiều?",
+    "correctAnswer": "Nguyễn Du",
+    "acceptedAnswers": ["Nguyễn Du", "nguyen du"],
+    "explanation": "Nguyễn Du là tác giả của Truyện Kiều"
+  },
+  {
+    "type": "ordering",
+    "question": "Sắp xếp các số từ nhỏ đến lớn:",
+    "orderingItems": ["5", "2", "9", "1"],
+    "correctOrder": [3, 1, 0, 2],
+    "explanation": "Thứ tự đúng: 1, 2, 5, 9"
+  },
+  {
+    "type": "matching",
+    "question": "Ghép thủ đô với quốc gia:",
+    "matchingPairs": {
+      "left": ["Hà Nội", "Bangkok", "Tokyo"],
+      "right": ["Nhật Bản", "Việt Nam", "Thái Lan"],
+      "correctPairs": [[0, 1], [1, 2], [2, 0]]
+    },
+    "explanation": "Ghép đúng thủ đô với quốc gia"
+  }
+]`;
+  }
+
+  /**
+   * Convert AI blanks format to UI format
+   */
+  private static convertBlanks(aiBlanks: any): any {
+    if (!aiBlanks) return undefined;
+    
+    // If already has id field, return as-is
+    if (Array.isArray(aiBlanks) && aiBlanks.length > 0 && aiBlanks[0].id) {
+      return aiBlanks;
     }
-  ]
-}
+    
+    // Convert from AI format to UI format with id field
+    if (Array.isArray(aiBlanks)) {
+      return aiBlanks.map((blank, idx) => ({
+        id: blank.id || `blank_${idx + 1}`,
+        position: blank.position !== undefined ? blank.position : idx,
+        correctAnswer: blank.correctAnswer || '',
+        acceptedAnswers: blank.acceptedAnswers || [],
+        caseSensitive: blank.caseSensitive || false
+      }));
+    }
+    
+    return undefined;
+  }
 
-QUAN TRỌNG: Chỉ trả về JSON thuần túy, không thêm text hoặc markdown nào khác.
-`;
+  /**
+   * Convert AI orderingItems format to UI format
+   */
+  private static convertOrderingItems(aiItems: any): any {
+    if (!aiItems) return undefined;
+    
+    // If already has id field, return as-is
+    if (Array.isArray(aiItems) && aiItems.length > 0 && aiItems[0].id) {
+      return aiItems;
+    }
+    
+    // Convert from AI format: ["item1", "item2"] or [correctOrder indices]
+    // to UI format: [{id, text, correctOrder}]
+    if (Array.isArray(aiItems)) {
+      return aiItems.map((item, idx) => ({
+        id: `order_${idx + 1}`,
+        text: typeof item === 'string' ? item : item.text || '',
+        correctOrder: idx + 1,
+        imageUrl: item.imageUrl
+      }));
+    }
+    
+    return undefined;
+  }
+
+  /**
+   * Convert AI matchingPairs format to UI format
+   */
+  private static convertMatchingPairs(aiPairs: any): any {
+    if (!aiPairs) return undefined;
+    
+    // If already array format, return as-is
+    if (Array.isArray(aiPairs)) return aiPairs;
+    
+    // Convert from AI format: {left: [], right: [], correctPairs: [[0,1]]}
+    // to UI format: [{id, left, right}]
+    if (aiPairs.left && aiPairs.right && aiPairs.correctPairs) {
+      return aiPairs.correctPairs.map((pair: number[], idx: number) => ({
+        id: `pair_${idx + 1}`,
+        left: aiPairs.left[pair[0]] || '',
+        right: aiPairs.right[pair[1]] || ''
+      }));
+    }
+    
+    return undefined;
   }
 
   /**
@@ -118,13 +290,44 @@ QUAN TRỌNG: Chỉ trả về JSON thuần túy, không thêm text hoặc markd
    */
   private static parseQuestionsFromResponse(questionsData: any[]): Question[] {
     try {
+      console.log('📥 Parsing questions data:', questionsData);
+      
+      if (!Array.isArray(questionsData)) {
+        console.error('❌ questionsData is not an array:', typeof questionsData, questionsData);
+        throw new Error('Dữ liệu câu hỏi không đúng định dạng (không phải array)');
+      }
+
+      if (questionsData.length === 0) {
+        throw new Error('AI không trả về câu hỏi nào');
+      }
+
       const questions: Question[] = [];
       
-      for (const questionData of questionsData) {
+      for (let i = 0; i < questionsData.length; i++) {
+        const questionData = questionsData[i];
+        
+        console.log(`📝 Processing question ${i + 1}:`, questionData);
+
+        // Accept both 'text' and 'question' field
+        const questionText = questionData.text || questionData.question;
+        if (!questionText) {
+          console.warn(`⚠️ Question ${i + 1} missing text/question field, skipping`);
+          continue;
+        }
+
+        // Validate based on question type
+        const questionType: QuestionType = questionData.type || 'multiple';
+        const needsAnswers = ['multiple', 'boolean', 'checkbox', 'image', 'audio', 'video'].includes(questionType);
+        
+        if (needsAnswers && (!questionData.answers || !Array.isArray(questionData.answers))) {
+          console.warn(`⚠️ Question ${i + 1} (type: ${questionType}) missing answers array, skipping`);
+          continue;
+        }
+
         const question: Question = {
           id: `q_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          text: questionData.text || '',
-          type: 'multiple',
+          text: questionText,
+          type: questionType,
           answers: questionData.answers?.map((answer: any, index: number) => ({
             id: `a_${index + 1}`,
             text: answer.text || '',
@@ -132,19 +335,70 @@ QUAN TRỌNG: Chỉ trả về JSON thuần túy, không thêm text hoặc markd
           })) || [],
           explanation: questionData.explanation || '',
           points: questionData.points || 10,
-          difficulty: questionData.difficulty || 'medium'
+          difficulty: questionData.difficulty || 'medium',
+          // Advanced question type fields
+          correctAnswer: questionData.correctAnswer,
+          acceptedAnswers: questionData.acceptedAnswers,
+          orderingItems: this.convertOrderingItems(questionData.orderingItems),
+          matchingPairs: this.convertMatchingPairs(questionData.matchingPairs),
+          textWithBlanks: questionData.textWithBlanks,
+          blanks: this.convertBlanks(questionData.blanks)
         };
 
-        // Validate question
-        if (question.text && question.answers.length >= 2) {
+        // Validate question based on type
+        let isValid = false;
+        
+        if (question.text) {
+          switch (questionType) {
+            case 'multiple':
+            case 'boolean':
+            case 'checkbox':
+            case 'image':
+            case 'audio':
+            case 'video':
+              isValid = question.answers.length >= 2;
+              break;
+            case 'short_answer':
+              isValid = !!question.correctAnswer;
+              break;
+            case 'ordering':
+              isValid = !!question.orderingItems && question.orderingItems.length > 0;
+              break;
+            case 'matching':
+              isValid = !!question.matchingPairs;
+              break;
+            case 'fill_blanks':
+              isValid = !!question.textWithBlanks || !!question.blanks;
+              break;
+            default:
+              isValid = question.answers.length >= 2;
+          }
+        }
+        
+        if (isValid) {
           questions.push(question);
+          console.log(`✅ Question ${i + 1} (${questionType}) parsed successfully`);
+        } else {
+          console.warn(`⚠️ Question ${i + 1} (${questionType}) validation failed:`, {
+            hasText: !!question.text,
+            answersLength: question.answers.length,
+            hasCorrectAnswer: !!question.correctAnswer,
+            hasOrderingItems: !!question.orderingItems,
+            hasMatchingPairs: !!question.matchingPairs
+          });
         }
       }
 
+      if (questions.length === 0) {
+        throw new Error('Không có câu hỏi hợp lệ nào được tạo từ AI');
+      }
+
+      console.log(`✅ Successfully parsed ${questions.length}/${questionsData.length} questions`);
       return questions;
     } catch (error) {
-      console.error('Error parsing questions from response:', error);
-      throw new Error('Không thể phân tích câu hỏi từ AI');
+      console.error('❌ Error parsing questions from response:', error);
+      console.error('Raw questionsData:', questionsData);
+      throw new Error(`Không thể phân tích câu hỏi từ AI: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

@@ -268,21 +268,27 @@ class GameStateService {
   ): () => void {
     const leaderboardRef = ref(rtdb, `rooms/${roomId}/leaderboard`);
 
+    // ⚡ ZERO-LATENCY: Process updates immediately
     const unsubscribe = onValue(
       leaderboardRef,
       (snapshot) => {
         const data = snapshot.val();
         if (data) {
           const leaderboard = Object.values(data) as LeaderboardEntry[];
-          // Sort by score desc, then by username
+          
+          // ⚡ Optimized sort: score > correctAnswers > username
           leaderboard.sort((a, b) => {
             if (b.score !== a.score) return b.score - a.score;
+            if (b.correctAnswers !== a.correctAnswers) return b.correctAnswers - a.correctAnswers;
             return a.username.localeCompare(b.username);
           });
-          // Update ranks
+          
+          // ⚡ Update ranks in single pass
           leaderboard.forEach((entry, index) => {
             entry.rank = index + 1;
           });
+          
+          // ⚡ Immediate callback - NO DELAY
           callback(leaderboard);
         } else {
           callback([]);

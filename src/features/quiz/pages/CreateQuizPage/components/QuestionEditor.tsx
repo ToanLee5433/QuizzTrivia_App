@@ -4,6 +4,7 @@ import { Question, Answer } from '../types';
 import { generateId } from '../utils';
 import { Trash2, Check, X as XIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { MediaUploader } from '../../../components/MediaUploader';
 interface QuestionEditorProps {
   question: Question;
   onChange: (q: Question) => void;
@@ -35,6 +36,14 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
           { id: generateId(), text: t('createQuiz.questions.booleanFalseDefault'), isCorrect: false }
         ];
         break;
+      case 'checkbox':
+        // Chọn nhiều đáp án: tạo 4 đáp án, có thể chọn nhiều đáp án đúng
+        newAnswers = Array.from({ length: 4 }, (_, i) => ({
+          id: generateId(),
+          text: '',
+          isCorrect: i === 0, // Default first answer is correct
+        }));
+        break;
       case 'short_answer':
         // Điền từ: không cần answers array, dùng correctAnswer và acceptedAnswers
         newAnswers = [];
@@ -58,6 +67,15 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
           isCorrect: i === 0,
         }));
         newQuestion.audioUrl = '';
+        break;
+      case 'video':
+        // Câu hỏi video: video URL + 4 đáp án trắc nghiệm
+        newAnswers = Array.from({ length: 4 }, (_, i) => ({
+          id: generateId(),
+          text: '',
+          isCorrect: i === 0,
+        }));
+        newQuestion.videoUrl = '';
         break;
       case 'ordering':
         // Sắp xếp: tạo 4 items mặc định
@@ -96,7 +114,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
   };
 
   const handleAddAnswer = () => {
-    if (question.type === 'multiple' || question.type === 'image' || question.type === 'audio') {
+    if (question.type === 'multiple' || question.type === 'checkbox' || question.type === 'image' || question.type === 'audio' || question.type === 'video') {
       const newAnswer: Answer = {
         id: generateId(),
         text:
@@ -189,21 +207,38 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
         >
           <option value="multiple">{t('quizCreation.multipleChoice')}</option>
           <option value="boolean">{t('quizCreation.trueFalse')}</option>
-          <option value="short_answer">{t('quizCreation.fillBlank')}</option>
+          <option value="short_answer">{t('quizCreation.fillInBlank')}</option>
+          <option value="checkbox">{t('quizCreation.multipleAnswers')}</option>
           <option value="image">{t('quizCreation.imageChoice')}</option>
           <option value="audio">{t('quizCreation.audioQuestion')}</option>
+          <option value="video">{t('quizCreation.videoQuestion')}</option>
           <option value="ordering">{t('quizCreation.orderingQuestion')}</option>
           <option value="matching">{t('quizCreation.matchingQuestion')}</option>
-          <option value="fill_blanks">{t('quizCreation.fillBlanksQuestion')}</option>
+          <option value="fill_blanks">{t('quizCreation.essayQuestion')}</option>
         </select>
         <input
           type="number"
-          className="w-20 border p-2 rounded"
+          className={`w-20 border p-2 rounded ${
+            question.points && (question.points < 1 || question.points > 100)
+              ? 'border-red-500'
+              : 'border-gray-300'
+          }`}
           min={1}
           max={100}
-          value={question.points}
-          onChange={e => onChange({ ...question, points: parseInt(e.target.value) || 1 })}
+          value={question.points || ''}
+          onChange={e => {
+            const val = e.target.value;
+            if (val === '') {
+              onChange({ ...question, points: '' as any });
+            } else {
+              const num = parseInt(val);
+              if (!isNaN(num)) {
+                onChange({ ...question, points: num });
+              }
+            }
+          }}
           placeholder={t("profile.sort.score")}
+          title={question.points && (question.points < 1 || question.points > 100) ? '⚠️ Points must be 1-100' : ''}
         />
         <Button variant="outline" onClick={onDelete} className="text-red-600 border-red-300">{t("action.clear")}</Button>
       </div>
@@ -282,6 +317,46 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
         </div>
       )}
 
+      {/* Checkbox (Multiple Answers) Question */}
+      {question.type === 'checkbox' && (
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <h4 className="font-medium text-gray-700 dark:text-gray-300">{t('quizCreation.multipleAnswersLabel')}</h4>
+            <Button onClick={handleAddAnswer} variant="outline" size="sm">{t('quizCreation.addAnswer')}</Button>
+          </div>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{t('quizCreation.multipleAnswersHint')}</p>
+          {question.answers.map((a, idx) => (
+            <div key={a.id} className="flex gap-2 items-center bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700">
+              <span className="text-sm font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{String.fromCharCode(65 + idx)}</span>
+              <input
+                className="flex-1 border border-gray-300 dark:border-gray-600 p-2 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                placeholder={t('createQuiz.questions.answerPlaceholder', { label: String.fromCharCode(65 + idx) })}
+                value={a.text}
+                onChange={e => handleAnswerChange(idx, 'text', e.target.value)}
+              />
+              <label className="flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  checked={a.isCorrect}
+                  onChange={e => handleAnswerChange(idx, 'isCorrect', e.target.checked)}
+                />
+                <span className="text-sm text-gray-700 dark:text-gray-300">{t('common.correct')}</span>
+              </label>
+              {question.answers.length > 2 && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleRemoveAnswer(idx)} 
+                  className="text-red-600 border-red-300 px-2"
+                  aria-label={t('createQuiz.questions.removeAnswer')}
+                >
+                  <Trash2 className="w-4 h-4" aria-hidden="true" />
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
       {question.type === 'short_answer' && (
         <div className="space-y-3">
           <h4 className="font-medium text-gray-700">{t('quizCreation.fillBlankQuestion')}</h4>
@@ -301,7 +376,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
                 <label className="block text-sm font-medium mb-1">{t('quizCreation.acceptedVariations')}</label>
                 <div className="space-y-1">
                   {question.acceptedAnswers.map((answer, idx) => (
-                    <div key={idx} className="flex gap-2 items-center">
+                    <div key={`accepted-${idx}-${answer}`} className="flex gap-2 items-center">
                       <span className="flex-1 bg-gray-50 p-2 rounded text-sm">{answer}</span>
                       <Button 
                         variant="outline" 
@@ -354,25 +429,13 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
                   onChange={e => handleAnswerChange(idx, 'text', e.target.value)}
                 />
                 
-                <input
-                  className="w-full border p-2 rounded text-sm"
-                  placeholder={t('placeholders.imageUrlOptional')}
-                  value={a.imageUrl || ''}
-                  onChange={e => handleAnswerChange(idx, 'imageUrl', e.target.value)}
+                <MediaUploader
+                  type="image"
+                  currentUrl={a.imageUrl}
+                  onUploadComplete={(url) => handleAnswerChange(idx, 'imageUrl', url)}
+                  onRemove={() => handleAnswerChange(idx, 'imageUrl', '')}
+                  maxSizeMB={5}
                 />
-                
-                {a.imageUrl && (
-                  <div className="relative">
-                    <img 
-                      src={a.imageUrl} 
-                      alt={a.text}
-                      className="w-full h-20 object-cover rounded border"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  </div>
-                )}
                 
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -392,20 +455,66 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
       {/* Audio Question */}
       {question.type === 'audio' && (
         <div className="space-y-3">
-          <div className="bg-white p-3 rounded border space-y-2">
-            <h4 className="font-medium text-gray-700">{t('quizCreation.audioFile')}</h4>
-            <input
-              className="w-full border p-2 rounded text-sm"
-              placeholder={t('placeholders.audioUrl')}
-              value={question.audioUrl || ''}
-              onChange={e => onChange({ ...question, audioUrl: e.target.value })}
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+            <MediaUploader
+              type="audio"
+              currentUrl={question.audioUrl}
+              onUploadComplete={(url) => onChange({ ...question, audioUrl: url })}
+              onRemove={() => onChange({ ...question, audioUrl: '' })}
+              label={t('quizCreation.audioFile')}
+              maxSizeMB={10}
             />
-            {question.audioUrl && (
-              <audio controls className="w-full mt-2">
-                <source src={question.audioUrl} />
-                {t('quizCreation.audioNotSupported')}
-              </audio>
-            )}
+          </div>
+          
+          <div className="flex justify-between items-center">
+            <h4 className="font-medium text-gray-700">{t('quizCreation.multipleChoiceAnswers')}</h4>
+            <Button onClick={handleAddAnswer} variant="outline" size="sm">{t('quizCreation.addAnswer')}</Button>
+          </div>
+          {question.answers.map((a, idx) => (
+            <div key={a.id} className="flex gap-2 items-center bg-white p-2 rounded border">
+              <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">{String.fromCharCode(65 + idx)}</span>
+              <input
+                className="flex-1 border p-2 rounded"
+                placeholder={t('createQuiz.questions.answerPlaceholder', { label: String.fromCharCode(65 + idx) })}
+                value={a.text}
+                onChange={e => handleAnswerChange(idx, 'text', e.target.value)}
+              />
+              <label className="flex items-center gap-1">
+                <input
+                  type="radio"
+                  name={`correct-${question.id}`}
+                  checked={a.isCorrect}
+                  onChange={() => handleSetCorrect(idx)}
+                />
+                <span className="text-sm">{t("common.correct")}</span>
+              </label>
+              {question.answers.length > 2 && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleRemoveAnswer(idx)} 
+                  className="text-red-600 border-red-300 px-2"
+                  aria-label={t('createQuiz.questions.removeAnswer')}
+                >
+                  <Trash2 className="w-4 h-4" aria-hidden="true" />
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Video Question */}
+      {question.type === 'video' && (
+        <div className="space-y-3">
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+            <MediaUploader
+              type="video"
+              currentUrl={question.videoUrl}
+              onUploadComplete={(url) => onChange({ ...question, videoUrl: url })}
+              onRemove={() => onChange({ ...question, videoUrl: '' })}
+              label={t('quizCreation.videoFile')}
+              maxSizeMB={100}
+            />
           </div>
           
           <div className="flex justify-between items-center">
@@ -541,7 +650,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
             <div className="font-medium text-sm text-gray-600">{t('quizCreation.leftColumn')}</div>
             <div className="font-medium text-sm text-gray-600">{t('quizCreation.rightColumn')}</div>
           </div>
-          {question.matchingPairs?.map((pair, idx) => (
+          {(Array.isArray(question.matchingPairs) ? question.matchingPairs : [])?.map((pair, idx) => (
             <div key={pair.id} className="grid grid-cols-2 gap-3 items-start bg-white p-3 rounded border">
               <div className="space-y-2">
                 <input
@@ -677,7 +786,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
                     <div className="space-y-1">
                       <label className="text-xs text-gray-600">{t('quizCreation.acceptedVariations')}</label>
                       {blank.acceptedAnswers.map((answer, aIdx) => (
-                        <div key={aIdx} className="flex gap-2 items-center">
+                        <div key={`blank-${idx}-accepted-${aIdx}-${answer}`} className="flex gap-2 items-center">
                           <input
                             className="flex-1 border p-1 rounded text-xs bg-white"
                             value={answer}

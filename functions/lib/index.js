@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.askRAGHealth = exports.askRAG = exports.sendOTP = exports.generateQuestionsHTTP = exports.testAI = exports.generateQuestions = void 0;
+exports.kickPlayer = exports.archiveCompletedRooms = exports.checkRateLimit = exports.getPlayerQuestions = exports.validateAnswer = exports.askRAGHealth = exports.askRAG = exports.sendOTP = exports.generateQuestionsHTTP = exports.testAI = exports.generateQuestions = void 0;
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const generative_ai_1 = require("@google/generative-ai");
@@ -97,7 +97,7 @@ exports.generateQuestions = functions.https.onCall(async (data, context) => {
                 temperature: (config === null || config === void 0 ? void 0 : config.temperature) || 0.7,
                 topP: 0.8,
                 topK: 40,
-                maxOutputTokens: (config === null || config === void 0 ? void 0 : config.maxTokens) || 2000,
+                maxOutputTokens: (config === null || config === void 0 ? void 0 : config.maxTokens) || 8000, // ⚡ Increased to support more questions
             },
         });
         const promptText = `${prompt}\n\nNội dung để tạo câu hỏi:\n\n${content}`;
@@ -107,19 +107,47 @@ exports.generateQuestions = functions.https.onCall(async (data, context) => {
             throw new Error('Không nhận được phản hồi từ AI');
         }
         const generatedText = result.text();
+        console.log('📥 Raw AI response (first 500 chars):', generatedText === null || generatedText === void 0 ? void 0 : generatedText.substring(0, 500));
         // Parse JSON từ response
         let parsedQuestions;
         try {
             if (!generatedText) {
                 throw new Error('AI không trả về text response');
             }
-            const cleanText = generatedText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+            // Clean markdown code blocks and whitespace
+            let cleanText = generatedText
+                .replace(/```json\s*/g, '')
+                .replace(/```\s*/g, '')
+                .trim();
+            console.log('🧹 Cleaned text (first 500 chars):', cleanText.substring(0, 500));
             const parsed = JSON.parse(cleanText);
-            parsedQuestions = parsed.questions || [];
+            // Support both array format and {questions: []} format
+            if (Array.isArray(parsed)) {
+                parsedQuestions = parsed;
+            }
+            else if (parsed.questions && Array.isArray(parsed.questions)) {
+                parsedQuestions = parsed.questions;
+            }
+            else {
+                parsedQuestions = [];
+            }
+            console.log(`✅ Successfully parsed ${parsedQuestions.length} questions`);
+            if (!Array.isArray(parsedQuestions)) {
+                console.error('❌ parsed.questions is not an array:', typeof parsedQuestions);
+                throw new Error('questions field is not an array');
+            }
+            if (parsedQuestions.length === 0) {
+                console.error('❌ No questions in parsed response');
+                throw new Error('AI returned 0 questions');
+            }
         }
         catch (parseError) {
-            console.error('Error parsing JSON:', parseError);
-            throw new Error('Không thể phân tích câu hỏi từ AI');
+            console.error('❌ Error parsing JSON:', parseError);
+            console.error('Raw response:', generatedText);
+            // Return detailed error for debugging
+            throw new Error(`Không thể phân tích câu hỏi từ AI. ` +
+                `Parse error: ${parseError instanceof Error ? parseError.message : 'Unknown'}. ` +
+                `Response preview: ${(generatedText === null || generatedText === void 0 ? void 0 : generatedText.substring(0, 200)) || 'empty'}`);
         }
         // Log cho debugging
         console.log(`Generated ${parsedQuestions.length} questions for user ${context.auth.uid}`);
@@ -276,4 +304,13 @@ exports.sendOTP = functions.https.onCall(async (data, context) => {
 var ask_1 = require("./rag/ask");
 Object.defineProperty(exports, "askRAG", { enumerable: true, get: function () { return ask_1.askRAG; } });
 Object.defineProperty(exports, "askRAGHealth", { enumerable: true, get: function () { return ask_1.askRAGHealth; } });
+// ============================================================
+// 🎮 Multiplayer Functions (Security & Anti-Cheat)
+// ============================================================
+var index_1 = require("./multiplayer/index");
+Object.defineProperty(exports, "validateAnswer", { enumerable: true, get: function () { return index_1.validateAnswer; } });
+Object.defineProperty(exports, "getPlayerQuestions", { enumerable: true, get: function () { return index_1.getPlayerQuestions; } });
+Object.defineProperty(exports, "checkRateLimit", { enumerable: true, get: function () { return index_1.checkRateLimit; } });
+Object.defineProperty(exports, "archiveCompletedRooms", { enumerable: true, get: function () { return index_1.archiveCompletedRooms; } });
+Object.defineProperty(exports, "kickPlayer", { enumerable: true, get: function () { return index_1.kickPlayer; } });
 //# sourceMappingURL=index.js.map

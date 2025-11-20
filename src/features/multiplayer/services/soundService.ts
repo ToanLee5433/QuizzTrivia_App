@@ -1,7 +1,7 @@
 import { Howl } from 'howler';
 import { logger } from '../utils/logger';
 
-export type SoundType = 'correct' | 'wrong' | 'countdown' | 'gameStart' | 'tick' | 'transition';
+export type SoundType = 'correct' | 'wrong' | 'countdown' | 'gameStart' | 'tick' | 'transition' | 'powerup' | 'click' | 'join' | 'ready' | 'kick' | 'start' | 'timeup' | 'victory' | 'applause';
 
 interface SoundConfig {
   src: string;
@@ -13,8 +13,10 @@ class SoundService {
   private sounds: Map<SoundType, Howl> = new Map();
   private enabled: boolean = true;
   private masterVolume: number = 0.5;
+  private audioUnlocked: boolean = false;
 
   private soundConfigs: Record<SoundType, SoundConfig> = {
+    // Core gameplay sounds
     correct: {
       src: '/sounds/correct.mp3',
       volume: 0.7,
@@ -39,6 +41,46 @@ class SoundService {
       src: '/sounds/transition.mp3',
       volume: 0.5,
     },
+    powerup: {
+      src: '/sounds/powerup.mp3',
+      volume: 0.7,
+    },
+    
+    // UI interaction sounds
+    click: {
+      src: '/sounds/click.mp3',
+      volume: 0.4,
+    },
+    join: {
+      src: '/sounds/join.mp3',
+      volume: 0.6,
+    },
+    ready: {
+      src: '/sounds/ready.mp3',
+      volume: 0.6,
+    },
+    kick: {
+      src: '/sounds/kick.mp3',
+      volume: 0.5,
+    },
+    start: {
+      src: '/sounds/start.mp3',
+      volume: 0.7,
+    },
+    
+    // End game sounds
+    timeup: {
+      src: '/sounds/timeup.mp3',
+      volume: 0.7,
+    },
+    victory: {
+      src: '/sounds/victory.mp3',
+      volume: 0.8,
+    },
+    applause: {
+      src: '/sounds/applause.mp3',
+      volume: 0.6,
+    },
   };
 
   constructor() {
@@ -47,23 +89,31 @@ class SoundService {
   }
 
   private initializeSounds(): void {
+    // ⚡ Preload ALL sounds for unlock to work
+    const criticalSounds = ['click', 'correct', 'wrong', 'ready', 'join'];
+    
     Object.entries(this.soundConfigs).forEach(([type, config]) => {
       try {
+        const isCritical = criticalSounds.includes(type);
+        
         const sound = new Howl({
           src: [config.src],
           volume: config.volume * this.masterVolume,
           loop: config.loop || false,
-          preload: false, // Don't preload to avoid errors with missing files
-          html5: true, // Use HTML5 Audio for better mobile support
-          onloaderror: () => {
-            // Silently fail if sound file doesn't exist (not critical)
-            logger.debug(`Sound file not found (optional): ${type}`);
+          preload: true, // ⚡ Changed to true - preload ALL sounds
+          html5: false, // ⚠️ Use Web Audio API instead of HTML5 (better pooling)
+          pool: 3, // Limit concurrent instances
+          onload: () => {
+            logger.debug(`✅ Sound loaded: ${type} (${isCritical ? 'critical' : 'lazy'})`);
+          },
+          onloaderror: (_id, error) => {
+            logger.warn(`⚠️ Sound file failed to load: ${type}`, error);
           },
         });
 
         this.sounds.set(type as SoundType, sound);
-      } catch {
-        logger.debug(`Sound file not available: ${type}`);
+      } catch (error) {
+        logger.error(`❌ Sound initialization failed: ${type}`, error);
       }
     });
 
@@ -74,19 +124,74 @@ class SoundService {
     });
   }
 
-  play(type: SoundType): void {
+  // ⚡ Unlock audio context (bypass browser autoplay policy)
+  unlock(): void {
+    if (this.audioUnlocked) return;
+    
+    logger.info('🔓 Attempting to unlock audio context...');
+    
+    const unlockAttempt = () => {
+      let unlockedCount = 0;
+      
+      this.sounds.forEach((sound, type) => {
+        try {
+          // Force load if unloaded
+          if (sound.state() === 'unloaded') {
+            sound.load();
+          }
+          
+          // Unlock only loaded sounds
+          if (sound.state() === 'loaded') {
+            const originalVolume = sound.volume();
+            sound.volume(0.01); // Very quiet (not 0 - some browsers need audible sound)
+            const id = sound.play();
+            setTimeout(() => {
+              sound.stop(id);
+              sound.volume(originalVolume);
+            }, 10);
+            unlockedCount++;
+          }
+        } catch (error) {
+          logger.warn(`⚠️ Could not unlock sound: ${type}`, error);
+        }
+      });
+
+      if (unlockedCount > 0) {
+        this.audioUnlocked = true;
+        logger.success(`🔊 Audio context unlocked (${unlockedCount}/${this.sounds.size} sounds)`);
+        return true;
+      }
+      return false;
+    };
+
+    // Try immediately
+    if (!unlockAttempt()) {
+      // Retry after 100ms if sounds not loaded yet
+      setTimeout(unlockAttempt, 100);
+    }
+  }  play(type: SoundType): void {
     if (!this.enabled) return;
+
+    // Auto-unlock on first play attempt
+    if (!this.audioUnlocked) {
+      this.unlock();
+    }
 
     const sound = this.sounds.get(type);
     if (sound) {
       try {
+        // Lazy load if not loaded yet
+        if (sound.state() === 'unloaded') {
+          sound.load();
+        }
+        
         sound.play();
-        logger.debug(`Playing sound: ${type}`);
+        logger.debug(`🎵 Playing sound: ${type}`);
       } catch (error) {
-        logger.error(`Error playing sound: ${type}`, error);
+        logger.error(`❌ Error playing sound: ${type}`, error);
       }
     } else {
-      logger.warn(`Sound not found: ${type}`);
+      logger.warn(`⚠️ Sound not found: ${type}`);
     }
   }
 

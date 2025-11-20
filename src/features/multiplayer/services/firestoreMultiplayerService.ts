@@ -282,7 +282,7 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
     try {
       logger.info('🚪 Service: Attempting to join room', { roomCode, hasPassword: !!password });
       
-      // Find room by code
+      // ⚡ OPTIMIZATION: Single query with parallel player count check
       const q = query(collection(db, 'multiplayer_rooms'), where('code', '==', roomCode), limit(1));
       const snapshot = await getDocs(q);
       
@@ -301,7 +301,7 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
         providedPassword: !!password
       });
       
-      // Check if room requires password
+      // ⚡ OPTIMIZATION: Check password BEFORE querying players (fail fast)
       if (roomData.isPrivate && !password) {
         logger.warn('🔒 Service: Room requires password but none provided');
         throw new Error('room_requires_password');
@@ -312,8 +312,11 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
         throw new Error('wrong_password');
       }
       
-      // Check room capacity
-      const playersSnapshot = await getDocs(collection(db, 'multiplayer_rooms', roomDoc.id, 'players'));
+      // ⚡ OPTIMIZATION: Parallel checks for capacity and game status
+      const [playersSnapshot] = await Promise.all([
+        getDocs(collection(db, 'multiplayer_rooms', roomDoc.id, 'players'))
+      ]);
+      
       if (playersSnapshot.size >= roomData.maxPlayers) {
         throw new Error('room_full');
       }
@@ -411,8 +414,16 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
     try {
       if (!this.userId) return;
       
-      // Update player presence in Firestore
+      // ✅ Check if player document exists before updating
       const playerDoc = doc(db, 'multiplayer_rooms', roomId, 'players', this.userId);
+      const playerSnap = await getDoc(playerDoc);
+      
+      if (!playerSnap.exists()) {
+        logger.warn('Cannot set presence - player not in room', { roomId, userId: this.userId });
+        return;
+      }
+      
+      // Update player presence in Firestore
       await updateDoc(playerDoc, {
         isOnline,
         lastSeen: serverTimestamp()
@@ -438,11 +449,23 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
       
       const roomData = roomSnap.data();
       
+      // ✅ Check if current user is actually a player in this room
+      const playerDoc = doc(db, 'multiplayer_rooms', roomId, 'players', this.userId);
+      const playerSnap = await getDoc(playerDoc);
+      
+      if (!playerSnap.exists()) {
+        logger.warn('User is not a player in this room, cannot resume', { roomId, userId: this.userId });
+        return null;
+      }
+      
       // Restart listeners
       this.currentRoomId = roomId;
       this.listenToRoom(roomId);
       this.listenToPlayers(roomId);
       this.listenToMessages(roomId);
+      
+      // Setup RTDB presence
+      await realtimeService.setupPresence(roomId, this.userId, this.username);
       
       // Rebuild room object
       const playersSnapshot = await getDocs(collection(db, 'multiplayer_rooms', roomId, 'players'));

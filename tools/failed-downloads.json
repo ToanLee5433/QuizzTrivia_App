@@ -1,0 +1,92 @@
+[
+  {
+    "filename": "click.mp3",
+    "url": "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3",
+    "error": "HTTP 403"
+  },
+  {
+    "filename": "join.mp3",
+    "url": "https://cdn.pixabay.com/download/audio/2022/03/10/audio_57dc181df7.mp3",
+    "error": "HTTP 403"
+  },
+  {
+    "filename": "kick.mp3",
+    "url": "https://cdn.pixabay.com/download/audio/2021/08/09/audio_1808fbf07a.mp3",
+    "error": "HTTP 403"
+  },
+  {
+    "filename": "start.mp3",
+    "url": "https://cdn.pixabay.com/download/audio/2022/03/24/audio_8350269a33.mp3",
+    "error": "HTTP 403"
+  },
+  {
+    "filename": "game-start.mp3",
+    "url": "https://cdn.pixabay.com/download/audio/2021/08/04/audio_05ba32e63e.mp3",
+    "error": "HTTP 403"
+  },
+  {
+    "filename": "countdown.mp3",
+    "url": "https://cdn.pixabay.com/download/audio/2023/06/27/audio_3634d73541.mp3",
+    "error": "HTTP 403"
+  },
+  {
+    "filename": "tick.mp3",
+    "url": "https://cdn.pixabay.com/download/audio/2022/03/10/audio_9a96e7f27c.mp3",
+    "error": "HTTP 403"
+  },
+  {
+    "filename": "transition.mp3",
+    "url": "https://cdn.pixabay.com/download/audio/2022/03/24/audio_1d69745f8c.mp3",
+    "error": "HTTP 403"
+  },
+  {
+    "filename": "wrong.mp3",
+    "url": "https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c90c5b61.mp3",
+    "error": "HTTP 403"
+  },
+  {
+    "filename": "powerup.mp3",
+    "url": "https://cdn.pixabay.com/download/audio/2022/03/15/audio_7949d54d66.mp3",
+    "error": "HTTP 403"
+  },
+  {
+    "filename": "victory.mp3",
+    "url": "https://cdn.pixabay.com/download/audio/2021/08/09/audio_05ba32e63e.mp3",
+    "error": "HTTP 403"
+  },
+  {
+    "filename": "applause.mp3",
+    "url": "https://cdn.pixabay.com/download/audio/2022/03/24/audio_3793080a54.mp3",
+    "error": "HTTP 403"
+  },
+  {
+    "filename": "waiting-music.mp3",
+    "url": "https://cdn.pixabay.com/download/audio/2022/03/15/audio_7949d54d66.mp3?filename=bossa-nova-elevator-music-10900.mp3",
+    "error": "HTTP 403"
+  },
+  {
+    "filename": "energetic.mp3",
+    "url": "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=happy-pop-169252.mp3",
+    "error": "HTTP 403"
+  },
+  {
+    "filename": "intense.mp3",
+    "url": "https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c90c5b61.mp3?filename=action-strike-125375.mp3",
+    "error": "HTTP 403"
+  },
+  {
+    "filename": "ambient-1.mp3",
+    "url": "https://cdn.pixabay.com/download/audio/2022/03/24/audio_1d69745f8c.mp3?filename=ambient-piano-10997.mp3",
+    "error": "HTTP 403"
+  },
+  {
+    "filename": "ambient-2.mp3",
+    "url": "https://cdn.pixabay.com/download/audio/2022/03/15/audio_7949d54d66.mp3?filename=space-atmosphere-192049.mp3",
+    "error": "HTTP 403"
+  },
+  {
+    "filename": "victory-music.mp3",
+    "url": "https://cdn.pixabay.com/download/audio/2022/03/24/audio_3793080a54.mp3?filename=winning-204996.mp3",
+    "error": "HTTP 403"
+  }
+]

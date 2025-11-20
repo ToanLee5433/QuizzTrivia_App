@@ -62,7 +62,7 @@ export interface Flashcard {
  * Card Media - Images or audio attachments
  */
 export interface CardMedia {
-  type: 'image' | 'audio';
+  type: 'image' | 'audio' | 'video';
   url: string;
   thumbnailUrl?: string;
   

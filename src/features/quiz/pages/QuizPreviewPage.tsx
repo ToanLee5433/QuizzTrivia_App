@@ -41,6 +41,7 @@ const QUESTION_TYPE_FALLBACKS: Record<Question['type'], string> = {
   checkbox: 'Multiple answers',
   rich_content: 'Rich content',
   audio: 'Audio comprehension',
+  video: 'Video comprehension',
   ordering: 'Ordering',
   matching: 'Matching pairs',
   fill_blanks: 'Fill in the blanks'

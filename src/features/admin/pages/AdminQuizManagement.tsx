@@ -17,6 +17,7 @@ import {
 import { db } from '../../../lib/firebase/config';
 import { RootState } from '../../../lib/store';
 import { useNotifications } from '../../../hooks/useNotifications';
+import { formatDate } from '../../../lib/utils/helpers';
 import { 
   Search, 
   Eye, 
@@ -964,13 +965,7 @@ const AdminQuizManagement: React.FC = () => {
                         <div className="flex items-center gap-4 text-sm text-gray-500">
                           <span className="flex items-center gap-1">
                             <Clock className="w-4 h-4" />
-                            {request.requestedAt?.toLocaleDateString('vi-VN', {
-                              day: '2-digit',
-                              month: '2-digit', 
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            }) || t('admin.quizManagement.unknownTime')}
+                            {request.requestedAt ? formatDate(request.requestedAt, 'long') : t('admin.quizManagement.unknownTime')}
                           </span>
                           <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">{t("admin.editRequests.pending")}
                           </span>

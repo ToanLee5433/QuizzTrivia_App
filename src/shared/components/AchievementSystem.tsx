@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../lib/store';
+import { formatDate } from '../../lib/utils/helpers';
 
 import { useTranslation } from 'react-i18next';
 import SafeHTML from './ui/SafeHTML';
@@ -174,7 +175,7 @@ const AchievementCard: React.FC<{ achievement: Achievement; onClaim: () => void 
         {/* Unlock Date */}
         {achievement.unlocked && achievement.unlockedAt && (
           <div className="text-xs text-gray-500 mt-2">
-            {t('achievement.unlockedAt', {date: achievement.unlockedAt.toLocaleDateString('vi-VN')})}
+            {t('achievement.unlockedAt', {date: formatDate(achievement.unlockedAt, 'long')})}
           </div>
         )}
       </div>

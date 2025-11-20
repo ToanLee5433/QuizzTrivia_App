@@ -143,11 +143,11 @@ service cloud.firestore {
       
       /* --- CREATE QUIZ ---
          Creator và Admin có thể tạo quiz.
-         Mặc định status = 'draft' khi tạo.
+         Cho phép tạo với status 'draft' hoặc 'pending'.
       */
       allow create: if signedIn() && (
         isCreator() || isAdmin()
-      ) && request.resource.data.status == 'draft';
+      ) && request.resource.data.status in ['draft', 'pending'];
       
       /* --- UPDATE QUIZ ---
          Owner: Có thể sửa quiz draft/rejected của mình

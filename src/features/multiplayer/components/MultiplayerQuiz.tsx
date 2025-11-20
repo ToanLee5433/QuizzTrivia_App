@@ -21,6 +21,8 @@ import soundService from '../services/soundService';
 import { useHostTransfer } from '../hooks/useHostTransfer';
 import { useReconnection } from '../hooks/useReconnection';
 import { usePerformanceMonitoring } from '../hooks/usePerformanceMonitoring';
+import PowerUpsPanel from './PowerUpsPanel';
+import powerUpsService, { PowerUpType } from '../services/powerUpsService';
 
 
 // Type definitions
@@ -161,10 +163,17 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
 
   const [waitingForOthers, setWaitingForOthers] = useState<boolean>(false);
   
+  // Power-ups state
+  const [, setActivePowerUp] = useState<PowerUpType | null>(null);
+  const [eliminatedOptions, setEliminatedOptions] = useState<number[]>([]);
+  const [scoreMultiplier, setScoreMultiplier] = useState<number>(1);
+  const [freezeTimeActive, setFreezeTimeActive] = useState<boolean>(false);
+  
   const timerRef = useRef<number | null>(null);
   const countdownRef = useRef<number | null>(null);
   const gameStartRef = useRef<number | null>(null);
   const previousQuestionIndexRef = useRef<number>(-1);
+  const freezeTimerRef = useRef<number | null>(null);
 
   // Use real-time data consistently
   const currentGameData = realtimeGameData || gameData;
@@ -520,9 +529,9 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
     explanation: 'Question loading...'
   }, [currentQuestion]);
 
-  // Countdown timer (optimized - minimal dependencies)
+  // Countdown timer (optimized - minimal dependencies, respects freeze-time)
   useEffect(() => {
-    if (locked || showResults || timeLeft <= 0) return;
+    if (locked || showResults || timeLeft <= 0 || freezeTimeActive) return;
     
     timerRef.current = window.setTimeout(() => {
       setTimeLeft(prev => prev - 1);
@@ -534,7 +543,55 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
         timerRef.current = null;
       }
     };
-  }, [timeLeft, locked, showResults]);
+  }, [timeLeft, locked, showResults, freezeTimeActive]);
+
+  // Power-up handler
+  const handlePowerUpUsed = useCallback((type: PowerUpType) => {
+    setActivePowerUp(type);
+    
+    switch (type) {
+      case '50-50':
+        // Eliminate 2 wrong answers
+        const correctAnswer = finalQuestion.correct;
+        const eliminated = powerUpsService.apply5050(correctAnswer, finalQuestion.options.length);
+        setEliminatedOptions(eliminated);
+        toast.info(t('multiplayer.powerUps.5050') + ' activated!', { autoClose: 2000 });
+        soundService.play('powerup');
+        break;
+        
+      case 'x2-score':
+        // Double score for this question
+        setScoreMultiplier(2);
+        toast.info(t('multiplayer.powerUps.x2Score') + ' activated!', { autoClose: 2000 });
+        soundService.play('powerup');
+        break;
+        
+      case 'freeze-time':
+        // Freeze timer for 5 seconds
+        setFreezeTimeActive(true);
+        toast.info(t('multiplayer.powerUps.freezeTime') + ' activated!', { autoClose: 2000 });
+        soundService.play('powerup');
+        
+        // Unfreeze after 5 seconds
+        freezeTimerRef.current = window.setTimeout(() => {
+          setFreezeTimeActive(false);
+        }, 5000);
+        break;
+    }
+  }, [finalQuestion, t]);
+  
+  // Reset power-up effects when question changes
+  useEffect(() => {
+    setActivePowerUp(null);
+    setEliminatedOptions([]);
+    setScoreMultiplier(1);
+    setFreezeTimeActive(false);
+    
+    if (freezeTimerRef.current) {
+      window.clearTimeout(freezeTimerRef.current);
+      freezeTimerRef.current = null;
+    }
+  }, [currentQuestionIndex]);
 
   // Submit answer function - defined before useEffect that uses it
   const handleSubmit = useCallback(async (answerIndex?: number) => {
@@ -556,37 +613,50 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
     
     try {
       const timeSpent = timePerQuestion - timeLeft;
-      const isCorrect = indexToSubmit !== null ? indexToSubmit === finalQuestion.correct : false;
-      const points = isCorrect ? Math.max(10, Math.floor(100 - (timeSpent * 2))) : 0; // 10-100 points based on speed
       
-      // Update client-side scores immediately for fast UI response
-      setPlayerScores(prev => ({
-        ...prev,
-        [currentUser.uid]: (prev[currentUser.uid] || 0) + points
-      }));
+      // Declare variables outside try-catch for scope access
+      let isCorrect = false;
+      let points = 0;
       
-      // Store current question answer for real-time leaderboard during results
-      setCurrentQuestionAnswers(prev => ({
-        ...prev,
-        [currentUser.uid]: {
-          selectedAnswer: indexToSubmit ?? -1,
-          answer: `${indexToSubmit ?? -1}`,
-          timeToAnswer: timeSpent,
-          timeSpent,
-          isCorrect,
-          pointsEarned: points,
-          points,
-          timestamp: Date.now()
-        }
-      }));
+      // ✅ SERVER-SIDE VALIDATION: Call Cloud Function to validate answer and calculate score
+      // This prevents client-side score manipulation and cheating
+      const validateAnswerFunction = import('firebase/functions').then(({ getFunctions, httpsCallable }) => {
+        const functions = getFunctions();
+        return httpsCallable(functions, 'validateAnswer');
+      });
       
-      // Update player's answer history
-      setPlayerAnswers(prev => ({
-        ...prev,
-        [currentUser.uid]: [
-          ...(prev[currentUser.uid] || []),
-          {
-            questionId: finalQuestion.id,
+      const validateAnswer = await validateAnswerFunction;
+      
+      try {
+        const result = await validateAnswer({
+          roomId: currentRoomData.id,
+          questionIndex: currentQuestionIndex,
+          answer: indexToSubmit ?? -1,
+          clientTimestamp: Date.now(),
+          scoreMultiplier: scoreMultiplier // Send power-up multiplier to server
+        });
+        
+        const validationData = result.data as {
+          success: boolean;
+          isCorrect: boolean;
+          points: number;
+          correctAnswer: number;
+          timeToAnswer: number;
+        };
+        
+        isCorrect = validationData.isCorrect;
+        points = Math.floor(validationData.points * scoreMultiplier); // Apply power-up multiplier
+        
+        // Update client-side scores with server-validated points
+        setPlayerScores(prev => ({
+          ...prev,
+          [currentUser.uid]: (prev[currentUser.uid] || 0) + points
+        }));
+        
+        // Store current question answer for real-time leaderboard during results
+        setCurrentQuestionAnswers(prev => ({
+          ...prev,
+          [currentUser.uid]: {
             selectedAnswer: indexToSubmit ?? -1,
             answer: `${indexToSubmit ?? -1}`,
             timeToAnswer: timeSpent,
@@ -596,8 +666,75 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
             points,
             timestamp: Date.now()
           }
-        ]
-      }));
+        }));
+        
+        // Update player's answer history
+        setPlayerAnswers(prev => ({
+          ...prev,
+          [currentUser.uid]: [
+            ...(prev[currentUser.uid] || []),
+            {
+              questionId: finalQuestion.id,
+              selectedAnswer: indexToSubmit ?? -1,
+              answer: `${indexToSubmit ?? -1}`,
+              timeToAnswer: timeSpent,
+              timeSpent,
+              isCorrect,
+              pointsEarned: points,
+              points,
+              timestamp: Date.now()
+            }
+          ]
+        }));
+        
+        logger.info('Answer validated by server', { isCorrect, points });
+        
+      } catch (serverError: any) {
+        // Fallback to client-side if server validation fails (network issues)
+        logger.warn('Server validation failed, using client fallback', serverError);
+        
+        isCorrect = indexToSubmit !== null ? indexToSubmit === finalQuestion.correct : false;
+        const basePoints = isCorrect ? Math.max(10, Math.floor(100 - (timeSpent * 2))) : 0;
+        points = Math.floor(basePoints * scoreMultiplier);
+        
+        // Update client-side scores as fallback
+        setPlayerScores(prev => ({
+          ...prev,
+          [currentUser.uid]: (prev[currentUser.uid] || 0) + points
+        }));
+        
+        setCurrentQuestionAnswers(prev => ({
+          ...prev,
+          [currentUser.uid]: {
+            selectedAnswer: indexToSubmit ?? -1,
+            answer: `${indexToSubmit ?? -1}`,
+            timeToAnswer: timeSpent,
+            timeSpent,
+            isCorrect,
+            pointsEarned: points,
+            points,
+            timestamp: Date.now()
+          }
+        }));
+        
+        setPlayerAnswers(prev => ({
+          ...prev,
+          [currentUser.uid]: [
+            ...(prev[currentUser.uid] || []),
+            {
+              questionId: finalQuestion.id,
+              selectedAnswer: indexToSubmit ?? -1,
+              answer: `${indexToSubmit ?? -1}`,
+              timeToAnswer: timeSpent,
+              timeSpent,
+              isCorrect,
+              pointsEarned: points,
+              points,
+              timestamp: Date.now()
+            }
+          ]
+        }));
+      }
       
       // Submit to server (for sync with other players) - only if answer was selected
       if (indexToSubmit !== null) {
@@ -819,13 +956,13 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
                           <div>
                             <div className={`font-medium text-sm ${isCurrentUser ? 'text-blue-700' : 'text-gray-800'}`}>
                               #{position} {isCurrentUser 
-                                ? (currentUserName || player?.username || player?.name || 'You')
+                                ? (currentUserName || player?.username || player?.name || t('common.you', 'You'))
                                 : (player?.username || player?.name || player?.displayName || `Player ${position}`)
                               }
-                              {isCurrentUser && <span className="ml-1 text-xs">(You)</span>}
+                              {isCurrentUser && <span className="ml-1 text-xs">({t('common.you', 'You')})</span>}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {correctAnswersCount} đúng • {player.score} điểm
+                              {t('multiplayer.game.correctCount', '{{count}} đúng', { count: correctAnswersCount })} • {t('multiplayer.game.pointsCount', '{{points}} điểm', { points: player.score })}
                               {currentAnswer && (
                                 <span className={`ml-2 ${currentAnswer.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
                                   {currentAnswer.isCorrect ? '✓' : '✗'} +{currentAnswer.points}
@@ -867,7 +1004,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
                   <span className="text-4xl">🏆</span>
                 </div>
                 <h1 className="text-5xl font-black text-white mb-2 bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-                  GAME COMPLETE!
+                  {t('multiplayer.game.gameComplete', 'GAME COMPLETE!')}
                 </h1>
                 <p className="text-xl text-blue-200">{t('multiplayer.game.amazingPerformance')}</p>
               </div>
@@ -1176,16 +1313,30 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
             </div>
           )}
           
+          {/* Power-Ups Panel */}
+          {!showResults && currentUser?.uid && currentRoomData?.id && (
+            <div className="mb-6">
+              <PowerUpsPanel
+                roomCode={currentRoomData.id}
+                playerId={currentUser.uid}
+                currentQuestionIndex={currentQuestionIndex}
+                onPowerUpUsed={handlePowerUpUsed}
+                disabled={locked}
+              />
+            </div>
+          )}
+
           {/* Show options if available */}
           {finalQuestion.options && finalQuestion.options.length > 0 ? (
             <AnswerOptions
               options={finalQuestion.options.map((text: string, idx: number) => ({ 
                 id: idx, 
-                text 
+                text,
+                eliminated: eliminatedOptions.includes(idx) // Fade out eliminated options
               }))}
               selectedAnswer={selectedIndex}
               onSelect={handleSelect}
-              disabled={locked}
+              disabled={locked || eliminatedOptions.includes(selectedIndex ?? -1)}
               correctAnswer={showResults ? questionResults?.correctAnswer : undefined}
               showResults={showResults}
             />

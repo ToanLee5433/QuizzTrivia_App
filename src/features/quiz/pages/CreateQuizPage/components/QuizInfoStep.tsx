@@ -101,14 +101,32 @@ const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
           </label>
           <input
             type="number"
-            className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+            className={`w-full p-4 border-2 rounded-xl focus:ring-2 focus:ring-blue-500 transition-colors ${
+              quiz.duration && (quiz.duration < 5 || quiz.duration > 120)
+                ? 'border-red-500 focus:border-red-500'
+                : 'border-gray-200 focus:border-blue-500'
+            }`}
             min={5}
             max={120}
-            value={quiz.duration}
-            onChange={e => setQuiz(q => ({ ...q, duration: parseInt(e.target.value) || 15 }))}
+            value={quiz.duration || ''}
+            onChange={e => {
+              const val = e.target.value;
+              if (val === '') {
+                setQuiz(q => ({ ...q, duration: '' as any }));
+              } else {
+                const num = parseInt(val);
+                if (!isNaN(num)) {
+                  setQuiz(q => ({ ...q, duration: num }));
+                }
+              }
+            }}
             placeholder={t('createQuiz.info.durationPlaceholder')}
           />
-          <p className="text-sm text-gray-500">{t('quizCreation.from5to120minutes')}</p>
+          {quiz.duration && (quiz.duration < 5 || quiz.duration > 120) ? (
+            <p className="text-sm text-red-600 mt-1">⚠️ {t('quizCreation.from5to120minutes')}</p>
+          ) : (
+            <p className="text-sm text-gray-500">{t('quizCreation.from5to120minutes')}</p>
+          )}
         </div>
 
         {/* Tags */}
