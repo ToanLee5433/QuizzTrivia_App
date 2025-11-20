@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Quiz } from '../../../types';
 import { ResultState } from '../types';
 
@@ -13,13 +14,15 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({
   result, 
   percentage 
 }) => {
+  const { t } = useTranslation();
+  
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">Performance Analysis</h2>
+      <h2 className="text-xl font-bold text-gray-900 mb-4">{t('result.performance_analysis', 'Performance Analysis')}</h2>
       
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <span className="text-gray-600">Accuracy Rate</span>
+          <span className="text-gray-600">{t('result.accuracy_rate', 'Accuracy Rate')}</span>
           <div className="flex items-center">
             <div className="w-32 bg-gray-200 rounded-full h-2 mr-3">
               <div 
@@ -32,7 +35,7 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({
         </div>
         
         <div className="flex items-center justify-between">
-          <span className="text-gray-600">Quiz Difficulty</span>
+          <span className="text-gray-600">{t('result.quiz_difficulty', 'Quiz Difficulty')}</span>
           <span className={`px-3 py-1 rounded-full text-sm font-medium ${
             quiz.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
             quiz.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-800' :
@@ -43,9 +46,9 @@ export const PerformanceAnalysis: React.FC<PerformanceAnalysisProps> = ({
         </div>
         
         <div className="flex items-center justify-between">
-          <span className="text-gray-600">Time Management</span>
+          <span className="text-gray-600">{t('result.time_management', 'Time Management')}</span>
           <span className="font-semibold text-green-600">
-            {result.isTimeUp ? 'Used full time' : 'Completed early'}
+            {result.isTimeUp ? t('result.used_full_time', 'Used full time') : t('result.completed_early', 'Completed early')}
           </span>
         </div>
       </div>

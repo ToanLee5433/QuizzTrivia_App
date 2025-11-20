@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getQuizResultById } from '../../api/base';
 import { getQuizById } from '../../services/quiz';
 import { QuizResult, Quiz } from '../../types';
@@ -12,20 +13,34 @@ import {
   StatsGrid,
   PerformanceAnalysis,
   AnswerReview,
-  ActionButtons
+  ActionButtons,
+  AIAnalysis,
+  SimilarQuizzes
 } from '../ResultPage/components';
 import { useLeaderboard } from '../ResultPage/hooks';
 import { Leaderboard } from '../ResultPage/components';
+import { quizAnalysisService, type QuizAnalysis } from '../../../../services/quizAnalysisService';
+import { similarQuizService } from '../../../../services/similarQuizService';
+import type { QuizRecommendation } from '../../../../lib/genkit/types';
 
 interface QuizResultViewerProps {}
 
 export const QuizResultViewer: React.FC<QuizResultViewerProps> = () => {
   const { resultId } = useParams<{ resultId: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
   const [result, setResult] = useState<QuizResult | null>(null);
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // AI Analysis state
+  const [aiAnalysis, setAiAnalysis] = useState<QuizAnalysis | null>(null);
+  const [aiAnalysisLoading, setAiAnalysisLoading] = useState(false);
+  
+  // Similar quizzes state
+  const [similarQuizzes, setSimilarQuizzes] = useState<QuizRecommendation[]>([]);
+  const [similarQuizzesLoading, setSimilarQuizzesLoading] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
@@ -43,7 +58,7 @@ export const QuizResultViewer: React.FC<QuizResultViewerProps> = () => {
         const resultData = await getQuizResultById(resultId);
         if (!resultData) {
           console.error('❌ Quiz result not found:', resultId);
-          toast.error('Không tìm thấy kết quả quiz!');
+          toast.error(t('result.quiz_not_found', 'Không tìm thấy kết quả quiz!'));
           navigate('/profile');
           return;
         }
@@ -62,7 +77,7 @@ export const QuizResultViewer: React.FC<QuizResultViewerProps> = () => {
         }
       } catch (error) {
         console.error('❌ Error loading data:', error);
-        toast.error('Không thể tải kết quả quiz!');
+        toast.error(t('result.cannot_load', 'Không thể tải kết quả quiz!'));
         navigate('/profile');
       } finally {
         setLoading(false);
@@ -90,6 +105,52 @@ export const QuizResultViewer: React.FC<QuizResultViewerProps> = () => {
   const percentage = getPercentage();
   const correct = result?.correctAnswers || 0;
   const total = result?.totalQuestions || 0;
+
+  // Function to generate AI analysis on demand
+  const handleAnalyzeWithAI = async () => {
+    if (!result || !quiz) return;
+    
+    try {
+      setAiAnalysisLoading(true);
+      const analysis = await quizAnalysisService.analyzeResult(quiz, result, percentage);
+      setAiAnalysis(analysis);
+    } catch (error) {
+      console.error('Failed to generate AI analysis:', error);
+      toast.error(t('result.ai_analysis_failed', 'Failed to generate AI analysis'));
+    } finally {
+      setAiAnalysisLoading(false);
+    }
+  };
+  
+  // Find similar quizzes when quiz is available
+  useEffect(() => {
+    if (!quiz) return;
+    
+    const findSimilar = async () => {
+      try {
+        setSimilarQuizzesLoading(true);
+        const similar = await similarQuizService.findSimilarQuizzes(
+          quiz.id,
+          quiz.category || 'general',
+          quiz.difficulty,
+          5
+        );
+        
+        if (similar.length < 3) {
+          const popular = await similarQuizService.getPopularQuizzes(quiz.id, 5 - similar.length);
+          setSimilarQuizzes([...similar, ...popular]);
+        } else {
+          setSimilarQuizzes(similar);
+        }
+      } catch (error) {
+        console.error('Failed to find similar quizzes:', error);
+      } finally {
+        setSimilarQuizzesLoading(false);
+      }
+    };
+    
+    findSimilar();
+  }, [quiz]);
 
   // Transform result to match ResultPage format
   const transformedResult = result ? {
@@ -163,6 +224,42 @@ export const QuizResultViewer: React.FC<QuizResultViewerProps> = () => {
           quiz={quiz} 
           result={transformedResult} 
           percentage={percentage} 
+        />
+
+        {/* AI Analysis - On Demand */}
+        {!aiAnalysis && !aiAnalysisLoading && (
+          <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl shadow-lg p-8 mb-8 border-2 border-purple-200 dark:border-purple-800">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">🤖</span>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                {t('result.ai_analysis_title', 'AI Performance Analysis')}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                {t('result.ai_analysis_description', 'Get personalized insights and study recommendations powered by AI')}
+              </p>
+              <button
+                onClick={handleAnalyzeWithAI}
+                className="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-semibold rounded-lg hover:from-purple-600 hover:to-blue-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+              >
+                ✨ {t('result.analyze_with_ai', 'Analyze with AI')}
+              </button>
+            </div>
+          </div>
+        )}
+        
+        {(aiAnalysis || aiAnalysisLoading) && (
+          <AIAnalysis 
+            analysis={aiAnalysis} 
+            isLoading={aiAnalysisLoading} 
+          />
+        )}
+
+        {/* Similar Quizzes Recommendations */}
+        <SimilarQuizzes 
+          quizzes={similarQuizzes} 
+          isLoading={similarQuizzesLoading} 
         />
 
         {/* Review Answers Section */}

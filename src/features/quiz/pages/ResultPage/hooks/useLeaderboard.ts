@@ -34,10 +34,10 @@ export const useLeaderboard = (quizId: string | null, currentResult?: any) => {
         
         console.log('📊 Raw quiz results:', quizResults);
         
-        // Use only real data
-        const leaderboardData = quizResults;
+        // Get all quiz results
+        let allResults = [...quizResults];
         
-        // Add current result to leaderboard if provided
+        // Add current result if provided
         const currentResultValue = currentResultRef.current;
         if (currentResultValue && user) {
           console.log('➕ Adding current result to leaderboard:', currentResultValue);
@@ -46,6 +46,7 @@ export const useLeaderboard = (quizId: string | null, currentResult?: any) => {
             userId: user.uid,
             userName: user.displayName || user.email?.split('@')[0] || 'Bạn',
             userEmail: user.email || '',
+            userPhotoURL: user.photoURL || '',
             quizId: quizId,
             score: currentResultValue.score?.percentage || 0,
             correctAnswers: currentResultValue.correct || 0,
@@ -54,12 +55,12 @@ export const useLeaderboard = (quizId: string | null, currentResult?: any) => {
             answers: [],
             completedAt: new Date() // Just completed
           };
-          leaderboardData.push(currentEntry);
+          allResults.push(currentEntry);
         }
         
         // Transform QuizResult data to LeaderboardEntry format with photoURL
         const transformedLeaderboard: LeaderboardEntry[] = await Promise.all(
-          leaderboardData.map(async (result: any) => {
+          allResults.map(async (result: any) => {
             let userPhotoURL = '';
             if (result.userId) {
               try {
@@ -72,13 +73,18 @@ export const useLeaderboard = (quizId: string | null, currentResult?: any) => {
               }
             }
             
+            // Calculate percentage from correctAnswers/totalQuestions
+            const percentage = result.totalQuestions > 0 
+              ? Math.round((result.correctAnswers / result.totalQuestions) * 100)
+              : result.percentage || result.score || 0;
+            
             return {
               id: result.id,
               userId: result.userId,
               userName: result.userName,
               userEmail: result.userEmail,
               userPhotoURL,
-              score: result.score,
+              score: percentage, // Use percentage (0-100) not raw score
               correctAnswers: result.correctAnswers,
               totalQuestions: result.totalQuestions,
               timeSpent: result.timeSpent,
@@ -96,13 +102,20 @@ export const useLeaderboard = (quizId: string | null, currentResult?: any) => {
         });
 
         console.log('📊 Sorted leaderboard:', sortedLeaderboard);
-        setLeaderboard(sortedLeaderboard.slice(0, 10)); // Top 10
+        
+        // Show top 10 entries
+        setLeaderboard(sortedLeaderboard);
 
-        // Find current user's rank
-        if (user) {
+        // Find current attempt's rank (if exists)
+        if (currentResultValue && user) {
+          const currentAttemptIndex = sortedLeaderboard.findIndex((r: LeaderboardEntry) => r.id === 'current-attempt');
+          setUserRank(currentAttemptIndex >= 0 ? currentAttemptIndex + 1 : null);
+          console.log('👤 Current attempt rank:', currentAttemptIndex >= 0 ? currentAttemptIndex + 1 : 'Not found');
+        } else if (user) {
+          // If no current result, find user's best rank
           const userResultIndex = sortedLeaderboard.findIndex((r: LeaderboardEntry) => r.userId === user.uid);
           setUserRank(userResultIndex >= 0 ? userResultIndex + 1 : null);
-          console.log('👤 User rank:', userResultIndex >= 0 ? userResultIndex + 1 : 'Not found');
+          console.log('👤 User best rank:', userResultIndex >= 0 ? userResultIndex + 1 : 'Not found');
         }
 
         console.log('📊 Leaderboard loaded:', sortedLeaderboard.length, 'entries');

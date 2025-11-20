@@ -68,11 +68,8 @@ const QuizReviewSystem: React.FC<QuizReviewSystemProps> = ({
       
       setReviews(reviewsData);
       
-      // Check if user has already reviewed
-      if (user) {
-        const userReview = reviewsData.find(r => r.userId === user.uid);
-        setHasUserReviewed(!!userReview);
-      }
+      // Allow multiple reviews - removed check
+      setHasUserReviewed(false);
     } catch (error) {
       console.error('Error loading reviews:', error);
       setReviews([]);
@@ -144,11 +141,10 @@ const QuizReviewSystem: React.FC<QuizReviewSystemProps> = ({
         hasAvatar: !!newReview.userAvatar
       });
 
-      const docRef = await addDoc(collection(db, 'quizReviews'), newReview);
+      await addDoc(collection(db, 'quizReviews'), newReview);
       
-      // Add to local state
-      setReviews(prev => [{ ...newReview, id: docRef.id }, ...prev]);
-      setHasUserReviewed(true);
+      // Reload all reviews to show the new one
+      await loadReviews();
 
       // Get quiz creator and send notification
       try {
@@ -270,14 +266,7 @@ const QuizReviewSystem: React.FC<QuizReviewSystemProps> = ({
         </div>
       )}
 
-      {/* User already reviewed */}
-      {hasUserReviewed && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-green-800 font-medium">
-            ✅ {t('quiz.reviews.alreadyReviewed')}
-          </p>
-        </div>
-      )}
+      {/* Removed block on multiple reviews - users can now submit multiple reviews */}
 
       {/* Reviews List */}
       <div className="space-y-4">

@@ -1,18 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { RootState } from '../../../../lib/store';
-import { useQuizData, useQuizSession, useQuizTimer, useQuizNavigation } from './hooks';
+import { useQuizData, useQuizSession, useQuizTimer, useQuizNavigation, useQuizSettings } from './hooks';
 import Timer from './components/Timer';
 import ProgressIndicator from './components/ProgressIndicator';
 import QuestionRenderer from './components/QuestionRenderer';
 import QuickNavigation from './components/QuickNavigation';
 import ConfirmationModals from './components/ConfirmationModals';
 import LearningResourcesView from './components/LearningResourcesView';
+import { PauseMenu } from './components/PauseMenu';
 import QuizPasswordModal from '../../../../shared/components/ui/QuizPasswordModal';
+import QuizSettingsModal from '../../components/QuizSettingsModal';
 import { unlockQuiz } from '../../../../lib/services/quizAccessService';
 import { toast } from 'react-toastify';
 import { Quiz, AnswerValue } from '../../types';
+import soundService from '../../../../services/soundService';
 
 const QuizPage: React.FC = () => {
   const { quiz, loading, error, needsPassword, quizMetadata, retryLoad } = useQuizData();
@@ -115,6 +118,24 @@ interface QuizPageContentProps {
 
 const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
   const navigate = useNavigate();
+  
+  // Load quiz settings
+  const { settings, shuffleQuestionsArray, shuffleQuestionAnswers } = useQuizSettings();
+  
+  // State for pause and settings modal
+  const [isPaused, setIsPaused] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  
+  // Apply shuffling to questions (memoized to prevent re-shuffling)
+  const shuffledQuiz = useMemo(() => {
+    const shuffledQuestions = shuffleQuestionsArray(quiz.questions);
+    const questionsWithShuffledAnswers = shuffledQuestions.map(q => shuffleQuestionAnswers(q));
+    return {
+      ...quiz,
+      questions: questionsWithShuffledAnswers
+    };
+  }, [quiz, shuffleQuestionsArray, shuffleQuestionAnswers]);
+  
   const {
     session,
     updateAnswer,
@@ -122,7 +143,7 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
     completeQuiz,
     getUnansweredQuestions,
     progress
-  } = useQuizSession({ quiz });
+  } = useQuizSession({ quiz: shuffledQuiz });
 
   const {
     formattedTime,
@@ -131,8 +152,36 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
     percentage
   } = useQuizTimer({
     onTimeUp: completeQuiz,
-    isActive: !session.isCompleted
+    isActive: !session.isCompleted && !isPaused
   });
+  
+  // Initialize sound service on mount
+  useEffect(() => {
+    soundService.unlock();
+    soundService.setEnabled(settings.soundEffects);
+    if (settings.soundEffects) {
+      soundService.play('gameStart');
+    }
+  }, [settings.soundEffects]);
+  
+  // Update sound enabled state when settings change
+  useEffect(() => {
+    soundService.setEnabled(settings.soundEffects);
+  }, [settings.soundEffects]);
+  
+  // Keyboard shortcuts for pause
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
+        if (!showSettingsModal && !session.isCompleted) {
+          setIsPaused(prev => !prev);
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [showSettingsModal, session.isCompleted]);
 
   const {
     goToNextQuestion,
@@ -145,16 +194,45 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
     isLastQuestion,
     modalControls
   } = useQuizNavigation({
-    questions: quiz.questions,
+    questions: shuffledQuiz.questions,
     currentQuestionIndex: session.currentQuestionIndex,
     onQuestionChange: setCurrentQuestion,
     answers: session.answers
   });
+  
+  // Pause menu handlers
+  const handlePause = () => setIsPaused(true);
+  const handleResume = () => {
+    setIsPaused(false);
+    if (settings.soundEffects) {
+      soundService.play('click');
+    }
+  };
+  const handleOpenSettings = () => {
+    setIsPaused(false);
+    setShowSettingsModal(true);
+  };
+  const handleCloseSettings = () => {
+    setShowSettingsModal(false);
+    // Settings are automatically reloaded from localStorage by useQuizSettings
+  };
+  const handleExitFromPause = () => {
+    setIsPaused(false);
+    handleExitQuiz();
+  };
+  
+  // Play sound on answer selection
+  const handleAnswerChange = (questionId: string, answer: AnswerValue) => {
+    updateAnswer(questionId, answer);
+    if (settings.soundEffects) {
+      soundService.play('click');
+    }
+  };
 
-  const currentQuestion = quiz.questions?.[session.currentQuestionIndex];
+  const currentQuestion = shuffledQuiz.questions?.[session.currentQuestionIndex];
 
   // If no questions available (draft/pending quiz), show message
-  if (!quiz.questions || quiz.questions.length === 0) {
+  if (!shuffledQuiz.questions || shuffledQuiz.questions.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
         <div className="text-center bg-white p-8 rounded-lg shadow-lg max-w-md">
@@ -214,14 +292,25 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
                 <span>Thoát</span>
               </button>
               <div className="h-6 w-px bg-gray-300"></div>
-              <h1 className="text-xl font-semibold text-gray-800">{quiz.title}</h1>
+              <h1 className="text-xl font-semibold text-gray-800">{shuffledQuiz.title}</h1>
             </div>
             
             <div className="flex items-center space-x-3">
+              {/* Pause Button */}
+              <button
+                onClick={handlePause}
+                className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Tạm dừng (P hoặc Esc)"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Tạm dừng</span>
+              </button>
 
               <ProgressIndicator
                 current={session.currentQuestionIndex + 1}
-                total={quiz.questions.length}
+                total={shuffledQuiz.questions.length}
                 percentage={progress}
               />
               <Timer
@@ -240,7 +329,7 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
           {/* Navigation Panel */}
           <div className="lg:col-span-1">
             <QuickNavigation
-              questions={quiz.questions}
+              questions={shuffledQuiz.questions}
               currentQuestionIndex={session.currentQuestionIndex}
               answers={session.answers}
               onQuestionSelect={goToQuestion}
@@ -254,7 +343,7 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
                 question={currentQuestion}
                 questionNumber={session.currentQuestionIndex + 1}
                 value={session.answers[currentQuestion.id]}
-                onChange={(answer: AnswerValue) => updateAnswer(currentQuestion.id, answer)}
+                onChange={(answer: AnswerValue) => handleAnswerChange(currentQuestion.id, answer)}
               />
 
               {/* Navigation Buttons */}
@@ -313,7 +402,7 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
       />
 
       {/* Thêm cảnh báo hết giờ nếu cần thiết - hiện khi còn <= 10% tổng thời gian */}
-      {isTimeRunningOut && (
+      {isTimeRunningOut && !isPaused && (
         <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-600 rounded-lg flex items-center gap-2">
           <span className="text-xl">⏰</span>
           <span className="font-medium">
@@ -323,6 +412,22 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
           </span>
         </div>
       )}
+      
+      {/* Pause Menu */}
+      <PauseMenu
+        isOpen={isPaused}
+        onResume={handleResume}
+        onSettings={handleOpenSettings}
+        onExit={handleExitFromPause}
+      />
+      
+      {/* Settings Modal (can be opened from pause menu) */}
+      <QuizSettingsModal
+        isOpen={showSettingsModal}
+        onClose={handleCloseSettings}
+        onSave={handleCloseSettings}
+        quizId={shuffledQuiz.id}
+      />
     </div>
   );
 };

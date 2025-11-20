@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ScoreCircle } from './ScoreCircle';
 import { ResultState } from '../types';
 import { getPerformanceMessage, formatDetailedTime, safeNumber } from '../utils';
@@ -16,30 +17,32 @@ export const ResultSummary: React.FC<ResultSummaryProps> = ({
   correct, 
   total 
 }) => {
+  const { t } = useTranslation();
+  
   return (
     <div className="text-center mb-8">
       <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
         {result.isTimeUp && (
           <div className="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-lg mb-6">
-            ⏰ Time's up! Quiz was automatically submitted.
+            ⏰ {t('result.times_up', "Time's up! Quiz was automatically submitted.")}
           </div>
         )}
         <div className="flex flex-col items-center">
           <ScoreCircle score={percentage} />
           <h1 className="text-3xl font-bold text-gray-900 mt-4 mb-2">
-            Quiz Completed!
+            {t('result.quiz_completed', 'Quiz Completed!')}
           </h1>
           <p className="text-xl text-gray-600 mb-4">
             {getPerformanceMessage(percentage)}
           </p>
           <div className="text-lg text-gray-700 mb-2">
-            You got <span className="font-bold text-blue-600">{correct}</span> out of{' '}
-            <span className="font-bold">{total}</span> questions correct
+            {t('result.you_got', 'You got')} <span className="font-bold text-blue-600">{correct}</span> {t('result.out_of', 'out of')}{' '}
+            <span className="font-bold">{total}</span> {t('result.questions_correct', 'questions correct')}
           </div>
           {/* Hiển thị thời gian làm bài - giống y hệt Leaderboard */}
           {typeof result.timeSpent === 'number' && (
             <div className="text-md text-gray-500 mt-2">
-              ⏱️ Time taken: <span className="font-semibold text-blue-700">{formatDetailedTime(safeNumber(result.timeSpent))}</span>
+              ⏱️ {t('result.time_taken', 'Time taken')}: <span className="font-semibold text-blue-700">{formatDetailedTime(safeNumber(result.timeSpent))}</span>
             </div>
           )}
         </div>

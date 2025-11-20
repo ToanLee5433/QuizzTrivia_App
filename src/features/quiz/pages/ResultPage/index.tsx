@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useResultData, useLeaderboard } from './hooks';
 import { safeNumber } from './utils';
 import { useNotifications } from '../../../../hooks/useNotifications';
@@ -11,12 +12,27 @@ import {
   PerformanceAnalysis,
   AnswerReview,
   Leaderboard,
-  ActionButtons
+  ActionButtons,
+  AIAnalysis,
+  SimilarQuizzes
 } from './components';
+import { quizAnalysisService, type QuizAnalysis } from '../../../../services/quizAnalysisService';
+import { similarQuizService } from '../../../../services/similarQuizService';
+import type { QuizRecommendation } from '../../../../lib/genkit/types';
+import type { QuizResult } from '../../types';
 
 export const ResultPage: React.FC = () => {
   const { result, quiz, quizId, isLoading } = useResultData();
   const { notifyAchievement, checkAchievements, notifyQuizCreator } = useNotifications();
+  const { t } = useTranslation();
+  
+  // AI Analysis state
+  const [aiAnalysis, setAiAnalysis] = useState<QuizAnalysis | null>(null);
+  const [aiAnalysisLoading, setAiAnalysisLoading] = useState(false);
+  
+  // Similar quizzes state
+  const [similarQuizzes, setSimilarQuizzes] = useState<QuizRecommendation[]>([]);
+  const [similarQuizzesLoading, setSimilarQuizzesLoading] = useState(true);
   
   // Tính toán điểm số, kiểm tra hợp lệ
   const correct = safeNumber(result?.correct);
@@ -33,6 +49,64 @@ export const ResultPage: React.FC = () => {
   
   const { leaderboard, userRank, loadingStats } = useLeaderboard(quizId, currentResult);
 
+  // Function to generate AI analysis on demand
+  const handleAnalyzeWithAI = async () => {
+    if (!result || !quiz) return;
+    
+    try {
+      setAiAnalysisLoading(true);
+      // Convert ResultState to QuizResult
+      const quizResult: QuizResult = {
+        id: result.quizId || quiz.id,
+        quizId: result.quizId || quiz.id,
+        userId: 'user', // Will be available in actual result
+        score: result.score,
+        totalQuestions: result.total,
+        correctAnswers: result.correct,
+        timeSpent: result.timeSpent || 0,
+        answers: [],
+        completedAt: new Date()
+      };
+      const analysis = await quizAnalysisService.analyzeResult(quiz, quizResult, percentage);
+      setAiAnalysis(analysis);
+    } catch (error) {
+      console.error('Failed to generate AI analysis:', error);
+    } finally {
+      setAiAnalysisLoading(false);
+    }
+  };
+  
+  // Find similar quizzes when quiz data is available
+  useEffect(() => {
+    if (!quiz) return;
+    
+    const findSimilar = async () => {
+      try {
+        setSimilarQuizzesLoading(true);
+        const similar = await similarQuizService.findSimilarQuizzes(
+          quiz.id,
+          quiz.category || 'general',
+          quiz.difficulty,
+          5
+        );
+        
+        // If not enough similar quizzes, get popular ones
+        if (similar.length < 3) {
+          const popular = await similarQuizService.getPopularQuizzes(quiz.id, 5 - similar.length);
+          setSimilarQuizzes([...similar, ...popular]);
+        } else {
+          setSimilarQuizzes(similar);
+        }
+      } catch (error) {
+        console.error('Failed to find similar quizzes:', error);
+      } finally {
+        setSimilarQuizzesLoading(false);
+      }
+    };
+    
+    findSimilar();
+  }, [quiz]);
+
   // Generate notifications based on quiz completion
   useEffect(() => {
     if (!result || !quiz) return;
@@ -41,20 +115,20 @@ export const ResultPage: React.FC = () => {
       // Achievement notifications based on score
       if (percentage === 100) {
         await notifyAchievement(
-          'Perfect Score!',
-          `You got 100% on "${quiz.title}"`,
+          t('result.perfect_score', 'Perfect Score!'),
+          `${t('result.you_got_100', 'You got 100% on')} "${quiz.title}"`,
           '💯'
         );
       } else if (percentage >= 90) {
         await notifyAchievement(
-          'Excellent Performance!',
-          `You scored ${percentage}% on "${quiz.title}"`,
+          t('result.excellent_performance', 'Excellent Performance!'),
+          `${t('result.you_scored', 'You scored')} ${percentage}% ${t('result.on', 'on')} "${quiz.title}"`,
           '⭐'
         );
       } else if (percentage >= 80) {
         await notifyAchievement(
-          'Great Job!',
-          `You scored ${percentage}% on "${quiz.title}"`,
+          t('result.great_job', 'Great Job!'),
+          `${t('result.you_scored', 'You scored')} ${percentage}% ${t('result.on', 'on')} "${quiz.title}"`,
           '🎯'
         );
       }
@@ -62,8 +136,8 @@ export const ResultPage: React.FC = () => {
       // First quiz completion
       if (correct === total && total > 0) {
         await notifyAchievement(
-          'First Perfect Score!',
-          'You aced your first quiz!',
+          t('result.first_perfect_score', 'First Perfect Score!'),
+          t('result.aced_first_quiz', 'You aced your first quiz!'),
           '🏆'
         );
       }
@@ -129,6 +203,42 @@ export const ResultPage: React.FC = () => {
           quiz={quiz!} 
           result={result!} 
           percentage={percentage} 
+        />
+
+        {/* AI Analysis - On Demand */}
+        {!aiAnalysis && !aiAnalysisLoading && (
+          <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl shadow-lg p-8 mb-8 border-2 border-purple-200 dark:border-purple-800">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <span className="text-3xl">🤖</span>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                {t('result.ai_analysis_title', 'AI Performance Analysis')}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                {t('result.ai_analysis_description', 'Get personalized insights and study recommendations powered by AI')}
+              </p>
+              <button
+                onClick={handleAnalyzeWithAI}
+                className="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white font-semibold rounded-lg hover:from-purple-600 hover:to-blue-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+              >
+                ✨ {t('result.analyze_with_ai', 'Analyze with AI')}
+              </button>
+            </div>
+          </div>
+        )}
+        
+        {(aiAnalysis || aiAnalysisLoading) && (
+          <AIAnalysis 
+            analysis={aiAnalysis} 
+            isLoading={aiAnalysisLoading} 
+          />
+        )}
+
+        {/* Similar Quizzes Recommendations */}
+        <SimilarQuizzes 
+          quizzes={similarQuizzes} 
+          isLoading={similarQuizzesLoading} 
         />
 
         {/* Review Answers Section */}

@@ -7,3 +7,5 @@ export { AnswerReview } from './AnswerReview';
 export { Leaderboard } from './Leaderboard';
 export { ActionButtons } from './ActionButtons';
 export { LoadingSpinner } from './LoadingSpinner';
+export { AIAnalysis } from './AIAnalysis';
+export { SimilarQuizzes } from './SimilarQuizzes';

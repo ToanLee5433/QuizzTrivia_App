@@ -187,7 +187,13 @@ export const submitQuizResult = async (result: Omit<QuizResult, 'id'>): Promise<
   });
   
   try {
-    const docRef = await addDoc(collection(db, QUIZ_RESULTS_COLLECTION), result);
+    // Add mode field to distinguish regular quiz from multiplayer
+    const resultWithMode = {
+      ...result,
+      mode: 'single' as const
+    };
+    
+    const docRef = await addDoc(collection(db, QUIZ_RESULTS_COLLECTION), resultWithMode);
     console.log('✅ [submitQuizResult] Successfully saved with ID:', docRef.id);
     toast.success('Nộp bài thành công!');
     return docRef.id;
@@ -217,7 +223,7 @@ export const getQuizResults = async (quizId: string): Promise<QuizResult[]> => {
     const querySnapshot = await getDocs(q);
     const results: QuizResult[] = [];
     
-    console.log('📊 Found', querySnapshot.size, 'quiz results');
+    console.log('📊 Found', querySnapshot.size, 'quiz results (before filtering)');
 
     if (querySnapshot.empty) {
       console.log('📊 No quiz results found for quizId:', quizId);
@@ -231,13 +237,20 @@ export const getQuizResults = async (quizId: string): Promise<QuizResult[]> => {
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       console.log('📊 Raw document data:', { id: doc.id, ...data });
+      
+      // Filter out multiplayer results (only show single/regular quiz results in leaderboard)
+      if (data.mode === 'multiplayer') {
+        console.log('🚫 Skipping multiplayer result:', doc.id);
+        return;
+      }
+      
       const convertedData = convertTimestamps(data);
       const result = { id: doc.id, ...convertedData } as QuizResult;
       console.log('📊 Converted quiz result:', result);
       results.push(result);
     });
     
-    console.log('📊 Returning', results.length, 'quiz results');
+    console.log('📊 Returning', results.length, 'quiz results (after filtering multiplayer)');
     return results;
   } catch (error) {
     console.error('❌ Error fetching quiz results:', error);

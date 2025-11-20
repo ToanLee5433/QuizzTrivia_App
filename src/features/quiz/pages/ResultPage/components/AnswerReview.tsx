@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Quiz } from '../../../types';
 import { ResultState } from '../types';
 import Button from '../../../../../shared/components/ui/Button';
@@ -11,17 +12,18 @@ interface AnswerReviewProps {
 }
 
 export const AnswerReview: React.FC<AnswerReviewProps> = ({ quiz, result }) => {
+  const { t } = useTranslation();
   const [showAnswers, setShowAnswers] = useState(false);
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-gray-900">Review Answers</h2>
+        <h2 className="text-xl font-bold text-gray-900">{t('result.review_answers', 'Review Answers')}</h2>
         <Button
           variant="outline"
           onClick={() => setShowAnswers(!showAnswers)}
         >
-          {showAnswers ? 'Hide' : 'Show'} Detailed Review
+          {showAnswers ? t('result.hide', 'Hide') : t('result.show', 'Show')} {t('result.detailed_review', 'Detailed Review')}
         </Button>
       </div>
 
@@ -40,7 +42,7 @@ export const AnswerReview: React.FC<AnswerReviewProps> = ({ quiz, result }) => {
               case 'image': {
                 const userAnswer = question.answers.find(a => a.id === userAnswerValue);
                 isCorrect = userAnswer?.isCorrect || false;
-                userAnswerText = userAnswer?.text || 'Chưa trả lời';
+                userAnswerText = userAnswer?.text || t('result.not_answered', 'Chưa trả lời');
                 break;
               }
               case 'short_answer': {
@@ -57,7 +59,7 @@ export const AnswerReview: React.FC<AnswerReviewProps> = ({ quiz, result }) => {
                     normalizeAnswer(accepted) === normalizedUserAnswer
                   );
                 }
-                userAnswerText = userAnswerValue || 'Chưa trả lời';
+                userAnswerText = userAnswerValue || t('result.not_answered', 'Chưa trả lời');
                 break;
               }
               case 'checkbox': {
@@ -67,7 +69,7 @@ export const AnswerReview: React.FC<AnswerReviewProps> = ({ quiz, result }) => {
                 const selectedAnswers = question.answers.filter(a => userIds.includes(a.id));
                 userAnswerText = selectedAnswers.length > 0 
                   ? selectedAnswers.map(a => a.text).join(', ')
-                  : 'Chưa trả lời';
+                  : t('result.not_answered', 'Chưa trả lời');
                 break;
               }
             }
@@ -81,13 +83,13 @@ export const AnswerReview: React.FC<AnswerReviewProps> = ({ quiz, result }) => {
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                     isCorrect ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                   }`}>
-                    {isCorrect ? '✓ Correct' : '✗ Incorrect'}
+                    {isCorrect ? `✓ ${t('result.correct_label', 'Correct')}` : `✗ ${t('result.incorrect', 'Incorrect')}`}
                   </span>
                 </div>
 
                 {/* Hiển thị câu trả lời của user */}
                 <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <span className="font-medium text-blue-800">Câu trả lời của bạn: </span>
+                  <span className="font-medium text-blue-800">{t('result.your_answer', 'Câu trả lời của bạn')}: </span>
                   <span className="text-blue-700">{userAnswerText}</span>
                 </div>
                 
@@ -112,12 +114,12 @@ export const AnswerReview: React.FC<AnswerReviewProps> = ({ quiz, result }) => {
                           <span>{answer.text}</span>
                           {answer.isCorrect && (
                             <span className="ml-auto text-green-600 font-medium">
-                              ✓ Correct Answer
+                              ✓ {t('result.correct_answer', 'Correct Answer')}
                             </span>
                           )}
                           {answer.id === userAnswerValue && !answer.isCorrect && (
                             <span className="ml-auto text-red-600 font-medium">
-                              Your Answer
+                              {t('result.your_answer_label', 'Your Answer')}
                             </span>
                           )}
                         </div>
@@ -150,17 +152,17 @@ export const AnswerReview: React.FC<AnswerReviewProps> = ({ quiz, result }) => {
                             <span>{answer.text}</span>
                             {answer.isCorrect && (
                               <span className="ml-auto text-green-600 font-medium">
-                                ✓ Should Select
+                                ✓ {t('result.should_select', 'Should Select')}
                               </span>
                             )}
                             {isUserSelected && !answer.isCorrect && (
                               <span className="ml-auto text-red-600 font-medium">
-                                Wrong Selection
+                                {t('result.wrong_selection', 'Wrong Selection')}
                               </span>
                             )}
                             {isUserSelected && answer.isCorrect && (
                               <span className="ml-auto text-green-600 font-medium">
-                                ✓ Correct Selection
+                                ✓ {t('result.correct_selection', 'Correct Selection')}
                               </span>
                             )}
                           </div>
@@ -174,11 +176,11 @@ export const AnswerReview: React.FC<AnswerReviewProps> = ({ quiz, result }) => {
                 {question.type === 'short_answer' && (
                   <div className="space-y-2">
                     <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                      <span className="font-medium text-green-800">Đáp án đúng: </span>
+                      <span className="font-medium text-green-800">{t('result.correct_answer_short', 'Đáp án đúng')}: </span>
                       <span className="text-green-700">
                         {question.correctAnswer}
                         {question.acceptedAnswers && question.acceptedAnswers.length > 0 && (
-                          <span className="text-sm"> (hoặc: {question.acceptedAnswers.join(', ')})</span>
+                          <span className="text-sm"> ({t('result.or_accepted', 'hoặc')}: {question.acceptedAnswers.join(', ')})</span>
                         )}
                       </span>
                     </div>
@@ -187,7 +189,7 @@ export const AnswerReview: React.FC<AnswerReviewProps> = ({ quiz, result }) => {
                 
                 {question.explanation && (
                   <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <span className="font-medium text-blue-800">Explanation: </span>
+                    <span className="font-medium text-blue-800">{t('result.explanation', 'Explanation')}: </span>
                     <SafeHTML content={question.explanation} className="text-blue-700" />
                   </div>
                 )}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { RootState } from '../../../../../lib/store';
 import { LeaderboardEntry } from '../types';
 import { safeNumber, formatDetailedTime, formatDateTime, getRankDisplay, getRankBackgroundColor } from '../utils';
@@ -16,6 +17,9 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
   loadingStats 
 }) => {
   const { user } = useSelector((state: RootState) => state.auth);
+  const { t } = useTranslation();
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [showAll, setShowAll] = React.useState(false);
 
   // Debug logging
   console.log('🏆 Leaderboard render:', {
@@ -26,17 +30,96 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     leaderboard: leaderboard.slice(0, 3) // Show first 3 entries for debug
   });
 
+  // Filter leaderboard by search query
+  const filteredLeaderboard = React.useMemo(() => {
+    if (!searchQuery.trim()) return leaderboard;
+    const query = searchQuery.toLowerCase();
+    return leaderboard.filter(entry => 
+      entry.userName.toLowerCase().includes(query)
+    );
+  }, [leaderboard, searchQuery]);
+
+  // Limit display to top 10 unless "Show All" is clicked
+  const displayedLeaderboard = React.useMemo(() => {
+    if (showAll || searchQuery.trim()) return filteredLeaderboard;
+    return filteredLeaderboard.slice(0, 10);
+  }, [filteredLeaderboard, showAll, searchQuery]);
+
+  // Get medal icon for top 3
+  const getMedalIcon = (rank: number) => {
+    switch(rank) {
+      case 0: return '🥇';
+      case 1: return '🥈';
+      case 2: return '🥉';
+      default: return null;
+    }
+  };
+
+  // Calculate unique participants (count distinct users)
+  const uniqueParticipants = React.useMemo(() => {
+    const userIds = new Set(leaderboard.map(entry => entry.userId).filter(Boolean));
+    return userIds.size;
+  }, [leaderboard]);
+
+  // Total attempts
+  const totalAttempts = leaderboard.length;
+
   return (
     <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">🏆 Leaderboard</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">
+          🏆 {t('result.leaderboard', 'Bảng xếp hạng')}
+        </h2>
+        
+        {/* Search input */}
+        <div className="relative">
+          <input
+            type="text"
+            placeholder={t('result.search_username', 'Search username...')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-64 px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          <svg 
+            className="absolute left-3 top-2.5 w-5 h-5 text-gray-400"
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Rank summary */}
+      {user && userRank && totalAttempts > 0 && (
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div className="text-center">
+            <span className="text-lg font-semibold text-gray-800">
+              {t('result.your_current_rank', 'Lần này xếp hạng: #{{rank}}', { rank: userRank })}
+              {' • '}
+              {t('result.total_stats', '{{attempts}} lượt chơi từ {{players}} người', { attempts: totalAttempts, players: uniqueParticipants })}
+            </span>
+            {userRank <= 3 && (
+              <span className="ml-3 text-2xl">{getMedalIcon(userRank - 1)}</span>
+            )}
+          </div>
+        </div>
+      )}
       {loadingStats ? (
         <div className="flex justify-center items-center h-24">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <span className="ml-3 text-gray-600">Loading leaderboard...</span>
+          <span className="ml-3 text-gray-600">{t('result.loading_leaderboard', 'Đang tải bảng xếp hạng...')}</span>
         </div>
-      ) : leaderboard.length > 0 ? (
+      ) : filteredLeaderboard.length > 0 ? (
+        <>
         <div className="space-y-3">
-          {leaderboard.map((entry, index) => (
+          {displayedLeaderboard.map((entry, index) => {
+            // Find original rank for medal display
+            const originalIndex = leaderboard.findIndex(e => e.id === entry.id);
+            const medal = getMedalIcon(originalIndex);
+            
+            return (
             <div 
               key={entry.id}
               className={`flex items-center justify-between p-4 rounded-lg border ${
@@ -48,12 +131,14 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
               }`}
             >
               <div className="flex items-center space-x-4">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm ${
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold ${
                   entry.id === 'current-attempt' 
-                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg transform scale-110' 
-                    : getRankBackgroundColor(index)
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg transform scale-110 text-2xl' 
+                    : medal 
+                      ? 'bg-gradient-to-br from-yellow-100 to-yellow-200 text-3xl'
+                      : `${getRankBackgroundColor(originalIndex)} text-sm`
                 }`}>
-                  {entry.id === 'current-attempt' ? '�' : getRankDisplay(index)}
+                  {entry.id === 'current-attempt' ? '★' : medal || getRankDisplay(originalIndex)}
                 </div>
                 {entry.userPhotoURL ? (
                   <img 
@@ -64,7 +149,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                 ) : (
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                     <span className="text-white font-semibold text-lg">
-                      {entry.userName.charAt(0).toUpperCase()}
+                      {entry.userName ? entry.userName.charAt(0).toUpperCase() : 'A'}
                     </span>
                   </div>
                 )}
@@ -74,16 +159,16 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                     {entry.id === 'current-attempt' && (
                       <div className="flex items-center mt-1">
                         <span className="text-white ml-2 font-bold bg-gradient-to-r from-green-500 to-emerald-600 px-3 py-1 rounded-full text-sm shadow-lg animate-pulse">
-                          � LƯỢT MỚI NHẤT - XẾP HẠNG #{index + 1}
+                          🎯 {t('result.latest_attempt_rank', 'LƯỢT MỚI NHẤT - XẾP HẠNG #{{rank}}', { rank: index + 1 })}
                         </span>
                       </div>
                     )}
                     {entry.userId === user?.uid && entry.id !== 'current-attempt' && (
-                      <span className="text-gray-500 ml-2 text-sm">(Lượt trước đó)</span>
+                      <span className="text-gray-500 ml-2 text-sm">({t('result.previous_attempt', 'Lượt trước đó')})</span>
                     )}
                   </div>
                   <div className="text-sm text-gray-500">
-                    {entry.correctAnswers}/{entry.totalQuestions} correct
+                    {entry.correctAnswers}/{entry.totalQuestions} {t('result.correct', 'đúng')}
                   </div>
                   <div className="text-xs text-gray-400 mt-1">
                     📅 {formatDateTime(entry.completedAt instanceof Date ? entry.completedAt.getTime() : new Date(entry.completedAt).getTime())}
@@ -91,30 +176,46 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-bold text-xl text-gray-900">{safeNumber(entry.score)}%</div>
+                <div className="font-bold text-xl text-gray-900">
+                  {Math.round((entry.correctAnswers / entry.totalQuestions) * 100)}%
+                </div>
                 <div className="text-sm text-gray-500">
                   ⏱️ {formatDetailedTime(safeNumber(entry.timeSpent))}
                 </div>
               </div>
             </div>
-          ))}
-          
-          {/* Show user rank if not in top 10 */}
-          {user && userRank && userRank > 10 && (
-            <div className="mt-6 pt-4 border-t border-gray-200">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="text-center">
-                  <span className="text-blue-800 font-medium">Your Rank: #{userRank}</span>
-                </div>
-              </div>
-            </div>
-          )}
+          );
+          })}
         </div>
+        
+        {/* Show All / Show Less button */}
+        {!searchQuery && filteredLeaderboard.length > 10 && (
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+            >
+              {showAll 
+                ? `↑ ${t('result.show_less', 'Thu gọn')}`
+                : `↓ ${t('result.show_more', 'Xem thêm')} (${filteredLeaderboard.length - 10} ${t('result.more_attempts', 'lượt khác')})`
+              }
+            </button>
+          </div>
+        )}
+        
+        {/* No results from search */}
+        {searchQuery && filteredLeaderboard.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <div className="text-4xl mb-3">🔍</div>
+            <p>{t('result.no_search_results', 'No players found matching "{{query}}"', { query: searchQuery })}</p>
+          </div>
+        )}
+        </>
       ) : (
         <div className="text-center py-12 text-gray-500">
           <div className="text-6xl mb-4">🏆</div>
-          <p className="text-lg">No results yet!</p>
-          <p>Be the first to complete this quiz and claim the top spot!</p>
+          <p className="text-lg">{t('result.no_results_yet', 'Chưa có kết quả!')}</p>
+          <p>{t('result.be_first', 'Hãy là người đầu tiên hoàn thành quiz này!')}</p>
         </div>
       )}
     </div>

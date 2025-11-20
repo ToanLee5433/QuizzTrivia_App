@@ -181,6 +181,7 @@ export interface QuizResult {
   timeSpent: number; // in seconds
   answers: UserAnswer[];
   completedAt: Date;
+  mode?: 'single' | 'multiplayer'; // Optional: to distinguish regular quiz from multiplayer
 }
 
 export interface UserAnswer {
