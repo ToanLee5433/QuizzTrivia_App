@@ -101,7 +101,7 @@ const Header: React.FC<HeaderProps> = () => {
           visible ? 'translate-y-0' : '-translate-y-full'
         } ${
           scrolled 
-            ? 'bg-white/95 backdrop-blur-xl shadow-lg border-b border-gray-200/50' 
+            ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl shadow-lg border-b border-gray-200/50 dark:border-gray-700/50' 
             : 'bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 shadow-xl'
         }`}
       >
@@ -151,7 +151,7 @@ const Header: React.FC<HeaderProps> = () => {
                         scrolled
                           ? isActive
                             ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md'
-                            : 'text-gray-700 hover:bg-gray-100'
+                            : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
                           : isActive
                             ? 'bg-white/30 text-white shadow-md ring-1 ring-white/30'
                             : 'text-white/90 hover:text-white hover:bg-white/20'
@@ -186,7 +186,7 @@ const Header: React.FC<HeaderProps> = () => {
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                     className={`flex items-center space-x-2 rounded-xl px-2 sm:px-3 py-2 transition-all duration-300 shadow-md hover:scale-105 group ${
                       scrolled
-                        ? 'bg-gray-100 hover:bg-gray-200 border border-gray-200'
+                        ? 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
                         : 'bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30'
                     }`}
                   >
@@ -209,13 +209,13 @@ const Header: React.FC<HeaderProps> = () => {
                     )}
                     <div className="hidden lg:block text-left">
                       <p className={`text-sm font-semibold truncate max-w-24 xl:max-w-32 transition-colors leading-tight ${
-                        scrolled ? 'text-gray-900' : 'text-white'
+                        scrolled ? 'text-gray-900 dark:text-gray-100' : 'text-white'
                       }`}>
                         {user?.displayName || user?.email || 'User'}
                       </p>
                       {user?.role && (
                         <p className={`text-xs flex items-center font-medium ${
-                          scrolled ? 'text-gray-600' : 'text-blue-100/90'
+                          scrolled ? 'text-gray-600 dark:text-gray-400' : 'text-blue-100/90'
                         }`}>
                           {user.role === 'admin' && <Crown className="w-3 h-3 mr-1 text-yellow-500" />}
                           {user.role === 'admin' ? t('ui.admin') : 
@@ -227,10 +227,9 @@ const Header: React.FC<HeaderProps> = () => {
                       isUserMenuOpen ? 'rotate-180' : ''
                     } ${scrolled ? 'text-gray-600' : 'text-white/90'}`} />
                   </button>
-
                   {/* User Dropdown - Refined */}
                   {isUserMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-64 sm:w-72 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-[200] animate-in slide-in-from-top-2 duration-200">
+                    <div className="absolute right-0 mt-2 w-64 sm:w-72 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden z-[200] animate-in slide-in-from-top-2 duration-200">
                       {/* User Info Header */}
                       <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-3">
                         <div className="flex items-center space-x-3">
@@ -274,17 +273,27 @@ const Header: React.FC<HeaderProps> = () => {
                             navigate('/profile');
                             setIsUserMenuOpen(false);
                           }}
-                          className="w-full flex items-center px-4 py-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200 group"
+                          className="w-full flex items-center px-4 py-2.5 text-gray-700 dark:text-gray-200 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-900/30 dark:hover:to-purple-900/30 transition-all duration-200 group"
                         >
-                          <UserCircle className="w-4 h-4 mr-2.5 text-blue-600 group-hover:scale-110 transition-transform" />
+                          <UserCircle className="w-4 h-4 mr-2.5 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
                           <span className="font-medium text-sm">{t('profile.myProfile')}</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            navigate('/settings');
+                            setIsUserMenuOpen(false);
+                          }}
+                          className="w-full flex items-center px-4 py-2.5 text-gray-700 dark:text-gray-200 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 dark:hover:from-purple-900/30 dark:hover:to-pink-900/30 transition-all duration-200 group"
+                        >
+                          <Settings className="w-4 h-4 mr-2.5 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform" />
+                          <span className="font-medium text-sm">Cài đặt</span>
                         </button>
                         <button
                           onClick={() => {
                             handleLogout();
                             setIsUserMenuOpen(false);
                           }}
-                          className="w-full flex items-center px-4 py-2.5 text-red-600 hover:bg-red-50 transition-all duration-200 group"
+                          className="w-full flex items-center px-4 py-2.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all duration-200 group"
                         >
                           <LogOut className="w-4 h-4 mr-2.5 group-hover:scale-110 transition-transform" />
                           <span className="font-medium text-sm">{t('auth.logout')}</span>
@@ -301,7 +310,7 @@ const Header: React.FC<HeaderProps> = () => {
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                   className={`lg:hidden p-2 rounded-lg transition-all duration-300 hover:scale-110 ${
                     scrolled
-                      ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                      ? 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200'
                       : 'bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20'
                   }`}
                   aria-label="Toggle menu"

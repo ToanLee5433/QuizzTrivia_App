@@ -8,6 +8,222 @@
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark mode styles */
+.dark {
+  color-scheme: dark;
+}
+
+.dark body {
+  background-color: #0f172a;
+  color: #f1f5f9;
+}
+
+.dark #root {
+  background-color: #0f172a;
+}
+
+/* Dark mode for backgrounds */
+.dark .bg-white {
+  background-color: #1e293b !important;
+}
+
+.dark .bg-gray-50 {
+  background-color: #1e293b !important;
+}
+
+.dark .bg-gray-100 {
+  background-color: #334155 !important;
+}
+
+.dark .bg-gray-200 {
+  background-color: #475569 !important;
+}
+
+.dark .bg-gray-300 {
+  background-color: #64748b !important;
+}
+
+/* Dark mode for text colors */
+.dark .text-gray-900 {
+  color: #f1f5f9 !important;
+}
+
+.dark .text-gray-800 {
+  color: #e2e8f0 !important;
+}
+
+.dark .text-gray-700 {
+  color: #cbd5e1 !important;
+}
+
+.dark .text-gray-600 {
+  color: #94a3b8 !important;
+}
+
+.dark .text-gray-500 {
+  color: #64748b !important;
+}
+
+.dark .text-gray-400 {
+  color: #475569 !important;
+}
+
+/* Dark mode for borders */
+.dark .border-gray-200 {
+  border-color: #334155 !important;
+}
+
+.dark .border-gray-300 {
+  border-color: #475569 !important;
+}
+
+.dark .border-gray-400 {
+  border-color: #64748b !important;
+}
+
+/* Dark mode for shadows - make them more visible */
+.dark .shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark .shadow-xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark .shadow-2xl {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Dark mode for hover states */
+.dark .hover\:bg-gray-50:hover {
+  background-color: #334155 !important;
+}
+
+.dark .hover\:bg-gray-100:hover {
+  background-color: #475569 !important;
+}
+
+.dark .hover\:bg-gray-200:hover {
+  background-color: #64748b !important;
+}
+
+/* Dark mode for inputs */
+.dark input[type="text"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark input[type="number"],
+.dark textarea,
+.dark select {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+  border-color: #475569 !important;
+}
+
+.dark input[type="text"]:focus,
+.dark input[type="email"]:focus,
+.dark input[type="password"]:focus,
+.dark input[type="number"]:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: #7c3aed !important;
+  background-color: #334155 !important;
+}
+
+/* Dark mode for buttons */
+.dark button:not(.bg-purple-600):not(.bg-blue-600):not(.bg-green-600):not(.bg-red-600):not([class*="bg-gradient"]) {
+  background-color: #334155;
+  color: #f1f5f9;
+}
+
+.dark button:not(.bg-purple-600):not(.bg-blue-600):not(.bg-green-600):not(.bg-red-600):not([class*="bg-gradient"]):hover {
+  background-color: #475569;
+}
+
+/* Dark mode for cards */
+.dark [class*="rounded-"] {
+  border-color: #334155;
+}
+
+/* Dark mode for modals/overlays */
+.dark .backdrop-blur {
+  background-color: rgba(15, 23, 42, 0.8) !important;
+}
+
+/* Dark mode for specific gradient backgrounds */
+.dark .from-purple-50 {
+  --tw-gradient-from: #1e1b4b !important;
+}
+
+.dark .via-white {
+  --tw-gradient-via: #0f172a !important;
+}
+
+.dark .to-pink-50 {
+  --tw-gradient-to: #500724 !important;
+}
+
+.dark .from-blue-50 {
+  --tw-gradient-from: #172554 !important;
+}
+
+.dark .via-purple-50 {
+  --tw-gradient-via: #1e1b4b !important;
+}
+
+.dark .from-gray-900 {
+  --tw-gradient-from: #0f172a !important;
+}
+
+.dark .via-gray-800 {
+  --tw-gradient-via: #1e293b !important;
+}
+
+.dark .to-gray-900 {
+  --tw-gradient-to: #0f172a !important;
+}
+
+/* Dark mode for page backgrounds */
+.dark [class*="bg-gradient-to"] {
+  background-color: #0f172a;
+}
+
+/* Improve readability on dark backgrounds */
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+  color: #f1f5f9;
+}
+
+.dark p {
+  color: #cbd5e1;
+}
+
+/* Dark mode for links */
+.dark a:not([class*="bg-"]) {
+  color: #a78bfa;
+}
+
+.dark a:not([class*="bg-"]):hover {
+  color: #c4b5fd;
+}
+
+/* Dark mode for cards */
+.dark [class*="bg-gradient-to"] {
+  opacity: 0.9;
+}
+
+/* Font size variants */
+[data-font-size="small"] {
+  font-size: 14px;
+}
+
+[data-font-size="medium"] {
+  font-size: 16px;
+}
+
+[data-font-size="large"] {
+  font-size: 18px;
 }
 
 /* Ensure the app fills the screen */
@@ -24,13 +240,25 @@ body {
   background: #f1f1f1;
 }
 
+.dark ::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
 ::-webkit-scrollbar-thumb {
   background: #c1c1c1;
   border-radius: 4px;
 }
 
+.dark ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
 ::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
 }
 
 /* Header Animations */

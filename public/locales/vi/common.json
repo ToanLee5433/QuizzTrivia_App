@@ -36,6 +36,74 @@
     "action": "Hành động"
   },
   "actions": "Hành động",
+  "settings": {
+    "title": "Cài đặt",
+    "subtitle": "Tùy chỉnh trải nghiệm của bạn",
+    "backButton": "Quay lại",
+    "themeEnabled": "Đang bật",
+    "themeDisabled": "Đang tắt",
+    "themeChanged": "Đã chuyển sang chế độ",
+    "themeDark": "tối",
+    "themeLight": "sáng",
+    "musicPlayerToggled": "Đã tắt Music Player",
+    "musicPlayerEnabled": "Đã bật Music Player",
+    "languageChanged": "Đã chuyển sang",
+    "clearCacheConfirm": "Xóa cache sẽ làm mới ứng dụng. Bạn có chắc chắn?",
+    "clearCacheSuccess": "Đã xóa cache thành công!",
+    "exportSuccess": "Đã xuất cài đặt thành công!",
+    "appearance": {
+      "title": "Giao diện",
+      "description": "Tùy chỉnh giao diện ứng dụng",
+      "theme": "Chế độ tối",
+      "themeDesc": "Chuyển đổi giữa chế độ sáng và tối",
+      "fontSize": "Kích thước chữ",
+      "fontSizeDesc": "Điều chỉnh kích thước văn bản",
+      "small": "Nhỏ",
+      "medium": "Vừa",
+      "large": "Lớn",
+      "reducedMotion": "Giảm hiệu ứng động",
+      "reducedMotionDesc": "Dành cho người nhạy cảm chuyển động"
+    },
+    "media": {
+      "title": "Phương tiện & Âm thanh",
+      "description": "Quản lý cài đặt âm thanh và phương tiện"
+    },
+    "audio": {
+      "title": "Âm thanh",
+      "description": "Quản lý cài đặt âm thanh",
+      "musicPlayer": "Music Player",
+      "musicPlayerDesc": "Hiển thị trình phát nhạc",
+      "soundEffects": "Hiệu ứng âm thanh",
+      "soundEffectsDesc": "Âm thanh khi tương tác"
+    },
+    "notifications": {
+      "title": "Thông báo",
+      "description": "Quản lý thông báo",
+      "enable": "Thông báo",
+      "enableDesc": "Nhận thông báo từ hệ thống"
+    },
+    "system": {
+      "title": "Hệ thống",
+      "description": "Cài đặt hệ thống",
+      "autoSave": "Tự động lưu",
+      "autoSaveDesc": "Lưu tiến trình tự động",
+      "language": "Ngôn ngữ",
+      "vietnamese": "Tiếng Việt",
+      "english": "English"
+    },
+    "data": {
+      "title": "Dữ liệu & Lưu trữ",
+      "description": "Quản lý dữ liệu và bộ nhớ",
+      "exportSettings": "Xuất cài đặt",
+      "exportFormat": "JSON",
+      "clearCache": "Xóa cache",
+      "clearCacheAction": "Làm mới"
+    },
+    "tips": {
+      "title": "💡 Mẹo",
+      "description": "Các cài đặt của bạn được lưu tự động và đồng bộ trên thiết bị này. Chế độ tối giúp giảm mỏi mắt khi sử dụng lâu dài."
+    }
+  },
   "emoji": {
     "books": "📚",
     "openBook": "📖",

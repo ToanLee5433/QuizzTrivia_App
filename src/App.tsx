@@ -8,6 +8,7 @@ import { auth, db } from './lib/firebase/config';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { loginSuccess, logout, authCheckComplete } from './features/auth/store';
 import I18nProvider from './shared/components/I18nProvider';
+import { SettingsProvider } from './contexts/SettingsContext';
 
 // Stage 1: Basic Landing & Authentication
 import { LandingPage } from './shared/pages/LandingPage';
@@ -26,6 +27,7 @@ const RealQuizListPage = React.lazy(() => import('./features/quiz/pages/RealQuiz
 const QuizResultViewer = React.lazy(() => import('./features/quiz/pages/QuizResultViewer'));
 const LearningMaterialsPage = React.lazy(() => import('./features/quiz/pages/LearningMaterialsPage'));
 const Profile = React.lazy(() => import('./features/auth/pages/Profile'));
+const SettingsPage = React.lazy(() => import('./features/settings/pages/SettingsPage'));
 const FavoritesPage = React.lazy(() => import('./features/quiz/pages/FavoritesPage'));
 const LeaderboardPage = React.lazy(() => import('./features/quiz/pages/LeaderboardPage'));
 
@@ -56,6 +58,7 @@ const BuildIndexPage = React.lazy(() => import('./features/admin/pages/BuildInde
 
 // RAG Chatbot
 import { ChatbotButton } from './components/rag';
+import MusicPlayer from './components/MusicPlayer';
 const StatsDashboard = React.lazy(() => import('./features/admin/pages/StatsDashboard'));
 const CategoryManagement = React.lazy(() => import('./features/admin/pages/CategoryManagement'));
 const AdminStats = React.lazy(() => import('./features/admin/components/AdminStats'));
@@ -330,6 +333,14 @@ const AppContent: React.FC = () => {
           <ProtectedRoute>
             <Suspense fallback={<LoadingFallback />}>
               <Profile />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingFallback />}>
+              <SettingsPage />
             </Suspense>
           </ProtectedRoute>
         } />
@@ -616,24 +627,28 @@ function App() {
   return (
     <Router>
       <Provider store={store}>
-        <I18nProvider>
-          <AuthProvider>
-            <ErrorBoundary>
-              <div className="app-container">
-                <NotificationBanner />
-                {/* <OfflineStatusIndicator /> */}
-                <ScrollToTop />
-                <Layout>
-                  <AutoLogoutOnBan />
-                  <AppContent />
-                  <ToastContainer position="top-right" autoClose={3000} hideProgressBar newestOnTop closeOnClick pauseOnFocusLoss draggable pauseOnHover aria-label="notification" />
-                </Layout>
-                {/* AI Chatbot - Floating button at bottom-right */}
-                <ChatbotButton />
-              </div>
-            </ErrorBoundary>
-          </AuthProvider>
-        </I18nProvider>
+        <SettingsProvider>
+          <I18nProvider>
+            <AuthProvider>
+              <ErrorBoundary>
+                <div className="app-container">
+                  <NotificationBanner />
+                  {/* <OfflineStatusIndicator /> */}
+                  <ScrollToTop />
+                  <Layout>
+                    <AutoLogoutOnBan />
+                    <AppContent />
+                    <ToastContainer position="top-right" autoClose={3000} hideProgressBar newestOnTop closeOnClick pauseOnFocusLoss draggable pauseOnHover aria-label="notification" />
+                  </Layout>
+                  {/* AI Chatbot - Floating button at bottom-right */}
+                  <ChatbotButton />
+                  {/* Music Player - Draggable floating player */}
+                  <MusicPlayer />
+                </div>
+              </ErrorBoundary>
+            </AuthProvider>
+          </I18nProvider>
+        </SettingsProvider>
       </Provider>
     </Router>
   );

@@ -36,6 +36,74 @@
     "action": "Action"
   },
   "actions": "Actions",
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Customize your experience",
+    "backButton": "Back",
+    "themeEnabled": "Enabled",
+    "themeDisabled": "Disabled",
+    "themeChanged": "Switched to",
+    "themeDark": "dark",
+    "themeLight": "light",
+    "musicPlayerToggled": "Music Player disabled",
+    "musicPlayerEnabled": "Music Player enabled",
+    "languageChanged": "Switched to",
+    "clearCacheConfirm": "Clearing cache will refresh the app. Are you sure?",
+    "clearCacheSuccess": "Cache cleared successfully!",
+    "exportSuccess": "Settings exported successfully!",
+    "appearance": {
+      "title": "Appearance",
+      "description": "Customize app appearance",
+      "theme": "Dark Mode",
+      "themeDesc": "Toggle between light and dark mode",
+      "fontSize": "Font Size",
+      "fontSizeDesc": "Adjust text size",
+      "small": "Small",
+      "medium": "Medium",
+      "large": "Large",
+      "reducedMotion": "Reduced Motion",
+      "reducedMotionDesc": "For motion-sensitive users"
+    },
+    "media": {
+      "title": "Media & Audio",
+      "description": "Manage audio and media settings"
+    },
+    "audio": {
+      "title": "Audio",
+      "description": "Manage audio settings",
+      "musicPlayer": "Music Player",
+      "musicPlayerDesc": "Show music player",
+      "soundEffects": "Sound Effects",
+      "soundEffectsDesc": "Sounds when interacting"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Manage notifications",
+      "enable": "Notifications",
+      "enableDesc": "Receive system notifications"
+    },
+    "system": {
+      "title": "System",
+      "description": "System settings",
+      "autoSave": "Auto Save",
+      "autoSaveDesc": "Save progress automatically",
+      "language": "Language",
+      "vietnamese": "Vietnamese",
+      "english": "English"
+    },
+    "data": {
+      "title": "Data & Storage",
+      "description": "Manage data and storage",
+      "exportSettings": "Export Settings",
+      "exportFormat": "JSON",
+      "clearCache": "Clear Cache",
+      "clearCacheAction": "Refresh"
+    },
+    "tips": {
+      "title": "💡 Tip",
+      "description": "Your settings are automatically saved and synced on this device. Dark mode helps reduce eye strain during extended use."
+    }
+  },
   "emoji": {
     "books": "📚",
     "openBook": "📖",
