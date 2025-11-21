@@ -1,12 +1,18 @@
 {
   "rules": {
+    "users": {
+      "$userId": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid == $userId"
+      }
+    },
     "rooms": {
       "$roomId": {
         ".read": "auth != null",
         
         "gameState": {
           ".read": "auth != null",
-          ".write": "auth != null && data.child('hostId').val() === auth.uid"
+          ".write": "auth != null"
         },
         
         "answers": {
