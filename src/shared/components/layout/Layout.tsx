@@ -41,7 +41,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-blue-950 dark:to-indigo-950 transition-all duration-500">
       {/* Use the new modern Header component */}
       <Header />
       

@@ -2,12 +2,18 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
+import { useSettings } from '../../contexts/SettingsContext';
 
 export const LandingPage: React.FC = () => {
   const { t } = useTranslation();
+  const { theme } = useSettings();
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900">
+    <div className={`min-h-screen transition-all duration-500 ${
+      theme === 'dark' 
+        ? 'bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950' 
+        : 'bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900'
+    }`}>
       {/* Navigation */}
       <nav className="flex items-center justify-between p-4 sm:p-6">
         <div className="flex items-center">

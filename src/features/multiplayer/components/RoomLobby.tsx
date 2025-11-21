@@ -25,6 +25,7 @@ import {
 import QRCodeLib from 'qrcode';
 import type { MultiplayerServiceInterface } from '../services/enhancedMultiplayerService';
 import realtimeService from '../services/realtimeMultiplayerService';
+import optimizedRealtimeService from '../services/optimizedRealtimeService';
 
 interface Player {
   id: string;
@@ -79,8 +80,10 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
     showLeaderboard: roomData?.settings?.showLeaderboard ?? true,
     allowLateJoin: roomData?.settings?.allowLateJoin ?? true
   });
+  const [realtimePlayers, setRealtimePlayers] = useState<Player[]>([]);
 
-  const players = useMemo(() => roomData?.players || [], [roomData?.players]);
+  // Use real-time players instead of static roomData.players
+  const players = useMemo(() => realtimePlayers.length > 0 ? realtimePlayers : (roomData?.players || []), [realtimePlayers, roomData?.players]);
   const readyCount = useMemo(() => players.filter(p => p.isReady).length, [players]);
   const onlineCount = useMemo(() => players.filter(p => p.isOnline).length, [players]);
   const allReady = useMemo(() => players.length >= 2 && players.every(p => p.isReady), [players]);
@@ -96,6 +99,40 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
       playerList: players.map(p => ({ id: p.id, username: p.username, isReady: p.isReady }))
     });
   }, [players, readyCount, allReady]);
+  
+  // ⚡ REAL-TIME PLAYER LISTENER - Fix avatar sync and near-zero latency updates
+  useEffect(() => {
+    if (!roomData?.id) return;
+
+    console.log('⚡ Setting up real-time player listener for room:', roomData.id);
+    
+    // Connect to optimized service for instant updates
+    optimizedRealtimeService.connect(
+      currentUserId, 
+      currentPlayer?.username || 'Player', 
+      currentPlayer?.photoURL
+    ).catch(err => console.error('Failed to connect to optimized service:', err));
+
+    // Listen to real-time player updates including avatars
+    const unsubscribe = optimizedRealtimeService.listenToPlayers(
+      roomData.id, 
+      (playersList) => {
+        console.log('⚡ Real-time players updated:', playersList.map(p => ({
+          id: p.id,
+          name: p.name,
+          hasAvatar: !!p.photoURL,
+          isReady: p.isReady
+        })));
+        
+        setRealtimePlayers(playersList);
+      }
+    );
+
+    return () => {
+      console.log('⚡ Cleaning up real-time player listener');
+      unsubscribe();
+    };
+  }, [roomData?.id, currentUserId, currentPlayer?.username, currentPlayer?.photoURL]);
   
   // Listen to RTDB countdown (synchronized across all clients)
   useEffect(() => {
@@ -194,10 +231,21 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({
   };
 
   const handleToggleReady = async () => {
-    if (!multiplayerService || !roomData?.id) return;
+    if (!roomData?.id) return;
     
     const newReadyState = !currentPlayer?.isReady;
-    await multiplayerService.updatePlayerStatus(roomData.id, newReadyState);
+    
+    try {
+      // ⚡ Use optimized service for instant sync (near-zero latency)
+      await optimizedRealtimeService.updatePlayerStatus(roomData.id, currentUserId, newReadyState);
+      console.log(`⚡ Ready status updated instantly: ${newReadyState}`);
+    } catch (error) {
+      console.error('Failed to update ready status:', error);
+      // Fallback to original service if optimized fails
+      if (multiplayerService) {
+        await multiplayerService.updatePlayerStatus(roomData.id, newReadyState);
+      }
+    }
   };
 
   const handleKickPlayer = async (playerId: string) => {

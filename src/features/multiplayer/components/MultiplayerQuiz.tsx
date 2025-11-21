@@ -10,8 +10,9 @@ import { toast } from 'react-toastify';
 import SafeHTML from '../../../shared/components/ui/SafeHTML';
 import { logger } from '../utils/logger';
 import gameStateService, { GameStateData, LeaderboardEntry } from '../services/gameStateService';
+import optimizedRealtimeService from '../services/optimizedRealtimeService';
 import QuestionTimer from './QuestionTimer';
-import LiveLeaderboard from './LiveLeaderboard';
+import OptimizedLiveLeaderboard from './OptimizedLiveLeaderboard';
 import HostControlPanel from './HostControlPanel';
 import AnswerResultAnimation from './AnswerResultAnimation';
 import SoundSettings from './SoundSettings';
@@ -738,7 +739,22 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
       
       // Submit to server (for sync with other players) - only if answer was selected
       if (indexToSubmit !== null) {
-        await multiplayerService.submitAnswer(currentRoomData.id, finalQuestion.id, indexToSubmit, timeSpent);
+        try {
+          // ⚡ Use optimized service for instant leaderboard updates (near-zero latency)
+          await optimizedRealtimeService.submitAnswer(
+            currentRoomData.id,
+            currentUser.uid,
+            finalQuestion.id,
+            indexToSubmit,
+            timeRemaining,
+            points
+          );
+          console.log('⚡ Answer submitted with instant leaderboard update');
+        } catch (error) {
+          console.error('Optimized service failed, falling back:', error);
+          // Fallback to original service
+          await multiplayerService.submitAnswer(currentRoomData.id, finalQuestion.id, indexToSubmit, timeSpent);
+        }
       }
       
       // Submit to game state service for real-time sync
@@ -1416,10 +1432,11 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
         {currentUser?.uid && roomData?.id && (currentRoomStatus === 'playing' || currentGamePhase === 'results') && (
           <div className="hidden lg:block w-80">
             <div className="sticky top-6">
-              <LiveLeaderboard 
+              <OptimizedLiveLeaderboard 
                 roomId={roomData.id} 
                 currentUserId={currentUser.uid}
-                showTop={5}
+                maxPlayers={5}
+                compact={false}
               />
             </div>
           </div>

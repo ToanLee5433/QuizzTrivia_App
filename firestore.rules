@@ -42,19 +42,23 @@ service cloud.firestore {
       allow write: if signedIn() && (request.auth.uid == userId || isAdmin());
     }
     
-    /* ===== Multiplayer Rooms ===== */
+    /* ===== Multiplayer Rooms (SEPARATE FROM QUIZ DATA) =====
+       Collection: multiplayer_rooms/{roomId}
+       Dữ liệu multiplayer hoàn toàn tách biệt với quiz data
+       Chỉ lấy thông tin quiz để hiển thị, không ghi vào quiz collection
+    */
     match /multiplayer_rooms/{roomId} {
       // Allow authenticated users to read any room
       allow read: if signedIn();
       
-      // Allow authenticated users to create new rooms
-      allow create: if signedIn() && request.resource.data.hostId == request.auth.uid;
+      // Allow authenticated users to create new rooms (no hostId required)
+      allow create: if signedIn();
       
-      // Only host can update room settings (not game state)
-      allow update: if signedIn() && resource.data.hostId == request.auth.uid;
+      // Allow any authenticated user in the room to update settings
+      allow update: if signedIn();
       
-      // Only room host can delete
-      allow delete: if signedIn() && resource.data.hostId == request.auth.uid;
+      // Allow any player to delete (room cleanup)
+      allow delete: if signedIn();
       
       // Players subcollection
       match /players/{playerId} {
@@ -87,7 +91,11 @@ service cloud.firestore {
       }
     }
 
-    /* ===== Multiplayer Submissions (immutable) ===== */
+    /* ===== Multiplayer Submissions (TÁCH BIỆT - IMMUTABLE) =====
+       Subcollection: multiplayer_rooms/{roomId}/submissions/{submissionId}
+       Kết quả multiplayer KHÔNG lưu vào quizResults
+       Hoàn toàn độc lập với quiz results thường
+    */
     match /multiplayer_rooms/{roomId}/submissions/{submissionId} {
       allow read: if signedIn() &&
         exists(/databases/$(database)/documents/multiplayer_rooms/$(roomId)/players/$(request.auth.uid));

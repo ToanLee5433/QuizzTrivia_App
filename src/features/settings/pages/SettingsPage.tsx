@@ -81,25 +81,25 @@ const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 py-8 px-4 transition-colors duration-300">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8 px-4 transition-all duration-500">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors mb-4"
+            className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 mb-4 group"
           >
-            <ArrowLeft className="w-5 h-5" />
-            <span>{t('settings.backButton')}</span>
+            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-medium">{t('settings.backButton')}</span>
           </button>
           
           <div className="flex items-center gap-4 mb-2">
-            <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl shadow-lg">
+            <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 dark:from-blue-600 dark:to-purple-700 rounded-2xl shadow-lg shadow-blue-500/25 dark:shadow-blue-600/25 transition-all duration-300 hover:scale-105">
               <SettingsIcon className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-800 dark:text-white">{t('settings.title')}</h1>
-              <p className="text-gray-600 dark:text-gray-400">{t('settings.subtitle')}</p>
+              <h1 className="text-3xl font-bold text-gray-800 dark:text-white transition-colors">{t('settings.title')}</h1>
+              <p className="text-gray-600 dark:text-gray-300 transition-colors">{t('settings.subtitle')}</p>
             </div>
           </div>
         </div>
@@ -107,24 +107,24 @@ const SettingsPage: React.FC = () => {
         {/* Settings Sections */}
         <div className="space-y-6">
           {/* Appearance Section */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 transition-colors duration-300">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 transition-all duration-300 hover:shadow-2xl">
             <div className="flex items-center gap-3 mb-6">
-              <Monitor className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white">{t('settings.appearance.title')}</h2>
+              <Monitor className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <h2 className="text-xl font-bold text-gray-800 dark:text-white transition-colors">{t('settings.appearance.title')}</h2>
             </div>
 
             <div className="space-y-4">
               {/* Theme Toggle */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-all duration-200 group">
                 <div className="flex items-center gap-3">
                   {theme === 'dark' ? (
-                    <Moon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                    <Moon className="w-5 h-5 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
                   ) : (
-                    <Sun className="w-5 h-5 text-yellow-500" />
+                    <Sun className="w-5 h-5 text-amber-500 group-hover:rotate-12 transition-transform" />
                   )}
                   <div>
-                    <p className="font-semibold text-gray-800 dark:text-white">{t('settings.appearance.theme')}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="font-semibold text-gray-800 dark:text-white transition-colors">{t('settings.appearance.theme')}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 transition-colors">
                       {theme === 'dark' ? t('settings.themeEnabled') : t('settings.themeDisabled')}
                     </p>
                   </div>
@@ -135,12 +135,12 @@ const SettingsPage: React.FC = () => {
                     const mode = theme === 'light' ? t('settings.themeDark') : t('settings.themeLight');
                     toast.success(`${t('settings.themeChanged')} ${mode}`);
                   }}
-                  className={`relative w-14 h-7 rounded-full transition-colors ${
-                    theme === 'dark' ? 'bg-purple-600' : 'bg-gray-300'
+                  className={`relative w-14 h-7 rounded-full transition-all duration-300 ${
+                    theme === 'dark' ? 'bg-blue-600 shadow-lg shadow-blue-500/30' : 'bg-gray-300'
                   }`}
                 >
                   <div
-                    className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
+                    className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-md transition-all duration-300 ${
                       theme === 'dark' ? 'translate-x-7' : 'translate-x-0'
                     }`}
                   />
@@ -150,18 +150,18 @@ const SettingsPage: React.FC = () => {
               {/* Font Size */}
               <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
                 <div className="flex items-center gap-3 mb-3">
-                  <Type className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                  <p className="font-semibold text-gray-800 dark:text-white">{t('settings.appearance.fontSize')}</p>
+                  <Type className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <p className="font-semibold text-gray-800 dark:text-white transition-colors">{t('settings.appearance.fontSize')}</p>
                 </div>
                 <div className="flex gap-2">
                   {(['small', 'medium', 'large'] as const).map((size) => (
                     <button
                       key={size}
                       onClick={() => setFontSize(size)}
-                      className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+                      className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all duration-200 ${
                         fontSize === size
-                          ? 'bg-purple-600 text-white'
-                          : 'bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-purple-100 dark:hover:bg-gray-500'
+                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                          : 'bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-500'
                       }`}
                     >
                       {t(`settings.appearance.${size}`)}
@@ -171,22 +171,22 @@ const SettingsPage: React.FC = () => {
               </div>
 
               {/* Reduced Motion */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-all duration-200 group">
                 <div className="flex items-center gap-3">
-                  <Accessibility className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                  <Accessibility className="w-5 h-5 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
                   <div>
-                    <p className="font-semibold text-gray-800 dark:text-white">{t('settings.appearance.reducedMotion')}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{t('settings.appearance.reducedMotionDesc')}</p>
+                    <p className="font-semibold text-gray-800 dark:text-white transition-colors">{t('settings.appearance.reducedMotion')}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 transition-colors">{t('settings.appearance.reducedMotionDesc')}</p>
                   </div>
                 </div>
                 <button
                   onClick={toggleReducedMotion}
-                  className={`relative w-14 h-7 rounded-full transition-colors ${
-                    reducedMotion ? 'bg-purple-600' : 'bg-gray-300'
+                  className={`relative w-14 h-7 rounded-full transition-all duration-300 ${
+                    reducedMotion ? 'bg-blue-600 shadow-lg shadow-blue-500/30' : 'bg-gray-300'
                   }`}
                 >
                   <div
-                    className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
+                    className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-md transition-all duration-300 ${
                       reducedMotion ? 'translate-x-7' : 'translate-x-0'
                     }`}
                   />
@@ -196,20 +196,20 @@ const SettingsPage: React.FC = () => {
           </div>
 
           {/* Media & Audio Section */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 transition-colors duration-300">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 transition-all duration-300 hover:shadow-2xl">
             <div className="flex items-center gap-3 mb-6">
-              <Volume2 className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white">{t('settings.media.title')}</h2>
+              <Volume2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <h2 className="text-xl font-bold text-gray-800 dark:text-white transition-colors">{t('settings.media.title')}</h2>
             </div>
 
             <div className="space-y-4">
               {/* Music Player */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-all duration-200 group">
                 <div className="flex items-center gap-3">
-                  <Music className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                  <Music className="w-5 h-5 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
                   <div>
-                    <p className="font-semibold text-gray-800 dark:text-white">{t('settings.audio.musicPlayer')}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="font-semibold text-gray-800 dark:text-white transition-colors">{t('settings.audio.musicPlayer')}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 transition-colors">
                       {t('settings.audio.musicPlayerDesc')}
                     </p>
                   </div>
@@ -219,12 +219,12 @@ const SettingsPage: React.FC = () => {
                     toggleMusicPlayer();
                     toast.success(isMusicPlayerEnabled ? t('settings.musicPlayerToggled') : t('settings.musicPlayerEnabled'));
                   }}
-                  className={`relative w-14 h-7 rounded-full transition-colors ${
-                    isMusicPlayerEnabled ? 'bg-purple-600' : 'bg-gray-300'
+                  className={`relative w-14 h-7 rounded-full transition-all duration-300 ${
+                    isMusicPlayerEnabled ? 'bg-blue-600 shadow-lg shadow-blue-500/30' : 'bg-gray-300'
                   }`}
                 >
                   <div
-                    className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
+                    className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-md transition-all duration-300 ${
                       isMusicPlayerEnabled ? 'translate-x-7' : 'translate-x-0'
                     }`}
                   />
@@ -232,22 +232,22 @@ const SettingsPage: React.FC = () => {
               </div>
 
               {/* Sound Effects */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-all duration-200 group">
                 <div className="flex items-center gap-3">
-                  <Zap className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                  <Zap className="w-5 h-5 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
                   <div>
-                    <p className="font-semibold text-gray-800 dark:text-white">{t('settings.audio.soundEffects')}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{t('settings.audio.soundEffectsDesc')}</p>
+                    <p className="font-semibold text-gray-800 dark:text-white transition-colors">{t('settings.audio.soundEffects')}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 transition-colors">{t('settings.audio.soundEffectsDesc')}</p>
                   </div>
                 </div>
                 <button
                   onClick={toggleSoundEffects}
-                  className={`relative w-14 h-7 rounded-full transition-colors ${
-                    soundEffectsEnabled ? 'bg-purple-600' : 'bg-gray-300'
+                  className={`relative w-14 h-7 rounded-full transition-all duration-300 ${
+                    soundEffectsEnabled ? 'bg-blue-600 shadow-lg shadow-blue-500/30' : 'bg-gray-300'
                   }`}
                 >
                   <div
-                    className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
+                    className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-md transition-all duration-300 ${
                       soundEffectsEnabled ? 'translate-x-7' : 'translate-x-0'
                     }`}
                   />
@@ -257,30 +257,30 @@ const SettingsPage: React.FC = () => {
           </div>
 
           {/* System Section */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 transition-colors duration-300">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 transition-all duration-300 hover:shadow-2xl">
             <div className="flex items-center gap-3 mb-6">
-              <Shield className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white">{t('settings.system.title')}</h2>
+              <Shield className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <h2 className="text-xl font-bold text-gray-800 dark:text-white transition-colors">{t('settings.system.title')}</h2>
             </div>
 
             <div className="space-y-4">
               {/* Notifications */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-all duration-200 group">
                 <div className="flex items-center gap-3">
-                  <Bell className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                  <Bell className="w-5 h-5 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
                   <div>
-                    <p className="font-semibold text-gray-800 dark:text-white">{t('settings.notifications.enable')}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{t('settings.notifications.enableDesc')}</p>
+                    <p className="font-semibold text-gray-800 dark:text-white transition-colors">{t('settings.notifications.enable')}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 transition-colors">{t('settings.notifications.enableDesc')}</p>
                   </div>
                 </div>
                 <button
                   onClick={toggleNotifications}
-                  className={`relative w-14 h-7 rounded-full transition-colors ${
-                    notificationsEnabled ? 'bg-purple-600' : 'bg-gray-300'
+                  className={`relative w-14 h-7 rounded-full transition-all duration-300 ${
+                    notificationsEnabled ? 'bg-blue-600 shadow-lg shadow-blue-500/30' : 'bg-gray-300'
                   }`}
                 >
                   <div
-                    className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
+                    className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-md transition-all duration-300 ${
                       notificationsEnabled ? 'translate-x-7' : 'translate-x-0'
                     }`}
                   />
@@ -288,22 +288,22 @@ const SettingsPage: React.FC = () => {
               </div>
 
               {/* Auto Save */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-all duration-200 group">
                 <div className="flex items-center gap-3">
-                  <Save className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                  <Save className="w-5 h-5 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
                   <div>
-                    <p className="font-semibold text-gray-800 dark:text-white">{t('settings.system.autoSave')}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{t('settings.system.autoSaveDesc')}</p>
+                    <p className="font-semibold text-gray-800 dark:text-white transition-colors">{t('settings.system.autoSave')}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 transition-colors">{t('settings.system.autoSaveDesc')}</p>
                   </div>
                 </div>
                 <button
                   onClick={toggleAutoSave}
-                  className={`relative w-14 h-7 rounded-full transition-colors ${
-                    autoSaveEnabled ? 'bg-purple-600' : 'bg-gray-300'
+                  className={`relative w-14 h-7 rounded-full transition-all duration-300 ${
+                    autoSaveEnabled ? 'bg-blue-600 shadow-lg shadow-blue-500/30' : 'bg-gray-300'
                   }`}
                 >
                   <div
-                    className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
+                    className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-md transition-all duration-300 ${
                       autoSaveEnabled ? 'translate-x-7' : 'translate-x-0'
                     }`}
                   />
@@ -313,26 +313,26 @@ const SettingsPage: React.FC = () => {
               {/* Language */}
               <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
                 <div className="flex items-center gap-3 mb-3">
-                  <Globe className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                  <p className="font-semibold text-gray-800 dark:text-white">{t('settings.system.language')}</p>
+                  <Globe className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <p className="font-semibold text-gray-800 dark:text-white transition-colors">{t('settings.system.language')}</p>
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleLanguageChange('vi')}
-                    className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+                    className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all duration-200 ${
                       i18n.language === 'vi'
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-purple-100 dark:hover:bg-gray-500'
+                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                        : 'bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-500'
                     }`}
                   >
                     🇻🇳 {t('settings.system.vietnamese')}
                   </button>
                   <button
                     onClick={() => handleLanguageChange('en')}
-                    className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+                    className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all duration-200 ${
                       i18n.language === 'en'
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-purple-100 dark:hover:bg-gray-500'
+                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                        : 'bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-500'
                     }`}
                   >
                     🇺🇸 {t('settings.system.english')}
@@ -343,39 +343,39 @@ const SettingsPage: React.FC = () => {
           </div>
 
           {/* Data & Storage Section */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 transition-colors duration-300">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 transition-all duration-300 hover:shadow-2xl">
             <div className="flex items-center gap-3 mb-6">
-              <Database className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white">{t('settings.data.title')}</h2>
+              <Database className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <h2 className="text-xl font-bold text-gray-800 dark:text-white transition-colors">{t('settings.data.title')}</h2>
             </div>
 
             <div className="space-y-3">
               <button
                 onClick={exportData}
-                className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-purple-100 dark:hover:bg-purple-900 transition-colors group"
+                className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all duration-200 group"
               >
                 <div className="flex items-center gap-3">
-                  <Download className="w-5 h-5 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform" />
-                  <p className="font-semibold text-gray-800 dark:text-white">{t('settings.data.exportSettings')}</p>
+                  <Download className="w-5 h-5 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
+                  <p className="font-semibold text-gray-800 dark:text-white transition-colors">{t('settings.data.exportSettings')}</p>
                 </div>
-                <span className="text-sm text-gray-500 dark:text-gray-400">{t('settings.data.exportFormat')}</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400 transition-colors">{t('settings.data.exportFormat')}</span>
               </button>
 
               <button
                 onClick={clearCache}
-                className="w-full flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/20 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors group"
+                className="w-full flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/20 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/40 transition-all duration-200 group"
               >
                 <div className="flex items-center gap-3">
                   <Database className="w-5 h-5 text-red-600 dark:text-red-400 group-hover:scale-110 transition-transform" />
-                  <p className="font-semibold text-red-600 dark:text-red-400">{t('settings.data.clearCache')}</p>
+                  <p className="font-semibold text-red-600 dark:text-red-400 transition-colors">{t('settings.data.clearCache')}</p>
                 </div>
-                <span className="text-sm text-red-500 dark:text-red-400">{t('settings.data.clearCacheAction')}</span>
+                <span className="text-sm text-red-500 dark:text-red-400 transition-colors">{t('settings.data.clearCacheAction')}</span>
               </button>
             </div>
           </div>
 
           {/* Info Footer */}
-          <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl shadow-xl p-6 text-white">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-700 dark:to-purple-700 rounded-2xl shadow-xl shadow-blue-500/25 dark:shadow-purple-600/25 p-6 text-white transition-all duration-300">
             <h3 className="font-bold text-lg mb-2">{t('settings.tips.title')}</h3>
             <p className="text-sm opacity-90">
               {t('settings.tips.description')}

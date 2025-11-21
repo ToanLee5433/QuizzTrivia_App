@@ -101,7 +101,7 @@ const Header: React.FC<HeaderProps> = () => {
           visible ? 'translate-y-0' : '-translate-y-full'
         } ${
           scrolled 
-            ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl shadow-lg border-b border-gray-200/50 dark:border-gray-700/50' 
+            ? 'bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-lg border-b border-slate-200/50 dark:border-slate-700/50' 
             : 'bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 shadow-xl'
         }`}
       >
@@ -114,7 +114,7 @@ const Header: React.FC<HeaderProps> = () => {
             >
               <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center ring-2 shadow-md transition-all duration-500 ${
                 scrolled 
-                  ? 'bg-gradient-to-br from-blue-500 to-purple-600 ring-blue-200 group-hover:ring-blue-300' 
+                  ? 'bg-gradient-to-br from-blue-500 to-purple-600 ring-blue-200 dark:ring-blue-800 group-hover:ring-blue-300 dark:group-hover:ring-blue-700' 
                   : 'bg-white/20 backdrop-blur-md ring-white/40 group-hover:ring-white/60'
               } group-hover:scale-110 group-hover:rotate-6`}>
                 <Zap className={`w-4 h-4 sm:w-5 sm:h-5 transition-colors duration-300 ${
@@ -130,7 +130,7 @@ const Header: React.FC<HeaderProps> = () => {
                   {t('appName')}
                 </h1>
                 <p className={`text-xs hidden lg:block transition-colors duration-300 ${
-                  scrolled ? 'text-gray-600' : 'text-blue-100/90'
+                  scrolled ? 'text-slate-600 dark:text-slate-400' : 'text-blue-100/90'
                 }`}>
                   {t('landing.hero.title')} ✨
                 </p>
@@ -151,7 +151,7 @@ const Header: React.FC<HeaderProps> = () => {
                         scrolled
                           ? isActive
                             ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md'
-                            : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
                           : isActive
                             ? 'bg-white/30 text-white shadow-md ring-1 ring-white/30'
                             : 'text-white/90 hover:text-white hover:bg-white/20'
@@ -186,7 +186,7 @@ const Header: React.FC<HeaderProps> = () => {
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                     className={`flex items-center space-x-2 rounded-xl px-2 sm:px-3 py-2 transition-all duration-300 shadow-md hover:scale-105 group ${
                       scrolled
-                        ? 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
+                        ? 'bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600'
                         : 'bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/30'
                     }`}
                   >
@@ -199,7 +199,7 @@ const Header: React.FC<HeaderProps> = () => {
                     ) : (
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ring-2 shadow-sm transition-all duration-300 ${
                         scrolled
-                          ? 'bg-gradient-to-br from-blue-500 to-purple-600 ring-blue-200 group-hover:ring-blue-300'
+                          ? 'bg-gradient-to-br from-blue-500 to-purple-600 ring-blue-200 dark:ring-blue-800 group-hover:ring-blue-300 dark:group-hover:ring-blue-700'
                           : 'bg-white/30 ring-white/40 group-hover:ring-white/60'
                       }`}>
                         <span className="text-white font-semibold text-sm">
@@ -209,13 +209,13 @@ const Header: React.FC<HeaderProps> = () => {
                     )}
                     <div className="hidden lg:block text-left">
                       <p className={`text-sm font-semibold truncate max-w-24 xl:max-w-32 transition-colors leading-tight ${
-                        scrolled ? 'text-gray-900 dark:text-gray-100' : 'text-white'
+                        scrolled ? 'text-slate-900 dark:text-slate-100' : 'text-white'
                       }`}>
                         {user?.displayName || user?.email || 'User'}
                       </p>
                       {user?.role && (
                         <p className={`text-xs flex items-center font-medium ${
-                          scrolled ? 'text-gray-600 dark:text-gray-400' : 'text-blue-100/90'
+                          scrolled ? 'text-slate-600 dark:text-slate-400' : 'text-blue-100/90'
                         }`}>
                           {user.role === 'admin' && <Crown className="w-3 h-3 mr-1 text-yellow-500" />}
                           {user.role === 'admin' ? t('ui.admin') : 
@@ -225,11 +225,11 @@ const Header: React.FC<HeaderProps> = () => {
                     </div>
                     <ChevronDown className={`hidden lg:block w-3.5 h-3.5 transition-transform duration-300 ${
                       isUserMenuOpen ? 'rotate-180' : ''
-                    } ${scrolled ? 'text-gray-600' : 'text-white/90'}`} />
+                    } ${scrolled ? 'text-slate-600 dark:text-slate-400' : 'text-white/90'}`} />
                   </button>
                   {/* User Dropdown - Refined */}
                   {isUserMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-64 sm:w-72 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden z-[200] animate-in slide-in-from-top-2 duration-200">
+                    <div className="absolute right-0 mt-2 w-64 sm:w-72 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden z-[200] animate-in slide-in-from-top-2 duration-200">
                       {/* User Info Header */}
                       <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-3">
                         <div className="flex items-center space-x-3">
@@ -273,7 +273,7 @@ const Header: React.FC<HeaderProps> = () => {
                             navigate('/profile');
                             setIsUserMenuOpen(false);
                           }}
-                          className="w-full flex items-center px-4 py-2.5 text-gray-700 dark:text-gray-200 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-900/30 dark:hover:to-purple-900/30 transition-all duration-200 group"
+                          className="w-full flex items-center px-4 py-2.5 text-slate-700 dark:text-slate-200 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-900/30 dark:hover:to-purple-900/30 transition-all duration-200 group"
                         >
                           <UserCircle className="w-4 h-4 mr-2.5 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
                           <span className="font-medium text-sm">{t('profile.myProfile')}</span>
@@ -283,7 +283,7 @@ const Header: React.FC<HeaderProps> = () => {
                             navigate('/settings');
                             setIsUserMenuOpen(false);
                           }}
-                          className="w-full flex items-center px-4 py-2.5 text-gray-700 dark:text-gray-200 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 dark:hover:from-purple-900/30 dark:hover:to-pink-900/30 transition-all duration-200 group"
+                          className="w-full flex items-center px-4 py-2.5 text-slate-700 dark:text-slate-200 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 dark:hover:from-purple-900/30 dark:hover:to-pink-900/30 transition-all duration-200 group"
                         >
                           <Settings className="w-4 h-4 mr-2.5 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform" />
                           <span className="font-medium text-sm">Cài đặt</span>
