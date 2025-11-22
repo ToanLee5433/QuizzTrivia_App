@@ -37,8 +37,10 @@ export const ROUTES = {
   ADMIN_CREATORS: '/admin/creators',
   ADMIN_CATEGORIES: '/admin/categories',
   
-  // Multiplayer routes
+  // Multiplayer routes - NEW MODERN SYSTEM
   MULTIPLAYER: '/multiplayer',
+  MULTIPLAYER_MODERN: '/multiplayer/modern',
+  MULTIPLAYER_TEST: '/multiplayer/test',
   MULTIPLAYER_LOBBY: '/multiplayer/lobby',
   MULTIPLAYER_ROOM: '/multiplayer/room/:roomId',
 } as const;

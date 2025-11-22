@@ -1,19 +1,20 @@
 import { 
-  collection, 
   doc, 
-  addDoc, 
+  collection, 
   setDoc, 
   getDoc, 
   getDocs, 
+  query, 
+  where,
+  limit,
+  orderBy,
   updateDoc, 
   deleteDoc, 
-  query, 
-  where, 
-  orderBy, 
-  limit, 
   onSnapshot, 
-  serverTimestamp
+  serverTimestamp, 
+  addDoc
 } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 import { db } from '../../../lib/firebase/config';
 import { logger } from '../utils/logger';
 import realtimeService from './realtimeMultiplayerService';
@@ -156,9 +157,26 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
 
   // Connection
   async connect(userId: string, username: string, photoURL?: string): Promise<void> {
+    console.log('🔍 DEBUG: FirestoreService.connect() called with:', { userId, username, photoURL });
+    
+    // Check Firebase auth state before connecting
+    const auth = getAuth();
+    console.log('🔍 DEBUG: Firebase auth state during connect:', {
+      currentUser: auth.currentUser,
+      uid: auth.currentUser?.uid,
+      isNull: !auth.currentUser
+    });
+    
     this.userId = userId;
     this.username = username;
     this.userPhotoURL = photoURL || '';
+    
+    console.log('🔍 DEBUG: Service state after connect:', {
+      serviceUserId: this.userId,
+      serviceUsername: this.username,
+      matchesAuth: this.userId === auth.currentUser?.uid
+    });
+    
     logger.success('Connected to Firestore Multiplayer Service', { userId, username, photoURL });
     this.emit('connected', { userId, username, photoURL });
   }
@@ -341,7 +359,31 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
         joinedAt: new Date()
       };
       
-      // Add player to room
+      // Add player to room - DEBUGGING PERMISSION ERROR
+      console.log('🔍 DEBUG: About to create player document');
+      console.log('🔍 DEBUG: Service userId:', this.userId);
+      console.log('🔍 DEBUG: Service username:', this.username);
+      console.log('🔍 DEBUG: Room ID:', roomDoc.id);
+      console.log('🔍 DEBUG: Player data:', player);
+      
+      // Check Firebase auth state
+      const auth = getAuth();
+      console.log('🔍 DEBUG: Firebase auth.currentUser:', auth.currentUser);
+      console.log('🔍 DEBUG: Firebase auth UID:', auth.currentUser?.uid);
+      console.log('🔍 DEBUG: UID match check:', this.userId === auth.currentUser?.uid);
+      console.log('🔍 DEBUG: Is user authenticated?:', !!auth.currentUser);
+      
+      if (!auth.currentUser) {
+        console.error('❌ CRITICAL: Firebase auth.currentUser is null when trying to create player!');
+        throw new Error('Firebase authentication not ready');
+      }
+      
+      if (this.userId !== auth.currentUser?.uid) {
+        console.error('❌ CRITICAL: Service userId does not match Firebase auth UID!');
+        console.error('❌ Service userId:', this.userId, 'Auth UID:', auth.currentUser?.uid);
+        throw new Error('Service userId mismatch with Firebase auth');
+      }
+      
       const playerDoc = doc(collection(db, 'multiplayer_rooms', roomDoc.id, 'players'), this.userId);
       await setDoc(playerDoc, player);
       
@@ -896,6 +938,14 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
     const unsubscribe = onSnapshot(roomDoc, (doc) => {
       if (doc.exists()) {
         const roomData = doc.data();
+        
+        logger.debug('Room snapshot received', {
+          roomId: doc.id,
+          status: roomData.status,
+          hasQuiz: !!roomData.quiz,
+          questionsCount: roomData.quiz?.questions?.length || 0
+        });
+        
         const room: Room = {
           id: doc.id,
           code: roomData.code,
@@ -920,7 +970,13 @@ export class FirestoreMultiplayerService extends SimpleEventEmitter implements M
         if (roomData.gameData) {
           this.emit('game:data_updated', roomData.gameData);
         }
+      } else {
+        logger.error('Room document does not exist!', { roomId });
+        this.emit('error', new Error('Room not found'));
       }
+    }, (error) => {
+      logger.error('Error in room snapshot listener', { roomId, error });
+      this.emit('error', error);
     });
     
     this.unsubscribeFunctions.push(unsubscribe);

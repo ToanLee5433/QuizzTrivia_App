@@ -118,14 +118,21 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
   }, [currentUserId, currentUserName, currentUserPhoto, t]);
   // Handlers are intentionally omitted from dependencies to prevent infinite loop from re-subscription
 
-  // ✅ Auto-join room from URL parameter (for QR code / share link) - OPTIMIZED
+  // ✅ Auto-join room from URL parameter (for QR code / share link) - FIXED TIMING
   useEffect(() => {
     if (!initialRoomCode || !multiplayerService || connectionStatus !== 'connected') return;
     if (state.currentState !== 'mode-selection') return; // Already joined/joining
+    
+    // 🔒 CRITICAL FIX: Ensure service has userId set before joining
+    if (!currentUserId || !currentUserName) {
+      console.log('⏳ Waiting for user authentication to complete before auto-joining...');
+      return;
+    }
 
     const autoJoinRoom = async () => {
       try {
         console.log('🔗 Auto-joining room from URL code:', initialRoomCode);
+        console.log('👤 User authenticated:', { userId: currentUserId, username: currentUserName });
         
         // ⚡ OPTIMIZATION: Try joining directly first (fast path)
         // If password required, joinRoom will throw 'room_requires_password' error
@@ -165,7 +172,7 @@ const MultiplayerManager: React.FC<MultiplayerManagerProps> = ({
     };
 
     autoJoinRoom();
-  }, [initialRoomCode, multiplayerService, connectionStatus, state.currentState, t]);
+  }, [initialRoomCode, multiplayerService, connectionStatus, state.currentState, currentUserId, currentUserName, t]);
 
   // Event handlers
   const handleRoomUpdate = useCallback((roomData: any) => {

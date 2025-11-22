@@ -5,9 +5,7 @@ import {
   update,
   serverTimestamp,
   onDisconnect,
-  get,
-  off,
-  runTransaction
+  off
 } from 'firebase/database';
 import { rtdb } from '../../../lib/firebase/config';
 import { logger } from '../utils/logger';
@@ -57,43 +55,27 @@ class OptimizedRealtimeService {
   /**
    * ⚡ Join room with instant presence update
    */
-  async joinRoom(roomId: string, userId: string, userName: string, photoURL?: string) {
+  async joinRoom(roomId: string, userId: string, userName: string, _photoURL?: string) {
     try {
-      const roomRef = ref(rtdb, `rooms/${roomId}`);
-      
-      // Use transaction for atomic join
-      await runTransaction(roomRef, async (roomData) => {
-        if (!roomData) {
-          roomData = { players: {}, status: 'waiting' };
-        }
-        
-        if (!roomData.players) roomData.players = {};
-        
-        // Add player with full info
-        roomData.players[userId] = {
-          id: userId,
-          name: userName,
-          photoURL: photoURL || null,
-          isHost: Object.keys(roomData.players).length === 0,
-          isReady: false,
-          score: 0,
-          joinedAt: serverTimestamp(),
-          isOnline: true
-        };
-        
-        return roomData;
-      });
-
-      // Setup presence tracking
+      // Setup presence tracking (allowed by rules)
       const presenceRef = ref(rtdb, `rooms/${roomId}/presence/${userId}`);
       await set(presenceRef, {
         isOnline: true,
-        lastSeen: Date.now()
+        lastSeen: Date.now(),
+        username: userName
       });
 
       onDisconnect(presenceRef).set({
         isOnline: false,
-        lastSeen: Date.now()
+        lastSeen: Date.now(),
+        username: userName
+      });
+
+      // Setup initial player status (allowed by rules)
+      const statusRef = ref(rtdb, `rooms/${roomId}/playerStatuses/${userId}`);
+      await set(statusRef, {
+        isReady: false,
+        updatedAt: Date.now()
       });
 
       logger.success('⚡ Joined room with instant sync', { roomId, userId });
@@ -125,43 +107,30 @@ class OptimizedRealtimeService {
   }
 
   /**
-   * ⚡ Submit answer with instant leaderboard update
+   * ⚡ Submit answer using allowed database paths
    */
   async submitAnswer(roomId: string, userId: string, questionId: string, answer: any, timeRemaining: number, score: number) {
     try {
       const updates: any = {};
       
-      // Store answer
-      updates[`rooms/${roomId}/answers/${questionId}/${userId}`] = {
+      // Store answer in submissions path (allowed by rules)
+      updates[`rooms/${roomId}/submissions/${userId}`] = {
+        questionId,
         answer,
         timeRemaining,
         submittedAt: serverTimestamp(),
         score
       };
       
-      // Update player score and stats
-      const playerScoreRef = ref(rtdb, `rooms/${roomId}/players/${userId}/score`);
-      const currentScore = (await get(playerScoreRef)).val() || 0;
-      updates[`rooms/${roomId}/players/${userId}/score`] = currentScore + score;
-      updates[`rooms/${roomId}/players/${userId}/lastAnswerAt`] = serverTimestamp();
-      updates[`rooms/${roomId}/players/${userId}/questionsAnswered`] = ((await get(ref(rtdb, `rooms/${roomId}/players/${userId}/questionsAnswered`))).val() || 0) + 1;
-      
-      // Update leaderboard immediately
-      const playerNameRef = ref(rtdb, `rooms/${roomId}/players/${userId}/name`);
-      const playerPhotoRef = ref(rtdb, `rooms/${roomId}/players/${userId}/photoURL`);
-      const playerName = (await get(playerNameRef)).val();
-      const playerPhotoURL = (await get(playerPhotoRef)).val();
-      
-      updates[`rooms/${roomId}/leaderboard/${userId}`] = {
-        score: currentScore + score,
-        name: playerName,
-        photoURL: playerPhotoURL,
-        lastUpdated: serverTimestamp()
+      // Update answer progress (allowed by rules)
+      updates[`rooms/${roomId}/answerProgress/${userId}`] = {
+        hasAnswered: true,
+        answeredAt: Date.now()
       };
       
       await update(ref(rtdb), updates);
       
-      logger.debug(`⚡ Answer submitted and leaderboard updated for ${userId}`);
+      logger.debug(`⚡ Answer submitted using allowed paths for ${userId}`);
     } catch (error) {
       logger.error('Failed to submit answer:', error);
       throw error;
@@ -195,53 +164,68 @@ class OptimizedRealtimeService {
   }
 
   /**
-   * ⚡ Listen to player updates including avatars
+   * ⚡ Listen to player updates using existing database structure
    */
   listenToPlayers(roomId: string, callback: (players: any[]) => void) {
-    const playersRef = ref(rtdb, `rooms/${roomId}/players`);
+    // Listen to presence and playerStatuses separately since we can't write to players path
+    const presenceRef = ref(rtdb, `rooms/${roomId}/presence`);
+    const statusRef = ref(rtdb, `rooms/${roomId}/playerStatuses`);
     
-    const unsubscribe = onValue(playersRef, (snapshot) => {
-      const players = snapshot.val() || {};
-      const playersList = Object.entries(players).map(([id, data]: any) => ({ id, ...data }));
+    let presenceData: any = {};
+    let statusData: any = {};
+    
+    const updatePlayers = () => {
+      const players = Object.keys(presenceData).map(userId => ({
+        id: userId,
+        name: presenceData[userId]?.username || 'Unknown',
+        photoURL: null, // Not stored in current structure
+        isReady: statusData[userId]?.isReady || false,
+        isOnline: presenceData[userId]?.isOnline || false,
+        joinedAt: new Date(presenceData[userId]?.lastSeen || Date.now())
+      }));
       
-      callback(playersList);
+      callback(players);
+    };
+    
+    onValue(presenceRef, (snapshot) => {
+      presenceData = snapshot.val() || {};
+      updatePlayers();
     }, (error) => {
-      logger.error('Players listener error:', error);
+      logger.error('Presence listener error:', error);
+    });
+
+    onValue(statusRef, (snapshot) => {
+      statusData = snapshot.val() || {};
+      updatePlayers();
+    }, (error) => {
+      logger.error('Player status listener error:', error);
     });
 
     const listenerKey = `players_${roomId}`;
-    this.listeners.set(listenerKey, { ref: playersRef, unsubscribe });
+    this.listeners.set(listenerKey, { 
+      ref: presenceRef, 
+      unsubscribe: () => {
+        off(presenceRef);
+        off(statusRef);
+        this.listeners.delete(listenerKey);
+      }
+    });
     
     return () => {
-      off(playersRef);
+      off(presenceRef);
+      off(statusRef);
       this.listeners.delete(listenerKey);
     };
   }
 
   /**
-   * ⚡ Update player avatar/photoURL
+   * ⚡ Update player avatar/photoURL (not supported by current rules)
+   * Note: Current database structure doesn't support avatar storage in RTDB
    */
-  async updatePlayerAvatar(roomId: string, userId: string, photoURL: string) {
-    try {
-      const updates: any = {};
-      
-      // Update in players list
-      updates[`rooms/${roomId}/players/${userId}/photoURL`] = photoURL;
-      updates[`rooms/${roomId}/players/${userId}/avatarUpdatedAt`] = serverTimestamp();
-      
-      // Update in leaderboard
-      updates[`rooms/${roomId}/leaderboard/${userId}/photoURL`] = photoURL;
-      
-      // Update global user profile
-      updates[`users/${userId}/photoURL`] = photoURL;
-      
-      await update(ref(rtdb), updates);
-      
-      logger.debug(`⚡ Avatar updated for ${userId}`);
-    } catch (error) {
-      logger.error('Failed to update avatar:', error);
-      throw error;
-    }
+  async updatePlayerAvatar(_roomId: string, _userId: string, _photoURL: string) {
+    logger.warn('Avatar updates not supported by current RTDB rules - skipping');
+    // Avatar updates would need database rules changes to store photoURL
+    return;
   }
 
   /**

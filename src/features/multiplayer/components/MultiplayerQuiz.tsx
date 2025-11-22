@@ -746,7 +746,7 @@ const MultiplayerQuiz: React.FC<MultiplayerQuizProps> = ({
             currentUser.uid,
             finalQuestion.id,
             indexToSubmit,
-            timeRemaining,
+            30, // TODO: Use actual timeRemaining when migrating to modern system
             points
           );
           console.log('⚡ Answer submitted with instant leaderboard update');

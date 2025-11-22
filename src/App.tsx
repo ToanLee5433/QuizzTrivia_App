@@ -40,10 +40,8 @@ const OfflineQueuePage = React.lazy(() => import('./pages/OfflineQueuePage'));
 const EditQuizPageAdvanced = React.lazy(() => import('./features/quiz/pages/EditQuizPageAdvanced'));
 const CreatorLayout = React.lazy(() => import('./features/creator/layouts/CreatorLayout'));
 
-// Stage 4: New Features - Offline & Multiplayer
-// const OfflineQuizManager = React.lazy(() => import('./features/offline/components/OfflineQuizManager'));
-const MultiplayerLobby = React.lazy(() => import('./features/multiplayer/pages/MultiplayerLobby'));
-const MultiplayerPage = React.lazy(() => import('./features/multiplayer/pages/MultiplayerPage'));
+// Stage 4: New Features - Offline & Multiplayer - NEW MODERN SYSTEM
+const ModernMultiplayerPage = React.lazy(() => import('./features/multiplayer/modern/components/ModernMultiplayerPage'));
 const MyQuizzesPage = React.lazy(() => import('./features/quiz/pages/MyQuizzesPage'));
 const QuizDetailedStats = React.lazy(() => import('./features/quiz/pages/QuizDetailedStats'));
 
@@ -556,7 +554,7 @@ const AppContent: React.FC = () => {
           </ProtectedRoute>
         } />
         
-        {/* Stage 4: New Features - Offline & Multiplayer */}
+        {/* Stage 4: New Features - Offline & Multiplayer - NEW MODERN SYSTEM */}
         <Route path="/offline" element={
           <ProtectedRoute>
             <Suspense fallback={<LoadingFallback />}>
@@ -565,19 +563,18 @@ const AppContent: React.FC = () => {
           </ProtectedRoute>
         } />
         
-        {/* Multiplayer Routes - Use MultiplayerLobby for quiz selection */}
         <Route path="/multiplayer" element={
           <ProtectedRoute>
             <Suspense fallback={<LoadingFallback />}>
-              <MultiplayerLobby />
+              <ModernMultiplayerPage />
             </Suspense>
           </ProtectedRoute>
         } />
         
-        <Route path="/multiplayer/game" element={
+        <Route path="/multiplayer/:roomId" element={
           <ProtectedRoute>
             <Suspense fallback={<LoadingFallback />}>
-              <MultiplayerPage />
+              <ModernMultiplayerPage />
             </Suspense>
           </ProtectedRoute>
         } />

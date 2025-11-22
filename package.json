@@ -51,7 +51,7 @@
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.13",
     "dexie": "^4.0.11",
-    "dompurify": "^3.2.6",
+    "dompurify": "^3.3.0",
     "express": "^5.1.0",
     "firebase": "^10.14.1",
     "framer-motion": "^12.23.24",

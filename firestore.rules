@@ -32,6 +32,77 @@ service cloud.firestore {
     function hasAccess(quizId) {
       return exists(/databases/$(database)/documents/quizzes/$(quizId)/access/$(request.auth.uid));
     }
+
+    /* ===== Multiplayer Validation Functions ===== */
+    // Validate room name
+    function validateRoomName(name) {
+      return name is string && 
+             name.size() >= 3 && 
+             name.size() <= 50 &&
+             !name.matches('.*[<>\"\'&].*'); // No HTML special chars
+    }
+    
+    // Validate max players
+    function validateMaxPlayers(count) {
+      return count is int && 
+             count >= 2 && 
+             count <= 20;
+    }
+    
+    // Validate password length (for hashed passwords)
+    function validatePassword(pwd) {
+      return pwd is string && 
+             pwd.size() >= 64 && // SHA256 hash length
+             pwd.size() <= 128;
+    }
+    
+    // Check if user is host of room
+    function isHost(roomId) {
+      return signedIn() &&
+        get(/databases/$(database)/documents/multiplayer_rooms/$(roomId)).data.hostId == request.auth.uid;
+    }
+    
+    // Check if user is player in room
+    function isPlayer(roomId) {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/multiplayer_rooms/$(roomId)/players/$(request.auth.uid));
+    }
+    
+    // Validate room data structure
+    function validateRoomData() {
+      let data = request.resource.data;
+      return data.name is string &&
+             validateRoomName(data.name) &&
+             data.maxPlayers is int &&
+             validateMaxPlayers(data.maxPlayers) &&
+             data.quizId is string &&
+             data.quiz is map && // Must be object
+             data.quiz.id == data.quizId && // Consistency check
+             data.quiz.questions is list && // Must have questions
+             data.quiz.questions.size() > 0 && // At least 1 question
+             data.hostId == request.auth.uid &&
+             data.status in ['waiting', 'starting', 'playing', 'finished'] &&
+             (!('password' in data) || validatePassword(data.password));
+    }
+    
+    // Validate player data structure
+    function validatePlayerData() {
+      let data = request.resource.data;
+      return data.name is string &&
+             data.name.size() >= 1 &&
+             data.name.size() <= 30 &&
+             data.score is int &&
+             data.score >= 0;
+    }
+    
+    // Validate message data structure
+    function validateMessageData() {
+      let data = request.resource.data;
+      return data.message is string &&
+             data.message.size() >= 1 &&
+             data.message.size() <= 500 &&
+             data.userId == request.auth.uid;
+    }
     
     /* ===== Users Collection ===== */
     match /users/{userId} {
@@ -40,6 +111,18 @@ service cloud.firestore {
       
       // Users can write their own document; admins can write any
       allow write: if signedIn() && (request.auth.uid == userId || isAdmin());
+      
+      // Notifications subcollection
+      match /notifications/{notificationId} {
+        // Users can read their own notifications; admins can read all
+        allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
+        // System and admins can write notifications to any user
+        allow write: if signedIn() && (
+          request.auth.uid == userId || 
+          isAdmin() || 
+          request.resource.data.senderId == 'system'
+        );
+      }
     }
     
     /* ===== Multiplayer Rooms (SEPARATE FROM QUIZ DATA) =====
@@ -48,33 +131,55 @@ service cloud.firestore {
        Chỉ lấy thông tin quiz để hiển thị, không ghi vào quiz collection
     */
     match /multiplayer_rooms/{roomId} {
-      // Allow authenticated users to read any room
+      // Allow ALL authenticated users to read any room (for joining and viewing)
       allow read: if signedIn();
+      allow list: if signedIn();
       
-      // Allow authenticated users to create new rooms (no hostId required)
-      allow create: if signedIn();
+      // Allow authenticated users to create new rooms - RELAXED validation for quiz field
+      allow create: if signedIn() && 
+                      request.resource.data.name is string &&
+                      validateRoomName(request.resource.data.name) &&
+                      request.resource.data.maxPlayers is int &&
+                      validateMaxPlayers(request.resource.data.maxPlayers) &&
+                      request.resource.data.quizId is string &&
+                      request.resource.data.hostId == request.auth.uid &&
+                      request.resource.data.status in ['waiting', 'starting', 'playing', 'finished'];
       
-      // Allow any authenticated user in the room to update settings
-      allow update: if signedIn();
+      // Allow host and players to update room (more permissive for multiplayer flow)
+      allow update: if signedIn() && (
+        isHost(roomId) ||
+        isPlayer(roomId) ||
+        // Allow game state updates
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'currentQuestion', 'questionStartTime', 'startedAt', 'finishedAt'])
+      );
       
-      // Allow any player to delete (room cleanup)
-      allow delete: if signedIn();
+      // Only host can delete room
+      allow delete: if signedIn() && isHost(roomId);
       
       // Players subcollection
       match /players/{playerId} {
+        // Any authenticated user in room can read player data (for join flow)
         allow read: if signedIn();
-        allow create: if signedIn() && request.auth.uid == playerId;
-        // Players can only update their own ready status
-        allow update: if signedIn() && 
-                       playerId == request.auth.uid && 
-                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isReady', 'updatedAt']);
-        allow delete: if signedIn() && request.auth.uid == playerId;
+        // Any authenticated user can create their own player document
+        allow create: if signedIn() && 
+                       request.auth.uid == playerId && 
+                       validatePlayerData();
+        // Players can update their own data, host can update any
+        allow update: if signedIn() && (
+          playerId == request.auth.uid || 
+          isHost(roomId)
+        );
+        allow delete: if signedIn() && (isHost(roomId) || request.auth.uid == playerId);
       }
       
       // Messages subcollection
       match /messages/{messageId} {
+        // Any authenticated user in room can read messages (checked after player creation)
         allow read: if signedIn();
-        allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+        // Only players who exist in subcollection can create messages
+        allow create: if signedIn() && 
+                       request.auth.uid == request.resource.data.userId &&
+                       validateMessageData();
         allow update, delete: if false; // Messages are immutable
       }
       
@@ -145,8 +250,8 @@ service cloud.firestore {
         isAdmin() ||
         // Owner sees their own quizzes
         resource.data.createdBy == request.auth.uid ||
-        // Everyone sees approved quizzes
-        resource.data.status == 'approved'
+        // Everyone sees approved quizzes OR quizzes without status field (treat as approved)
+        resource.data.status == 'approved' || !('status' in resource.data)
       );
       
       /* --- CREATE QUIZ ---
@@ -206,9 +311,10 @@ service cloud.firestore {
           isAdmin() ||
           // Owner can read their own quiz questions
           quizDoc(quizId).data.createdBy == request.auth.uid ||
-          // Regular users: only approved + (public OR unlocked)
+          // Regular users: only approved + (public OR unlocked OR no visibility field)
           (quizDoc(quizId).data.status == 'approved' && (
             quizDoc(quizId).data.visibility == "public" ||
+            !('visibility' in quizDoc(quizId).data) ||
             (
               (quizDoc(quizId).data.visibility == "password" || quizDoc(quizId).data.havePassword == "password") && 
               hasAccess(quizId)

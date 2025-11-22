@@ -9,6 +9,31 @@
     "rooms": {
       "$roomId": {
         ".read": "auth != null",
+        ".write": "auth != null",
+        
+        "players": {
+          ".read": "auth != null",
+          ".indexOn": ["joinedAt", "isOnline"],
+          "$playerId": {
+            ".write": "auth != null && (auth.uid == $playerId || data.exists())",
+            ".validate": "newData.hasChildren(['id', 'name', 'score', 'isReady', 'isOnline'])",
+            "id": {
+              ".validate": "newData.isString() && newData.val() == $playerId"
+            },
+            "name": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 50"
+            },
+            "score": {
+              ".validate": "newData.isNumber() && newData.val() >= 0"
+            },
+            "isReady": {
+              ".validate": "newData.isBoolean()"
+            },
+            "isOnline": {
+              ".validate": "newData.isBoolean()"
+            }
+          }
+        },
         
         "gameState": {
           ".read": "auth != null",
@@ -108,26 +133,35 @@
         
         "chat": {
           ".read": "auth != null",
-          "$messageId": {
-            ".write": "auth != null && !data.exists()",
-            ".validate": "newData.hasChildren(['userId', 'username', 'message', 'timestamp'])",
-            "userId": {
-              ".validate": "newData.isString() && newData.val() == auth.uid"
+          "messages": {
+            ".indexOn": ["timestamp"],
+            "$messageId": {
+              ".write": "auth != null",
+              ".validate": "newData.child('userId').val() == auth.uid && newData.child('username').isString() && newData.child('message').isString() && newData.child('timestamp').isNumber()",
+              "userId": {
+                ".validate": "newData.isString() && newData.val() == auth.uid"
+              },
+              "username": {
+                ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 50"
+              },
+              "message": {
+                ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 500"
+              },
+              "timestamp": {
+                ".validate": "newData.isNumber()"
+              },
+              "type": {
+                ".validate": "!newData.exists() || (newData.isString() && (newData.val() == 'user' || newData.val() == 'system' || newData.val() == 'announcement'))"
+              },
+              "photoURL": {
+                ".validate": "!newData.exists() || newData.isString()"
+              }
             },
-            "username": {
-              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 50"
-            },
-            "message": {
-              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 500"
-            },
-            "timestamp": {
-              ".validate": "newData.isNumber()"
-            },
-            "type": {
-              ".validate": "newData.isString() && (newData.val() == 'user' || newData.val() == 'system')"
-            },
-            "$other": {
-              ".validate": false
+            "typing": {
+              "$userId": {
+                ".read": "auth != null",
+                ".write": "auth != null && auth.uid == $userId"
+              }
             }
           }
         }

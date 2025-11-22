@@ -15,8 +15,8 @@ i18n
     // Remove inline resources - will use external files only
     lng: 'vi', // default language
     fallbackLng: 'vi',
-    // Use only common namespace from external files
-    ns: ['common'],
+    // Use common and multiplayer namespaces from external files
+    ns: ['common', 'multiplayer'],
     defaultNS: 'common',
     
     detection: {
