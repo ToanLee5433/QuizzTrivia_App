@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
 import { doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../../../lib/firebase/config';
 import { logout } from '../store';
 import { toast } from 'react-toastify';
+import { setUserOffline } from '../../../utils/presenceUtils';
 
 /**
  * Component này sẽ tự động kiểm tra trạng thái isActive của user mỗi 5s.
@@ -25,6 +26,11 @@ const AutoLogoutOnBan = () => {
         const userData = userDoc.data();
         if (userData && userData.isActive === false) {
           if (!isUnmounted) {
+            // Set presence to offline before logout
+            if (auth.currentUser) {
+              await setUserOffline(auth.currentUser.uid);
+            }
+            
             dispatch(logout());
             toast.error('Tài khoản của bạn đã bị khoá. Vui lòng liên hệ quản trị viên.');
             if (auth.currentUser) await auth.signOut();

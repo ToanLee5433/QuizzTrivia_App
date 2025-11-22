@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
-import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, updateDoc, getCountFromServer, limit, orderBy } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 import { toast } from 'react-toastify';
 import { 
@@ -110,16 +110,23 @@ const MyQuizzesPage: React.FC = () => {
           approvedAt: doc.data().approvedAt?.toDate()
         })) as EditRequest[];
         
-        // Load quiz results to calculate real stats
+        // ✅ FIXED: Use getCountFromServer to only count, not load all documents
         const resultsQuery = query(
           collection(db, 'quizResults'),
           where('quizId', '==', docSnap.id)
         );
-        const resultsSnapshot = await getDocs(resultsQuery);
+        const resultsCountSnapshot = await getCountFromServer(resultsQuery);
+        const completions = resultsCountSnapshot.data().count;
         
-        // Calculate real stats from quiz results
-        const results = resultsSnapshot.docs.map(doc => doc.data());
-        const completions = results.filter(r => r.completed === true || r.score !== undefined).length;
+        // For average score, we need to sample some results (not all)
+        const sampleQuery = query(
+          collection(db, 'quizResults'),
+          where('quizId', '==', docSnap.id),
+          orderBy('completedAt', 'desc'),
+          limit(100) // Sample 100 recent results for average
+        );
+        const sampleSnapshot = await getDocs(sampleQuery);
+        const results = sampleSnapshot.docs.map(doc => doc.data());
         
         // Calculate average score, normalizing to 0-100 percentage
         // For multiplayer: use percentage field (0-100)

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
 import { ROUTES } from '../../../config/routes';
-import { doc, getDoc, collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 import { formatDate } from '../../../lib/utils/helpers';
 import { 
@@ -149,17 +149,21 @@ const QuizDetailedStats: React.FC = () => {
           const startDate = new Date();
           startDate.setDate(startDate.getDate() - days);
           
+          // ✅ FIXED: Added limit to date-filtered query
           resultsQuery = query(
             collection(db, 'quizResults'),
             where('quizId', '==', id),
             where('completedAt', '>=', startDate),
-            orderBy('completedAt', 'desc')
+            orderBy('completedAt', 'desc'),
+            limit(500) // Sufficient for stats
           );
         } else {
+          // ✅ FIXED: Added limit to prevent loading ALL results
           resultsQuery = query(
             collection(db, 'quizResults'),
             where('quizId', '==', id),
-            orderBy('completedAt', 'desc')
+            orderBy('completedAt', 'desc'),
+            limit(500) // Sufficient for stats calculation
           );
         }
 
@@ -173,9 +177,11 @@ const QuizDetailedStats: React.FC = () => {
         // If index is still building, fall back to fetching all results and filtering client-side
         console.warn('Index still building, using fallback query:', indexError.message);
         
+        // ✅ FIXED: Added limit to fallback query
         const fallbackQuery = query(
           collection(db, 'quizResults'),
-          where('quizId', '==', id)
+          where('quizId', '==', id),
+          limit(500) // Prevent loading ALL results
         );
         
         const resultsSnapshot = await getDocs(fallbackQuery);

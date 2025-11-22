@@ -203,10 +203,19 @@ const Profile: React.FC = () => {
     
     setSaving(true);
     try {
-      // Update Firebase Auth profile
+      // Validate photoURL length (Firebase Auth has a limit)
+      const MAX_PHOTO_URL_LENGTH = 2048; // Firebase Auth limit
+      const isPhotoURLValid = !avatarUrl || avatarUrl.length <= MAX_PHOTO_URL_LENGTH;
+      
+      if (avatarUrl && !isPhotoURLValid) {
+        console.warn(`⚠️ PhotoURL too long (${avatarUrl.length} chars). Skipping Firebase Auth update, updating Firestore only.`);
+        toast.warning(t('profile.photoUrlTooLong'));
+      }
+      
+      // Update Firebase Auth profile (skip photoURL if too long)
       await updateProfile(auth.currentUser, {
         displayName: displayName,
-        photoURL: avatarUrl
+        ...(isPhotoURLValid && avatarUrl ? { photoURL: avatarUrl } : {})
       });
       
       console.log('✅ Updated Firebase Auth profile');
@@ -217,16 +226,20 @@ const Profile: React.FC = () => {
       
       await updateDoc(doc(db, 'users', user.uid), {
         displayName: displayName,
-        photoURL: avatarUrl,
+        photoURL: avatarUrl || null, // Always update in Firestore, even if long URL
         updatedAt: new Date()
       });
       
-      console.log('✅ Updated Firestore users collection with photoURL:', avatarUrl);
+      console.log('✅ Updated Firestore users collection with photoURL:', avatarUrl ? `${avatarUrl.substring(0, 50)}...` : 'null');
       
       toast.success(t('profile.profileUpdateSuccess'));
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error(t('profile.profileUpdateError'));
+      if (error instanceof Error && error.message.includes('invalid-profile-attribute')) {
+        toast.error(t('profile.photoUrlInvalid'));
+      } else {
+        toast.error(t('profile.profileUpdateError'));
+      }
     } finally {
       setSaving(false);
     }
@@ -425,7 +438,18 @@ const Profile: React.FC = () => {
               <h1 className="text-2xl font-bold text-gray-900">{user.displayName || user.email}</h1>
               <p className="text-gray-600">{user.email}</p>
               <p className="text-sm text-gray-500 mt-1">
-                {t('profile.memberSince')} {user.createdAt ? formatDate(new Date(user.createdAt), 'long') : formatDate(new Date(), 'long')}
+                {t('profile.memberSince')} {(() => {
+                  // Priority 1: Firebase Auth metadata (most accurate)
+                  if (auth.currentUser?.metadata?.creationTime) {
+                    return formatDate(new Date(auth.currentUser.metadata.creationTime), 'long');
+                  }
+                  // Priority 2: Firestore createdAt
+                  if (user.createdAt) {
+                    return formatDate(new Date(user.createdAt), 'long');
+                  }
+                  // Fallback
+                  return t('notAvailable');
+                })()}
               </p>
             </div>
             <button
@@ -683,11 +707,11 @@ const Profile: React.FC = () => {
                     onUploadSuccess={(result: ImageUploadResult) => {
                       if (result.originalUrl) {
                         setAvatarUrl(result.originalUrl);
-                        toast.success('Upload avatar thành công! Nhấn "Cập nhật thông tin" để lưu.');
+                        toast.success(t('profile.uploadAvatarSuccess'));
                       }
                     }}
                     onUploadError={(error) => {
-                      toast.error('Lỗi upload avatar: ' + error);
+                      toast.error(t('profile.uploadAvatarError', { error }));
                     }}
                     options={{
                       folder: 'avatars',
@@ -707,13 +731,29 @@ const Profile: React.FC = () => {
                     <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
                       {t('profile.enterUrlManually')}
                     </summary>
-                    <input
-                      type="url"
-                      value={avatarUrl}
-                      onChange={(e) => setAvatarUrl(e.target.value)}
-                      className="w-full mt-2 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder={t('placeholders.avatarUrl')}
-                    />
+                    <div className="mt-2">
+                      <input
+                        type="url"
+                        value={avatarUrl}
+                        onChange={(e) => setAvatarUrl(e.target.value)}
+                        maxLength={2048}
+                        className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          avatarUrl.length > 2048 ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                        placeholder={t('placeholders.avatarUrl')}
+                      />
+                      {avatarUrl.length > 0 && (
+                        <p className={`text-xs mt-1 ${
+                          avatarUrl.length > 2048 ? 'text-red-600' : 
+                          avatarUrl.length > 1800 ? 'text-yellow-600' : 
+                          'text-gray-500'
+                        }`}>
+                          {avatarUrl.length} / 2048 {t('profile.characters')}
+                          {avatarUrl.length > 2048 && ` - ${t('profile.urlTooLong')}`}
+                          {avatarUrl.length > 1800 && avatarUrl.length <= 2048 && ` - ${t('profile.closeToLimit')}`}
+                        </p>
+                      )}
+                    </div>
                   </details>
                 </div>
                 <button

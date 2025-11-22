@@ -11,6 +11,7 @@ import { toast } from 'react-toastify';
 import NotificationCenter from './NotificationCenter';
 import LanguageSwitcher from './LanguageSwitcher';
 import { LogOut, Settings, Crown, Zap, Home, BookOpen, Heart, Trophy, UserCircle, Plus, ChevronDown } from 'lucide-react';
+import { setUserOffline } from '../../utils/presenceUtils';
 
 interface HeaderProps {
   user?: any;
@@ -69,6 +70,11 @@ const Header: React.FC<HeaderProps> = () => {
 
   const handleLogout = async () => {
     try {
+      // Set presence to offline BEFORE signing out
+      if (auth.currentUser) {
+        await setUserOffline(auth.currentUser.uid);
+      }
+      
       await signOut(auth);
       dispatch(logout());
       toast.success('Đăng xuất thành công!');

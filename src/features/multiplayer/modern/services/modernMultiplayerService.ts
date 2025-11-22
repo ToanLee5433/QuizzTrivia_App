@@ -96,6 +96,8 @@ export interface ModernRoom {
   questionStartTime?: number;
 }
 
+export type PlayerRole = 'host' | 'player' | 'spectator';
+
 export interface ModernPlayer {
   id: string;
   name: string;
@@ -104,6 +106,8 @@ export interface ModernPlayer {
   score: number;
   isReady: boolean;
   isOnline: boolean;
+  role: PlayerRole; // host = quản lý phòng, player = người chơi, spectator = người xem
+  isParticipating?: boolean; // For host: true = playing, false = spectating (only for role='host')
   joinedAt: number;
   lastActive: number;
   answers: PlayerAnswer[];
@@ -538,6 +542,8 @@ export class ModernMultiplayerService {
             score: 0,
             isReady: false,
             isOnline: true,
+            role: 'host' as PlayerRole, // Host starts with host role
+            isParticipating: true, // Host starts as participating (playing)
             joinedAt: Date.now(),
             lastActive: Date.now(),
             answers: []
@@ -673,6 +679,7 @@ export class ModernMultiplayerService {
           score: playerData?.score || 0,
           isReady: playerData?.isReady || false,
           isOnline: true,
+          role: playerData?.role || 'player' as PlayerRole, // Regular players start as player role
           joinedAt: Date.now(),
           lastActive: Date.now(),
           answers: []
@@ -1104,6 +1111,83 @@ export class ModernMultiplayerService {
     }, retryStrategies.standard);
   }
 
+  // Toggle role between player and spectator (host can switch modes)
+  async toggleRole() {
+    return this.executeOperation(async () => {
+      try {
+        this.ensureAuthenticated();
+        
+        if (!this.roomId) throw new RoomNotFoundError('current');
+        
+        const playerRef = ref(this.rtdb, `rooms/${this.roomId}/players/${this.userId}`);
+        const snapshot = await get(playerRef);
+        const playerData = snapshot.val();
+        
+        if (!playerData) {
+          throw new Error('Player not found in room');
+        }
+        
+        // Toggle between player and spectator (host should not call this)
+        let newRole: PlayerRole;
+        if (playerData.role === 'host') {
+          // Host should use toggleHostParticipation, but don't throw error
+          logger.warn('Host tried to toggle role, use toggleHostParticipation instead');
+          return;
+        } else if (playerData.role === 'player') {
+          newRole = 'spectator';
+        } else {
+          newRole = 'player';
+        }
+        
+        await update(playerRef, {
+          role: newRole,
+          isReady: false, // Reset ready when changing role
+          lastActive: Date.now()
+        });
+        
+        logger.info('Role toggled', { newRole });
+      } catch (error) {
+        logger.error('Failed to toggle role', error);
+        this.emit('error', error);
+        throw error;
+      }
+    }, retryStrategies.standard);
+  }
+
+  // Toggle host participation (play vs spectate) without losing host role
+  async toggleHostParticipation() {
+    return this.executeOperation(async () => {
+      try {
+        this.ensureAuthenticated();
+        
+        if (!this.roomId) throw new RoomNotFoundError('current');
+        
+        const playerRef = ref(this.rtdb, `rooms/${this.roomId}/players/${this.userId}`);
+        const snapshot = await get(playerRef);
+        const playerData = snapshot.val();
+        
+        if (!playerData || playerData.role !== 'host') {
+          throw new UnauthorizedError('toggle host participation');
+        }
+        
+        // Add isParticipating field for host
+        const currentParticipation = playerData.isParticipating ?? true;
+        
+        await update(playerRef, {
+          isParticipating: !currentParticipation,
+          isReady: !currentParticipation ? false : playerData.isReady, // Reset ready if becoming spectator
+          lastActive: Date.now()
+        });
+        
+        logger.info('Host participation toggled', { isParticipating: !currentParticipation });
+      } catch (error) {
+        logger.error('Failed to toggle host participation', error);
+        this.emit('error', error);
+        throw error;
+      }
+    }, retryStrategies.standard);
+  }
+
   // Transfer host to another player
   async transferHost(newHostId: string) {
     return this.executeOperation(async () => {
@@ -1154,6 +1238,19 @@ export class ModernMultiplayerService {
         const rtdbRoomRef = ref(this.rtdb, `rooms/${this.roomId}`);
         await update(rtdbRoomRef, {
           hostId: newHostId
+        });
+
+        // Update roles in RTDB: old host becomes player, new host becomes host
+        const oldHostRef = ref(this.rtdb, `rooms/${this.roomId}/players/${this.userId}`);
+        await update(oldHostRef, {
+          role: 'player' as PlayerRole,
+          isParticipating: true
+        });
+
+        const newHostRef = ref(this.rtdb, `rooms/${this.roomId}/players/${newHostId}`);
+        await update(newHostRef, {
+          role: 'host' as PlayerRole,
+          isParticipating: true
         });
 
         // Send system message about host transfer
@@ -1440,6 +1537,7 @@ export class ModernMultiplayerService {
             score: firestorePlayerData?.score || 0,
             isReady: firestorePlayerData?.isReady || false,
             isOnline: true,
+            role: firestorePlayerData?.role || 'player' as PlayerRole,
             joinedAt: Date.now(),
             lastActive: Date.now(),
             answers: []

@@ -539,6 +539,16 @@
       "reset": "Reset",
       "save": "Save Settings"
     },
+    "presence": {
+      "online": "Online",
+      "offline": "Offline",
+      "idle": "Idle",
+      "minutesAgo": "{{minutes}} minutes ago",
+      "hoursAgo": "{{hours}} hours ago",
+      "daysAgo": "{{days}} days ago",
+      "justNow": "Just now",
+      "neverActive": "Never active"
+    },
     "categories": {
       "headerDesc": "Manage quiz categories",
       "enterName": "Enter category name",
@@ -591,7 +601,10 @@
     },
     "userManagementCards": {
       "totalUsers": "Total Users",
-      "activeUsers": "Active Users"
+      "activeUsers": "Active Users",
+      "onlineUsers": "Online Now",
+      "creators": "Creators",
+      "administrators": "Administrators"
     },
     "utilities": {
       "title": "Utilities",
@@ -2091,7 +2104,9 @@
     "avatarLabel": "Avatar",
     "currentAvatar": "Current avatar",
     "removeAvatar": "Remove avatar",
-    "enterUrlManually": "Or enter avatar URL manually"
+    "enterUrlManually": "Or enter avatar URL manually",
+    "photoUrlTooLong": "Avatar URL is too long. Saved to database but may not display in all places.",
+    "photoUrlInvalid": "Avatar URL is invalid or too long. Please use a shorter URL."
   },
   "shareLinkModal": {
     "title": "🎉 Quiz Published Successfully!",
@@ -3543,7 +3558,8 @@
     "loi_khi_xu_ly_file": "Error khi xử lý file",
     "vui_long_nhap_chu_de_hoac_tai_len_file": "Vui lòng nhập chủ đề hoặc tải lên file!",
     "vd_javascript_lich_su_viet_nam_toan_hoc": "VD: JavaScript, Lịch sử Việt Nam, Mathematics...",
-    "tu_file": " từ file"
+    "tu_file": " từ file",
+    "notAvailable": "N/A"
   },
   "quizList": {
     "exploreQuizzes": "Explore Quizzes",
@@ -3653,7 +3669,10 @@
     "unauthorized": "Unauthorized"
   },
   "users": {
-    "confirmDelete": "Confirm delete user?"
+    "confirmDelete": "Are you sure you want to delete this user?",
+    "confirmRoleChange": "Are you sure you want to change this user role to {{role}}?",
+    "confirmDeactivate": "Are you sure you want to deactivate this account?",
+    "confirmActivate": "Are you sure you want to activate this account?"
   },
   "resources": {
     "title": "Learning Resources",
@@ -4682,5 +4701,23 @@
       "notFound": "Quiz not found",
       "loadFailed": "Failed to load quiz"
     }
-  }
+  },
+  "presence": {
+    "online": "Online",
+    "offline": "Offline",
+    "idle": "Idle",
+    "minutesAgo": "{{minutes}} minutes ago",
+    "hoursAgo": "{{hours}} hours ago",
+    "daysAgo": "{{days}} days ago",
+    "justNow": "Just now",
+    "neverActive": "Never active"
+  },
+  "accountStatus": {
+    "active": "Active",
+    "blocked": "Blocked"
+  },
+  "notAvailable": "N/A",
+  "you": "You",
+  "all": "All",
+  "tat_ca": "All"
 }

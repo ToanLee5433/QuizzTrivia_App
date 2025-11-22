@@ -51,8 +51,6 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [copySuccess, setCopySuccess] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
-  const [roomData, setRoomData] = useState<any>(null);
-  const [quiz, setQuiz] = useState<ModernQuiz | null>(selectedQuiz);
   const [kickDialog, setKickDialog] = useState<{
     isOpen: boolean;
     player: ModernPlayer | null;
@@ -74,27 +72,6 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
       player,
       isKicking: false
     });
-  }, []);
-
-  const handleToggleReady = useCallback(async () => {
-    try {
-      await modernMultiplayerService.toggleReady();
-      console.log('✅ Ready status toggled');
-    } catch (error) {
-      console.error('❌ Failed to toggle ready:', error);
-    }
-  }, []);
-
-  const handleTransferHost = useCallback(async (player: ModernPlayer) => {
-    try {
-      const confirmed = window.confirm(`Chuyển quyền host cho ${player.name}?`);
-      if (confirmed) {
-        await modernMultiplayerService.transferHost(player.id);
-        console.log('✅ Host transferred to:', player.name);
-      }
-    } catch (error) {
-      console.error('❌ Failed to transfer host:', error);
-    }
   }, []);
 
   const handleKickPlayer = useCallback(async () => {
@@ -125,6 +102,14 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
     });
   }, []);
 
+  const handleTransferHost = useCallback(async (playerId: string) => {
+    try {
+      await modernMultiplayerService.transferHost(playerId);
+    } catch (error) {
+      console.error('❌ Failed to transfer host:', error);
+    }
+  }, []);
+
   // Helper functions
   const generateQRCode = async () => {
     try {
@@ -146,8 +131,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
 
   const handleCopyRoomCode = async () => {
     try {
-      const codeToShare = roomData?.code || roomId;
-      await navigator.clipboard.writeText(codeToShare);
+      await navigator.clipboard.writeText(roomId);
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (error) {
@@ -157,16 +141,15 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
 
   const handleShareRoom = async () => {
     try {
-      const roomCode = roomData?.code || roomId;
       const roomUrl = `${window.location.origin}/multiplayer/${roomId}`;
       if (navigator.share) {
         await navigator.share({
           title: 'Join my Quiz Room',
-          text: `Join my quiz room with code: ${roomCode}`,
+          text: `Join my quiz room with code: ${roomId}`,
           url: roomUrl
         });
       } else {
-        await navigator.clipboard.writeText(roomCode);
+        await navigator.clipboard.writeText(roomUrl);
         setCopySuccess(true);
         setTimeout(() => setCopySuccess(false), 2000);
       }
@@ -214,25 +197,15 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
   };
 
   // Memoized derived state to prevent unnecessary recalculations
-  const playersList = useMemo(() => {
-    const list = Object.values(players);
-    console.log('🎯 PlayersList computed:', {
-      playersObjectKeys: Object.keys(players),
-      listLength: list.length,
-      players: list.map(p => ({ id: p.id, name: p.name }))
-    });
-    return list;
-  }, [players]);
+  const playersList = useMemo(() => Object.values(players), [players]);
   const readyCount = useMemo(() => playersList.filter((p) => p.isReady).length, [playersList]);
-  const allReady = useMemo(() => {
-    // Game can start if: at least 2 players (including host) AND at least 1 non-host player is ready
-    const nonHostPlayers = playersList.filter(p => p.id !== roomData?.hostId);
-    const readyNonHostPlayers = nonHostPlayers.filter(p => p.isReady);
-    return playersList.length >= 2 && readyNonHostPlayers.length >= 1;
-  }, [playersList, roomData?.hostId]);
+  const allReady = useMemo(() => 
+    playersList.length >= 2 && playersList.every((p) => p.isReady), 
+    [playersList]
+  );
   const isHost = useMemo(() => 
-    roomData?.hostId === currentUserId || (playersList.length > 0 && playersList[0]?.id === currentUserId), 
-    [roomData?.hostId, playersList, currentUserId]
+    playersList.length > 0 && playersList[0]?.id === currentUserId, 
+    [playersList, currentUserId]
   );
 
   useEffect(() => {
@@ -240,84 +213,36 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
       try {
         // Get current user ID
         const auth = getAuth();
-        const userId = auth.currentUser?.uid || '';
-        setCurrentUserId(userId);
-        
-        console.log('🔧 Initializing lobby for room:', roomId, 'user:', userId);
-
-        // ✅ Fetch current players state IMMEDIATELY before setting up listeners
-        const { ref: refFn, get: getFn } = await import('firebase/database');
-        const playersRef = refFn(modernMultiplayerService['rtdb'], `rooms/${roomId}/players`);
-        const playersSnapshot = await getFn(playersRef);
-        const initialPlayers = playersSnapshot.val() || {};
-        console.log('📥 Initial players loaded:', {
-          count: Object.keys(initialPlayers).length,
-          playerIds: Object.keys(initialPlayers)
-        });
-        setPlayers(initialPlayers);
+        setCurrentUserId(auth.currentUser?.uid || '');
 
         // Set up real-time listeners
         const playersUpdateId = modernMultiplayerService.on('players:updated', handlePlayersUpdate);
         const gameUpdateId = modernMultiplayerService.on('game:updated', handleGameStateUpdate);
-        const roomUpdateId = modernMultiplayerService.on('room:updated', handleRoomUpdate);
         const errorId = modernMultiplayerService.on('error', handleError);
 
         // Set up chat listener
-        let chatUnsubscribe: (() => void) | undefined;
-        let roomUnsubscribe: (() => void) | undefined;
-        
+        let unsubscribe: (() => void) | undefined;
         if (roomId) {
-          // Chat messages listener
           const messagesQuery = query(
             collection(modernMultiplayerService.db, 'multiplayer_rooms', roomId, 'messages'),
             orderBy('timestamp', 'asc')
           );
           
-          chatUnsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+          unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
             const newMessages = snapshot.docs.map(doc => ({
               id: doc.id,
               ...doc.data()
             }));
             setMessages(newMessages);
           });
-          
-          // Room data listener for quiz info and settings
-          const { doc: docFn } = await import('firebase/firestore');
-          roomUnsubscribe = onSnapshot(
-            docFn(modernMultiplayerService.db, 'multiplayer_rooms', roomId),
-            (docSnapshot) => {
-              if (docSnapshot.exists()) {
-                const data = docSnapshot.data();
-                console.log('📊 Room data updated:', {
-                  hasQuiz: !!data.quiz,
-                  hostId: data.hostId,
-                  status: data.status,
-                  questionCount: data.quiz?.questions?.length
-                });
-                setRoomData(data);
-                if (data.quiz) {
-                  setQuiz(data.quiz);
-                }
-              } else {
-                console.error('❌ Room document does not exist');
-              }
-            },
-            (error) => {
-              console.error('❌ Error listening to room:', error);
-            }
-          );
         }
         
         return () => {
-          if (chatUnsubscribe) {
-            chatUnsubscribe();
-          }
-          if (roomUnsubscribe) {
-            roomUnsubscribe();
+          if (unsubscribe) {
+            unsubscribe();
           }
           modernMultiplayerService.off('players:updated', playersUpdateId);
           modernMultiplayerService.off('game:updated', gameUpdateId);
-          modernMultiplayerService.off('room:updated', roomUpdateId);
           modernMultiplayerService.off('error', errorId);
           
           // Clear large state objects to prevent memory leaks
@@ -341,11 +266,6 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
   }, [messages]);
 
   const handlePlayersUpdate = useCallback((playersData: { [key: string]: ModernPlayer }) => {
-    console.log('🎮 ModernRoomLobby received players update:', {
-      playerCount: Object.keys(playersData).length,
-      playerIds: Object.keys(playersData),
-      currentUserId
-    });
     setPlayers(playersData);
     
     // Check if current player was kicked (no longer in players list)
@@ -365,14 +285,6 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
 
   const handleGameStateUpdate = useCallback((_gameStateData: any) => {
     // Game state updates handled by RTDB listeners
-  }, []);
-
-  const handleRoomUpdate = useCallback((updatedRoom: any) => {
-    console.log('📡 Room updated from service:', updatedRoom);
-    setRoomData(updatedRoom);
-    if (updatedRoom.quiz) {
-      setQuiz(updatedRoom.quiz);
-    }
   }, []);
 
   const handleError = useCallback((error: any) => {
@@ -418,7 +330,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
             </motion.button>
             <div>
               <h2 className="text-xl sm:text-2xl font-bold text-white">{t('roomLobby')}</h2>
-              <p className="text-blue-100 text-sm sm:text-base">{t('code')}: {roomData?.code || roomId}</p>
+              <p className="text-blue-100 text-sm sm:text-base">{t('code')}: {roomId}</p>
             </div>
           </div>
           
@@ -470,10 +382,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
               >
                 {isStarting ? (
                   <>
-                    <div className="relative">
-                      <Loader className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
-                      <div className="absolute inset-0 w-3 h-3 sm:w-4 sm:h-4 bg-blue-400/20 rounded-full animate-ping"></div>
-                    </div>
+                    <Loader className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
                     <span className="hidden sm:inline">{t('startingGame')}</span>
                     <span className="sm:hidden">Starting...</span>
                   </>
@@ -505,8 +414,8 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
                   <Trophy className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-lg sm:text-2xl font-bold text-white truncate">{quiz?.title || 'Loading...'}</h2>
-                  <p className="text-blue-200 text-sm sm:text-base truncate">{quiz?.description || ''}</p>
+                  <h2 className="text-lg sm:text-2xl font-bold text-white truncate">{selectedQuiz?.title}</h2>
+                  <p className="text-blue-200 text-sm sm:text-base truncate">{selectedQuiz?.description}</p>
                 </div>
               </div>
               {isHost && (
@@ -514,7 +423,6 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
                   animate={{ rotate: 360 }}
                   transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                   className="p-1.5 sm:p-2 bg-yellow-500/20 rounded-xl self-start sm:self-auto"
-                  title="You are the host"
                 >
                   <Crown className="w-3 h-3 sm:w-5 sm:h-5 text-yellow-400" />
                 </motion.div>
@@ -523,15 +431,15 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
               <div className="text-center">
-                <div className="text-lg sm:text-2xl font-bold text-white">{quiz?.questionCount || quiz?.questions?.length || 0}</div>
+                <div className="text-lg sm:text-2xl font-bold text-white">{selectedQuiz?.questionCount}</div>
                 <div className="text-xs sm:text-sm text-blue-200">{t('questions')}</div>
               </div>
               <div className="text-center">
-                <div className="text-lg sm:text-2xl font-bold text-white">{quiz?.timeLimit || roomData?.settings?.timePerQuestion || 30}s</div>
+                <div className="text-lg sm:text-2xl font-bold text-white">{selectedQuiz?.timeLimit}s</div>
                 <div className="text-xs sm:text-sm text-blue-200">{t('timeLimit')}</div>
               </div>
               <div className="text-center">
-                <div className="text-lg sm:text-2xl font-bold text-white">{quiz?.difficulty || 'Medium'}</div>
+                <div className="text-lg sm:text-2xl font-bold text-white">{selectedQuiz?.difficulty}</div>
                 <div className="text-xs sm:text-sm text-blue-200">{t('difficulty')}</div>
               </div>
               <div className="text-center">
@@ -567,10 +475,8 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
                     player={player}
                     isHost={isHost}
                     currentUserId={currentUserId}
-                    hostId={roomData?.hostId || playersList[0]?.id || ''}
+                    hostId={playersList[0]?.id || ''}
                     onKickPlayer={handleKickPlayerClick}
-                    onTransferHost={handleTransferHost}
-                    onToggleReady={handleToggleReady}
                   />
                 ))}
               </AnimatePresence>
@@ -591,31 +497,6 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
 
         {/* Side Panel */}
         <div className="xl:col-span-1 space-y-4 sm:space-y-6">
-          {/* Host Control Panel (only for host) - MOVED TO TOP */}
-          {isHost && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <ModernHostControlPanel
-                roomId={roomId}
-                currentUserId={currentUserId}
-                isHost={isHost}
-                players={playersList}
-                onGameStart={handleStartGame}
-                onGamePause={() => {}}
-                onGameResume={() => {}}
-                onKickPlayer={() => {}}
-                onTransferHost={(playerId) => {
-                  const player = playersList.find(p => p.id === playerId);
-                  if (player) handleTransferHost(player);
-                }}
-                onSettingsUpdate={() => {}}
-              />
-            </motion.div>
-          )}
-
           {/* Enhanced Chat Component */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -674,6 +555,28 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
               compact={true}
             />
           </motion.div>
+
+          {/* Host Control Panel (only for host) */}
+          {isHost && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.7 }}
+            >
+              <ModernHostControlPanel
+                roomId={roomId}
+                currentUserId={currentUserId}
+                isHost={isHost}
+                players={playersList}
+                onGameStart={handleStartGame}
+                onGamePause={() => {}}
+                onGameResume={() => {}}
+                onKickPlayer={() => {}}
+                onTransferHost={handleTransferHost}
+                onSettingsUpdate={() => {}}
+              />
+            </motion.div>
+          )}
         </div>
       </div>
 
@@ -727,14 +630,8 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
                     className="w-full h-auto"
                   />
                 ) : (
-                  <div className="w-full h-48 flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50/30 rounded-xl border border-blue-100/50">
-                    <div className="text-center space-y-3">
-                      <div className="relative">
-                        <Loader className="w-8 h-8 text-blue-500 animate-spin mx-auto" />
-                        <div className="absolute inset-0 w-8 h-8 bg-blue-400/20 rounded-full animate-ping mx-auto"></div>
-                      </div>
-                      <p className="text-sm text-gray-600 font-medium">Generating QR Code...</p>
-                    </div>
+                  <div className="w-full h-48 flex items-center justify-center">
+                    <Loader className="w-8 h-8 text-blue-500 animate-spin" />
                   </div>
                 )}
               </div>

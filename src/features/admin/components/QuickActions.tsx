@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
-import { collection, addDoc, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, updateDoc, doc, query, where, limit } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 
 interface QuickActionsProps {
@@ -70,13 +70,18 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
 
   // 2. Backup dữ liệu
   const backupData = async () => {
+    // ⚠️ WARNING: Limited backup
+    if (!confirm('⚠️ Backup will only include recent data (max 1000 items per collection). Continue?')) return;
+    
     setLoading(true);
     try {
       const collections = ['users', 'quizzes', 'categories', 'quiz_results'];
       const backup: any = {};
       
       for (const collectionName of collections) {
-        const snapshot = await getDocs(collection(db, collectionName));
+        // ✅ FIXED: Added limit
+        const limitedQuery = query(collection(db, collectionName), limit(1000));
+        const snapshot = await getDocs(limitedQuery);
         backup[collectionName] = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
@@ -106,8 +111,13 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
     
     setLoading(true);
     try {
-      // Lấy tất cả thông báo đang active
-      const notificationsSnapshot = await getDocs(collection(db, 'system_notifications'));
+      // ✅ FIXED: Only delete active notifications with limit
+      const notificationsQuery = query(
+        collection(db, 'system_notifications'),
+        where('isActive', '==', true),
+        limit(500)
+      );
+      const notificationsSnapshot = await getDocs(notificationsQuery);
       const deletePromises = notificationsSnapshot.docs.map(doc => 
         updateDoc(doc.ref, { isActive: false })
       );
@@ -128,13 +138,21 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefreshData, stats }) => 
     if (!confirm(t('admin.quickActions.toasts.confirmCleanup'))) return;
     setLoading(true);
     try {
-      // Xóa quiz đã bị đánh dấu deleted=true
-      const quizzesSnapshot = await getDocs(collection(db, 'quizzes'));
-      const deletedQuizzes = quizzesSnapshot.docs.filter(doc => doc.data().deleted === true);
+      // ✅ OPTIMIZED: Chỉ query docs có deleted=true, không load all
+      const quizzesSnapshot = await getDocs(query(
+        collection(db, 'quizzes'),
+        where('deleted', '==', true),
+        limit(50)
+      ));
+      const deletedQuizzes = quizzesSnapshot.docs;
       const quizDeletePromises = deletedQuizzes.map(q => updateDoc(doc(db, 'quizzes', q.id), { isPurged: true }));
 
-      // Xóa user đã bị đánh dấu deleted=true
-      const usersSnapshot = await getDocs(collection(db, 'users'));
+      // ✅ OPTIMIZED: Chỉ query users có deleted=true
+      const usersSnapshot = await getDocs(query(
+        collection(db, 'users'),
+        where('deleted', '==', true),
+        limit(50)
+      ));
       const deletedUsers = usersSnapshot.docs.filter(doc => doc.data().deleted === true);
       const userDeletePromises = deletedUsers.map(u => updateDoc(doc(db, 'users', u.id), { isPurged: true }));
 

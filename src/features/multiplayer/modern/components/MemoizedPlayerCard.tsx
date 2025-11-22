@@ -11,6 +11,8 @@ interface MemoizedPlayerCardProps {
   onKickPlayer?: (player: ModernPlayer) => void;
   onTransferHost?: (player: ModernPlayer) => void;
   onToggleReady?: () => void;
+  onToggleHostParticipation?: () => void;
+  onToggleRole?: () => void;
 }
 
 const MemoizedPlayerCard: React.FC<MemoizedPlayerCardProps> = memo(({
@@ -20,10 +22,13 @@ const MemoizedPlayerCard: React.FC<MemoizedPlayerCardProps> = memo(({
   hostId,
   onKickPlayer,
   onTransferHost,
-  onToggleReady
+  onToggleReady,
+  onToggleHostParticipation,
+  onToggleRole
 }) => {
   const isCurrentPlayer = player.id === currentUserId;
-  const isPlayerHost = player.id === hostId;
+  // Use both hostId AND role to determine if player is host (role is more reliable after transfer)
+  const isPlayerHost = player.id === hostId || player.role === 'host';
   const canKick = isHost && !isCurrentPlayer && !isPlayerHost;
   const canTransferHost = isHost && !isCurrentPlayer && !isPlayerHost;
 
@@ -69,10 +74,26 @@ const MemoizedPlayerCard: React.FC<MemoizedPlayerCardProps> = memo(({
               {player.name}
               {isCurrentPlayer && <span className="text-blue-400 ml-1">(You)</span>}
             </span>
-            {player.isReady ? (
-              <CheckCircle className="w-4 h-4 text-green-400" />
-            ) : (
-              <Circle className="w-4 h-4 text-gray-400" />
+            
+            {/* Role Badge */}
+            {player.role === 'spectator' && (
+              <span className="px-2 py-0.5 text-xs rounded-full bg-gray-500/30 text-gray-300">
+                Người xem
+              </span>
+            )}
+            {player.role === 'host' && player.isParticipating === false && (
+              <span className="px-2 py-0.5 text-xs rounded-full bg-yellow-500/30 text-yellow-300">
+                Đang xem
+              </span>
+            )}
+            
+            {/* Ready Status (only for players, not spectators) */}
+            {player.role !== 'spectator' && (player.role !== 'host' || player.isParticipating !== false) && (
+              player.isReady ? (
+                <CheckCircle className="w-4 h-4 text-green-400" />
+              ) : (
+                <Circle className="w-4 h-4 text-gray-400" />
+              )
             )}
           </div>
           <div className="text-sm text-gray-300">
@@ -82,21 +103,65 @@ const MemoizedPlayerCard: React.FC<MemoizedPlayerCardProps> = memo(({
       </div>
 
       <div className="flex items-center space-x-2">
-        {/* Ready Button (Current Player only, not host) */}
-        {isCurrentPlayer && !isPlayerHost && onToggleReady && (
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={onToggleReady}
-            className={`px-3 py-1.5 rounded-lg font-medium text-sm transition-colors ${
-              player.isReady 
-                ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' 
-                : 'bg-gray-500/20 text-gray-300 hover:bg-gray-500/30'
-            }`}
-            title={player.isReady ? 'Mark as not ready' : 'Mark as ready'}
-          >
-            {player.isReady ? 'Sẵn sàng' : 'Chưa sẵn sàng'}
-          </motion.button>
+        {/* Current Player Controls */}
+        {isCurrentPlayer && (
+          <>
+            {/* Host Participation Toggle (Host only) */}
+            {isPlayerHost && onToggleHostParticipation && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onToggleHostParticipation}
+                className={`px-3 py-1.5 rounded-lg font-medium text-sm transition-colors ${
+                  player.isParticipating !== false
+                    ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30' 
+                    : 'bg-gray-500/20 text-gray-300 hover:bg-gray-500/30'
+                }`}
+                title={player.isParticipating !== false ? 'Chuyển sang chế độ xem' : 'Tham gia chơi'}
+              >
+                {player.isParticipating !== false ? '🎮 Chơi' : '👁️ Xem'}
+              </motion.button>
+            )}
+            
+            {/* Regular Player Controls (not host) */}
+            {!isPlayerHost && (
+              <>
+                {/* Role Toggle: Player <-> Spectator */}
+                {onToggleRole && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={onToggleRole}
+                    className={`px-3 py-1.5 rounded-lg font-medium text-sm transition-colors ${
+                      player.role === 'player'
+                        ? 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30' 
+                        : 'bg-gray-500/20 text-gray-300 hover:bg-gray-500/30'
+                    }`}
+                    title={player.role === 'player' ? 'Chuyển sang chế độ xem' : 'Tham gia chơi'}
+                  >
+                    {player.role === 'player' ? '🎮 Người chơi' : '👁️ Người xem'}
+                  </motion.button>
+                )}
+                
+                {/* Ready Button (only when role is player) */}
+                {player.role === 'player' && onToggleReady && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={onToggleReady}
+                    className={`px-3 py-1.5 rounded-lg font-medium text-sm transition-colors ${
+                      player.isReady 
+                        ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' 
+                        : 'bg-gray-500/20 text-gray-300 hover:bg-gray-500/30'
+                    }`}
+                    title={player.isReady ? 'Đánh dấu chưa sẵn sàng' : 'Đánh dấu sẵn sàng'}
+                  >
+                    {player.isReady ? '✅ Sẵn sàng' : '⏳ Chưa sẵn sàng'}
+                  </motion.button>
+                )}
+              </>
+            )}
+          </>
         )}
         
         {/* Transfer Host Button (Host only) */}

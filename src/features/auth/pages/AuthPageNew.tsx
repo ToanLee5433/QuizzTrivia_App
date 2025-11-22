@@ -6,7 +6,7 @@ import {
   GoogleAuthProvider,
   User
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../../../lib/firebase/config';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
@@ -246,7 +246,11 @@ const AuthPage: React.FC = () => {
             redirectPath = '/dashboard';
             break;
         }
-        await setDoc(userDocRef, { lastLoginAt: new Date(), emailVerified: userCredential.user.emailVerified }, { merge: true });
+        await setDoc(userDocRef, { 
+          lastLoginAt: serverTimestamp(), 
+          lastActive: serverTimestamp(),
+          emailVerified: userCredential.user.emailVerified 
+        }, { merge: true });
       }
 
       // toast.success(t('auth.loginSuccess'));

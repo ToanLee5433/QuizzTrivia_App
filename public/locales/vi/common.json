@@ -17,11 +17,11 @@
   "5Cau": "5 câu",
   "8CardsThongKeChiTiet": "📈 8 Cards thống kê chi tiết",
   "action": {
-    "activate": "Activate",
+    "activate": "Kích hoạt",
     "approve": "Phê duyệt",
     "clear": "Clear",
     "confirm": "Xác nhận",
-    "deactivate": "Deactivate",
+    "deactivate": "Vô hiệu hóa",
     "deselect": "Deselect",
     "download": "Tải xuống",
     "export": "Export",
@@ -591,7 +591,10 @@
     },
     "userManagementCards": {
       "totalUsers": "Tổng người dùng",
-      "activeUsers": "Người dùng hoạt động"
+      "activeUsers": "Người dùng hoạt động",
+      "onlineUsers": "Đang online",
+      "creators": "Người tạo",
+      "administrators": "Administrator"
     },
     "utilities": {
       "title": "Tiện ích",
@@ -1206,7 +1209,7 @@
     "points": "điểm",
     "title": "Tạo quiz mới"
   },
-  "createdAt": "Tạo lúc",
+  "createdAt": "Ngày tạo",
   "language": {
     "vietnamese": "Tiếng Việt",
     "english": "Tiếng Anh"
@@ -2035,85 +2038,85 @@
   "privateRiengTu": "🔒 Private (Riêng tư)",
   "processing": "Đang xử lý...",
   "profile": {
-    "achievementSystem": "Achievement system",
-    "achievements": "Achievements",
-    "authenticating": "Authenticating...",
-    "avatarUrl": "Avatar URL",
+    "achievementSystem": "Hệ thống thành tích",
+    "achievements": "Thành tích",
+    "authenticating": "Đang xác thực...",
+    "avatarUrl": "URL Avatar",
     "changePassword": "Đổi mật khẩu",
-    "confirmNewPassword": "Confirm New Password",
-    "currentPassword": "Current Password",
-    "currentPasswordRequired": "You need to enter the correct current password to authenticate before changing to a new password",
+    "confirmNewPassword": "Xác nhận mật khẩu mới",
+    "currentPassword": "Mật khẩu hiện tại",
+    "currentPasswordRequired": "Bạn cần nhập đúng mật khẩu hiện tại để xác thực trước khi đổi sang mật khẩu mới",
     "editProfile": "Chỉnh sửa hồ sơ",
-    "emailNotFound": "User email not found",
-    "fillAllFields": "Please fill in all fields",
+    "emailNotFound": "Không tìm thấy email người dùng",
+    "fillAllFields": "Vui lòng điền đầy đủ các trường",
     "filters": {
       "score": {
         "all": "Tất cả",
-        "high": "High (≥80%)",
-        "low": "Low (<60%)",
-        "medium": "Medium (60-79%)"
+        "high": "Cao (≥80%)",
+        "low": "Thấp (<60%)",
+        "medium": "Trung bình (60-79%)"
       }
     },
-    "inDevelopment": "Feature under development",
-    "loginRequired": "Please login to view profile",
-    "memberSince": "Member since",
+    "inDevelopment": "Tính năng đang phát triển",
+    "loginRequired": "Vui lòng đăng nhập để xem hồ sơ",
+    "memberSince": "Thành viên từ",
     "myProfile": "Hồ sơ của tôi",
-    "newPassword": "New Password",
-    "noResults": "No results yet",
-    "noResultsDesc": "You haven't completed any quizzes. Start your first quiz!",
+    "newPassword": "Mật khẩu mới",
+    "noResults": "Chưa có kết quả",
+    "noResultsDesc": "Bạn chưa hoàn thành quiz nào. Bắt đầu quiz đầu tiên của bạn!",
     "pagination": {
       "next": "Tiếp theo",
       "of": "của",
-      "paginate": "Paginate",
-      "perPage10": "10/page",
-      "perPage100": "100/page",
-      "perPage25": "25/page",
-      "perPage50": "50/page",
+      "paginate": "Phân trang",
+      "perPage10": "10/trang",
+      "perPage100": "100/trang",
+      "perPage25": "25/trang",
+      "perPage50": "50/trang",
       "prev": "Trước đó",
-      "results": "results",
-      "showing": "Showing"
+      "results": "kết quả",
+      "showing": "Đang hiển thị"
     },
-    "passwordChangeError": "Error changing password",
-    "passwordChangeSuccess": "Password changed successfully!",
-    "passwordMismatch": "New password and confirm password do not match",
-    "passwordMustDiffer": "New password must be different from current password",
-    "passwordTooShort": "New password must be at least 6 characters",
-    "profileUpdateError": "Error updating profile",
-    "profileUpdateSuccess": "Profile updated successfully!",
-    "recentActivity": "Recent Activity",
-    "requiresRecentLogin": "Login session has expired. Please logout and login again",
+    "passwordChangeError": "Lỗi khi đổi mật khẩu",
+    "passwordChangeSuccess": "Đổi mật khẩu thành công!",
+    "passwordMismatch": "Mật khẩu mới và xác nhận mật khẩu không khớp",
+    "passwordMustDiffer": "Mật khẩu mới phải khác mật khẩu hiện tại",
+    "passwordTooShort": "Mật khẩu mới phải có ít nhất 6 ký tự",
+    "profileUpdateError": "Lỗi khi cập nhật hồ sơ",
+    "profileUpdateSuccess": "Cập nhật hồ sơ thành công!",
+    "recentActivity": "Hoạt động gần đây",
+    "requiresRecentLogin": "Phiên đăng nhập đã hết hạn. Vui lòng đăng xuất và đăng nhập lại",
     "searchPlaceholder": "Tìm kiếm quiz...",
     "settings": {
-      "title": "Personal information"
+      "title": "Thông tin cá nhân"
     },
     "sort": {
       "date": "Ngày",
       "label": "Sắp xếp",
-      "percentage": "Percentage",
+      "percentage": "Phần trăm",
       "score": "Điểm"
     },
     "stats": {
-      "accuracy": "Accuracy",
-      "averageScore": "Average Score",
-      "completedQuizzes": "Completed Quizzes",
-      "correctRate": "Correct rate",
-      "highScores": "High Scores",
-      "onTotal": "On total quizzes",
-      "over80": ">= 80%"
+      "accuracy": "Độ chính xác",
+      "averageScore": "Điểm trung bình",
+      "completedQuizzes": "Quiz đã hoàn thành",
+      "correctRate": "Tỷ lệ đúng",
+      "highScores": "Điểm cao",
+      "onTotal": "Trên tổng số quiz",
+      "over80": "≥ 80%"
     },
     "tabs": {
-      "achievements": "Achievements",
-      "history": "Quiz History",
-      "overview": "Overview",
+      "achievements": "Thành tích",
+      "history": "Lịch sử Quiz",
+      "overview": "Tổng quan",
       "settings": "Cài đặt"
     },
     "updateProfile": "Cập nhật hồ sơ",
-    "updating": "Updating...",
-    "viewAgain": "Review quiz",
-    "viewAllHistory": "View all history",
-    "viewDetails": "View detailed result",
-    "weakPassword": "New password is too weak. Please choose a stronger password (at least 6 characters)",
-    "wrongPassword": "Old password is incorrect",
+    "updating": "Đang cập nhật...",
+    "viewAgain": "Xem lại quiz",
+    "viewAllHistory": "Xem tất cả lịch sử",
+    "viewDetails": "Xem kết quả chi tiết",
+    "weakPassword": "Mật khẩu mới quá yếu. Vui lòng chọn mật khẩu mạnh hơn (ít nhất 6 ký tự)",
+    "wrongPassword": "Mật khẩu cũ không đúng",
     "viewAllCount": "Xem tất cả",
     "passwordMinLength": "Mật khẩu tối thiểu 6 ký tự",
     "displayName": "Tên hiển thị",
@@ -2123,7 +2126,14 @@
     "avatarLabel": "Avatar",
     "currentAvatar": "Avatar hiện tại",
     "removeAvatar": "Xóa avatar",
-    "enterUrlManually": "Hoặc nhập URL avatar thủ công"
+    "enterUrlManually": "Hoặc nhập URL avatar thủ công",
+    "photoUrlTooLong": "URL avatar quá dài. Đã lưu vào database nhưng có thể không hiển thị ở một số nơi.",
+    "photoUrlInvalid": "URL avatar không hợp lệ hoặc quá dài. Vui lòng sử dụng URL ngắn hơn.",
+    "uploadAvatarSuccess": "Upload avatar thành công! Nhấn \"Cập nhật thông tin\" để lưu.",
+    "uploadAvatarError": "Lỗi upload avatar: {{error}}",
+    "characters": "ký tự",
+    "urlTooLong": "URL quá dài!",
+    "closeToLimit": "Gần đến giới hạn"
   },
   "shareLinkModal": {
     "title": "🎉 Quiz đã được xuất bản!",
@@ -2220,7 +2230,11 @@
     "deleteSuccess": "Xóa quiz thành công",
     "description": "Mô tả",
     "detailedInfo": "Thông tin chi tiết",
-    "difficulty": "Độ khó",
+    "difficulty": {
+      "easy": "Dễ",
+      "medium": "Trung bình",
+      "hard": "Khó"
+    },
     "card": {
       "duration": {
         "minutes": "{{count}} phút",
@@ -3612,7 +3626,8 @@
     "loi_khi_xu_ly_file": "Lỗi khi xử lý file",
     "vui_long_nhap_chu_de_hoac_tai_len_file": "Vui lòng nhập chủ đề hoặc tải lên file!",
     "vd_javascript_lich_su_viet_nam_toan_hoc": "VD: JavaScript, Lịch sử Việt Nam, Toán học...",
-    "tu_file": " từ file"
+    "tu_file": " từ file",
+    "notAvailable": "Không có"
   },
   "quizList": {
     "exploreQuizzes": "Khám phá Quiz",
@@ -3722,7 +3737,10 @@
     "loadFailed": "Tải dữ liệu thất bại"
   },
   "users": {
-    "confirmDelete": "Xác nhận xóa người dùng?"
+    "confirmDelete": "Bạn có chắc chắn muốn xóa người dùng này?",
+    "confirmRoleChange": "Bạn có chắc chắn muốn đổi quyền cho người dùng này thành {{role}}?",
+    "confirmDeactivate": "Bạn có chắc chắn muốn khóa tài khoản này?",
+    "confirmActivate": "Bạn có chắc chắn muốn kích hoạt tài khoản này?"
   },
   "fileUpload": {
     "dragDrop": "Kéo & thả file vào đây, hoặc bấm để chọn",
@@ -4788,5 +4806,22 @@
       "notFound": "Không tìm thấy quiz",
       "loadFailed": "Không thể tải quiz"
     }
-  }
+  },
+  "presence": {
+    "online": "Online",
+    "offline": "Offline",
+    "idle": "Chờ",
+    "minutesAgo": "{{minutes}} phút trước",
+    "hoursAgo": "{{hours}} giờ trước",
+    "daysAgo": "{{days}} ngày trước",
+    "justNow": "Vừa xong",
+    "neverActive": "Chưa hoạt động"
+  },
+  "accountStatus": {
+    "active": "Hoạt động",
+    "blocked": "Bị khóa"
+  },
+  "notAvailable": "Không có",
+  "you": "Bạn",
+  "tat_ca": "Tất cả"
 }

@@ -37,9 +37,26 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
               )}
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-500">{t('welcome')}, {user?.email}</span>
-              <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium">A</span>
+              <span className="text-sm text-gray-500">{t('welcome')}, {user?.displayName || user?.email}</span>
+              <div className="relative h-10 w-10">
+                {user?.photoURL ? (
+                  <img 
+                    src={user.photoURL} 
+                    alt={user.displayName || user.email || 'User'}
+                    className="h-10 w-10 rounded-full object-cover border-2 border-blue-500"
+                    onError={(e) => {
+                      // Fallback to initials if image fails to load
+                      e.currentTarget.style.display = 'none';
+                      const fallbackDiv = e.currentTarget.nextElementSibling as HTMLElement;
+                      if (fallbackDiv) fallbackDiv.classList.remove('hidden');
+                    }}
+                  />
+                ) : null}
+                <div className={`h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center border-2 border-white shadow-md ${user?.photoURL ? 'hidden' : ''}`}>
+                  <span className="text-white text-sm font-bold">
+                    {user?.displayName?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'A'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>

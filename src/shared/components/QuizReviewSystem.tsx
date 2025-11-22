@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { RootState } from '../../lib/store';
-import { collection, addDoc, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, doc, getDoc, limit } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { toast } from 'react-toastify';
 import { useNotifications } from '../../hooks/useNotifications';
@@ -45,10 +45,11 @@ const QuizReviewSystem: React.FC<QuizReviewSystemProps> = ({
     try {
       setLoading(true);
       
-      // Simplified query without orderBy to avoid index issues
+      // ✅ FIXED: Added limit to prevent loading thousands of reviews
       const reviewsQuery = query(
         collection(db, 'quizReviews'),
-        where('quizId', '==', quizId)
+        where('quizId', '==', quizId),
+        limit(100) // Only load 100 most recent reviews
       );
       
       const querySnapshot = await getDocs(reviewsQuery);

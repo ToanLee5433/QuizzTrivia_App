@@ -5,7 +5,7 @@ import { Provider, useSelector, useDispatch } from 'react-redux';
 import { store, RootState } from './lib/store';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from './lib/firebase/config';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { loginSuccess, logout, authCheckComplete } from './features/auth/store';
 import I18nProvider from './shared/components/I18nProvider';
 import { SettingsProvider } from './contexts/SettingsContext';
@@ -76,9 +76,13 @@ import ScrollToTop from './shared/components/ScrollToTop';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { initializeAutoSync, cleanupAutoSync } from './shared/services/autoSync';
+import { usePresence } from './hooks/usePresence';
 
 const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const dispatch = useDispatch();
+  
+  // ✅ Facebook-style Presence System using Firebase RTDB
+  usePresence();
 
   useEffect(() => {
     const mounted = true;
@@ -115,9 +119,23 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
           if (userDoc.exists()) {
             userData = userDoc.data();
             
+            // Sync Firebase Auth metadata to Firestore
+            try {
+              const metadata = user.metadata;
+              if (metadata.creationTime && !userData.authCreatedAt) {
+                await updateDoc(userDocRef, {
+                  authCreatedAt: metadata.creationTime,
+                  lastSynced: new Date().toISOString()
+                });
+                console.log(' Synced Firebase Auth metadata to Firestore');
+              }
+            } catch (syncError) {
+              console.error('Error syncing metadata:', syncError);
+            }
+            
             // Check if user is deleted or inactive
             if (userData.isDeleted || userData.isActive === false) {
-              console.log('🚫 User account is deleted/inactive, logging out');
+              console.log(' User account is deleted/inactive, logging out');
               await auth.signOut();
               dispatch(logout());
               dispatch(authCheckComplete());
@@ -125,11 +143,11 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             }
             
             role = userData.role || 'user';
-            console.log('✅ Found user document:', { uid: user.uid, role, userData });
+            console.log(' Found user document:', { uid: user.uid, role, userData });
             
             // Chỉ check email verification cho user thường, không phải admin
             if (!user.emailVerified && user.email !== 'admin123@gmail.com' && role !== 'admin') {
-              console.log('📧 Email not verified for regular user, redirecting to verification');
+              console.log(' Email not verified for regular user, redirecting to verification');
               // Không sign out ngay, để user có cơ hội verify email
               // await auth.signOut();
               // dispatch(logout());
@@ -138,7 +156,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             }
           } else if (user.email === 'admin123@gmail.com') {
             role = 'admin';
-            console.log('👑 Creating admin user document');
+            console.log(' Creating admin user document');
             // Create admin document if it doesn't exist
             try {
               await setDoc(userDocRef, {
@@ -200,12 +218,6 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
           
           // Initialize auto-sync for this user
           initializeAutoSync(user.uid);
-          
-          // Force re-render để cập nhật UI ngay lập tức
-          setTimeout(() => {
-            console.log('🔄 Force state refresh for UI update');
-            dispatch(loginSuccess(authUser));
-          }, 100);
         } catch (error) {
           console.error('Error getting user role:', error);
           // Fallback role với check admin email chính xác hơn
@@ -225,12 +237,6 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
           
           // Initialize auto-sync for fallback user too
           initializeAutoSync(user.uid);
-          
-          // Force re-render cho fallback cũng cần
-          setTimeout(() => {
-            console.log('🔄 Force state refresh for fallback user');
-            dispatch(loginSuccess(authUser));
-          }, 100);
         }
       } else {
         dispatch(logout());

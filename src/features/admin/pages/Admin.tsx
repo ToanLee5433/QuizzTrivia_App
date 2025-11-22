@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { RootState } from '../../../lib/store';
 import AdminLayout from '../components/AdminLayout';
 import { toast } from 'react-toastify';
-import { collection, addDoc, getDocs, updateDoc, doc, query, where } from 'firebase/firestore';
+import { collection, addDoc, getDocs, updateDoc, doc, query, where, orderBy, limit, getCountFromServer } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 
 const Admin: React.FC = () => {
@@ -21,23 +21,30 @@ const Admin: React.FC = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // Đồng bộ logic với /home: dùng dữ liệu thực, chỉ đếm quiz approved (bỏ drafts)
-        const [quizzesSnap, usersSnap, quizResultsSnap] = await Promise.all([
-          getDocs(query(collection(db, 'quizzes'), where('status', '==', 'approved'))),
-          getDocs(collection(db, 'users')),
-          getDocs(collection(db, 'quizResults'))
+        console.log(' [Admin] Fetching stats with getCountFromServer...');
+        
+        // OPTIMIZED: Load toàn bộ users để đếm creators chính xác
+        // Lý do: Nếu dùng limit(200), có thể bỏ sót creators nằm ngoài 200 users đầu
+        const [quizzesCount, allUsersCount, quizResultsSnap, allUsersSnap] = await Promise.all([
+          getCountFromServer(query(collection(db, 'quizzes'), where('status', '==', 'approved'))),
+          getCountFromServer(collection(db, 'users')), // Đếm TẤT CẢ users
+          getDocs(query(collection(db, 'quizResults'), orderBy('completedAt', 'desc'), limit(100))),
+          getDocs(collection(db, 'users')) // FIXED: Load ALL users để đếm creators chính xác
         ]);
 
-        // Tổng số quiz = chỉ quiz có status 'approved' (không bao gồm draft)
-        const totalQuizzes = quizzesSnap.size;
+        const totalQuizzes = quizzesCount.data().count;
+        const totalUsers = allUsersCount.data().count;
+        
+        console.log(' [Admin] Total users (count):', totalUsers);
+        console.log(' [Admin] Total quizzes (approved):', totalQuizzes);
 
-        // Chỉ đếm người dùng hoạt động (isActive !== false và isDeleted !== true)
-        const users = usersSnap.docs.map(doc => doc.data() as any);
+        // Đếm creators từ TOÀN BỘ users (chính xác 100%)
+        const users = allUsersSnap.docs.map(doc => doc.data() as any);
         const activeUsers = users.filter(u => u?.isActive !== false && u?.isDeleted !== true);
-        const totalUsers = activeUsers.length;
-
-        // Người tạo: role 'creator' hoặc 'admin' trong nhóm active
         const totalCreators = activeUsers.filter(u => u?.role === 'creator' || u?.role === 'admin').length;
+        
+        console.log(' [Admin] Total users loaded:', users.length);
+        console.log(' [Admin] Active users:', activeUsers.length, 'Creators:', totalCreators);
 
         // Đếm số quiz đã hoàn thành từ quizResults collection
         const completedQuizzes = quizResultsSnap.docs.filter(doc => {
@@ -100,14 +107,19 @@ const Admin: React.FC = () => {
   };
 
   // Backup dữ liệu
-  const backupData = async () => {
+  const handleBackup = async () => {
+    // ⚠️ WARNING: This will fetch limited data for backup
+    if (!confirm('⚠️ Backup will only include recent data (limited to 1000 items per collection). Continue?')) return;
+    
     setLoading(true);
     try {
       const collections = ['users', 'quizzes', 'categories', 'quiz_results'];
       const backup: any = {};
       
       for (const collectionName of collections) {
-        const snapshot = await getDocs(collection(db, collectionName));
+        // ✅ FIXED: Added limit to prevent fetching entire collections
+        const limitedQuery = query(collection(db, collectionName), limit(1000));
+        const snapshot = await getDocs(limitedQuery);
         backup[collectionName] = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
@@ -137,7 +149,13 @@ const Admin: React.FC = () => {
     
     setLoading(true);
     try {
-      const notificationsSnapshot = await getDocs(collection(db, 'system_notifications'));
+      // ✅ FIXED: Only delete active notifications, limited to 500
+      const notificationsQuery = query(
+        collection(db, 'system_notifications'),
+        where('isActive', '==', true),
+        limit(500)
+      );
+      const notificationsSnapshot = await getDocs(notificationsQuery);
       const deletePromises = notificationsSnapshot.docs.map(doc => 
         updateDoc(doc.ref, { isActive: false })
       );
@@ -157,13 +175,26 @@ const Admin: React.FC = () => {
     if (!confirm(t('admin.quickActions.toasts.confirmCleanup'))) return;
     setLoading(true);
     try {
-      const quizzesSnapshot = await getDocs(collection(db, 'quizzes'));
-      const deletedQuizzes = quizzesSnapshot.docs.filter(doc => doc.data().deleted === true);
-      const quizDeletePromises = deletedQuizzes.map(q => updateDoc(doc(db, 'quizzes', q.id), { isPurged: true }));
+      // ✅ FIXED: Query only deleted items with limit
+      const deletedQuizzesQuery = query(
+        collection(db, 'quizzes'),
+        where('deleted', '==', true),
+        limit(500)
+      );
+      const quizzesSnapshot = await getDocs(deletedQuizzesQuery);
+      const quizDeletePromises = quizzesSnapshot.docs.map(q => 
+        updateDoc(doc(db, 'quizzes', q.id), { isPurged: true })
+      );
 
-      const usersSnapshot = await getDocs(collection(db, 'users'));
-      const deletedUsers = usersSnapshot.docs.filter(doc => doc.data().deleted === true);
-      const userDeletePromises = deletedUsers.map(u => updateDoc(doc(db, 'users', u.id), { isPurged: true }));
+      const deletedUsersQuery = query(
+        collection(db, 'users'),
+        where('deleted', '==', true),
+        limit(500)
+      );
+      const usersSnapshot = await getDocs(deletedUsersQuery);
+      const userDeletePromises = usersSnapshot.docs.map(u => 
+        updateDoc(doc(db, 'users', u.id), { isPurged: true })
+      );
 
       await Promise.all([...quizDeletePromises, ...userDeletePromises]);
       toast.success(t('admin.quickActions.toasts.cleanupSuccess'));
@@ -320,7 +351,7 @@ const Admin: React.FC = () => {
           </button>
           
           <button 
-            onClick={backupData}
+            onClick={handleBackup}
             className="group bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white p-4 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
             disabled={loading}
           >

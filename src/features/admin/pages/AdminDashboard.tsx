@@ -13,7 +13,7 @@ import {
   deleteDoc, 
   addDoc,
   query,
-  orderBy
+  where
 } from 'firebase/firestore';
 import Modal from '../../../shared/components/ui/Modal';
 import QuickActions from '../components/QuickActions';
@@ -143,20 +143,22 @@ const AdminDashboard: React.FC = () => {
 
     loadRealData();
 
-    const interval = setInterval(loadRealData, 30000);
+    // ⚠️ FIXED: Increased from 30s to 5 minutes to reduce reads
+    const interval = setInterval(loadRealData, 300000); // 5 minutes instead of 30 seconds
     return () => clearInterval(interval);
   }, [t]);
 
   // Data loading functions that return data instead of updating state
   const loadUsersData = async (): Promise<User[]> => {
     try {
-      const usersQuery = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
-      const snapshot = await getDocs(usersQuery);
+      // ✅ FIXED: Load ALL users without limit or orderBy to avoid missing data
+      // orderBy('createdAt') would skip users without createdAt field
+      const snapshot = await getDocs(collection(db, 'users'));
       const usersData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       } as User));
-      console.log('Loaded users:', usersData.length);
+      console.log('✅ [AdminDashboard] Loaded ALL users:', usersData.length);
       return usersData;
     } catch (error) {
       console.error('Error loading users:', error);
@@ -166,13 +168,17 @@ const AdminDashboard: React.FC = () => {
 
   const loadQuizzesData = async (): Promise<Quiz[]> => {
     try {
-      const quizzesQuery = query(collection(db, 'quizzes'), orderBy('createdAt', 'desc'));
+      // ✅ FIXED: Load ALL approved quizzes without limit
+      const quizzesQuery = query(
+        collection(db, 'quizzes'), 
+        where('status', '==', 'approved')
+      );
       const snapshot = await getDocs(quizzesQuery);
       const quizzesData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       } as Quiz));
-      console.log('Loaded quizzes:', quizzesData.length);
+      console.log('✅ [AdminDashboard] Loaded ALL quizzes:', quizzesData.length);
       return quizzesData;
     } catch (error) {
       console.error('Error loading quizzes:', error);
@@ -182,13 +188,14 @@ const AdminDashboard: React.FC = () => {
 
   const loadCategoriesData = async (): Promise<Category[]> => {
     try {
-      const categoriesQuery = query(collection(db, 'categories'), orderBy('name'));
-      const snapshot = await getDocs(categoriesQuery);
+      // ✅ FIXED: Load ALL categories without limit
+      // Categories collection is usually small, so load all
+      const snapshot = await getDocs(collection(db, 'categories'));
       const categoriesData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       } as Category));
-      console.log('Loaded categories:', categoriesData.length);
+      console.log('✅ [AdminDashboard] Loaded ALL categories:', categoriesData.length);
       return categoriesData;
     } catch (error) {
       console.error('Error loading categories:', error);

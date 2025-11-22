@@ -46,6 +46,17 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
   
+  // ✅ FIXED: Skip Chrome extensions and unsupported URL schemes
+  if (
+    url.protocol === 'chrome-extension:' ||
+    url.protocol === 'chrome:' ||
+    url.protocol === 'about:' ||
+    url.protocol === 'data:' ||
+    url.hostname.includes('extension')
+  ) {
+    return;
+  }
+  
   // Skip Firebase/API requests (let SDK handle)
   if (
     url.hostname.includes('firebaseio.com') ||

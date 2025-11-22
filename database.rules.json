@@ -1,5 +1,17 @@
 {
   "rules": {
+    "status": {
+      "$userId": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid == $userId",
+        "state": {
+          ".validate": "newData.isString() && (newData.val() == 'online' || newData.val() == 'offline' || newData.val() == 'idle')"
+        },
+        "lastChanged": {
+          ".validate": "newData.exists()"
+        }
+      }
+    },
     "users": {
       "$userId": {
         ".read": "auth != null",
