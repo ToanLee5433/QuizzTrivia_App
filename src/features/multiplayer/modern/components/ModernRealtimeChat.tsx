@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, X, Loader2, MessageCircle, Smile, Paperclip } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { 
   ref, 
   push, 
@@ -50,6 +51,7 @@ const ModernRealtimeChat: React.FC<ModernRealtimeChatProps> = ({
   onClose,
   transparent = false
 }) => {
+  const { t } = useTranslation('multiplayer');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [messageInput, setMessageInput] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -230,8 +232,8 @@ const ModernRealtimeChat: React.FC<ModernRealtimeChatProps> = ({
             <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-pulse"></div>
           </div>
           <div>
-            <h3 className="text-white font-bold text-lg">Chat Trực Tiếp</h3>
-            <p className="text-blue-100 text-xs">{messages.length} tin nhắn</p>
+            <h3 className="text-white font-bold text-lg">{t('liveChat')}</h3>
+            <p className="text-blue-100 text-xs">{t('messageCount', { count: messages.length })}</p>
           </div>
         </div>
         {onClose && (
@@ -256,7 +258,7 @@ const ModernRealtimeChat: React.FC<ModernRealtimeChatProps> = ({
             className="px-4 py-2 bg-blue-50 border-b border-blue-100"
           >
             <p className="text-xs text-blue-600 italic">
-              {typingUsers.join(', ')} {typingUsers.length === 1 ? 'đang' : 'đang'} nhập...
+              {typingUsers.join(', ')} {t('typing')}...
             </p>
           </motion.div>
         )}
@@ -275,8 +277,8 @@ const ModernRealtimeChat: React.FC<ModernRealtimeChatProps> = ({
         ) : messages.length === 0 ? (
           <div className="text-center py-8">
             <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 text-sm">Chưa có tin nhắn nào</p>
-            <p className="text-gray-400 text-xs mt-1">Bắt đầu cuộc trò chuyện!</p>
+            <p className="text-gray-500 text-sm">{t('noMessagesYet')}</p>
+            <p className="text-gray-400 text-xs mt-1">{t('sendMessage')}!</p>
           </div>
         ) : (
           <>
@@ -366,7 +368,7 @@ const ModernRealtimeChat: React.FC<ModernRealtimeChatProps> = ({
                 handleTypingStart();
               }}
               onKeyPress={handleKeyPress}
-              placeholder="Nhập tin nhắn..."
+              placeholder={t('enterMessage')}
               maxLength={MAX_MESSAGE_LENGTH}
               className="w-full px-4 py-3 bg-white border border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               disabled={isSending}

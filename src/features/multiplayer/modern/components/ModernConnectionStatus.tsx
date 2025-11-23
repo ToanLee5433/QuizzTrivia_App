@@ -11,6 +11,7 @@ import {
   CloudOff
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { getDatabase, ref, onValue, off } from 'firebase/database';
 
 interface ConnectionStatus {
@@ -37,6 +38,7 @@ const ModernConnectionStatus: React.FC<ModernConnectionStatusProps> = ({
   onReconnect,
   compact = false
 }) => {
+  const { t } = useTranslation('multiplayer');
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
     isConnected: navigator.onLine, // Use real browser online status
     connectionQuality: 'disconnected', // Start with unknown status
@@ -263,20 +265,20 @@ const ModernConnectionStatus: React.FC<ModernConnectionStatusProps> = ({
 
   const getStatusText = () => {
     if (connectionStatus.isReconnecting || isManualReconnecting) {
-      return 'Đang kết nối lại...';
+      return t('reconnecting');
     }
     
     switch (connectionStatus.connectionQuality) {
       case 'excellent':
-        return 'Kết nối tuyệt vời';
+        return t('excellentConnection');
       case 'good':
-        return 'Kết nối tốt';
+        return t('goodConnection');
       case 'poor':
-        return 'Kết nối kém';
+        return t('poorConnection');
       case 'disconnected':
-        return 'Mất kết nối';
+        return t('disconnected');
       default:
-        return 'Không xác định';
+        return t('unknownStatus');
     }
   };
 
@@ -313,7 +315,7 @@ const ModernConnectionStatus: React.FC<ModernConnectionStatusProps> = ({
             {getStatusIcon()}
           </div>
           <div>
-            <h4 className="font-bold text-gray-800">Trạng thái kết nối</h4>
+            <h4 className="font-bold text-gray-800">{t('connectionStatus')}</h4>
             <p className="text-sm text-gray-600">{getStatusText()}</p>
           </div>
         </div>
@@ -343,7 +345,7 @@ const ModernConnectionStatus: React.FC<ModernConnectionStatusProps> = ({
               ) : (
                 <RefreshCw className="w-4 h-4" />
               )}
-              <span className="text-sm font-medium">Kết nối lại</span>
+              <span className="text-sm font-medium">{t('reconnecting')}</span>
             </motion.button>
           )}
         </div>
@@ -365,7 +367,7 @@ const ModernConnectionStatus: React.FC<ModernConnectionStatusProps> = ({
                 <p className="text-lg font-bold text-gray-800">
                   {connectionStatus.latency > 0 ? `${connectionStatus.latency}ms` : '--'}
                 </p>
-                <p className="text-xs text-gray-600">Độ trễ</p>
+                <p className="text-xs text-gray-600">{t('latency')}</p>
               </div>
 
               {/* Uptime */}
@@ -374,7 +376,7 @@ const ModernConnectionStatus: React.FC<ModernConnectionStatusProps> = ({
                 <p className="text-lg font-bold text-gray-800">
                   {formatUptime(connectionStatus.lastConnected)}
                 </p>
-                <p className="text-xs text-gray-600">Thời gian kết nối</p>
+                <p className="text-xs text-gray-600">{t('connectionTime')}</p>
               </div>
 
               {/* Reconnect Attempts */}
@@ -383,7 +385,7 @@ const ModernConnectionStatus: React.FC<ModernConnectionStatusProps> = ({
                 <p className="text-lg font-bold text-gray-800">
                   {connectionStatus.reconnectAttempts}
                 </p>
-                <p className="text-xs text-gray-600">Lần thử lại</p>
+                <p className="text-xs text-gray-600">{t('retries')}</p>
               </div>
 
               {/* Quality */}
@@ -394,7 +396,7 @@ const ModernConnectionStatus: React.FC<ModernConnectionStatusProps> = ({
                    connectionStatus.connectionQuality === 'good' ? 'Tốt' :
                    connectionStatus.connectionQuality === 'poor' ? 'Kém' : 'Mất kết nối'}
                 </p>
-                <p className="text-xs text-gray-600">Chất lượng</p>
+                <p className="text-xs text-gray-600">{t('quality')}</p>
               </div>
             </div>
 

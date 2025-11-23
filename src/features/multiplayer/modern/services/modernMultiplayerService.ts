@@ -804,6 +804,7 @@ export class ModernMultiplayerService {
           id: this.userId,
           name: playerData?.name || auth.currentUser?.displayName || 'Player',
           avatar: auth.currentUser?.photoURL || undefined,
+          photoURL: auth.currentUser?.photoURL || undefined, // ✅ Add photoURL for avatar display
           score: playerData?.score || 0,
           isReady: playerData?.isReady || false,
           isOnline: true,
@@ -1733,6 +1734,7 @@ export class ModernMultiplayerService {
             id: this.userId,
             name: firestorePlayerData?.name || auth.currentUser?.displayName || 'Player',
             avatar: auth.currentUser?.photoURL || undefined,
+            photoURL: auth.currentUser?.photoURL || undefined, // ✅ Add photoURL for avatar display
             score: firestorePlayerData?.score || 0,
             isReady: firestorePlayerData?.isReady || false,
             isOnline: true,

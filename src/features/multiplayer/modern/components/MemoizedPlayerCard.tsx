@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Crown, User, CheckCircle, Circle } from 'lucide-react';
 import { ModernPlayer } from '../services/modernMultiplayerService';
 
@@ -26,6 +27,7 @@ const MemoizedPlayerCard: React.FC<MemoizedPlayerCardProps> = memo(({
   onToggleHostParticipation,
   onToggleRole
 }) => {
+  const { t } = useTranslation('multiplayer');
   const isCurrentPlayer = player.id === currentUserId;
   // Use both hostId AND role to determine if player is host (role is more reliable after transfer)
   const isPlayerHost = player.id === hostId || player.role === 'host';
@@ -78,12 +80,12 @@ const MemoizedPlayerCard: React.FC<MemoizedPlayerCardProps> = memo(({
             {/* Role Badge */}
             {player.role === 'spectator' && (
               <span className="px-2 py-0.5 text-xs rounded-full bg-gray-500/30 text-gray-300">
-                Người xem
+                {t('spectatorBadge')}
               </span>
             )}
             {player.role === 'host' && player.isParticipating === false && (
               <span className="px-2 py-0.5 text-xs rounded-full bg-yellow-500/30 text-yellow-300">
-                Đang xem
+                {t('spectators')}
               </span>
             )}
             
@@ -117,9 +119,9 @@ const MemoizedPlayerCard: React.FC<MemoizedPlayerCardProps> = memo(({
                     ? 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30' 
                     : 'bg-gray-500/20 text-gray-300 hover:bg-gray-500/30'
                 }`}
-                title={player.isParticipating !== false ? 'Chuyển sang chế độ xem' : 'Tham gia chơi'}
+                title={player.isParticipating !== false ? t('switchToSpectator') : t('joinGameButton')}
               >
-                {player.isParticipating !== false ? '🎮 Người chơi' : '👁️ Người xem'}
+                {player.isParticipating !== false ? t('playerRole') : t('spectatorRole')}
               </motion.button>
             )}
             
@@ -137,9 +139,9 @@ const MemoizedPlayerCard: React.FC<MemoizedPlayerCardProps> = memo(({
                         ? 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30' 
                         : 'bg-gray-500/20 text-gray-300 hover:bg-gray-500/30'
                     }`}
-                    title={player.role === 'player' ? 'Chuyển sang chế độ xem' : 'Tham gia chơi'}
+                    title={player.role === 'player' ? t('switchToSpectator') : t('joinGameButton')}
                   >
-                    {player.role === 'player' ? '🎮 Người chơi' : '👁️ Người xem'}
+                    {player.role === 'player' ? t('playerRole') : t('spectatorRole')}
                   </motion.button>
                 )}
                 
@@ -154,9 +156,9 @@ const MemoizedPlayerCard: React.FC<MemoizedPlayerCardProps> = memo(({
                         ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' 
                         : 'bg-gray-500/20 text-gray-300 hover:bg-gray-500/30'
                     }`}
-                    title={player.isReady ? 'Đánh dấu chưa sẵn sàng' : 'Đánh dấu sẵn sàng'}
+                    title={player.isReady ? t('notReadyStatus') : t('readyStatus')}
                   >
-                    {player.isReady ? '✅ Sẵn sàng' : '⏳ Chưa sẵn sàng'}
+                    {player.isReady ? `✅ ${t('readyStatus')}` : `⏳ ${t('notReadyStatus')}`}
                   </motion.button>
                 )}
               </>
@@ -200,6 +202,9 @@ const MemoizedPlayerCard: React.FC<MemoizedPlayerCardProps> = memo(({
     prevProps.player.score === nextProps.player.score &&
     prevProps.player.isReady === nextProps.player.isReady &&
     prevProps.player.isOnline === nextProps.player.isOnline &&
+    prevProps.player.photoURL === nextProps.player.photoURL && // ✅ Check photoURL for avatar updates
+    prevProps.player.role === nextProps.player.role && // ✅ Check role changes
+    prevProps.player.isParticipating === nextProps.player.isParticipating && // ✅ Check participation
     prevProps.isHost === nextProps.isHost &&
     prevProps.currentUserId === nextProps.currentUserId &&
     prevProps.hostId === nextProps.hostId

@@ -600,8 +600,8 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
           className="bg-white/10 backdrop-blur-md rounded-2xl p-8 text-center"
         >
           <Loader className="w-12 h-12 mx-auto mb-4 text-blue-400 animate-spin" />
-          <p className="text-white text-lg font-semibold">Đang tải phòng...</p>
-          <p className="text-blue-200 text-sm mt-2">Vui lòng đợi trong giây lát</p>
+          <p className="text-white text-lg font-semibold">{t('loadingRoom')}</p>
+          <p className="text-blue-200 text-sm mt-2">{t('pleaseWait')}</p>
         </motion.div>
       )}
 
@@ -699,7 +699,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
                 <h3 className="text-lg sm:text-xl font-bold text-white flex items-center space-x-2">
                   <Users className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
                   <span>
-                    👁️ Người xem ({spectators.length} xem)
+                    👁️ {t('spectators')} ({t('spectatorCount', { count: spectators.length })})
                   </span>
                 </h3>
                 
@@ -712,14 +712,14 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
                     className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-purple-500/25 transition-all flex items-center space-x-2"
                   >
                     <span className="text-lg">👁️</span>
-                    <span>Chuyển sang xem</span>
+                    <span>{t('switchToSpectator')}</span>
                     <ArrowRight className="w-4 h-4" />
                   </motion.button>
                 )}
               </div>
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
-                <span className="text-xs sm:text-sm text-purple-400">Đang xem</span>
+                <span className="text-xs sm:text-sm text-purple-400">{t('spectators')}</span>
               </div>
             </div>
 
@@ -748,8 +748,8 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
                   className="text-center py-6 sm:py-8"
                 >
                   <Users className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-400 text-sm sm:text-base">Chưa có người xem nào</p>
-                  <p className="text-gray-500 text-xs sm:text-sm mt-1">Người chơi có thể chuyển sang chế độ người xem</p>
+                  <p className="text-gray-400 text-sm sm:text-base">{t('noSpectatorsYet')}</p>
+                  <p className="text-gray-500 text-xs sm:text-sm mt-1">{t('playersCanSwitchToSpectator')}</p>
                 </motion.div>
               )}
             </div>
@@ -767,7 +767,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
                 <h3 className="text-lg sm:text-xl font-bold text-white flex items-center space-x-2">
                   <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
                   <span>
-                    🎮 Người chơi ({activePlayers.length} chơi)
+                    🎮 {t('activePlayers')} ({t('activePlayerCount', { count: activePlayers.length })})
                   </span>
                 </h3>
                 
@@ -780,7 +780,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
                     className="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-blue-500/25 transition-all flex items-center space-x-2"
                   >
                     <span className="text-lg">🎮</span>
-                    <span>Tham gia chơi</span>
+                    <span>{t('joinGameButton')}</span>
                     <ArrowRight className="w-4 h-4" />
                   </motion.button>
                 )}
@@ -863,7 +863,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
                 currentUserId={currentUserId}
                 currentUsername={players[currentUserId]?.name || 'Player'}
                 currentUserPhoto={players[currentUserId]?.photoURL}
-                isMobile={false}
+                isMobile={typeof window !== 'undefined' && window.innerWidth < 768}
               />
             </motion.div>
           ) : (
@@ -875,10 +875,10 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
             >
               <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-500" />
               <p className="text-gray-400 text-lg font-medium">
-                {isHost ? "Bạn đã tắt chat" : "Chat đã bị tắt"}
+                {isHost ? t('chatDisabledHost') : t('chatDisabledPlayer')}
               </p>
               <p className="text-gray-500 text-sm mt-2">
-                {isHost ? "Bật tính năng này trong cài đặt host để mọi người có thể trò chuyện" : "Host đã vô hiệu hóa tính năng chat"}
+                {isHost ? t('chatDisabledHostDesc') : t('chatDisabledPlayerDesc')}
               </p>
             </motion.div>
           )}
