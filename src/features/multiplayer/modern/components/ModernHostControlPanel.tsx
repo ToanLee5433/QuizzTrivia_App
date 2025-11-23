@@ -52,6 +52,7 @@ interface ModernHostControlPanelProps {
   onGameResume: () => void;
   onKickPlayer: (playerId: string) => void;
   onTransferHost: (playerId: string) => void;
+  onToggleHostParticipation?: () => void;
   onSettingsUpdate: (settings: RoomSettings) => void;
 }
 
@@ -65,6 +66,7 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
   onGameResume,
   onKickPlayer,
   onTransferHost,
+  onToggleHostParticipation,
   onSettingsUpdate
 }) => {
   const [settings, setSettings] = useState<RoomSettings>({
@@ -266,13 +268,8 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => {
-              // Find first online player who is not current user
-              const targetPlayer = players.find(p => p.isOnline && p.id !== currentUserId);
-              if (targetPlayer) {
-                handleTransferHost(targetPlayer.id);
-              } else {
-                alert(t('noOtherOnlinePlayer'));
-              }
+              // Host toggles participation mode (play vs spectate)
+              onToggleHostParticipation?.();
             }}
             className="flex items-center justify-center space-x-2 p-3 bg-gradient-to-r from-green-100 to-emerald-100 hover:from-green-200 hover:to-emerald-200 rounded-xl transition-all duration-200"
             title={t('switchToPlayerMode')}

@@ -649,7 +649,9 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
                 <div className="text-xs sm:text-sm text-blue-200">{t('timeLimit')}</div>
               </div>
               <div className="text-center">
-                <div className="text-lg sm:text-2xl font-bold text-white">{quiz?.difficulty || 'Medium'}</div>
+                <div className="text-lg sm:text-2xl font-bold text-white">
+                  {quiz?.difficulty ? t(quiz.difficulty.toLowerCase()) : t('medium')}
+                </div>
                 <div className="text-xs sm:text-sm text-blue-200">{t('difficulty')}</div>
               </div>
               <div className="text-center">
@@ -679,7 +681,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
             >
               <Monitor className="w-12 h-12 mx-auto mb-4 text-gray-500" />
               <p className="text-gray-400 text-lg font-medium">
-                {isHost ? "Bạn đã tắt màn hình chia sẻ" : "Màn hình chia sẻ đã bị tắt"}
+                {isHost ? t('screenShareDisabledHost') : t('screenShareDisabledPlayer')}
               </p>
               <p className="text-gray-500 text-sm mt-2">
                 {isHost ? "Bật tính năng này trong cài đặt host để chia sẻ nội dung" : "Host đã vô hiệu hóa tính năng chia sẻ màn hình"}
@@ -846,6 +848,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
                   const player = playersList.find(p => p.id === playerId);
                   if (player) handleTransferHost(player);
                 }}
+                onToggleHostParticipation={handleToggleHostParticipation}
                 onSettingsUpdate={() => {}}
               />
             </motion.div>

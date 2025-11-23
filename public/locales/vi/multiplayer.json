@@ -196,5 +196,14 @@
   "chatDisabledHost": "Bạn đã tắt chat",
   "chatDisabledPlayer": "Chat đã bị tắt",
   "chatDisabledHostDesc": "Bật tính năng này trong cài đặt host để mọi người có thể trò chuyện",
-  "chatDisabledPlayerDesc": "Host đã vô hiệu hóa tính năng chat"
+  "chatDisabledPlayerDesc": "Host đã vô hiệu hóa tính năng chat",
+  "screenShareDisabledHost": "Bạn đã tắt màn hình chia sẻ",
+  "screenShareDisabledPlayer": "Màn hình chia sẻ đã bị tắt",
+  "screenShareDisabledHostDesc": "Bật tính năng này trong cài đặt host để chia sẻ màn hình",
+  "screenShareDisabledPlayerDesc": "Host đã vô hiệu hóa màn hình chia sẻ",
+  "attachFile": "Đính kèm file",
+  "selectEmoji": "Chọn emoji",
+  "easy": "Dễ",
+  "medium": "Trung bình",
+  "hard": "Khó"
 }

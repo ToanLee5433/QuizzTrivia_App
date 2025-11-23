@@ -191,5 +191,14 @@
   "chatDisabledHost": "You have disabled chat",
   "chatDisabledPlayer": "Chat has been disabled",
   "chatDisabledHostDesc": "Enable this feature in host settings to allow everyone to chat",
-  "chatDisabledPlayerDesc": "The host has disabled the chat feature"
+  "chatDisabledPlayerDesc": "The host has disabled the chat feature",
+  "screenShareDisabledHost": "You have disabled screen sharing",
+  "screenShareDisabledPlayer": "Screen sharing has been disabled",
+  "screenShareDisabledHostDesc": "Enable this feature in host settings to allow screen sharing",
+  "screenShareDisabledPlayerDesc": "The host has disabled screen sharing",
+  "attachFile": "Attach file",
+  "selectEmoji": "Select emoji",
+  "easy": "Easy",
+  "medium": "Medium",
+  "hard": "Hard"
 }

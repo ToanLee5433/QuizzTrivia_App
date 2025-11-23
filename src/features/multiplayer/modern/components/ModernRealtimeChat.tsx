@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, X, Loader2, MessageCircle, Smile, Paperclip } from 'lucide-react';
+import { Send, X, Loader2, MessageCircle, Smile } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -58,6 +58,7 @@ const ModernRealtimeChat: React.FC<ModernRealtimeChatProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -215,6 +216,26 @@ const ModernRealtimeChat: React.FC<ModernRealtimeChatProps> = ({
     });
   };
 
+  // Emoji picker data
+  const emojis = [
+    '😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '😇', '🙂',
+    '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋',
+    '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳',
+    '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '😣', '😖', '😫',
+    '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬', '🤯', '😳',
+    '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🤗', '🤔', '🤭',
+    '👍', '👎', '👏', '🙌', '👐', '🤝', '🙏', '✌️', '🤞', '🤟',
+    '🤘', '🤙', '👊', '✊', '🤛', '🤜', '💪', '👋', '🤚', '🖐',
+    '✋', '🖖', '👌', '🤌', '🤏', '✍️', '🙋', '💁', '🙆', '🙅',
+    '🎉', '🎊', '🎈', '🎁', '🏆', '🥇', '🥈', '🥉', '⭐', '🌟'
+  ];
+
+  const handleEmojiSelect = (emoji: string) => {
+    setMessageInput(prev => prev + emoji);
+    setShowEmojiPicker(false);
+    inputRef.current?.focus();
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -339,25 +360,49 @@ const ModernRealtimeChat: React.FC<ModernRealtimeChatProps> = ({
 
       {/* Input Area */}
       <div className="p-4 bg-gradient-to-r from-gray-50 to-blue-50/50 rounded-b-2xl border-t border-blue-200/50">
+        {/* Emoji Picker */}
+        <AnimatePresence>
+          {showEmojiPicker && (
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="mb-3 p-3 bg-white rounded-xl shadow-lg border border-blue-200 max-h-48 overflow-y-auto"
+            >
+              <div className="grid grid-cols-10 gap-2">
+                {emojis.map((emoji, index) => (
+                  <motion.button
+                    key={index}
+                    whileHover={{ scale: 1.2 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => handleEmojiSelect(emoji)}
+                    className="text-2xl hover:bg-blue-50 rounded p-1 transition-colors"
+                  >
+                    {emoji}
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="flex items-center space-x-2">
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => alert('Tính năng đính kèm file đang được phát triển!')}
-            className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
-            title="Đính kèm file"
-          >
-            <Paperclip className="w-5 h-5" />
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => alert('Tính năng emoji đang được phát triển!')}
-            className="p-2 text-gray-500 hover:text-blue-600 transition-colors"
-            title="Chọn emoji"
-          >
-            <Smile className="w-5 h-5" />
-          </motion.button>
+          <div className="relative">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className={`p-2 transition-colors ${
+                showEmojiPicker 
+                  ? 'text-blue-600 bg-blue-50' 
+                  : 'text-gray-500 hover:text-blue-600'
+              }`}
+              title={t('selectEmoji')}
+            >
+              <Smile className="w-5 h-5" />
+            </motion.button>
+          </div>
           <div className="flex-1 relative">
             <input
               ref={inputRef}

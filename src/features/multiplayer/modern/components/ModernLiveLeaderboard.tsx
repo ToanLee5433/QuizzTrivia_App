@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { 
   Trophy, 
   Crown, 
@@ -42,6 +43,7 @@ const ModernLiveLeaderboard: React.FC<ModernLiveLeaderboardProps> = ({
   showAnimations = true,
   compact = false
 }) => {
+  const { t } = useTranslation('multiplayer');
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [previousRanks, setPreviousRanks] = useState<{ [key: string]: number }>({});
   const [isLive, setIsLive] = useState(true);
@@ -148,7 +150,7 @@ const ModernLiveLeaderboard: React.FC<ModernLiveLeaderboardProps> = ({
     return (
       <div className="bg-gradient-to-br from-white to-blue-50/30 rounded-2xl p-6 text-center border border-blue-100/50">
         <Trophy className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-        <p className="text-gray-500 font-medium">Bảng xếp hạng sẽ xuất hiện khi game bắt đầu</p>
+        <p className="text-gray-500 font-medium">{t('leaderboardAppears')}</p>
       </div>
     );
   }
