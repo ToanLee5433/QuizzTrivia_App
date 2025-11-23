@@ -284,7 +284,63 @@ export class ModernMultiplayerService {
     return html.replace(/<[^>]*>/g, '').trim();
   }
 
-  // Quiz Data from Firestore
+  // ✅ Get quizzes metadata only (no questions) - saves Firebase reads
+  async getAvailableQuizzesMetadata(): Promise<ModernQuiz[]> {
+    try {
+      this.ensureAuthenticated();
+      
+      const quizzesQuery = query(
+        collection(this.db, 'quizzes'),
+        where('status', '==', 'approved'),
+        orderBy('createdAt', 'desc'),
+        limit(50)
+      );
+      
+      const snapshot = await getDocs(quizzesQuery);
+      const quizzes: ModernQuiz[] = [];
+      
+      for (const doc of snapshot.docs) {
+        const data = doc.data();
+        
+        // Filter client-side for visibility
+        if (data.visibility === 'private' || data.visibility === 'password') {
+          continue;
+        }
+        
+        // ✅ Only get question count, NOT the actual questions
+        let questionCount = 0;
+        if (data.questionCount) {
+          // If questionCount is stored in document
+          questionCount = data.questionCount;
+        } else if (data.questions && Array.isArray(data.questions)) {
+          // Count from document field
+          questionCount = data.questions.length;
+        }
+        
+        quizzes.push({
+          id: doc.id,
+          title: data.title,
+          description: this.stripHtml(data.description),
+          category: data.category || 'General',
+          difficulty: data.difficulty || 'Medium',
+          questionCount: questionCount,
+          timeLimit: data.timeLimit || 30,
+          thumbnail: data.thumbnail,
+          questions: [], // ✅ Empty - will load later if needed
+          password: data.password || null,
+          isPrivate: !!data.password
+        });
+      }
+      
+      return quizzes;
+    } catch (error) {
+      console.error('❌ Failed to fetch quizzes metadata:', error);
+      this.emit('error', error);
+      throw error;
+    }
+  }
+
+  // Quiz Data from Firestore (with full questions)
   async getAvailableQuizzes(): Promise<ModernQuiz[]> {
     try {
       this.ensureAuthenticated();
@@ -369,6 +425,58 @@ export class ModernMultiplayerService {
     } catch (error) {
       console.error('❌ Failed to fetch quizzes:', error);
       this.emit('error', error);
+      throw error;
+    }
+  }
+
+  // ✅ NEW: Get questions for specific quiz (lazy loading)
+  async getQuizQuestions(quizId: string): Promise<QuizQuestion[]> {
+    try {
+      let questions: QuizQuestion[] = [];
+      
+      // Try subcollection first
+      try {
+        const questionsQuery = query(
+          collection(this.db, 'quizzes', quizId, 'questions')
+        );
+        const questionsSnapshot = await getDocs(questionsQuery);
+        
+        questionsSnapshot.forEach(qDoc => {
+          const qData = qDoc.data();
+          questions.push({
+            id: qDoc.id,
+            question: qData.question,
+            options: qData.options,
+            correctAnswer: qData.correctAnswer,
+            timeLimit: qData.timeLimit || 30,
+            points: qData.points || 100
+          });
+        });
+      } catch (error) {
+        console.warn(`⚠️ Could not fetch questions subcollection for ${quizId}`);
+      }
+      
+      // Fallback: Get from document field
+      if (questions.length === 0) {
+        const quizDoc = await getDoc(doc(this.db, 'quizzes', quizId));
+        if (quizDoc.exists()) {
+          const data = quizDoc.data();
+          if (data.questions && Array.isArray(data.questions)) {
+            questions = data.questions.map((q: any, idx: number) => ({
+              id: q.id || `q${idx}`,
+              question: q.question || q.text || q.title,
+              options: q.options || q.answers?.map((a: any) => a.text) || [],
+              correctAnswer: q.correctAnswer ?? q.answers?.findIndex((a: any) => a.isCorrect) ?? 0,
+              timeLimit: q.timeLimit || 30,
+              points: q.points || 100
+            }));
+          }
+        }
+      }
+      
+      return questions;
+    } catch (error) {
+      console.error(`❌ Failed to fetch questions for quiz ${quizId}:`, error);
       throw error;
     }
   }
@@ -581,7 +689,7 @@ export class ModernMultiplayerService {
   }
 
   // Join room
-  async joinRoom(roomCode: string, password?: string): Promise<ModernRoom> {
+  async joinRoom(roomCodeOrId: string, password?: string): Promise<{ roomId: string; roomCode: string }> {
     return this.executeOperation(async () => {
       try {
         this.ensureAuthenticated();
@@ -591,20 +699,39 @@ export class ModernMultiplayerService {
           throw new RateLimitError('join room', 60);
         }
 
-        // Find room by code in Firestore
-        const roomsQuery = query(
-          collection(this.db, 'multiplayer_rooms'),
-          where('code', '==', roomCode),
-          limit(1)
-        );
+        // Determine if input is roomCode (6 chars) or roomId (long string)
+        let roomDoc: any;
+        let roomData: ModernRoom;
         
-        const snapshot = await getDocs(roomsQuery);
-        if (snapshot.empty) {
-          throw new RoomNotFoundError(roomCode);
+        if (roomCodeOrId.length === 6) {
+          // Short code - search by code field
+          console.log('🔍 Searching room by code:', roomCodeOrId);
+          const roomsQuery = query(
+            collection(this.db, 'multiplayer_rooms'),
+            where('code', '==', roomCodeOrId),
+            limit(1)
+          );
+          
+          const snapshot = await getDocs(roomsQuery);
+          if (snapshot.empty) {
+            throw new RoomNotFoundError(roomCodeOrId);
+          }
+          
+          roomDoc = snapshot.docs[0];
+          roomData = roomDoc.data() as ModernRoom;
+        } else {
+          // Long ID - direct document lookup
+          console.log('🔍 Looking up room by ID:', roomCodeOrId);
+          const roomDocRef = doc(this.db, 'multiplayer_rooms', roomCodeOrId);
+          const roomSnapshot = await getDoc(roomDocRef);
+          
+          if (!roomSnapshot.exists()) {
+            throw new RoomNotFoundError(roomCodeOrId);
+          }
+          
+          roomDoc = roomSnapshot;
+          roomData = roomSnapshot.data() as ModernRoom;
         }
-        
-        const roomDoc = snapshot.docs[0];
-        const roomData = roomDoc.data() as ModernRoom;
         
         // Check password if room is private
         if (roomData.isPrivate && !password) {
@@ -640,6 +767,7 @@ export class ModernMultiplayerService {
         }
         
         this.roomId = roomDoc.id;
+        const actualRoomCode = roomData.code;
         
         // ✅ Check if player already exists in Firestore
         const auth = getAuth();
@@ -668,7 +796,7 @@ export class ModernMultiplayerService {
         console.log('✅ Player Firestore data ready');
         
         // ✅ Setup RTDB and listeners AFTER player is in Firestore
-        await this.setupRealtimeRoom(roomDoc.id, roomCode);
+        await this.setupRealtimeRoom(roomDoc.id, actualRoomCode);
         
         // ✅ Add player to RTDB for real-time presence (use Firestore data if exists)
         const playerData = existingPlayerSnap.exists() ? existingPlayerSnap.data() : null;
@@ -686,8 +814,8 @@ export class ModernMultiplayerService {
         });
         console.log('✅ Player added to RTDB with score:', playerData?.score || 0);
         
-        console.log('✅ Joined room:', { roomId: this.roomId, code: roomCode });
-        return { ...roomData, id: roomDoc.id };
+        console.log('✅ Joined room:', { roomId: this.roomId, code: actualRoomCode });
+        return { roomId: this.roomId, roomCode: actualRoomCode };
       } catch (error) {
         console.error('❌ Failed to join room:', error);
         this.emit('error', error);
@@ -1166,11 +1294,11 @@ export class ModernMultiplayerService {
         const snapshot = await get(playerRef);
         const playerData = snapshot.val();
         
-        if (!playerData || playerData.role !== 'host') {
-          throw new UnauthorizedError('toggle host participation');
+        if (!playerData) {
+          throw new Error('Player not found in room');
         }
-        
-        // Add isParticipating field for host
+
+        // Toggle isParticipating for host
         const currentParticipation = playerData.isParticipating ?? true;
         
         await update(playerRef, {
@@ -1188,7 +1316,7 @@ export class ModernMultiplayerService {
     }, retryStrategies.standard);
   }
 
-  // Transfer host to another player
+// Transfer host to another player
   async transferHost(newHostId: string) {
     return this.executeOperation(async () => {
       try {
@@ -1228,36 +1356,76 @@ export class ModernMultiplayerService {
           throw new Error('Cannot transfer host to offline player');
         }
 
-        // Update Firestore room document
-        await updateDoc(roomRef, {
-          hostId: newHostId,
-          updatedAt: serverTimestamp()
-        });
-
-        // Update RTDB host status
-        const rtdbRoomRef = ref(this.rtdb, `rooms/${this.roomId}`);
-        await update(rtdbRoomRef, {
-          hostId: newHostId
-        });
-
-        // Update roles in RTDB: old host becomes player, new host becomes host
+        // Update roles in RTDB FIRST (while still host), then update room hostId
         const oldHostRef = ref(this.rtdb, `rooms/${this.roomId}/players/${this.userId}`);
-        await update(oldHostRef, {
-          role: 'player' as PlayerRole,
-          isParticipating: true
+        const wasParticipating = playerData?.isParticipating ?? true; // Get current participation state
+        
+        // Debug logging to track the issue
+        console.log('🔍 Host Transfer Debug:', {
+          oldHostId: this.userId,
+          newHostId: newHostId,
+          playerDataIsParticipating: playerData?.isParticipating,
+          wasParticipating: wasParticipating,
+          willBeRole: wasParticipating ? 'player' : 'spectator'
         });
+        
+        // Update old host role FIRST - with granular error handling
+        try {
+          console.log('🔄 Updating old host role...');
+          await update(oldHostRef, {
+            role: wasParticipating ? 'player' as PlayerRole : 'spectator' as PlayerRole,
+            isParticipating: wasParticipating
+          });
+          console.log('✅ Old host role updated successfully');
+        } catch (error) {
+          console.error('❌ Failed to update old host role:', error);
+          throw error;
+        }
 
-        const newHostRef = ref(this.rtdb, `rooms/${this.roomId}/players/${newHostId}`);
-        await update(newHostRef, {
-          role: 'host' as PlayerRole,
-          isParticipating: true
-        });
+        // Update new host role - with granular error handling
+        try {
+          console.log('🔄 Updating new host role...');
+          const newHostRef = ref(this.rtdb, `rooms/${this.roomId}/players/${newHostId}`);
+          await update(newHostRef, {
+            role: 'host' as PlayerRole,
+            isParticipating: true
+          });
+          console.log('✅ New host role updated successfully');
+        } catch (error) {
+          console.error('❌ Failed to update new host role:', error);
+          throw error;
+        }
+
+        // Update room hostId - with granular error handling
+        try {
+          console.log('🔄 Updating room hostId...');
+          const rtdbRoomRef = ref(this.rtdb, `rooms/${this.roomId}`);
+          await update(rtdbRoomRef, {
+            hostId: newHostId
+          });
+          console.log('✅ Room hostId updated successfully');
+        } catch (error) {
+          console.error('❌ Failed to update room hostId:', error);
+          throw error;
+        }
+
+        // Update Firestore room document LAST (after RTDB updates succeed)
+        try {
+          await updateDoc(roomRef, {
+            hostId: newHostId,
+            updatedAt: serverTimestamp()
+          });
+          console.log('✅ Firestore room document updated');
+        } catch (firestoreError) {
+          console.warn('⚠️ Firestore update failed, but RTDB transfer succeeded:', firestoreError);
+          // Don't throw error - RTDB transfer is what matters for functionality
+        }
 
         // Send system message about host transfer
         const messagesRef = collection(this.db, 'multiplayer_rooms', this.roomId, 'messages');
         await addDoc(messagesRef, {
           type: 'system',
-          content: `${playerData.name} is now the host of the room`,
+          content: `${playerData?.name || 'Unknown player'} is now the host of the room`,
           timestamp: new Date(),
           senderId: 'system',
           senderName: 'System'
@@ -1279,18 +1447,49 @@ export class ModernMultiplayerService {
         this.emit('host:transferred', { 
           oldHostId: this.userId, 
           newHostId, 
-          newHostName: playerData.name 
+          newHostName: playerData?.name || 'Unknown player' 
         });
         
         logger.info('Host transferred successfully', { 
           oldHostId: this.userId,
           newHostId,
-          newHostName: playerData.name,
+          newHostName: playerData?.name || 'Unknown player',
           roomId: this.roomId
         });
         
       } catch (error) {
         logger.error('Failed to transfer host', error);
+        this.emit('error', error);
+        throw error;
+      }
+    }, retryStrategies.standard);
+  }
+
+  // Update shared screen content
+  async updateSharedScreen(screenData: any) {
+    return this.executeOperation(async () => {
+      try {
+        this.ensureAuthenticated();
+        
+        if (!this.roomId) throw new RoomNotFoundError('current');
+
+        console.log('🔍 updateSharedScreen Debug:', {
+          roomId: this.roomId,
+          userId: this.userId,
+          screenData: screenData
+        });
+
+        const rtdbRoomRef = ref(this.rtdb, `rooms/${this.roomId}`);
+        await update(rtdbRoomRef, {
+          sharedScreen: screenData,
+          updatedAt: Date.now()
+        });
+        
+        console.log('✅ SharedScreen updated to RTDB successfully');
+        logger.info('Shared screen updated', { screenData });
+      } catch (error) {
+        console.error('❌ Failed to update shared screen:', error);
+        logger.error('Failed to update shared screen', error);
         this.emit('error', error);
         throw error;
       }

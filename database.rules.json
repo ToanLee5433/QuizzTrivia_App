@@ -1,5 +1,15 @@
 {
   "rules": {
+    "quizPresence": {
+      "$quizId": {
+        ".read": true,
+        "users": {
+          "$userId": {
+            ".write": "auth != null && auth.uid == $userId"
+          }
+        }
+      }
+    },
     "status": {
       "$userId": {
         ".read": "auth != null",

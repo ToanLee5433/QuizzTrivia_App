@@ -115,6 +115,16 @@
     "leaderboard": "Bảng xếp hạng",
     "loading_leaderboard": "Đang tải bảng xếp hạng...",
     "previous_attempt": "Lượt trước đó",
+    "latest_attempt_rank": "🎯 LƯỢT MỚI NHẤT - XẾP HẠNG #{{rank}}",
+    "search_username": "Tìm kiếm tên người chơi...",
+    "your_current_rank": "Thứ hạng của bạn lần này: #{{rank}}",
+    "total_stats": "{{attempts}} lượt chơi từ {{players}} người",
+    "show_less": "Thu gọn",
+    "show_more": "Xem thêm",
+    "more_attempts": "lượt chơi nữa",
+    "no_search_results": "Không tìm thấy người chơi phù hợp với \"{{query}}\"",
+    "no_results_yet": "Chưa có kết quả nào!",
+    "be_first": "Hãy là người đầu tiên hoàn thành quiz này!",
     "correct": "đúng",
     "ai_analysis": "Phân tích AI",
     "strengths": "Điểm mạnh",
@@ -175,17 +185,7 @@
     "ai_analysis_description": "Nhận thông tin chi tiết và đề xuất học tập cá nhân hóa bởi AI",
     "analyze_with_ai": "Phân tích với AI",
     "ai_analysis_failed": "Không thể tạo phân tích AI",
-    "search_username": "Tìm tên người chơi...",
-    "your_rank_summary": "Xếp hạng của bạn: #{{rank}} / {{total}} người chơi",
-    "no_search_results": "Không tìm thấy người chơi nào với \"{{query}}\"",
-    "latest_attempt_rank": "LƯỢT MỚI NHẤT - XẾP HẠNG #{{rank}}",
-    "no_results_yet": "Chưa có kết quả!",
-    "be_first": "Hãy là người đầu tiên hoàn thành quiz này!",
-    "your_current_rank": "Lần này xếp hạng: #{{rank}}",
-    "total_stats": "{{attempts}} lượt chơi từ {{players}} người",
-    "show_more": "Xem thêm",
-    "show_less": "Thu gọn",
-    "more_attempts": "lượt khác"
+    "your_rank_summary": "Xếp hạng của bạn: #{{rank}} / {{total}} người chơi"
   },
   "admin": {
     "activated": "activated",
@@ -2428,8 +2428,14 @@
     "result": {
       "correctAnswers": "Số câu đúng",
       "incorrectAnswers": "Số câu sai",
-      "finalScore": "Điểm cuối cùng"
+      "finalScore": "Điểm cuối cùng",
+      "finding_similar_quizzes": "Đang tìm quiz tương tự..."
     },
+    "retake_quiz": "Làm lại Quiz",
+    "view_more_quizzes": "Xem thêm Quiz",
+    "back_to_dashboard": "Về Trang chủ",
+    "share_result": "Chia sẻ kết quả",
+    "view_all_results": "Xem tất cả kết quả",
     "reviewCount": "Review Count",
     "reviewText": "Review Content",
     "reviews": {
@@ -4204,6 +4210,15 @@
     },
     "multipleChoice": "Trắc nghiệm",
     "trueFalse": "Đúng/Sai",
+    "multimediaQuestion": "Đa phương tiện",
+    "questionMedia": "Phương tiện câu hỏi (tùy chọn)",
+    "multimediaAnswers": "Đáp án (có thể có phương tiện)",
+    "mediaTypes": {
+      "text": "Văn bản",
+      "image": "Hình ảnh",
+      "audio": "Âm thanh",
+      "video": "Video"
+    },
     "fillBlank": "Điền vào chỗ trống",
     "fillInBlank": "Điền từ",
     "multipleAnswers": "Chọn nhiều đáp án",
@@ -4715,7 +4730,9 @@
       "avgScore": "Điểm TB",
       "outOfHundred": "Trên thang 100",
       "completion": "Tỷ lệ hoàn thành",
-      "completionSub": "Tỷ lệ hoàn thành"
+      "completionSub": "Tỷ lệ hoàn thành",
+      "completionRate": "Tỷ lệ hoàn thành",
+      "completionRateSub": "Đạt >= 50% điểm"
     },
     "sections": {
       "overview": "Tổng quan Quiz",
@@ -4738,6 +4755,8 @@
       "minutes": "phút",
       "questions": "câu hỏi",
       "players": "người chơi",
+      "viewers": "người đang xem",
+      "playing": "đang chơi",
       "points": "điểm",
       "total": "tổng cộng"
     },

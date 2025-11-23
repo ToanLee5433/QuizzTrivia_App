@@ -182,7 +182,7 @@
     "search_username": "Search username...",
     "your_rank_summary": "Your Rank: #{{rank}} out of {{total}} players",
     "no_search_results": "No players found matching \"{{query}}\"",
-    "latest_attempt_rank": "LATEST - RANK #{{rank}}",
+    "latest_attempt_rank": "🎯 LATEST ATTEMPT - RANK #{{rank}}",
     "no_results_yet": "No results yet!",
     "be_first": "Be the first to complete this quiz!",
     "your_current_rank": "This attempt ranked: #{{rank}}",
@@ -2393,7 +2393,8 @@
     "result": {
       "correctAnswers": "Correct Answers",
       "incorrectAnswers": "Incorrect Answers",
-      "finalScore": "Final Score"
+      "finalScore": "Final Score",
+      "finding_similar_quizzes": "Finding similar quizzes..."
     },
     "reviewCount": "Review Count",
     "reviewText": "Review Content",
@@ -4712,7 +4713,9 @@
       "completion": "Completion",
       "completionSub": "Completion rate >=50%",
       "completions": "Completions",
-      "completionsSub": "Finished attempts"
+      "completionsSub": "Finished attempts",
+      "completionRate": "Completion Rate",
+      "completionRateSub": "Scored >= 50%"
     },
     "sections": {
       "overview": "Quiz Overview",
@@ -4744,6 +4747,8 @@
       "minutes": "minutes",
       "questions": "questions",
       "players": "players",
+      "viewers": "viewers",
+      "playing": "playing",
       "points": "pts",
       "total": "total"
     },

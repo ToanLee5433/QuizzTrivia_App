@@ -24,6 +24,9 @@ import { getApps, getApp } from "firebase/app";
 // Initialize Firebase chỉ 1 lần duy nhất
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
+// Export app for use in other services
+export { app };
+
 // Initialize Firebase services
 export const auth = getAuth(app);
 setPersistence(auth, browserLocalPersistence)

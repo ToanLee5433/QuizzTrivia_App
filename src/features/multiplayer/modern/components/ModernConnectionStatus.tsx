@@ -11,7 +11,7 @@ import {
   CloudOff
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getDatabase, ref, onValue, off } from 'firebase/database';
+import { getDatabase, ref, onValue, off, update } from 'firebase/database';
 
 interface ConnectionStatus {
   isConnected: boolean;
@@ -38,19 +38,47 @@ const ModernConnectionStatus: React.FC<ModernConnectionStatusProps> = ({
   compact = false
 }) => {
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
-    isConnected: true,
-    connectionQuality: 'excellent',
+    isConnected: navigator.onLine, // Use real browser online status
+    connectionQuality: 'disconnected', // Start with unknown status
     latency: 0,
     lastConnected: Date.now(),
     reconnectAttempts: 0,
     isReconnecting: false
   });
+  
   const [showDetails, setShowDetails] = useState(false);
   const [isManualReconnecting, setIsManualReconnecting] = useState(false);
 
   const db = getDatabase();
 
-  // Monitor connection status
+  // Monitor browser online/offline status
+  useEffect(() => {
+    const handleOnline = () => {
+      setConnectionStatus(prev => ({
+        ...prev,
+        isConnected: true,
+        connectionQuality: getConnectionQuality(prev.latency)
+      }));
+    };
+
+    const handleOffline = () => {
+      setConnectionStatus(prev => ({
+        ...prev,
+        isConnected: false,
+        connectionQuality: 'disconnected'
+      }));
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Monitor Firebase connection status
   useEffect(() => {
     if (!roomId || !db) return;
 
@@ -58,48 +86,95 @@ const ModernConnectionStatus: React.FC<ModernConnectionStatusProps> = ({
     const unsubscribe = onValue(connectedRef, (snapshot) => {
       const connected = snapshot.val();
       
-      setConnectionStatus((prevStatus) => ({
-        ...prevStatus,
-        isConnected: connected,
-        connectionQuality: connected ? getConnectionQuality(prevStatus.latency) : 'disconnected'
-      }));
-
-      // Auto-reconnect logic
       setConnectionStatus((prevStatus) => {
+        const newStatus = {
+          ...prevStatus,
+          isConnected: connected,
+          connectionQuality: connected ? getConnectionQuality(prevStatus.latency) : 'disconnected',
+          lastConnected: connected ? Date.now() : prevStatus.lastConnected
+        };
+
+        // Auto-reconnect logic
         if (!connected && prevStatus.reconnectAttempts < 3) {
           setTimeout(() => {
             handleAutoReconnect();
           }, Math.pow(2, prevStatus.reconnectAttempts) * 1000); // Exponential backoff
         }
-        return prevStatus;
+
+        return newStatus;
       });
     });
 
-    return () => off(connectedRef, 'value', unsubscribe);
+    return () => {
+      off(connectedRef, 'value', unsubscribe);
+    };
   }, [roomId, db]);
 
   // Monitor latency
   useEffect(() => {
     if (!roomId || !db) return;
 
-    const latencyTestInterval = setInterval(async () => {
+    console.log('🏃 Starting REAL latency measurement for room:', roomId);
+    
+    const measureLatency = async () => {
       const startTime = Date.now();
       try {
+        // Write timestamp to measure round-trip time
         const testRef = ref(db, `rooms/${roomId}/ping`);
-        await onValue(testRef, () => {}, { onlyOnce: true });
-        const latency = Date.now() - startTime;
+        const timestamp = Date.now();
         
-        setConnectionStatus(prev => ({
-          ...prev,
-          latency,
-          connectionQuality: getConnectionQuality(latency)
-        }));
+        // Write to database
+        await update(testRef, { 
+          timestamp,
+          test: 'latency_check'
+        });
+        
+        // Read it back to measure RTT
+        const readRef = ref(db, `rooms/${roomId}/ping/timestamp`);
+        await onValue(readRef, () => {}, { onlyOnce: true });
+        
+        const latency = Date.now() - startTime;
+        console.log('⏱️ REAL measured latency:', latency, 'ms');
+        
+        setConnectionStatus(prev => {
+          const newQuality = getConnectionQuality(latency);
+          console.log('📊 Connection quality updated:', newQuality, 'from latency:', latency);
+          return {
+            ...prev,
+            latency,
+            connectionQuality: newQuality
+          };
+        });
       } catch (error) {
-        console.error('Latency test failed:', error);
+        // Try alternative method - simple Firebase connectivity test
+        try {
+          const connectivityRef = ref(db, '.info/serverTimeOffset');
+          await onValue(connectivityRef, () => {}, { onlyOnce: true });
+          const fallbackLatency = Date.now() - startTime;
+          
+          setConnectionStatus(prev => ({
+            ...prev,
+            latency: fallbackLatency,
+            connectionQuality: getConnectionQuality(fallbackLatency)
+          }));
+        } catch (fallbackError) {
+          setConnectionStatus(prev => ({
+            ...prev,
+            latency: 0,
+            connectionQuality: 'disconnected'
+          }));
+        }
       }
-    }, 5000); // Test every 5 seconds
+    };
 
-    return () => clearInterval(latencyTestInterval);
+    // Initial measurement
+    setTimeout(measureLatency, 1000); // Wait 1s for Firebase to connect
+    
+    const latencyTestInterval = setInterval(measureLatency, 10000); // Test every 10 seconds
+
+    return () => {
+      clearInterval(latencyTestInterval);
+    };
   }, [roomId, db]);
 
   const getConnectionQuality = (latency: number): 'excellent' | 'good' | 'poor' | 'disconnected' => {
@@ -376,4 +451,9 @@ const ModernConnectionStatus: React.FC<ModernConnectionStatusProps> = ({
   );
 };
 
-export default ModernConnectionStatus;
+// ✅ Memoize component to prevent unnecessary re-renders
+export default React.memo(ModernConnectionStatus, (prevProps, nextProps) => {
+  return prevProps.roomId === nextProps.roomId && 
+         prevProps.currentUserId === nextProps.currentUserId &&
+         prevProps.compact === nextProps.compact;
+});

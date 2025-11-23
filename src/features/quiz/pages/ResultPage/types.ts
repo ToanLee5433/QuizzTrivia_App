@@ -19,4 +19,5 @@ export interface LeaderboardEntry {
   totalQuestions: number;
   timeSpent: number;
   completedAt: Date | string;
+  isCurrentAttempt?: boolean; // Flag to mark the current/latest attempt
 }

@@ -106,7 +106,7 @@ const MemoizedPlayerCard: React.FC<MemoizedPlayerCardProps> = memo(({
         {/* Current Player Controls */}
         {isCurrentPlayer && (
           <>
-            {/* Host Participation Toggle (Host only) */}
+            {/* Host Participation Toggle (Host only) - RESTORED for host role switching */}
             {isPlayerHost && onToggleHostParticipation && (
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -114,19 +114,19 @@ const MemoizedPlayerCard: React.FC<MemoizedPlayerCardProps> = memo(({
                 onClick={onToggleHostParticipation}
                 className={`px-3 py-1.5 rounded-lg font-medium text-sm transition-colors ${
                   player.isParticipating !== false
-                    ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30' 
+                    ? 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30' 
                     : 'bg-gray-500/20 text-gray-300 hover:bg-gray-500/30'
                 }`}
                 title={player.isParticipating !== false ? 'Chuyển sang chế độ xem' : 'Tham gia chơi'}
               >
-                {player.isParticipating !== false ? '🎮 Chơi' : '👁️ Xem'}
+                {player.isParticipating !== false ? '🎮 Người chơi' : '👁️ Người xem'}
               </motion.button>
             )}
             
             {/* Regular Player Controls (not host) */}
             {!isPlayerHost && (
               <>
-                {/* Role Toggle: Player <-> Spectator */}
+                {/* Role Toggle Button */}
                 {onToggleRole && (
                   <motion.button
                     whileHover={{ scale: 1.05 }}

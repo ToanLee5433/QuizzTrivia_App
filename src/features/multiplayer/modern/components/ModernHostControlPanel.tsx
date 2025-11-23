@@ -8,14 +8,14 @@ import {
   Crown, 
   UserMinus, 
   Volume2, 
-  Eye,
   Zap,
-  Shield,
   Clock,
   Trophy,
   AlertTriangle,
   CheckCircle,
-  RotateCcw
+  RotateCcw,
+  MessageSquare,
+  Monitor
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getDatabase, ref, update, onValue, off } from 'firebase/database';
@@ -31,15 +31,14 @@ interface Player {
 }
 
 interface RoomSettings {
-  timePerQuestion: number;
-  allowLateJoin: boolean;
-  showAnswers: boolean;
-  enablePowerUps: boolean;
-  enableChat: boolean;
   maxPlayers: number;
+  timePerQuestion: number;
+  difficulty: 'easy' | 'medium' | 'hard';
   isPrivate: boolean;
   autoStart: boolean;
   soundEnabled: boolean;
+  chatEnabled: boolean;
+  screenEnabled: boolean;
 }
 
 interface ModernHostControlPanelProps {
@@ -68,15 +67,14 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
   onSettingsUpdate
 }) => {
   const [settings, setSettings] = useState<RoomSettings>({
-    timePerQuestion: 30,
-    allowLateJoin: true,
-    showAnswers: true,
-    enablePowerUps: true,
-    enableChat: true,
     maxPlayers: 8,
+    timePerQuestion: 30,
+    difficulty: 'medium',
     isPrivate: false,
     autoStart: false,
-    soundEnabled: true
+    soundEnabled: true,
+    chatEnabled: true,    // Chat ON by default
+    screenEnabled: false  // Screen OFF by default
   });
   const [showSettings, setShowSettings] = useState(false);
   const [showPlayerManagement, setShowPlayerManagement] = useState(false);
@@ -346,14 +344,12 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
               </div>
 
               {/* Toggle Settings */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
-                  { key: 'allowLateJoin', icon: Users, label: 'Vào muộn', color: 'green' },
-                  { key: 'showAnswers', icon: Eye, label: 'Hiện đáp án', color: 'blue' },
-                  { key: 'enablePowerUps', icon: Zap, label: 'Power-ups', color: 'purple' },
-                  { key: 'enableChat', icon: Shield, label: 'Chat', color: 'indigo' },
-                  { key: 'autoStart', icon: Play, label: 'Tự động bắt đầu', color: 'yellow' },
-                  { key: 'soundEnabled', icon: Volume2, label: 'Âm thanh', color: 'pink' }
+                  { key: 'chatEnabled', icon: MessageSquare, label: 'Chat', color: 'blue' },
+                  { key: 'screenEnabled', icon: Monitor, label: 'Màn hình', color: 'purple' },
+                  { key: 'soundEnabled', icon: Volume2, label: 'Âm thanh', color: 'green' },
+                  { key: 'autoStart', icon: Play, label: 'Tự động bắt đầu', color: 'yellow' }
                 ].map(({ key, icon: Icon, label, color }) => (
                   <motion.button
                     key={key}

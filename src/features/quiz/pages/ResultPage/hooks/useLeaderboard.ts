@@ -105,7 +105,8 @@ export const useLeaderboard = (quizId: string | null, currentResult?: any) => {
               correctAnswers: result.correctAnswers,
               totalQuestions: result.totalQuestions,
               timeSpent: result.timeSpent,
-              completedAt: result.completedAt instanceof Date ? result.completedAt : new Date(result.completedAt)
+              completedAt: result.completedAt instanceof Date ? result.completedAt : new Date(result.completedAt),
+              isCurrentAttempt: result.id === 'current-attempt' // Mark if this is current attempt
             };
           })
         );
@@ -118,16 +119,73 @@ export const useLeaderboard = (quizId: string | null, currentResult?: any) => {
           return a.timeSpent - b.timeSpent; // Faster time first if same score
         });
 
-        console.log('📊 Sorted leaderboard:', sortedLeaderboard);
+        console.log('📊 Sorted leaderboard with all attempts:', sortedLeaderboard);
         
-        // Show top 10 entries
+        // Mark the latest attempt by current user if not already marked
+        if (currentResultValue && user && !sortedLeaderboard.some(e => e.isCurrentAttempt)) {
+          const currentScore = currentResultValue.score?.percentage || 0;
+          const currentCorrect = currentResultValue.correct || 0;
+          const currentTotal = currentResultValue.total || 0;
+          const currentTimeSpent = currentResultValue.timeSpent || 0;
+          
+          // Find matching entry (most recent with same data)
+          const matchingIndex = sortedLeaderboard.findIndex((entry: LeaderboardEntry) => 
+            entry.userId === user.uid &&
+            entry.score === currentScore &&
+            entry.correctAnswers === currentCorrect &&
+            entry.totalQuestions === currentTotal &&
+            Math.abs((entry.timeSpent || 0) - currentTimeSpent) < 10
+          );
+          
+          if (matchingIndex >= 0) {
+            sortedLeaderboard[matchingIndex].isCurrentAttempt = true;
+            console.log('✅ Marked latest attempt at index:', matchingIndex, sortedLeaderboard[matchingIndex]);
+          }
+        }
+        
+        // Show ALL attempts (including multiple attempts from same user)
+        // The current-attempt will be highlighted in the UI
         setLeaderboard(sortedLeaderboard);
 
         // Find current attempt's rank (if exists)
         if (currentResultValue && user) {
-          const currentAttemptIndex = sortedLeaderboard.findIndex((r: LeaderboardEntry) => r.id === 'current-attempt');
+          // Try to find by resultId first (from currentResult object)
+          let currentAttemptIndex = -1;
+          const resultId = currentResultValue.id || currentResultValue.resultId;
+          if (resultId) {
+            currentAttemptIndex = sortedLeaderboard.findIndex((r: LeaderboardEntry) => r.id === resultId);
+          }
+          
+          // If not found by resultId, try to find by 'current-attempt' id (for unsaved results)
+          if (currentAttemptIndex < 0) {
+            currentAttemptIndex = sortedLeaderboard.findIndex((r: LeaderboardEntry) => r.id === 'current-attempt');
+          }
+          
+          // If still not found, find by matching data (score, correct answers, timeSpent)
+          if (currentAttemptIndex < 0) {
+            const currentScore = currentResultValue.score?.percentage || 0;
+            const currentCorrect = currentResultValue.correct || 0;
+            const currentTotal = currentResultValue.total || 0;
+            const currentTimeSpent = currentResultValue.timeSpent || 0;
+            
+            currentAttemptIndex = sortedLeaderboard.findIndex((r: LeaderboardEntry) => 
+              r.userId === user.uid &&
+              r.score === currentScore &&
+              r.correctAnswers === currentCorrect &&
+              r.totalQuestions === currentTotal &&
+              Math.abs((r.timeSpent || 0) - currentTimeSpent) < 10
+            );
+          }
+          
           setUserRank(currentAttemptIndex >= 0 ? currentAttemptIndex + 1 : null);
-          console.log('👤 Current attempt rank:', currentAttemptIndex >= 0 ? currentAttemptIndex + 1 : 'Not found');
+          console.log('👤 Current attempt rank:', currentAttemptIndex >= 0 ? currentAttemptIndex + 1 : 'Not found', {
+            foundBy: currentAttemptIndex >= 0 ? 
+              (resultId && sortedLeaderboard[currentAttemptIndex]?.id === resultId ? 'resultId' : 
+               sortedLeaderboard[currentAttemptIndex]?.id === 'current-attempt' ? 'current-attempt' : 'data-match') 
+              : 'none',
+            resultId,
+            foundEntry: currentAttemptIndex >= 0 ? sortedLeaderboard[currentAttemptIndex] : null
+          });
         } else if (user) {
           // If no current result, find user's best rank
           const userResultIndex = sortedLeaderboard.findIndex((r: LeaderboardEntry) => r.userId === user.uid);

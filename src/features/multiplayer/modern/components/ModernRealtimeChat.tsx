@@ -11,7 +11,8 @@ import {
   limitToLast, 
   off,
   remove,
-  set
+  set,
+  get
 } from 'firebase/database';
 import { getDatabase } from 'firebase/database';
 import { getAuth } from 'firebase/auth';
@@ -70,8 +71,6 @@ const ModernRealtimeChat: React.FC<ModernRealtimeChatProps> = ({
   // Load initial messages
   useEffect(() => {
     if (!roomId || !db) return;
-
-    console.log('🔵 Setting up chat listener for room:', roomId);
     
     // Clear messages when room changes
     setMessages([]);
@@ -80,29 +79,37 @@ const ModernRealtimeChat: React.FC<ModernRealtimeChatProps> = ({
     const messagesRef = ref(db, `rooms/${roomId}/chat/messages`);
     const messagesQuery = query(messagesRef, orderByChild('timestamp'), limitToLast(MAX_MESSAGES_DISPLAY));
 
+    // ✅ Load existing messages first
+    get(messagesQuery).then((snapshot: any) => {
+      if (snapshot.exists()) {
+        const messagesData: ChatMessage[] = [];
+        snapshot.forEach((childSnapshot: any) => {
+          const message = childSnapshot.val() as ChatMessage;
+          messagesData.push({ ...message, id: childSnapshot.key! });
+        });
+        setMessages(messagesData);
+      }
+      setIsLoading(false); // ✅ Always stop loading after initial fetch
+      setTimeout(scrollToBottom, 100);
+    });
+
     const handleNewMessage = (snapshot: any) => {
       const message = snapshot.val() as ChatMessage;
       if (message) {
         const messageId = snapshot.key!;
         setMessages(prev => {
           // Prevent duplicate messages
-          if (prev.some(m => m.id === messageId)) {
-            console.log('⚠️ Duplicate message prevented:', messageId);
-            return prev;
-          }
+          if (prev.some(m => m.id === messageId)) return prev;
           const newMessages = [...prev, { ...message, id: messageId }];
-          console.log('✅ New message added:', messageId, 'Total:', newMessages.length);
           return newMessages.slice(-MAX_MESSAGES_DISPLAY);
         });
+        setTimeout(scrollToBottom, 100);
       }
-      setIsLoading(false);
-      setTimeout(scrollToBottom, 100);
     };
 
     onChildAdded(messagesQuery, handleNewMessage);
 
     return () => {
-      console.log('🔴 Cleaning up chat listener for room:', roomId);
       off(messagesQuery, 'child_added', handleNewMessage);
     };
   }, [roomId, db, scrollToBottom]);

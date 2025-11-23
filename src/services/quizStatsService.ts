@@ -7,7 +7,8 @@ import {
   setDoc,
   collection,
   addDoc,
-  serverTimestamp
+  serverTimestamp,
+  runTransaction
 } from 'firebase/firestore';
 
 export interface QuizStats {
@@ -140,44 +141,69 @@ class QuizStatsService {
         return;
       }
       
-      if (quizDoc.exists()) {
-        const currentStats = quizDoc.data().stats || {};
+      // ⚠️ CRITICAL: Use Firestore transaction to prevent race conditions
+      // When multiple users submit simultaneously, we must ensure atomic read-modify-write
+      await runTransaction(db, async (transaction) => {
+        const quizSnapshot = await transaction.get(quizRef);
+        
+        if (!quizSnapshot.exists()) {
+          // Initialize stats for new quiz
+          const isCompleted = percentage >= 50;
+          transaction.set(quizRef, {
+            stats: {
+              completions: 1,
+              completedCount: isCompleted ? 1 : 0,
+              totalScore: percentage,
+              averageScore: percentage,
+              completionRate: isCompleted ? 100 : 0,
+              views: 0,
+              attempts: 0,
+              lastUpdated: serverTimestamp()
+            }
+          }, { merge: true });
+          return;
+        }
+        
+        const currentStats = quizSnapshot.data().stats || {};
         const currentCompletions = currentStats.completions || 0;
-        const currentAttempts = currentStats.attempts || 0;
         const currentTotalScore = currentStats.totalScore || 0;
         const newTotalScore = currentTotalScore + percentage;
         const newCompletions = currentCompletions + 1;
-        const newAverageScore = Math.round(newTotalScore / newCompletions);
         
-        // ✅ NEW LOGIC: Completion rate = (attempts with score >= 50%) / total attempts
-        // Count this attempt as "completed" only if score >= 50%
+        // ✅ CRITICAL FIX: Validate totalScore is not exceeding theoretical maximum
+        // Maximum possible totalScore = completions * 100 (if everyone got 100%)
+        const maxPossibleTotal = newCompletions * 100;
+        const validatedTotalScore = Math.min(newTotalScore, maxPossibleTotal);
+        
+        // ✅ FIX: Ensure averageScore is always between 0-100
+        const newAverageScore = Math.min(100, Math.max(0, Math.round(validatedTotalScore / newCompletions)));
+        
+        // ✅ CRITICAL FIX: Completion rate calculation
         const isCompleted = percentage >= 50;
         const currentCompletedCount = currentStats.completedCount || 0;
         const newCompletedCount = isCompleted ? currentCompletedCount + 1 : currentCompletedCount;
-        const newCompletionRate = currentAttempts > 0 ? Math.round((newCompletedCount / currentAttempts) * 100) : 0;
+        const newCompletionRate = newCompletions > 0 ? Math.min(100, Math.max(0, Math.round((newCompletedCount / newCompletions) * 100))) : 0;
 
-        await updateDoc(quizRef, {
-          'stats.completions': increment(1), // Total times trackCompletion was called
-          'stats.completedCount': isCompleted ? increment(1) : currentCompletedCount, // Count of scores >= 50%
-          'stats.totalScore': increment(percentage),
+        // Debug logging
+        console.log(`📊 Quiz ${quizId} stats update (transaction):`, {
+          currentCompletions,
+          currentTotalScore,
+          newPercentage: percentage,
+          newTotalScore,
+          validatedTotalScore,
+          newAverageScore,
+          wasValidationNeeded: newTotalScore !== validatedTotalScore
+        });
+
+        transaction.update(quizRef, {
+          'stats.completions': newCompletions,
+          'stats.completedCount': newCompletedCount,
+          'stats.totalScore': validatedTotalScore,
           'stats.averageScore': newAverageScore,
           'stats.completionRate': newCompletionRate,
           'stats.lastUpdated': serverTimestamp()
         });
-      } else {
-        // Initialize stats if not exists
-        const isCompleted = percentage >= 50;
-        await updateDoc(quizRef, {
-          'stats.completions': 1,
-          'stats.completedCount': isCompleted ? 1 : 0,
-          'stats.totalScore': percentage,
-          'stats.averageScore': percentage,
-          'stats.completionRate': isCompleted ? 100 : 0,
-          'stats.views': increment(0),
-          'stats.attempts': increment(0),
-          'stats.lastUpdated': serverTimestamp()
-        });
-      }
+      });
 
       // Track user activity
       const activityRef = doc(db, 'userQuizActivities', `${userId}_${quizId}`);

@@ -109,18 +109,87 @@ const QuizPreviewPage: React.FC = () => {
   const [showAllQuestions, setShowAllQuestions] = useState(false);
   const [creatorDisplayName, setCreatorDisplayName] = useState<string>('');
   const [creatorPhotoURL, setCreatorPhotoURL] = useState<string>('');
+  const [currentViewers, setCurrentViewers] = useState<number>(0);
+  const [activePlayers, setActivePlayers] = useState<number>(0);
 
   const shareUrl = useMemo(() => {
     if (!quiz) return '';
     if (typeof window === 'undefined') return '';
     const baseUrl = window.location.origin;
     const tokenPart = quiz.shareToken ? `?token=${quiz.shareToken}` : '';
-    return `${baseUrl}/quiz/${quiz.id}${tokenPart}`;
+    return `${baseUrl}/quiz/${quiz.id}/preview${tokenPart}`;
   }, [quiz]);
 
   useEffect(() => {
     setLinkCopied(false);
   }, [shareUrl]);
+
+  // 🔥 Real-time presence tracking
+  useEffect(() => {
+    if (!id) return;
+    
+    let unsubscribe: (() => void) | undefined;
+    
+    const setupPresence = async () => {
+      try {
+        const { quizPresenceService } = await import('../../../services/quizPresenceService');
+        const { auth } = await import('../../../lib/firebase/config');
+        
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+          // Join as viewer
+          const userName = currentUser.displayName || currentUser.email?.split('@')[0] || 'Anonymous';
+          await quizPresenceService.joinQuiz(id, currentUser.uid, userName, false);
+          
+          // Subscribe to presence updates
+          unsubscribe = quizPresenceService.subscribeToQuizPresence(id, (presence) => {
+            setCurrentViewers(presence.currentViewers);
+            setActivePlayers(presence.activePlayers);
+          });
+          
+          // Track view in stats (only once)
+          const { quizStatsService } = await import('../../../services/quizStatsService');
+          await quizStatsService.trackView(id, currentUser.uid);
+        } else {
+          // Anonymous viewer - just subscribe
+          unsubscribe = quizPresenceService.subscribeToQuizPresence(id, (presence) => {
+            setCurrentViewers(presence.currentViewers);
+            setActivePlayers(presence.activePlayers);
+          });
+          
+          // Track anonymous view
+          const { quizStatsService } = await import('../../../services/quizStatsService');
+          await quizStatsService.trackView(id);
+        }
+      } catch (error) {
+        console.error('Error setting up presence:', error);
+      }
+    };
+    
+    setupPresence();
+    
+    // Cleanup on unmount
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+      
+      // Leave quiz
+      const cleanup = async () => {
+        try {
+          const { quizPresenceService } = await import('../../../services/quizPresenceService');
+          const { auth } = await import('../../../lib/firebase/config');
+          const currentUser = auth.currentUser;
+          if (currentUser && id) {
+            await quizPresenceService.leaveQuiz(id, currentUser.uid);
+          }
+        } catch (error) {
+          console.error('Error leaving quiz:', error);
+        }
+      };
+      cleanup();
+    };
+  }, [id]);
 
   // 📊 Fetch quiz data
   useEffect(() => {
@@ -442,8 +511,16 @@ const QuizPreviewPage: React.FC = () => {
     
   // ✅ FIX: "Lượt làm" should be completions (người hoàn thành), not attempts
   const completionsValue = quiz.stats?.completions ?? 0;
-  const completionRateValue = quiz.stats?.completionRate ?? 0;
-  const averageScoreValue = quiz.stats?.averageScore ?? 0;
+  
+  // ✅ FIX: Ensure percentage values are valid numbers between 0-100 (prevent NaN, Infinity, or 500%)
+  const safePercentage = (value: any): number => {
+    const num = Number(value);
+    if (!isFinite(num) || isNaN(num)) return 0;
+    return Math.min(100, Math.max(0, Math.round(num)));
+  };
+  
+  const completionRateValue = safePercentage(quiz.stats?.completionRate);
+  const averageScoreValue = safePercentage(quiz.stats?.averageScore);
   const questionCount = quiz.questions?.length ?? 0;
   const hasQuestions = questionCount > 0;
   
@@ -501,12 +578,12 @@ const QuizPreviewPage: React.FC = () => {
       subLabel: t('quizOverview.insights.outOfHundred', 'Out of 100')
     },
     {
-      label: t('quizOverview.insights.completion', 'Completion'),
+      label: t('quizOverview.insights.completionRate', 'Tỷ lệ hoàn thành'),
       value: formatPercentage(completionRateValue),
       icon: Percent,
       accent: 'text-fuchsia-500',
       background: 'bg-fuchsia-50 dark:bg-fuchsia-900/20',
-      subLabel: t('quizOverview.insights.completionSub', 'Completion rate')
+      subLabel: t('quizOverview.insights.completionRateSub', 'Đạt >= 50% điểm')
     }
   ];
 
@@ -580,7 +657,7 @@ const QuizPreviewPage: React.FC = () => {
                 <img 
                   src={quiz.imageUrl || quiz.coverImage || COVER_PLACEHOLDER} 
                   alt={coverAltText}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-cover"
                   onError={(e) => {
                     if (e.currentTarget.src !== COVER_PLACEHOLDER) {
                       e.currentTarget.onerror = null;
@@ -1110,8 +1187,15 @@ const QuizPreviewPage: React.FC = () => {
                 </div>
                 <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-center">
                   <Users className="w-6 h-6 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-slate-900 dark:text-white">{formatNumber(quiz.totalPlayers ?? 0)}</div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">{t('quizOverview.facts.players', 'players')}</div>
+                  <div className="text-2xl font-bold text-slate-900 dark:text-white">{formatNumber(currentViewers)}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                    {t('quizOverview.facts.viewers', 'viewers')}
+                    {activePlayers > 0 && (
+                      <span className="ml-1 text-emerald-600 dark:text-emerald-400">
+                        ({activePlayers} {t('quizOverview.facts.playing', 'playing')})
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 

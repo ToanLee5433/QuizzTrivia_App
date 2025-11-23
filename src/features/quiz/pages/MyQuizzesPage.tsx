@@ -141,15 +141,19 @@ const MyQuizzesPage: React.FC = () => {
         // For multiplayer: use percentage field (0-100)
         // For single-player: use score field (already 0-100)
         const totalScore = results.reduce((sum, r) => {
+          let score = 0;
           if (r.mode === 'multiplayer') {
             // Multiplayer has separate percentage field
-            return sum + (r.percentage || 0);
+            score = Number(r.percentage || 0);
           } else {
             // Single-player score is already percentage
-            return sum + (r.score || 0);
+            score = Number(r.score || 0);
           }
+          // Validate score is a valid number between 0-100
+          if (!isFinite(score) || isNaN(score)) score = 0;
+          return sum + Math.min(100, Math.max(0, score));
         }, 0);
-        const averageScore = results.length > 0 ? totalScore / results.length : 0;
+        const averageScore = results.length > 0 ? Math.round(totalScore / results.length) : 0;
         const attempts = results.length;
         
         loadedQuizzes.push({
@@ -421,7 +425,10 @@ const MyQuizzesPage: React.FC = () => {
   // Calculate average score only from quizzes that have attempts (at least 1 person has taken the quiz)
   const quizzesWithAttempts = quizzes.filter(q => (q.attempts || 0) > 0);
   const averageScore = quizzesWithAttempts.length > 0
-    ? quizzesWithAttempts.reduce((sum, q) => sum + (q.averageScore || 0), 0) / quizzesWithAttempts.length
+    ? quizzesWithAttempts.reduce((sum, q) => {
+        const score = Number(q.averageScore || 0);
+        return sum + (isFinite(score) && !isNaN(score) ? Math.min(100, Math.max(0, score)) : 0);
+      }, 0) / quizzesWithAttempts.length
     : 0;
 
   if (!user || (user.role !== 'creator' && user.role !== 'admin')) {
@@ -745,9 +752,13 @@ const MyQuizzesPage: React.FC = () => {
                           <div>{t('quiz.myQuizzes.stats.views', { count: quiz.stats?.views ?? quiz.views ?? 0 })}</div>
                           <div>{t('quiz.myQuizzes.stats.attempts', { count: quiz.stats?.attempts ?? quiz.attempts ?? 0 })}</div>
                           <div>{t('quiz.myQuizzes.stats.completions', { count: quiz.stats?.completions ?? quiz.completions ?? 0 })}</div>
-                          {(quiz.stats?.averageScore ?? quiz.averageScore) !== undefined && (
-                            <div>{t('quiz.myQuizzes.stats.averageScoreValue', { value: Number(quiz.stats?.averageScore ?? quiz.averageScore).toFixed(1) })}</div>
-                          )}
+                          {(() => {
+                            const score = quiz.stats?.averageScore ?? quiz.averageScore;
+                            const numScore = Number(score);
+                            return !isNaN(numScore) && isFinite(numScore) && (
+                              <div>{t('quiz.myQuizzes.stats.averageScoreValue', { value: Math.min(100, Math.max(0, numScore)).toFixed(1) })}</div>
+                            );
+                          })()}
                           {typeof quiz.avgRating === 'number' && (
                             <div>{t('quiz.myQuizzes.stats.avgRating', { rating: quiz.avgRating.toFixed(1) })}</div>
                           )}

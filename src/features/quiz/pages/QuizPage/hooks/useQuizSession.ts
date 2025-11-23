@@ -228,6 +228,21 @@ export const useQuizSession = ({ quiz }: UseQuizSessionProps) => {
     const { submitQuizResult } = await import('../../../api/base');
     resultId = await submitQuizResult(resultData);
     console.log('✅ Quiz result saved with ID:', resultId);
+    
+    // ✅ NEW: Track completion in quiz stats
+    try {
+      const { quizStatsService } = await import('../../../../../services/quizStatsService');
+      await quizStatsService.trackCompletion(
+        quiz.id,
+        user.uid,
+        score.correct,
+        score.total
+      );
+      console.log('✅ Quiz stats updated');
+    } catch (statsError) {
+      console.error('❌ Failed to update quiz stats:', statsError);
+      // Don't block user flow if stats update fails
+    }
       }
   } catch (error) {
       console.error('❌ Failed to save quiz result:', error);

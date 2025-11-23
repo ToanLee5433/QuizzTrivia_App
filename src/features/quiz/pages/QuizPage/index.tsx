@@ -15,6 +15,7 @@ import { unlockQuiz } from '../../../../lib/services/quizAccessService';
 import { toast } from 'react-toastify';
 import { Quiz, AnswerValue } from '../../types';
 import soundService from '../../../../services/soundService';
+import { quizPresenceService } from '../../../../services/quizPresenceService';
 
 const QuizPage: React.FC = () => {
   const { quiz, loading, error, needsPassword, quizMetadata, retryLoad } = useQuizData();
@@ -117,6 +118,7 @@ interface QuizPageContentProps {
 
 const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
   const navigate = useNavigate();
+  const user = useSelector((state: RootState) => state.auth.user);
   
   // Load quiz settings
   const { settings, shuffleQuestionsArray, shuffleQuestionAnswers } = useQuizSettings();
@@ -162,6 +164,33 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
       soundService.play('gameStart');
     }
   }, [settings.soundEffects]);
+  
+  // Track presence when user starts playing
+  useEffect(() => {
+    if (!user) return;
+    
+    // Join quiz as active player
+    const joinPresence = async () => {
+      try {
+        await quizPresenceService.joinQuiz(
+          quiz.id,
+          user.uid,
+          user.displayName || user.email || 'Anonymous',
+          true // isPlaying = true
+        );
+        console.log('✅ Joined quiz presence as active player');
+      } catch (error) {
+        console.error('❌ Failed to join quiz presence:', error);
+      }
+    };
+    
+    joinPresence();
+    
+    // Leave quiz on unmount
+    return () => {
+      quizPresenceService.leaveQuiz(quiz.id, user.uid).catch(console.error);
+    };
+  }, [quiz.id, user]);
   
   // Update sound enabled state when settings change
   useEffect(() => {

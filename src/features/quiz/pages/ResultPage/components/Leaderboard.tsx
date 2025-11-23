@@ -114,7 +114,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
       ) : filteredLeaderboard.length > 0 ? (
         <>
         <div className="space-y-3">
-          {displayedLeaderboard.map((entry, index) => {
+          {displayedLeaderboard.map((entry) => {
             // Find original rank for medal display
             const originalIndex = leaderboard.findIndex(e => e.id === entry.id);
             const medal = getMedalIcon(originalIndex);
@@ -123,7 +123,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
             <div 
               key={entry.id}
               className={`flex items-center justify-between p-4 rounded-lg border ${
-                entry.id === 'current-attempt'
+                entry.isCurrentAttempt
                   ? 'bg-gradient-to-r from-green-50 via-emerald-50 to-green-50 border-green-400 shadow-xl ring-4 ring-green-200 ring-opacity-50' 
                   : entry.userId === user?.uid 
                     ? 'bg-blue-50 border-blue-200 shadow-md' 
@@ -132,13 +132,13 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
             >
               <div className="flex items-center space-x-4">
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold ${
-                  entry.id === 'current-attempt' 
+                  entry.isCurrentAttempt 
                     ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg transform scale-110 text-2xl' 
                     : medal 
                       ? 'bg-gradient-to-br from-yellow-100 to-yellow-200 text-3xl'
                       : `${getRankBackgroundColor(originalIndex)} text-sm`
                 }`}>
-                  {entry.id === 'current-attempt' ? '★' : medal || getRankDisplay(originalIndex)}
+                  {entry.isCurrentAttempt ? '★' : medal || getRankDisplay(originalIndex)}
                 </div>
                 {entry.userPhotoURL ? (
                   <img 
@@ -156,15 +156,15 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                 <div>
                   <div className="font-medium text-gray-900">
                     {entry.userName}
-                    {entry.id === 'current-attempt' && (
+                    {entry.isCurrentAttempt && (
                       <div className="flex items-center mt-1">
                         <span className="text-white ml-2 font-bold bg-gradient-to-r from-green-500 to-emerald-600 px-3 py-1 rounded-full text-sm shadow-lg animate-pulse">
-                          🎯 {t('result.latest_attempt_rank', 'LATEST ATTEMPT - RANK #{{rank}}', { rank: index + 1 })}
+                          🎯 {t('result.latest_attempt_rank', 'LƯỢT MỚI NHẤT - XẾP HẠNG #{{rank}}', { rank: originalIndex + 1 })}
                         </span>
                       </div>
                     )}
-                    {entry.userId === user?.uid && entry.id !== 'current-attempt' && (
-                      <span className="text-gray-500 ml-2 text-sm">({t('result.previous_attempt', 'Previous attempt')})</span>
+                    {entry.userId === user?.uid && !entry.isCurrentAttempt && (
+                      <span className="text-gray-500 ml-2 text-sm">({t('result.previous_attempt', 'Lượt trước đó')})</span>
                     )}
                   </div>
                   <div className="text-sm text-gray-500">

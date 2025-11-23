@@ -66,7 +66,9 @@ const ModernCreateRoomModal: React.FC<ModernCreateRoomModalProps> = ({
   const handleContinue = () => {
     if (roomCode) {
       const roomId = (window as any).__createdRoomId;
+      // Pass roomId first, roomCode second for routing
       onRoomCreated(roomId, roomCode);
+      console.log('✅ Room created - ID:', roomId, 'Code:', roomCode);
     }
   };
 
