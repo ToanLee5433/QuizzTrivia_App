@@ -68,7 +68,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-900">
-          🏆 {t('result.leaderboard', 'Bảng xếp hạng')}
+          🏆 {t('result.leaderboard', 'Leaderboard')}
         </h2>
         
         {/* Search input */}
@@ -96,7 +96,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
         <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 mb-6">
           <div className="text-center">
             <span className="text-lg font-semibold text-gray-800">
-              {t('result.your_current_rank', 'Lần này xếp hạng: #{{rank}}', { rank: userRank })}
+              {t('result.your_current_rank', 'Your rank this time: #{{rank}}', { rank: userRank })}
               {' • '}
               {t('result.total_stats', '{{attempts}} lượt chơi từ {{players}} người', { attempts: totalAttempts, players: uniqueParticipants })}
             </span>
@@ -159,16 +159,16 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                     {entry.id === 'current-attempt' && (
                       <div className="flex items-center mt-1">
                         <span className="text-white ml-2 font-bold bg-gradient-to-r from-green-500 to-emerald-600 px-3 py-1 rounded-full text-sm shadow-lg animate-pulse">
-                          🎯 {t('result.latest_attempt_rank', 'LƯỢT MỚI NHẤT - XẾP HẠNG #{{rank}}', { rank: index + 1 })}
+                          🎯 {t('result.latest_attempt_rank', 'LATEST ATTEMPT - RANK #{{rank}}', { rank: index + 1 })}
                         </span>
                       </div>
                     )}
                     {entry.userId === user?.uid && entry.id !== 'current-attempt' && (
-                      <span className="text-gray-500 ml-2 text-sm">({t('result.previous_attempt', 'Lượt trước đó')})</span>
+                      <span className="text-gray-500 ml-2 text-sm">({t('result.previous_attempt', 'Previous attempt')})</span>
                     )}
                   </div>
                   <div className="text-sm text-gray-500">
-                    {entry.correctAnswers}/{entry.totalQuestions} {t('result.correct', 'đúng')}
+                    {entry.correctAnswers}/{entry.totalQuestions} {t('result.correct', 'correct')}
                   </div>
                   <div className="text-xs text-gray-400 mt-1">
                     📅 {formatDateTime(entry.completedAt instanceof Date ? entry.completedAt.getTime() : new Date(entry.completedAt).getTime())}
@@ -196,8 +196,8 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
               className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
             >
               {showAll 
-                ? `↑ ${t('result.show_less', 'Thu gọn')}`
-                : `↓ ${t('result.show_more', 'Xem thêm')} (${filteredLeaderboard.length - 10} ${t('result.more_attempts', 'lượt khác')})`
+                ? `↑ ${t('result.show_less', 'Show less')}`
+                : `↓ ${t('result.show_more', 'Show more')} (${filteredLeaderboard.length - 10} ${t('result.more_attempts', 'more attempts')})`
               }
             </button>
           </div>
@@ -214,8 +214,8 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
       ) : (
         <div className="text-center py-12 text-gray-500">
           <div className="text-6xl mb-4">🏆</div>
-          <p className="text-lg">{t('result.no_results_yet', 'Chưa có kết quả!')}</p>
-          <p>{t('result.be_first', 'Hãy là người đầu tiên hoàn thành quiz này!')}</p>
+          <p className="text-lg">{t('result.no_results_yet', 'No results yet!')}</p>
+          <p>{t('result.be_first', 'Be the first to complete this quiz!')}</p>
         </div>
       )}
     </div>

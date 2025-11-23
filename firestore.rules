@@ -309,8 +309,9 @@ service cloud.firestore {
         allow read: if signedIn() && (
           // Admin can read all
           isAdmin() ||
-          // Owner can read their own quiz questions
+          // Owner can read their own quiz questions (check both createdBy and authorId)
           quizDoc(quizId).data.createdBy == request.auth.uid ||
+          quizDoc(quizId).data.authorId == request.auth.uid ||
           // Regular users: only approved + (public OR unlocked OR no visibility field)
           (quizDoc(quizId).data.status == 'approved' && (
             quizDoc(quizId).data.visibility == "public" ||

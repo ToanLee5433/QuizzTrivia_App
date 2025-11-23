@@ -5,6 +5,7 @@ import RichTextViewer from '../../../../../shared/components/ui/RichTextViewer';
 import SafeHTML from '../../../../../shared/components/ui/SafeHTML';
 import { QuizFormData, Question } from '../types';
 import { LearningResource } from '../../../types/learning';
+import { VideoPlayer } from '../../../../../shared/components/ui/VideoPlayer';
 
 interface ReviewStepProps {
   quiz: QuizFormData;
@@ -44,6 +45,20 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ quiz }) => {
         return t('quizCreation.fillBlank');
       case 'image':
         return t('quizCreation.imageChoice');
+      case 'audio':
+        return t('quizCreation.audioQuestion', 'Audio');
+      case 'video':
+        return t('quizCreation.videoQuestion', 'Video');
+      case 'multimedia':
+        return t('quizCreation.multimediaQuestion', 'Multimedia');
+      case 'checkbox':
+        return t('quizCreation.multipleAnswers', 'Multiple Answers');
+      case 'ordering':
+        return t('quizCreation.orderingQuestion', 'Ordering');
+      case 'matching':
+        return t('quizCreation.matchingQuestion', 'Matching');
+      case 'fill_blanks':
+        return t('quizCreation.essayQuestion', 'Essay');
       default:
         return t('quizCreation.multipleChoice');
     }
@@ -249,11 +264,37 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ quiz }) => {
               className="border-2 border-gray-200 rounded-xl p-5 bg-gradient-to-br from-gray-50 to-white hover:border-blue-300 transition-colors"
             >
               <div className="flex justify-between items-start mb-3">
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-3 flex-1">
                   <span className="inline-flex items-center justify-center w-8 h-8 bg-blue-600 text-white font-bold rounded-lg flex-shrink-0">
                     {idx + 1}
                   </span>
-                  <h4 className="font-bold text-gray-900 text-base leading-tight">{q.text || t('createQuiz.review.emptyQuestionText')}</h4>
+                  <div className="flex-1">
+                    <h4 className="font-bold text-gray-900 text-base leading-tight mb-2">{q.text || t('createQuiz.review.emptyQuestionText')}</h4>
+                    
+                    {/* Question Media Preview */}
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {q.imageUrl && (
+                        <div className="relative group">
+                          <img src={q.imageUrl} alt="Question" className="w-24 h-24 object-cover rounded-lg border-2 border-gray-200" />
+                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all rounded-lg flex items-center justify-center">
+                            <ImageIcon className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        </div>
+                      )}
+                      {q.audioUrl && (
+                        <div className="flex items-center gap-2 px-3 py-2 bg-purple-50 border-2 border-purple-200 rounded-lg">
+                          <Music className="w-4 h-4 text-purple-600" />
+                          <span className="text-xs font-semibold text-purple-700">Audio</span>
+                        </div>
+                      )}
+                      {q.videoUrl && (
+                        <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border-2 border-red-200 rounded-lg">
+                          <Video className="w-4 h-4 text-red-600" />
+                          <span className="text-xs font-semibold text-red-700">Video</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span className="px-2.5 py-1 bg-purple-100 text-purple-700 rounded-lg text-xs font-bold border border-purple-200">
@@ -276,6 +317,68 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ quiz }) => {
                     </div>
                   )}
                 </div>
+              ) : q.type === 'ordering' ? (
+                <div className="space-y-2">
+                  <div className="text-sm text-gray-600 mb-2">{t('createQuiz.review.orderingInstruction', 'Drag to arrange in correct order:')}</div>
+                  {q.orderingItems?.map((item) => (
+                    <div key={item.id} className="flex items-center gap-3 p-3 bg-indigo-50 border-2 border-indigo-200 rounded-lg">
+                      <span className="inline-flex items-center justify-center w-8 h-8 bg-indigo-600 text-white font-bold rounded-full flex-shrink-0">
+                        {item.correctOrder}
+                      </span>
+                      <div className="flex-1">
+                        <span className="text-gray-900">{item.text}</span>
+                        {item.imageUrl && (
+                          <img src={item.imageUrl} alt={item.text} className="w-20 h-20 object-cover rounded-lg mt-2 border-2 border-white shadow-sm" />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : q.type === 'matching' ? (
+                <div className="space-y-2">
+                  <div className="text-sm text-gray-600 mb-2">{t('createQuiz.review.matchingInstruction', 'Match pairs:')}</div>
+                  {q.matchingPairs?.map((pair) => (
+                    <div key={pair.id} className="flex items-center gap-4 p-3 bg-teal-50 border-2 border-teal-200 rounded-lg">
+                      <div className="flex-1 flex items-center gap-2">
+                        <span className="font-bold text-teal-700">Left:</span>
+                        {pair.leftImageUrl ? (
+                          <img src={pair.leftImageUrl} alt={pair.left} className="w-16 h-16 object-cover rounded-lg border-2 border-white shadow-sm" />
+                        ) : (
+                          <span className="text-gray-900">{pair.left}</span>
+                        )}
+                      </div>
+                      <div className="flex-shrink-0">
+                        <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 flex items-center gap-2">
+                        <span className="font-bold text-teal-700">Right:</span>
+                        {pair.rightImageUrl ? (
+                          <img src={pair.rightImageUrl} alt={pair.right} className="w-16 h-16 object-cover rounded-lg border-2 border-white shadow-sm" />
+                        ) : (
+                          <span className="text-gray-900">{pair.right}</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : q.type === 'fill_blanks' ? (
+                <div className="space-y-2">
+                  <div className="text-sm text-gray-700 bg-yellow-50 p-3 rounded-lg border border-yellow-200 mb-3">
+                    <strong className="text-yellow-900">{t('createQuiz.review.textWithBlanks', 'Text with blanks:')}</strong>
+                    <div className="mt-2 font-mono text-sm">{q.textWithBlanks}</div>
+                  </div>
+                  {q.blanks?.map((blank) => (
+                    <div key={blank.id} className="flex items-center gap-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg text-sm">
+                      <span className="font-bold text-yellow-700">Blank {blank.position}:</span>
+                      <span className="text-gray-900">{blank.correctAnswer}</span>
+                      {blank.acceptedAnswers && blank.acceptedAnswers.length > 0 && (
+                        <span className="text-gray-600 text-xs">({blank.acceptedAnswers.join(', ')})</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <div className="space-y-2">
                   {q.answers.map((a, aidx) => (
@@ -287,7 +390,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ quiz }) => {
                           : 'bg-gray-50 text-gray-700 border border-gray-200'
                       }`}
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 mb-2">
                         <span
                           className={`inline-flex items-center justify-center w-6 h-6 rounded-full font-bold ${
                             a.isCorrect ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-700'
@@ -295,15 +398,35 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ quiz }) => {
                         >
                           {String.fromCharCode(65 + aidx)}
                         </span>
-                        <span>{a.text}</span>
+                        <span className="flex-1">{a.text || <span className="italic text-gray-400">(No text)</span>}</span>
                         {a.isCorrect && <span className="ml-auto text-green-600 font-bold">{t('createQuiz.review.correctBadge')}</span>}
                       </div>
-                      {q.type === 'image' && a.imageUrl && (
-                        <img
-                          src={a.imageUrl}
-                          alt={a.text}
-                          className="w-20 h-20 object-cover rounded-lg mt-2 border-2 border-white shadow-sm"
-                        />
+                      
+                      {/* Show media for image, audio, video, or multimedia types */}
+                      {(q.type === 'image' || q.type === 'multimedia') && a.imageUrl && (
+                        <div className="mt-2">
+                          <img
+                            src={a.imageUrl}
+                            alt={a.text || 'Answer image'}
+                            className="w-32 h-32 object-cover rounded-lg border-2 border-white shadow-sm"
+                          />
+                        </div>
+                      )}
+                      {(q.type === 'audio' || q.type === 'multimedia') && a.audioUrl && (
+                        <div className="mt-2">
+                          <audio controls className="w-full max-w-xs">
+                            <source src={a.audioUrl} />
+                          </audio>
+                        </div>
+                      )}
+                      {(q.type === 'video' || q.type === 'multimedia') && a.videoUrl && (
+                        <div className="mt-2">
+                          <VideoPlayer 
+                            url={a.videoUrl} 
+                            className="w-full max-w-xs rounded-lg" 
+                            style={{ maxHeight: '150px' }}
+                          />
+                        </div>
                       )}
                     </div>
                   ))}

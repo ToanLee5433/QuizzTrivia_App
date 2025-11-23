@@ -117,11 +117,11 @@ const PopularQuizzesRanking: React.FC<PopularQuizzesRankingProps> = ({ timeFilte
                   </div>
                   <div className="flex items-center space-x-1">
                     <TrendingUp className="w-3 h-3" />
-                    <span>{t('quiz.popularQuizzesRanking.attempts', { count: quiz.attempts })}</span>
+                    <span>{t('quiz.popularQuizzesRanking.attempts', { count: quiz.stats?.attempts ?? quiz.attempts ?? 0 })}</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Target className="w-3 h-3" />
-                    <span>{t('quiz.popularQuizzesRanking.averageScore', { score: quiz.averageScore.toFixed(1) })}</span>
+                    <span>{t('quiz.popularQuizzesRanking.averageScore', { score: (quiz.stats?.averageScore ?? quiz.averageScore ?? 0).toFixed(1) })}</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Clock className="w-3 h-3" />

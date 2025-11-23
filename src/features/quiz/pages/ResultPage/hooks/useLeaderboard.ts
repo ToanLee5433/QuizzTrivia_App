@@ -37,25 +37,42 @@ export const useLeaderboard = (quizId: string | null, currentResult?: any) => {
         // Get all quiz results
         let allResults = [...quizResults];
         
-        // Add current result if provided
+        // Add current result if provided and not already in the results
         const currentResultValue = currentResultRef.current;
         if (currentResultValue && user) {
-          console.log('➕ Adding current result to leaderboard:', currentResultValue);
-          const currentEntry = {
-            id: 'current-attempt',
-            userId: user.uid,
-            userName: user.displayName || user.email?.split('@')[0] || 'Bạn',
-            userEmail: user.email || '',
-            userPhotoURL: user.photoURL || '',
-            quizId: quizId,
-            score: currentResultValue.score?.percentage || 0,
-            correctAnswers: currentResultValue.correct || 0,
-            totalQuestions: currentResultValue.total || 0,
-            timeSpent: currentResultValue.timeSpent || 0,
-            answers: [],
-            completedAt: new Date() // Just completed
-          };
-          allResults.push(currentEntry);
+          // Check if this exact result already exists in Firestore by comparing data
+          const currentScore = currentResultValue.score?.percentage || 0;
+          const currentCorrect = currentResultValue.correct || 0;
+          const currentTotal = currentResultValue.total || 0;
+          const currentTimeSpent = currentResultValue.timeSpent || 0;
+          
+          const alreadySaved = quizResults.some((result: any) => 
+            result.userId === user.uid && 
+            result.correctAnswers === currentCorrect &&
+            result.totalQuestions === currentTotal &&
+            Math.abs((result.timeSpent || 0) - currentTimeSpent) < 10 // Within 10 seconds difference
+          );
+          
+          if (!alreadySaved) {
+            console.log('➕ Adding current result to leaderboard:', currentResultValue);
+            const currentEntry = {
+              id: 'current-attempt',
+              userId: user.uid,
+              userName: user.displayName || user.email?.split('@')[0] || 'Bạn',
+              userEmail: user.email || '',
+              userPhotoURL: user.photoURL || '',
+              quizId: quizId,
+              score: currentScore,
+              correctAnswers: currentCorrect,
+              totalQuestions: currentTotal,
+              timeSpent: currentTimeSpent,
+              answers: [],
+              completedAt: new Date() // Just completed
+            };
+            allResults.push(currentEntry);
+          } else {
+            console.log('📋 Current result already exists in leaderboard (matching data found), skipping duplicate add');
+          }
         }
         
         // Transform QuizResult data to LeaderboardEntry format with photoURL

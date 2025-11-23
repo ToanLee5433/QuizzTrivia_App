@@ -1,4 +1,4 @@
-import React, { useEffect, Suspense } from 'react';
+import React, { useEffect, Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider, useSelector, useDispatch } from 'react-redux';
@@ -52,6 +52,7 @@ const FlashcardPage = React.lazy(() => import('./features/flashcard/pages/Flashc
 const Admin = React.lazy(() => import('./features/admin/pages/Admin'));
 const AdminQuizManagement = React.lazy(() => import('./features/admin/pages/AdminQuizManagement'));
 const AdminUserManagement = React.lazy(() => import('./features/admin/pages/AdminUserManagement'));
+const AdminQuizUtilities = React.lazy(() => import('./features/admin/pages/AdminQuizUtilities'));
 const BuildIndexPage = React.lazy(() => import('./features/admin/pages/BuildIndexPage'));
 
 // RAG Chatbot
@@ -60,7 +61,7 @@ import MusicPlayer from './components/MusicPlayer';
 const StatsDashboard = React.lazy(() => import('./features/admin/pages/StatsDashboard'));
 const CategoryManagement = React.lazy(() => import('./features/admin/pages/CategoryManagement'));
 const AdminStats = React.lazy(() => import('./features/admin/components/AdminStats'));
-const AdminUtilities = React.lazy(() => import('./features/admin/components/AdminUtilities'));
+// const AdminUtilities = React.lazy(() => import('./features/admin/components/AdminUtilities'));
 
 // Stage 5: Advanced Components
 import { Layout } from './shared/components/layout/Layout';
@@ -518,18 +519,18 @@ const AppContent: React.FC = () => {
           </AdminProtectedRoute>
         } />
         
+        <Route path="/admin/utilities" element={
+          <AdminProtectedRoute>
+            <Suspense fallback={<LoadingFallback />}>
+              <AdminQuizUtilities />
+            </Suspense>
+          </AdminProtectedRoute>
+        } />
+        
         <Route path="/admin/stats-test" element={
           <AdminProtectedRoute>
             <Suspense fallback={<LoadingFallback />}>
               <AdminStats />
-            </Suspense>
-          </AdminProtectedRoute>
-        } />
-
-        <Route path="/admin/utilities" element={
-          <AdminProtectedRoute>
-            <Suspense fallback={<LoadingFallback />}>
-              <AdminUtilities />
             </Suspense>
           </AdminProtectedRoute>
         } />
@@ -627,6 +628,8 @@ const AppContent: React.FC = () => {
 };
 
 function App() {
+  const [showMusicPlayer, setShowMusicPlayer] = useState(false);
+  
   return (
     <Router>
       <Provider store={store}>
@@ -646,7 +649,7 @@ function App() {
                   {/* AI Chatbot - Floating button at bottom-right */}
                   <ChatbotButton />
                   {/* Music Player - Draggable floating player */}
-                  <MusicPlayer />
+                  {showMusicPlayer && <MusicPlayer onClose={() => setShowMusicPlayer(false)} />}
                 </div>
               </ErrorBoundary>
             </AuthProvider>

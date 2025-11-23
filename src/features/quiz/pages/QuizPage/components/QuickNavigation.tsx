@@ -1,5 +1,4 @@
-import React, { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
+import React from 'react';
 import { Question, AnswerMap } from '../../../types';
 import { isAnswerProvided } from '../utils';
 
@@ -16,34 +15,33 @@ const QuickNavigation: React.FC<QuickNavigationProps> = ({
   answers,
   onQuestionSelect,
 }) => {
-  const { t } = useTranslation();
-
-  const heading = useMemo(() => t('quiz.quickNavigation.heading', 'Điều hướng nhanh'), [t]);
-
   return (
-    <div className="bg-white rounded-lg shadow-md p-4">
-      <h3 className="text-sm font-medium text-gray-600 mb-3">{heading}</h3>
-      <div className="grid grid-cols-5 gap-2">
-        {questions.map((question, index) => {
-          const answerValue = answers[question.id];
-          const isAnswered = isAnswerProvided(answerValue);
-          return (
-            <button
-              key={question.id}
-              onClick={() => onQuestionSelect(index)}
-              className={`w-8 h-8 rounded text-xs font-medium transition-colors ${
-                index === currentQuestionIndex
-                  ? 'bg-blue-500 text-white'
-                  : isAnswered
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-              }`}
-            >
-              {index + 1}
-            </button>
-          );
-        })}
-      </div>
+    <div className="grid grid-cols-5 gap-2.5">
+      {questions.map((question, index) => {
+        const answerValue = answers[question.id];
+        const isAnswered = isAnswerProvided(answerValue);
+        const isCurrent = index === currentQuestionIndex;
+        
+        return (
+          <button
+            key={question.id}
+            onClick={() => onQuestionSelect(index)}
+            className={`
+              w-10 h-10 rounded-xl font-bold text-sm flex items-center justify-center
+              transition-all duration-200 shadow-sm
+              ${isCurrent 
+                ? 'bg-blue-600 text-white shadow-blue-200 ring-2 ring-blue-100 scale-105 z-10' 
+                : isAnswered
+                  ? 'bg-emerald-500 text-white shadow-emerald-100 hover:bg-emerald-600'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50'
+              }
+            `}
+            title={`Câu hỏi ${index + 1}${isAnswered ? ' (Đã làm)' : ''}`}
+          >
+            {index + 1}
+          </button>
+        );
+      })}
     </div>
   );
 };

@@ -222,7 +222,12 @@ export const useQuizData = () => {
           console.log('⚠️ Quiz from Redux has no questions, loading from Firestore...');
           
           // Check status before loading questions
-          if (foundQuiz.status !== 'approved') {
+          // Allow quiz creator and admins to access quiz regardless of status
+          const isCreator = user && (foundQuiz.createdBy === user.uid || foundQuiz.authorId === user.uid);
+          const isAdmin = user && user.role === 'admin';
+          const canAccess = foundQuiz.status === 'approved' || isCreator || isAdmin;
+          
+          if (!canAccess) {
             console.error('❌ Quiz not approved:', foundQuiz.status);
             setError('Quiz này đang chờ phê duyệt hoặc chưa có câu hỏi. Vui lòng quay lại sau!');
             setLoading(false);
@@ -319,7 +324,12 @@ export const useQuizData = () => {
       setQuizMetadata(enrichedMetadata);
 
       // Check quiz status before loading questions
-      if (metadata.status !== 'approved') {
+      // Allow quiz creator and admins to access quiz regardless of status
+      const isCreator = user && (metadata.createdBy === user.uid || metadata.authorId === user.uid);
+      const isAdmin = user && user.role === 'admin';
+      const canAccess = metadata.status === 'approved' || isCreator || isAdmin;
+      
+      if (!canAccess) {
         console.error('❌ Quiz not approved:', metadata.status);
         setError('Quiz này đang chờ phê duyệt hoặc chưa có câu hỏi. Vui lòng quay lại sau!');
         setLoading(false);

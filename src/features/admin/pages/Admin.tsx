@@ -21,30 +21,29 @@ const Admin: React.FC = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        console.log(' [Admin] Fetching stats with getCountFromServer...');
+        console.log('📊 [Admin] Fetching stats with getCountFromServer...');
         
-        // OPTIMIZED: Load toàn bộ users để đếm creators chính xác
-        // Lý do: Nếu dùng limit(200), có thể bỏ sót creators nằm ngoài 200 users đầu
-        const [quizzesCount, allUsersCount, quizResultsSnap, allUsersSnap] = await Promise.all([
+        // ✅ OPTIMIZED: Sử dụng getCountFromServer - KHÔNG tốn reads!
+        // Count only ACTIVE users (không đếm deleted users)
+        const [quizzesCount, usersCount, quizResultsSnap, usersSample] = await Promise.all([
           getCountFromServer(query(collection(db, 'quizzes'), where('status', '==', 'approved'))),
-          getCountFromServer(collection(db, 'users')), // Đếm TẤT CẢ users
+          getCountFromServer(query(collection(db, 'users'), where('isDeleted', '!=', true))),
           getDocs(query(collection(db, 'quizResults'), orderBy('completedAt', 'desc'), limit(100))),
-          getDocs(collection(db, 'users')) // FIXED: Load ALL users để đếm creators chính xác
+          getDocs(query(collection(db, 'users'), where('isDeleted', '!=', true), limit(100))) // Sample để đếm creators
         ]);
 
         const totalQuizzes = quizzesCount.data().count;
-        const totalUsers = allUsersCount.data().count;
+        const totalUsers = usersCount.data().count;
         
-        console.log(' [Admin] Total users (count):', totalUsers);
-        console.log(' [Admin] Total quizzes (approved):', totalQuizzes);
+        console.log('✅ [Admin] Total users (active only):', totalUsers);
+        console.log('✅ [Admin] Total quizzes (approved):', totalQuizzes);
 
-        // Đếm creators từ TOÀN BỘ users (chính xác 100%)
-        const users = allUsersSnap.docs.map(doc => doc.data() as any);
+        // Đếm creators từ sample (tối ưu hơn là đếm chính xác)
+        const users = usersSample.docs.map(doc => doc.data() as any);
         const activeUsers = users.filter(u => u?.isActive !== false && u?.isDeleted !== true);
         const totalCreators = activeUsers.filter(u => u?.role === 'creator' || u?.role === 'admin').length;
         
-        console.log(' [Admin] Total users loaded:', users.length);
-        console.log(' [Admin] Active users:', activeUsers.length, 'Creators:', totalCreators);
+        console.log('👥 [Admin] Sample - Active users:', activeUsers.length, 'Creators:', totalCreators);
 
         // Đếm số quiz đã hoàn thành từ quizResults collection
         const completedQuizzes = quizResultsSnap.docs.filter(doc => {

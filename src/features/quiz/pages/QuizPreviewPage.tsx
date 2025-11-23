@@ -18,7 +18,7 @@ import { motion } from 'framer-motion';
 import {
   Clock, Target, Users,
   BookOpen, Play, AlertCircle, Star, Brain,
-  ArrowLeft, Settings, FileText, Video, Image as ImageIcon, Music, Link as LinkIcon, Presentation, Trophy, ChevronRight, ChevronDown,
+  ArrowLeft, Settings, FileText, Video, Image as ImageIcon, Music, Link as LinkIcon, Presentation, Trophy, ChevronRight, ChevronDown, ChevronUp,
   Eye, Activity, Percent, Share2, Repeat, ShieldCheck, Globe
 } from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
@@ -42,6 +42,7 @@ const QUESTION_TYPE_FALLBACKS: Record<Question['type'], string> = {
   rich_content: 'Rich content',
   audio: 'Audio comprehension',
   video: 'Video comprehension',
+  multimedia: 'Multimedia',
   ordering: 'Ordering',
   matching: 'Matching pairs',
   fill_blanks: 'Fill in the blanks'
@@ -105,6 +106,7 @@ const QuizPreviewPage: React.FC = () => {
   const [quizSettings, setQuizSettings] = useState<QuizSettings | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
   const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
+  const [showAllQuestions, setShowAllQuestions] = useState(false);
   const [creatorDisplayName, setCreatorDisplayName] = useState<string>('');
   const [creatorPhotoURL, setCreatorPhotoURL] = useState<string>('');
 
@@ -137,6 +139,18 @@ const QuizPreviewPage: React.FC = () => {
         }
         
         const quizData = { id: quizDoc.id, ...quizDoc.data() } as Quiz;
+        
+        // 🔍 Debug: Log quiz stats
+        console.log('📊 Quiz stats loaded:', {
+          quizId: quizData.id,
+          stats: quizData.stats,
+          views: quizData.stats?.views,
+          attempts: quizData.stats?.attempts,
+          completions: quizData.stats?.completions,
+          averageScore: quizData.stats?.averageScore,
+          completionRate: quizData.stats?.completionRate
+        });
+        
         setQuiz(quizData);
         
         // Fetch creator's displayName and photoURL from users collection
@@ -248,16 +262,38 @@ const QuizPreviewPage: React.FC = () => {
         return t('quizOverview.meta.notAvailable', 'N/A');
       }
 
+      // ⚠️ REMOVED: Don't check for serverTimestamp placeholder
+      // Let Firestore SDK handle it - if it's still a placeholder, skip it
+      // This can happen if document was just created and not refetched
+      if (typeof value === 'object' && value !== null && (value as any)._methodName === 'serverTimestamp') {
+        // Don't return N/A immediately - try to handle it as timestamp
+        console.warn('⚠️ Found serverTimestamp placeholder, this should not happen in read operations');
+      }
+
       let dateValue: Date | null = null;
 
       if (value instanceof Date) {
         dateValue = value;
       } else if (typeof value === 'object' && value !== null) {
-        const typedValue = value as { toDate?: () => Date; seconds?: number };
+        const typedValue = value as { toDate?: () => Date; seconds?: number; nanoseconds?: number };
+        
+        // Try toDate() method first
         if (typeof typedValue.toDate === 'function') {
-          dateValue = typedValue.toDate();
-        } else if (typeof typedValue.seconds === 'number') {
+          try {
+            dateValue = typedValue.toDate();
+          } catch (err) {
+            console.error('toDate() failed:', err);
+          }
+        }
+        
+        // Fallback to seconds property
+        if (!dateValue && typeof typedValue.seconds === 'number') {
           dateValue = new Date(typedValue.seconds * 1000);
+        }
+        
+        // Additional check for Firestore Timestamp structure
+        if (!dateValue && typedValue.seconds && typedValue.nanoseconds !== undefined) {
+          dateValue = new Date(typedValue.seconds * 1000 + typedValue.nanoseconds / 1000000);
         }
       }
 
@@ -266,6 +302,7 @@ const QuizPreviewPage: React.FC = () => {
       }
 
       if (!dateValue || Number.isNaN(dateValue.getTime())) {
+        console.log('Failed to convert to date:', value);
         return t('quizOverview.meta.notAvailable', 'N/A');
       }
 
@@ -392,13 +429,25 @@ const QuizPreviewPage: React.FC = () => {
   const quizTypeLabel = quiz.quizType === 'with-materials'
     ? t('quizOverview.quizType.withMaterials', 'With study materials')
     : t('quizOverview.quizType.standard', 'Standard quiz');
-  const formattedCreatedAt = formatDateLabel(quiz.createdAt);
-  const attemptsValue = quiz.attempts ?? quiz.totalPlayers ?? 0;
-  const completionRateValue = quiz.completionRate;
-  const averageScoreValue = quiz.averageScore;
+  const formattedCreatedAt = formatDateLabel(quiz.createdAt || quiz.updatedAt);
+  const formattedUpdatedAt = formatDateLabel(quiz.updatedAt || quiz.createdAt);
+  
+  // Debug log
+  console.log('📅 Date values:', {
+    createdAt: quiz.createdAt,
+    updatedAt: quiz.updatedAt,
+    formattedCreatedAt,
+    formattedUpdatedAt
+  });
+    
+  // ✅ FIX: "Lượt làm" should be completions (người hoàn thành), not attempts
+  const completionsValue = quiz.stats?.completions ?? 0;
+  const completionRateValue = quiz.stats?.completionRate ?? 0;
+  const averageScoreValue = quiz.stats?.averageScore ?? 0;
   const questionCount = quiz.questions?.length ?? 0;
   const hasQuestions = questionCount > 0;
-
+  
+  
   const statusBadges = [
     quiz.featured
       ? {
@@ -429,21 +478,19 @@ const QuizPreviewPage: React.FC = () => {
   const insightStats = [
     {
       label: t('quizOverview.insights.views', 'Views'),
-      value: formatNumber(quiz.views ?? 0),
+      value: formatNumber(quiz.stats?.views ?? quiz.views ?? 0),
       icon: Eye,
       accent: 'text-sky-500',
       background: 'bg-sky-50 dark:bg-sky-900/20',
       subLabel: t('quizOverview.insights.viewsSub', 'All-time')
     },
     {
-      label: t('quizOverview.insights.attempts', 'Attempts'),
-      value: formatNumber(attemptsValue),
+      label: t('quizOverview.insights.completions', 'Completions'),
+      value: formatNumber(completionsValue),
       icon: Repeat,
       accent: 'text-emerald-500',
       background: 'bg-emerald-50 dark:bg-emerald-900/20',
-      subLabel: quiz.allowRetake
-        ? t('quizOverview.insights.retakeAllowed', 'Retakes allowed')
-        : t('quizOverview.insights.singleAttempt', 'Single attempt')
+      subLabel: t('quizOverview.insights.completionsSub', 'Finished attempts')
     },
     {
       label: t('quizOverview.insights.avgScore', 'Avg. Score'),
@@ -469,16 +516,16 @@ const QuizPreviewPage: React.FC = () => {
       value: t(`categories.${quiz.category}`, quiz.category)
     },
     {
+      label: t('quizOverview.meta.quizType', 'Quiz type'),
+      value: quizTypeLabel
+    },
+    {
       label: t('quizOverview.meta.created', 'Created on'),
       value: formattedCreatedAt
     },
     {
       label: t('quizOverview.meta.updated', 'Last updated'),
-      value: creator.lastUpdated
-    },
-    {
-      label: t('quizOverview.meta.quizType', 'Quiz type'),
-      value: quizTypeLabel
+      value: formattedUpdatedAt
     }
   ];
 
@@ -529,11 +576,11 @@ const QuizPreviewPage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column */}
             <div className="lg:col-span-2 space-y-8">
-              <div className="relative rounded-2xl overflow-hidden shadow-lg h-64">
+              <div className="relative rounded-2xl overflow-hidden shadow-lg h-64 bg-gray-100 dark:bg-slate-900">
                 <img 
-                  src={quiz.coverImage || COVER_PLACEHOLDER} 
+                  src={quiz.imageUrl || quiz.coverImage || COVER_PLACEHOLDER} 
                   alt={coverAltText}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                   onError={(e) => {
                     if (e.currentTarget.src !== COVER_PLACEHOLDER) {
                       e.currentTarget.onerror = null;
@@ -774,7 +821,7 @@ const QuizPreviewPage: React.FC = () => {
                     </span>
                   </div>
                   <div className="space-y-4">
-                    {quiz.questions.map((question: Question, index: number) => {
+                    {quiz.questions.slice(0, showAllQuestions ? quiz.questions.length : 5).map((question: Question, index: number) => {
                       const questionKey = question.id || `question-${index}`;
                       const normalizedQuestionId = String(questionKey);
                       const isExpanded = expandedQuestionId === normalizedQuestionId;
@@ -842,7 +889,87 @@ const QuizPreviewPage: React.FC = () => {
 
                           {isExpanded && (
                             <div className="mt-4 pt-4 border-t border-dashed border-slate-200 dark:border-slate-700 space-y-4">
-                              {answers.length > 0 ? (
+                              {/* Ordering Questions Preview */}
+                              {question.type === 'ordering' && question.orderingItems && question.orderingItems.length > 0 ? (
+                                <div>
+                                  <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-3">
+                                    {t('quizOverview.sections.orderingItems', 'Items to order')}
+                                  </p>
+                                  <div className="space-y-2">
+                                    {[...question.orderingItems]
+                                      .sort((a, b) => a.correctOrder - b.correctOrder)
+                                      .map((item, idx) => (
+                                        <div
+                                          key={item.id}
+                                          className="p-3 rounded-lg border border-green-300 dark:border-green-600 bg-green-50/70 dark:bg-green-900/20 flex items-center gap-3"
+                                        >
+                                          <span className="text-sm font-bold text-green-700 dark:text-green-400">{idx + 1}.</span>
+                                          <p className="text-sm text-slate-700 dark:text-slate-200">{item.text}</p>
+                                        </div>
+                                      ))}
+                                  </div>
+                                </div>
+                              ) : question.type === 'matching' && question.matchingPairs && question.matchingPairs.length > 0 ? (
+                                <div>
+                                  <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-3">
+                                    {t('quizOverview.sections.matchingPairs', 'Pairs to match')}
+                                  </p>
+                                  <div className="space-y-2">
+                                    {question.matchingPairs.map((pair) => (
+                                      <div
+                                        key={pair.id}
+                                        className="p-3 rounded-lg border border-purple-300 dark:border-purple-600 bg-purple-50/70 dark:bg-purple-900/20 flex items-center gap-3"
+                                      >
+                                        <span className="text-sm font-semibold text-purple-700 dark:text-purple-300">{pair.left}</span>
+                                        <span className="text-purple-500">↔</span>
+                                        <span className="text-sm text-slate-700 dark:text-slate-200">{pair.right}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ) : question.type === 'fill_blanks' && question.blanks && question.blanks.length > 0 ? (
+                                <div>
+                                  <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-3">
+                                    {t('quizOverview.sections.fillBlanks', 'Fill in the blanks')}
+                                  </p>
+                                  {question.textWithBlanks && (
+                                    <div className="p-4 rounded-lg border border-blue-200 dark:border-blue-600 bg-blue-50/70 dark:bg-blue-900/20 mb-3">
+                                      <p className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap">
+                                        {question.textWithBlanks.split('{blank}').map((text, idx) => (
+                                          <span key={idx}>
+                                            {text}
+                                            {idx < (question.blanks?.length || 0) && (
+                                              <span className="inline-block px-3 py-1 mx-1 bg-blue-200 dark:bg-blue-700 rounded text-blue-900 dark:text-blue-100 font-mono text-xs">
+                                                ___
+                                              </span>
+                                            )}
+                                          </span>
+                                        ))}
+                                      </p>
+                                    </div>
+                                  )}
+                                  <div className="space-y-2">
+                                    {question.blanks.map((blank, idx) => (
+                                      <div
+                                        key={blank.id}
+                                        className="p-3 rounded-lg border border-green-300 dark:border-green-600 bg-green-50/70 dark:bg-green-900/20"
+                                      >
+                                        <p className="text-sm text-slate-700 dark:text-slate-200">
+                                          <span className="font-semibold text-green-700 dark:text-green-400">
+                                            {t('quizOverview.sections.blankNumber', 'Blank {{number}}', { number: idx + 1 })}:
+                                          </span>{' '}
+                                          {blank.correctAnswer}
+                                          {blank.acceptedAnswers && blank.acceptedAnswers.length > 0 && (
+                                            <span className="text-xs text-slate-600 dark:text-slate-400">
+                                              {' '}({t('quizOverview.sections.or', 'or')}: {blank.acceptedAnswers.join(', ')})
+                                            </span>
+                                          )}
+                                        </p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ) : answers.length > 0 ? (
                                 <div>
                                   <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                                     {t('quizOverview.sections.answersLabel', 'Answer choices')}
@@ -901,6 +1028,63 @@ const QuizPreviewPage: React.FC = () => {
                         </div>
                       );
                     })}
+                    
+                    {/* Show More/Less Button */}
+                    {quiz.questions.length > 5 && (
+                      <div className="text-center pt-6">
+                        <div className="inline-flex flex-col items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setShowAllQuestions(!showAllQuestions)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                setShowAllQuestions(!showAllQuestions);
+                              }
+                            }}
+                            aria-expanded={showAllQuestions}
+                            aria-label={showAllQuestions 
+                              ? t('quizOverview.sections.showLess', 'Thu gọn')
+                              : t('quizOverview.sections.showMore', 'Hiển thị thêm ({{count}} câu)', {
+                                  count: quiz.questions.length - 5
+                                })
+                            }
+                            className="group relative inline-flex items-center gap-3 px-6 py-3 bg-white/30 dark:bg-slate-800/30 backdrop-blur-sm border border-slate-200/50 dark:border-slate-600/50 text-slate-700 dark:text-slate-300 rounded-xl font-medium transition-all duration-300 hover:bg-white/50 dark:hover:bg-slate-800/50 hover:border-slate-300/70 dark:hover:border-slate-500/70 hover:scale-[1.02] focus:outline-none focus:ring-1 focus:ring-slate-400/50 dark:focus:ring-slate-500/50"
+                          >
+                            {/* Animated background effect */}
+                            <div className="absolute inset-0 bg-white/20 dark:bg-slate-700/20 backdrop-blur-sm rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            
+                            {/* Icon with animation */}
+                            <span className="relative flex items-center justify-center">
+                              {showAllQuestions ? (
+                                <ChevronUp className="w-5 h-5 transition-transform duration-300 group-hover:-translate-y-1" />
+                              ) : (
+                                <ChevronDown className="w-5 h-5 transition-transform duration-300 group-hover:translate-y-1" />
+                              )}
+                            </span>
+                            
+                            {/* Text with counter */}
+                            <span className="relative flex items-center gap-2">
+                              {showAllQuestions ? (
+                                t('quizOverview.sections.showLess', 'Thu gọn')
+                              ) : (
+                                t('quizOverview.sections.showMore', 'Hiển thị thêm ({{count}} câu)', {
+                                  count: quiz.questions.length - 5
+                                })
+                              )}
+                            </span>
+                            
+                            {/* Keyboard hint - only show on desktop */}
+                            {!showAllQuestions && (
+                              <span className="hidden md:inline-flex absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 dark:bg-slate-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                                {t('quizOverview.sections.keyboardHint', 'Nhấn Enter để mở rộng')}
+                                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 dark:bg-slate-700 rotate-45" />
+                              </span>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               )}

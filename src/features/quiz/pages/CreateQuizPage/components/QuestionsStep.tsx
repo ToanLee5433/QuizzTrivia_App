@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -78,14 +78,6 @@ const QuestionsStep: React.FC<QuestionsStepProps> = ({
     setShowGeminiAI(false);
   };
 
-  const aiButtonContent = useMemo(
-    () => ({
-      iconLabel: t('createQuiz.questions.aiButtonIconLabel'),
-      text: t('createQuiz.questions.aiButtonText')
-    }),
-    [t]
-  );
-
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
@@ -101,7 +93,7 @@ const QuestionsStep: React.FC<QuestionsStepProps> = ({
           >
             <Sparkles className="w-4 h-4" />
             <span>
-              {aiButtonContent.iconLabel} {aiButtonContent.text}
+              {t('createQuiz.questions.aiButtonText')}
             </span>
           </Button>
         </div>

@@ -12,7 +12,8 @@ import {
   deleteDoc,
   query, 
   orderBy,
-  where
+  where,
+  Timestamp
 } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 import { RootState } from '../../../lib/store';
@@ -276,8 +277,9 @@ const AdminQuizManagement: React.FC = () => {
       await updateDoc(quizRef, {
         status: 'approved',
         isPublished: true,
-        approvedAt: new Date(),
-        approvedBy: user?.uid
+        approvedAt: Timestamp.now(),
+        approvedBy: user?.uid,
+        updatedAt: Timestamp.now()  // ✅ Update timestamp when approved
       });
       
       setQuizzes(prev => prev.map(q => 
@@ -313,9 +315,10 @@ const AdminQuizManagement: React.FC = () => {
       await updateDoc(quizRef, {
         status: 'rejected',
         isPublished: false,
-        rejectedAt: new Date(),
+        rejectedAt: Timestamp.now(),
         rejectedBy: user?.uid,
-        rejectionReason: reason || undefined
+        rejectionReason: reason || undefined,
+        updatedAt: Timestamp.now()  // ✅ Update timestamp when rejected
       });
       
       setQuizzes(prev => prev.map(q => 
@@ -434,8 +437,9 @@ const AdminQuizManagement: React.FC = () => {
       await updateDoc(quizRef, {
         status: 'pending',
         isPublished: false,
-        reopenedAt: new Date(),
-        reopenedBy: user?.uid
+        reopenedAt: Timestamp.now(),
+        reopenedBy: user?.uid,
+        updatedAt: Timestamp.now()  // ✅ Update timestamp when reopened
       });
       
       setQuizzes(prev => prev.map(quiz => 

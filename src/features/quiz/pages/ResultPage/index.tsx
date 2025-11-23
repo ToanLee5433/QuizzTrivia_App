@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { useResultData, useLeaderboard } from './hooks';
 import { safeNumber } from './utils';
 import { useNotifications } from '../../../../hooks/useNotifications';
+import { RootState } from '../../../../lib/store';
 import QuizReviewSystem from '../../../../shared/components/QuizReviewSystem';
 import {
   Confetti,
@@ -18,6 +20,7 @@ import {
 } from './components';
 import { quizAnalysisService, type QuizAnalysis } from '../../../../services/quizAnalysisService';
 import { similarQuizService } from '../../../../services/similarQuizService';
+import { quizStatsService } from '../../../../services/quizStatsService';
 import type { QuizRecommendation } from '../../../../lib/genkit/types';
 import type { QuizResult } from '../../types';
 
@@ -25,6 +28,7 @@ export const ResultPage: React.FC = () => {
   const { result, quiz, quizId, isLoading } = useResultData();
   const { notifyAchievement, checkAchievements, notifyQuizCreator } = useNotifications();
   const { t } = useTranslation();
+  const user = useSelector((state: RootState) => state.auth.user);
   
   // AI Analysis state
   const [aiAnalysis, setAiAnalysis] = useState<QuizAnalysis | null>(null);
@@ -106,6 +110,28 @@ export const ResultPage: React.FC = () => {
     
     findSimilar();
   }, [quiz]);
+
+  // Track quiz completion for statistics
+  useEffect(() => {
+    console.log('ResultPage useEffect triggered:', { result: !!result, quiz: !!quiz, user: !!user, correct, total });
+    
+    if (!result || !quiz || !user) {
+      console.log('Missing data for tracking completion:', { result: !!result, quiz: !!quiz, user: !!user });
+      return;
+    }
+    
+    const trackQuizCompletion = async () => {
+      try {
+        console.log('About to track completion:', { quizId: quiz.id, userId: user.uid, score: correct, total });
+        await quizStatsService.trackCompletion(quiz.id, user.uid, correct, total);
+        console.log('Quiz completion tracked successfully');
+      } catch (error) {
+        console.error('Error tracking quiz completion:', error);
+      }
+    };
+    
+    trackQuizCompletion();
+  }, [result, quiz, user, correct, total]);
 
   // Generate notifications based on quiz completion
   useEffect(() => {

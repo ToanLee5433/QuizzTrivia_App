@@ -4708,12 +4708,14 @@
       "views": "Lượt xem",
       "viewsSub": "Tổng cộng",
       "attempts": "Lượt làm",
+      "completions": "Hoàn thành",
+      "completionsSub": "Lượt làm xong",
       "retakeAllowed": "Cho phép làm lại",
       "singleAttempt": "Chỉ 1 lần",
       "avgScore": "Điểm TB",
       "outOfHundred": "Trên thang 100",
-      "completion": "Hoàn thành",
-      "completionSub": "Tỉ lệ hoàn thành"
+      "completion": "Tỷ lệ hoàn thành",
+      "completionSub": "Tỷ lệ hoàn thành"
     },
     "sections": {
       "overview": "Tổng quan Quiz",

@@ -131,6 +131,7 @@ export class FirebaseAIService {
       'image': 'chọn ảnh',
       'audio': 'nghe audio',
       'video': 'xem video',
+      'multimedia': 'đa phương tiện (câu hỏi và đáp án có thể có image/audio/video)',
       'rich_content': 'nội dung phong phú'
     };
     

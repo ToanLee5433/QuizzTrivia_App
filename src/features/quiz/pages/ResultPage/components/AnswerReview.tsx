@@ -30,7 +30,23 @@ export const AnswerReview: React.FC<AnswerReviewProps> = ({ quiz, result }) => {
       {showAnswers && (
         <div className="space-y-6">
           {quiz.questions.map((question, index) => {
-            const userAnswerValue = result.answers[question.id];
+            let userAnswerValue = result.answers[question.id];
+            
+            // ✅ Parse JSON string if needed (for matching, ordering, fill_blanks)
+            if (typeof userAnswerValue === 'string' && (question.type === 'matching' || question.type === 'ordering' || question.type === 'fill_blanks')) {
+              try {
+                userAnswerValue = JSON.parse(userAnswerValue);
+              } catch (e) {
+                console.warn(`Failed to parse answer for question ${question.id}:`, e);
+              }
+            }
+            
+            console.log(`🔍 Question ${index + 1} (${question.type}):`, {
+              questionId: question.id,
+              userAnswerValue,
+              type: typeof userAnswerValue,
+              isArray: Array.isArray(userAnswerValue)
+            });
             
             // Logic để xác định đáp án đúng sai dựa trên loại câu hỏi
             let isCorrect = false;
@@ -39,14 +55,17 @@ export const AnswerReview: React.FC<AnswerReviewProps> = ({ quiz, result }) => {
             switch (question.type) {
               case 'boolean':
               case 'multiple':
-              case 'image': {
+              case 'multimedia':
+              case 'image':
+              case 'audio':
+              case 'video':
+              case 'rich_content': {
                 const userAnswer = question.answers.find(a => a.id === userAnswerValue);
                 isCorrect = userAnswer?.isCorrect || false;
-                userAnswerText = userAnswer?.text || t('result.not_answered', 'Chưa trả lời');
+                userAnswerText = userAnswer?.text || t('result.not_answered', 'Not answered');
                 break;
               }
               case 'short_answer': {
-                // Import checkShortAnswer function hoặc tính toán tại đây
                 const normalizeAnswer = (answer: string) => 
                   answer.trim().toLowerCase().replace(/\s+/g, ' ');
                 
@@ -59,7 +78,7 @@ export const AnswerReview: React.FC<AnswerReviewProps> = ({ quiz, result }) => {
                     normalizeAnswer(accepted) === normalizedUserAnswer
                   );
                 }
-                userAnswerText = userAnswerValue || t('result.not_answered', 'Chưa trả lời');
+                userAnswerText = userAnswerValue || t('result.not_answered', 'Not answered');
                 break;
               }
               case 'checkbox': {
@@ -69,7 +88,65 @@ export const AnswerReview: React.FC<AnswerReviewProps> = ({ quiz, result }) => {
                 const selectedAnswers = question.answers.filter(a => userIds.includes(a.id));
                 userAnswerText = selectedAnswers.length > 0 
                   ? selectedAnswers.map(a => a.text).join(', ')
-                  : t('result.not_answered', 'Chưa trả lời');
+                  : t('result.not_answered', 'Not answered');
+                break;
+              }
+              case 'ordering': {
+                const items = question.orderingItems || [];
+                const userOrder = Array.isArray(userAnswerValue) ? userAnswerValue : [];
+                const correctOrder = [...items].sort((a, b) => a.correctOrder - b.correctOrder).map(item => item.id);
+                isCorrect = JSON.stringify(userOrder) === JSON.stringify(correctOrder);
+                
+                console.log('🔍 Ordering check:', { userOrder, correctOrder, isCorrect });
+                
+                if (userOrder.length > 0) {
+                  userAnswerText = userOrder.map((id, idx) => {
+                    const item = items.find(i => i.id === id);
+                    return `${idx + 1}. ${item?.text || id}`;
+                  }).join(' → ');
+                } else {
+                  userAnswerText = t('result.not_answered', 'Not answered');
+                }
+                break;
+              }
+              case 'matching': {
+                const pairs = question.matchingPairs || [];
+                const userMatches = typeof userAnswerValue === 'object' && !Array.isArray(userAnswerValue) ? userAnswerValue as Record<string, string> : {};
+                let correctCount = 0;
+                pairs.forEach(pair => {
+                  if (userMatches[pair.left] === pair.right) correctCount++;
+                });
+                isCorrect = correctCount === pairs.length;
+                
+                console.log('🔍 Matching check:', { userMatches, pairs, correctCount, isCorrect });
+                
+                if (Object.keys(userMatches).length > 0) {
+                  userAnswerText = Object.entries(userMatches).map(([left, right]) => `${left} ↔ ${right}`).join(', ');
+                } else {
+                  userAnswerText = t('result.not_answered', 'Not answered');
+                }
+                break;
+              }
+              case 'fill_blanks': {
+                const blanks = question.blanks || [];
+                const userAnswers = typeof userAnswerValue === 'object' && !Array.isArray(userAnswerValue) ? userAnswerValue as Record<string, string> : {};
+                let correctCount = 0;
+                blanks.forEach(blank => {
+                  const userAns = (userAnswers[blank.id] || '').trim().toLowerCase();
+                  const correctAns = blank.correctAnswer.trim().toLowerCase();
+                  if (blank.caseSensitive ? userAnswers[blank.id] === blank.correctAnswer : userAns === correctAns) {
+                    correctCount++;
+                  } else if (blank.acceptedAnswers) {
+                    const isAccepted = blank.acceptedAnswers.some(accepted => 
+                      blank.caseSensitive ? userAnswers[blank.id] === accepted : userAns === accepted.trim().toLowerCase()
+                    );
+                    if (isAccepted) correctCount++;
+                  }
+                });
+                isCorrect = correctCount === blanks.length;
+                userAnswerText = Object.keys(userAnswers).length > 0
+                  ? Object.values(userAnswers).filter(v => v).join(', ')
+                  : t('result.not_answered', 'Not answered');
                 break;
               }
             }
@@ -89,12 +166,12 @@ export const AnswerReview: React.FC<AnswerReviewProps> = ({ quiz, result }) => {
 
                 {/* Hiển thị câu trả lời của user */}
                 <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <span className="font-medium text-blue-800">{t('result.your_answer', 'Câu trả lời của bạn')}: </span>
+                  <span className="font-medium text-blue-800">{t('result.your_answer', 'Your answer')}: </span>
                   <span className="text-blue-700">{userAnswerText}</span>
                 </div>
                 
-                {/* Hiển thị đáp án cho multiple choice, image và boolean */}
-                {(question.type === 'multiple' || question.type === 'image' || question.type === 'boolean') && (
+                {/* Hiển thị đáp án cho multiple choice, image, boolean và multimedia */}
+                {(question.type === 'multiple' || question.type === 'image' || question.type === 'boolean' || question.type === 'multimedia') && (
                   <div className="space-y-2">
                     {question.answers.map(answer => (
                       <div
@@ -107,11 +184,19 @@ export const AnswerReview: React.FC<AnswerReviewProps> = ({ quiz, result }) => {
                             : 'border-gray-200 bg-gray-50'
                         }`}
                       >
-                        <div className="flex items-center">
-                          <span className="font-medium mr-3">
+                        <div className="flex items-center gap-3">
+                          <span className="font-medium">
                             {String.fromCharCode(65 + question.answers.indexOf(answer))}.
                           </span>
-                          <span>{answer.text}</span>
+                          <div className="flex items-center gap-2">
+                            {answer.imageUrl && (
+                              <img src={answer.imageUrl} alt={answer.text || 'Answer'} className="w-16 h-16 object-cover rounded" />
+                            )}
+                            {answer.videoUrl && (
+                              <div className="text-sm text-blue-600">📹 Video: {answer.videoUrl}</div>
+                            )}
+                            <span>{answer.text}</span>
+                          </div>
                           {answer.isCorrect && (
                             <span className="ml-auto text-green-600 font-medium">
                               ✓ {t('result.correct_answer', 'Correct Answer')}
@@ -176,13 +261,152 @@ export const AnswerReview: React.FC<AnswerReviewProps> = ({ quiz, result }) => {
                 {question.type === 'short_answer' && (
                   <div className="space-y-2">
                     <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                      <span className="font-medium text-green-800">{t('result.correct_answer_short', 'Đáp án đúng')}: </span>
+                      <span className="font-medium text-green-800">{t('result.correct_answer_short', 'Correct answer')}: </span>
                       <span className="text-green-700">
                         {question.correctAnswer}
                         {question.acceptedAnswers && question.acceptedAnswers.length > 0 && (
-                          <span className="text-sm"> ({t('result.or_accepted', 'hoặc')}: {question.acceptedAnswers.join(', ')})</span>
+                          <span className="text-sm"> ({t('result.or_accepted', 'or')}: {question.acceptedAnswers.join(', ')})</span>
                         )}
                       </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Hiển thị đáp án cho ordering */}
+                {question.type === 'ordering' && (
+                  <div className="space-y-3">
+                    {/* User's order */}
+                    {Array.isArray(userAnswerValue) && userAnswerValue.length > 0 && (
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <span className="font-medium text-blue-800">{t('result.your_order', 'Thứ tự bạn chọn')}: </span>
+                        <div className="mt-2 space-y-1">
+                          {userAnswerValue.map((id: string, idx: number) => {
+                            const item = (question.orderingItems || []).find(i => i.id === id);
+                            const correctOrder = [...(question.orderingItems || [])].sort((a, b) => a.correctOrder - b.correctOrder);
+                            const isCorrectPosition = correctOrder[idx]?.id === id;
+                            return (
+                              <div key={id} className={`flex items-center gap-2 ${isCorrectPosition ? 'text-green-700' : 'text-red-700'}`}>
+                                <span className="font-bold">{idx + 1}.</span>
+                                <div className="flex items-center gap-2">
+                                  {item?.imageUrl && (
+                                    <img src={item.imageUrl} alt={item.text || 'Item'} className="w-12 h-12 object-cover rounded" />
+                                  )}
+                                  <span>{item?.text || id}</span>
+                                </div>
+                                {isCorrectPosition && <span className="ml-auto text-green-600">✓</span>}
+                                {!isCorrectPosition && <span className="ml-auto text-red-600">✗</span>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Correct order */}
+                    <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <span className="font-medium text-green-800">{t('result.correct_order', 'Thứ tự đúng')}: </span>
+                      <div className="mt-2 space-y-1">
+                        {[...(question.orderingItems || [])]
+                          .sort((a, b) => a.correctOrder - b.correctOrder)
+                          .map((item, idx) => (
+                            <div key={item.id} className="text-green-700 flex items-center gap-2">
+                              <span className="font-bold">{idx + 1}.</span>
+                              <div className="flex items-center gap-2">
+                                {item.imageUrl && (
+                                  <img src={item.imageUrl} alt={item.text || 'Item'} className="w-12 h-12 object-cover rounded" />
+                                )}
+                                <span>{item.text}</span>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Hiển thị đáp án cho matching */}
+                {question.type === 'matching' && (
+                  <div className="space-y-3">
+                    {/* User's matches */}
+                    {typeof userAnswerValue === 'object' && !Array.isArray(userAnswerValue) && Object.keys(userAnswerValue).length > 0 && (
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <span className="font-medium text-blue-800">{t('result.your_matches', 'Các cặp bạn ghép')}: </span>
+                        <div className="mt-2 space-y-1">
+                          {Object.entries(userAnswerValue as Record<string, string>).map(([left, right]) => {
+                            const correctPair = (question.matchingPairs || []).find(p => p.left === left);
+                            const isCorrect = correctPair?.right === right;
+                            return (
+                              <div key={left} className={`flex items-center gap-2 ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>
+                                <span className="font-medium">{left}</span>
+                                <span className="mx-1">↔</span>
+                                <div className="flex items-center gap-2">
+                                  {correctPair?.rightImageUrl && (
+                                    <img src={correctPair.rightImageUrl} alt={right} className="w-12 h-12 object-cover rounded" />
+                                  )}
+                                  <span>{right}</span>
+                                </div>
+                                {isCorrect && <span className="ml-auto text-green-600">✓</span>}
+                                {!isCorrect && correctPair && (
+                                  <span className="ml-auto text-red-600 text-sm">
+                                    ✗ (Đúng: {correctPair.right})
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Correct matches */}
+                    <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <span className="font-medium text-green-800">{t('result.correct_matches', 'Các cặp đúng')}: </span>
+                      <div className="mt-2 space-y-1">
+                        {(question.matchingPairs || []).map((pair) => (
+                          <div key={pair.id} className="flex items-center gap-2 text-green-700">
+                            <span className="font-medium">{pair.left}</span>
+                            <span className="mx-1">↔</span>
+                            <div className="flex items-center gap-2">
+                              {pair.rightImageUrl && (
+                                <img src={pair.rightImageUrl} alt={pair.right} className="w-12 h-12 object-cover rounded" />
+                              )}
+                              <span>{pair.right}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Hiển thị đáp án cho fill_blanks */}
+                {question.type === 'fill_blanks' && (
+                  <div className="space-y-2">
+                    <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <span className="font-medium text-green-800">{t('result.correct_answers', 'Đáp án đúng')}: </span>
+                      <div className="mt-2 space-y-1">
+                        {(question.blanks || []).map((blank, idx) => {
+                          const userAnswers = typeof userAnswerValue === 'object' && !Array.isArray(userAnswerValue) ? userAnswerValue as Record<string, string> : {};
+                          const userAns = userAnswers[blank.id] || '';
+                          const isCorrect = blank.caseSensitive 
+                            ? userAns === blank.correctAnswer
+                            : userAns.trim().toLowerCase() === blank.correctAnswer.trim().toLowerCase();
+                          
+                          return (
+                            <div key={blank.id} className="text-green-700">
+                              {t('result.blank', 'Chỗ trống')} {idx + 1}: <strong>{blank.correctAnswer}</strong>
+                              {blank.acceptedAnswers && blank.acceptedAnswers.length > 0 && (
+                                <span className="text-sm"> ({t('result.or_accepted', 'or')}: {blank.acceptedAnswers.join(', ')})</span>
+                              )}
+                              {userAns && (
+                                <span className={`ml-2 text-sm ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                                  ({t('result.you_answered', 'Bạn trả lời')}: {userAns})
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 )}

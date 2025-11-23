@@ -1,0 +1,156 @@
+{
+  "title": "Test Advanced Question Types",
+  "description": "Quiz để test các loại câu hỏi nâng cao: ordering, matching, fill_blanks",
+  "category": "test",
+  "difficulty": "easy",
+  "timeLimit": 300,
+  "questions": [
+    {
+      "id": "q1-ordering",
+      "type": "ordering",
+      "text": "Sắp xếp các bước của vòng đời phát triển phần mềm theo thứ tự đúng:",
+      "points": 10,
+      "orderingItems": [
+        {
+          "id": "item1",
+          "text": "Thu thập yêu cầu",
+          "correctOrder": 1
+        },
+        {
+          "id": "item2",
+          "text": "Thiết kế hệ thống",
+          "correctOrder": 2
+        },
+        {
+          "id": "item3",
+          "text": "Lập trình và coding",
+          "correctOrder": 3
+        },
+        {
+          "id": "item4",
+          "text": "Testing và kiểm thử",
+          "correctOrder": 4
+        },
+        {
+          "id": "item5",
+          "text": "Triển khai (Deploy)",
+          "correctOrder": 5
+        }
+      ],
+      "answers": [],
+      "explanation": "Đây là quy trình chuẩn của SDLC (Software Development Life Cycle)"
+    },
+    {
+      "id": "q2-matching",
+      "type": "matching",
+      "text": "Ghép các ngôn ngữ lập trình với mục đích sử dụng chính:",
+      "points": 10,
+      "matchingPairs": [
+        {
+          "id": "pair1",
+          "left": "Python",
+          "right": "AI và Data Science"
+        },
+        {
+          "id": "pair2",
+          "left": "JavaScript",
+          "right": "Web Development"
+        },
+        {
+          "id": "pair3",
+          "left": "Swift",
+          "right": "iOS Development"
+        },
+        {
+          "id": "pair4",
+          "left": "SQL",
+          "right": "Database Management"
+        }
+      ],
+      "answers": [],
+      "explanation": "Mỗi ngôn ngữ có mục đích sử dụng chính riêng"
+    },
+    {
+      "id": "q3-fill-blanks",
+      "type": "fill_blanks",
+      "text": "Điền vào chỗ trống:",
+      "points": 10,
+      "textWithBlanks": "HTML viết tắt của {blank}, CSS viết tắt của {blank}, và JavaScript được viết tắt là {blank}.",
+      "blanks": [
+        {
+          "id": "blank1",
+          "position": 0,
+          "correctAnswer": "HyperText Markup Language",
+          "acceptedAnswers": ["Hypertext Markup Language", "hypertext markup language"],
+          "caseSensitive": false
+        },
+        {
+          "id": "blank2",
+          "position": 1,
+          "correctAnswer": "Cascading Style Sheets",
+          "acceptedAnswers": ["cascading style sheets"],
+          "caseSensitive": false
+        },
+        {
+          "id": "blank3",
+          "position": 2,
+          "correctAnswer": "JS",
+          "acceptedAnswers": ["js", "Javascript"],
+          "caseSensitive": false
+        }
+      ],
+      "answers": [],
+      "explanation": "Đây là các công nghệ cơ bản của web development"
+    },
+    {
+      "id": "q4-audio",
+      "type": "audio",
+      "text": "Nghe đoạn audio và chọn đáp án đúng:",
+      "points": 10,
+      "audioUrl": "https://example.com/audio.mp3",
+      "answers": [
+        {
+          "id": "a1",
+          "text": "Đáp án A",
+          "isCorrect": true
+        },
+        {
+          "id": "a2",
+          "text": "Đáp án B",
+          "isCorrect": false
+        },
+        {
+          "id": "a3",
+          "text": "Đáp án C",
+          "isCorrect": false
+        }
+      ],
+      "explanation": "Audio question example"
+    },
+    {
+      "id": "q5-video",
+      "type": "video",
+      "text": "Xem video và trả lời câu hỏi:",
+      "points": 10,
+      "videoUrl": "https://example.com/video.mp4",
+      "answers": [
+        {
+          "id": "a1",
+          "text": "Đáp án A",
+          "isCorrect": false
+        },
+        {
+          "id": "a2",
+          "text": "Đáp án B",
+          "isCorrect": true
+        },
+        {
+          "id": "a3",
+          "text": "Đáp án C",
+          "isCorrect": false
+        }
+      ],
+      "explanation": "Video question example"
+    }
+  ]
+}

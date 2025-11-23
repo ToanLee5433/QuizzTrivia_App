@@ -13,6 +13,7 @@ import {
 import { db } from '../../../lib/firebase/config';
 import { Quiz, QuizResult } from '../types';
 import { toast } from 'react-toastify';
+import { quizStatsService } from '../../../services/quizStatsService';
 
 const QUIZZES_COLLECTION = 'quizzes';
 const QUIZ_RESULTS_COLLECTION = 'quizResults';
@@ -195,6 +196,22 @@ export const submitQuizResult = async (result: Omit<QuizResult, 'id'>): Promise<
     
     const docRef = await addDoc(collection(db, QUIZ_RESULTS_COLLECTION), resultWithMode);
     console.log('✅ [submitQuizResult] Successfully saved with ID:', docRef.id);
+    
+    // ✅ FIX: Track completion to update quiz.stats
+    try {
+      console.log('📊 Tracking quiz completion stats...');
+      await quizStatsService.trackCompletion(
+        result.quizId,
+        result.userId,
+        result.correctAnswers,
+        result.totalQuestions
+      );
+      console.log('✅ Quiz stats updated successfully');
+    } catch (statsError) {
+      console.error('⚠️ Failed to update quiz stats (non-critical):', statsError);
+      // Don't throw - result is already saved
+    }
+    
     toast.success('Nộp bài thành công!');
     return docRef.id;
   } catch (error) {

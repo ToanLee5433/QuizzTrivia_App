@@ -524,11 +524,29 @@ export const ResultPage: React.FC = () => {
             </div>
           ) : leaderboard.length > 0 ? (
             <div className="space-y-3">
-              {leaderboard.map((entry, index) => (
+              {leaderboard.map((entry, index) => {
+                // Check if this is the current attempt by comparing score and timeSpent
+                const isCurrentAttempt = entry.userId === user?.uid && 
+                  result && 
+                  entry.score === result.score && 
+                  Math.abs(entry.timeSpent - (result.timeSpent || 0)) < 2; // Within 2 seconds difference
+                
+                console.log('🔍 Checking entry:', { 
+                  entryId: entry.id, 
+                  entryScore: entry.score,
+                  entryTime: entry.timeSpent,
+                  resultScore: result?.score,
+                  resultTime: result?.timeSpent,
+                  isCurrentAttempt
+                });
+                
+                return (
                 <div 
                   key={entry.id}
                   className={`flex items-center justify-between p-4 rounded-lg border ${
-                    entry.userId === user?.uid 
+                    isCurrentAttempt
+                      ? 'bg-green-50 border-green-300 shadow-lg ring-2 ring-green-400' 
+                      : entry.userId === user?.uid 
                       ? 'bg-blue-50 border-blue-200 shadow-md' 
                       : 'bg-gray-50 border-gray-200'
                   }`}
@@ -559,6 +577,7 @@ export const ResultPage: React.FC = () => {
                       <div className="font-medium text-gray-900">
                         {entry.userName}
                         {entry.userId === user?.uid && <span className="text-blue-600 ml-2">{t('resultPage.you')}</span>}
+                        {isCurrentAttempt && <span className="text-green-600 ml-2 font-bold">🎯 {t('resultPage.thisAttempt', 'Lần chơi này')}</span>}
                       </div>
                       {/* eslint-disable i18next/no-literal-string */}
                       <div className="text-sm text-gray-500">
@@ -574,7 +593,8 @@ export const ResultPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
               
               {/* Show user rank if not in top 10 */}
               {user && userRank && userRank > 10 && (

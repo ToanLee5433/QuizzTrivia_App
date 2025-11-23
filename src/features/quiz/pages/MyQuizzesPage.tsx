@@ -39,6 +39,15 @@ type CreatorQuiz = Omit<BaseQuiz, 'havePassword'> & {
   attempts?: number;
   completions?: number;
   averageScore?: number;
+  stats?: {
+    views?: number;
+    attempts?: number;
+    completions?: number;
+    averageScore?: number;
+    completionRate?: number;
+    totalScore?: number;
+    lastUpdated?: Date;
+  };
 };
 
 interface EditRequest {
@@ -733,11 +742,11 @@ const MyQuizzesPage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900">
                         <div className="space-y-1">
-                          <div>{t('quiz.myQuizzes.stats.views', { count: quiz.views || 0 })}</div>
-                          <div>{t('quiz.myQuizzes.stats.attempts', { count: quiz.attempts || 0 })}</div>
-                          <div>{t('quiz.myQuizzes.stats.completions', { count: quiz.completions || 0 })}</div>
-                          {quiz.averageScore !== undefined && (
-                            <div>{t('quiz.myQuizzes.stats.averageScoreValue', { value: Number(quiz.averageScore).toFixed(1) })}</div>
+                          <div>{t('quiz.myQuizzes.stats.views', { count: quiz.stats?.views ?? quiz.views ?? 0 })}</div>
+                          <div>{t('quiz.myQuizzes.stats.attempts', { count: quiz.stats?.attempts ?? quiz.attempts ?? 0 })}</div>
+                          <div>{t('quiz.myQuizzes.stats.completions', { count: quiz.stats?.completions ?? quiz.completions ?? 0 })}</div>
+                          {(quiz.stats?.averageScore ?? quiz.averageScore) !== undefined && (
+                            <div>{t('quiz.myQuizzes.stats.averageScoreValue', { value: Number(quiz.stats?.averageScore ?? quiz.averageScore).toFixed(1) })}</div>
                           )}
                           {typeof quiz.avgRating === 'number' && (
                             <div>{t('quiz.myQuizzes.stats.avgRating', { rating: quiz.avgRating.toFixed(1) })}</div>

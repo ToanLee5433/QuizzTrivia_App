@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { RootState } from '../../../../lib/store';
 import { useQuizData, useQuizSession, useQuizTimer, useQuizNavigation, useQuizSettings } from './hooks';
 import Timer from './components/Timer';
-import ProgressIndicator from './components/ProgressIndicator';
 import QuestionRenderer from './components/QuestionRenderer';
 import QuickNavigation from './components/QuickNavigation';
 import ConfirmationModals from './components/ConfirmationModals';
@@ -276,89 +275,144 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-8">
-      {/* Header với Timer và Progress */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+    <div className="min-h-screen bg-slate-50 font-sans relative selection:bg-blue-100 selection:text-blue-700">
+      {/* Background Pattern */}
+      <div className="fixed inset-0 opacity-40 pointer-events-none" style={{ 
+        backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', 
+        backgroundSize: '24px 24px' 
+      }}></div>
+
+      {/* Header - Sticky & Glassmorphism */}
+      <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all duration-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex items-center justify-between gap-4">
+            
+            {/* Left: Exit & Title */}
+            <div className="flex items-center gap-4 min-w-0 flex-1">
               <button
                 onClick={handleExitQuiz}
-                className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-full transition-all group"
+                title="Thoát bài thi"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                <span>Thoát</span>
+                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-red-100 transition-colors">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </div>
+                <span className="font-semibold hidden sm:inline">Thoát</span>
               </button>
-              <div className="h-6 w-px bg-gray-300"></div>
-              <h1 className="text-xl font-semibold text-gray-800">{shuffledQuiz.title}</h1>
+              
+              <div className="h-8 w-px bg-slate-200 hidden sm:block"></div>
+              
+              <h1 className="text-lg font-bold text-slate-800 truncate" title={shuffledQuiz.title}>
+                {shuffledQuiz.title}
+              </h1>
             </div>
             
-            <div className="flex items-center space-x-3">
+            {/* Right: Stats & Controls */}
+            <div className="flex items-center gap-3 sm:gap-6">
+              {/* Timer Widget */}
+              <div className={`flex items-center gap-3 px-4 py-2 rounded-full border ${
+                isTimeRunningOut 
+                  ? 'bg-red-50 border-red-200 text-red-600 animate-pulse' 
+                  : 'bg-blue-50 border-blue-100 text-blue-700'
+              }`}>
+                <Timer
+                  timeLeft={formattedTime}
+                  isWarning={isTimeRunningOut}
+                  isCritical={isTimeCritical}
+                  percentage={percentage}
+                />
+              </div>
+
               {/* Pause Button */}
               <button
                 onClick={handlePause}
-                className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Tạm dừng (P hoặc Esc)"
+                className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                title="Tạm dừng (P)"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span>Tạm dừng</span>
               </button>
-
-              <ProgressIndicator
-                current={session.currentQuestionIndex + 1}
-                total={shuffledQuiz.questions.length}
-                percentage={progress}
-              />
-              <Timer
-                timeLeft={formattedTime}
-                isWarning={isTimeRunningOut}
-                isCritical={isTimeCritical}
-                percentage={percentage}
-              />
             </div>
           </div>
         </div>
+        
+        {/* Progress Bar as Bottom Border */}
+        <div className="absolute bottom-0 left-0 w-full h-1 bg-slate-100">
+          <div 
+            className="h-full bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-500 ease-out"
+            style={{ width: `${progress}%` }}
+          ></div>
+        </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Navigation Panel */}
-          <div className="lg:col-span-1">
-            <QuickNavigation
-              questions={shuffledQuiz.questions}
-              currentQuestionIndex={session.currentQuestionIndex}
-              answers={session.answers}
-              onQuestionSelect={goToQuestion}
-            />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          {/* Left Sidebar: Quick Nav (Sticky) */}
+          <div className="lg:col-span-3 lg:sticky lg:top-24 order-2 lg:order-1">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-slate-700">Câu hỏi</h3>
+                <span className="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-1 rounded-full">
+                  {session.currentQuestionIndex + 1}/{shuffledQuiz.questions.length}
+                </span>
+              </div>
+              <QuickNavigation
+                questions={shuffledQuiz.questions}
+                currentQuestionIndex={session.currentQuestionIndex}
+                answers={session.answers}
+                onQuestionSelect={goToQuestion}
+              />
+              
+              {/* Legend */}
+              <div className="mt-6 pt-4 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs text-slate-500">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-blue-600"></div>
+                  <span>Hiện tại</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  <span>Đã làm</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-slate-200"></div>
+                  <span>Chưa làm</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Main Quiz Content */}
-          <div className="lg:col-span-3">
-            <div className="bg-white rounded-lg shadow-sm border p-8">
-              <QuestionRenderer
-                question={currentQuestion}
-                questionNumber={session.currentQuestionIndex + 1}
-                value={session.answers[currentQuestion.id]}
-                onChange={(answer: AnswerValue) => handleAnswerChange(currentQuestion.id, answer)}
-              />
+          <div className="lg:col-span-9 order-1 lg:order-2">
+            <div className="bg-white rounded-3xl shadow-xl border-0 p-8 md:p-10 relative overflow-hidden">
+              {/* Decorative top accent */}
+              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+              
+              <div className="relative z-10">
+                <QuestionRenderer
+                  question={currentQuestion}
+                  questionNumber={session.currentQuestionIndex + 1}
+                  value={session.answers[currentQuestion.id]}
+                  onChange={(answer: AnswerValue) => handleAnswerChange(currentQuestion.id, answer)}
+                />
+              </div>
 
               {/* Navigation Buttons */}
-              <div className="flex items-center justify-between mt-8 pt-6 border-t">
+              <div className="flex items-center justify-between mt-10 pt-8 border-t border-gray-100">
                 <button
                   onClick={goToPreviousQuestion}
                   disabled={isFirstQuestion}
-                  className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all ${
+                  className={`flex items-center space-x-2 px-6 py-3 rounded-full font-semibold transition-all duration-200 ${
                     isFirstQuestion
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-gray-600 text-white hover:bg-gray-700 shadow-sm hover:shadow-md'
+                      ? 'bg-gray-50 text-gray-300 cursor-not-allowed'
+                      : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-400 hover:text-blue-600 hover:shadow-md'
                   }`}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
                   </svg>
                   <span>Câu trước</span>
                 </button>
@@ -367,21 +421,21 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
                   {isLastQuestion ? (
                     <button
                       onClick={handleSubmitQuiz}
-                      className="flex items-center space-x-2 px-8 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 shadow-sm hover:shadow-md transition-all"
+                      className="flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full font-bold hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                       </svg>
                       <span>Nộp bài</span>
                     </button>
                   ) : (
                     <button
                       onClick={goToNextQuestion}
-                      className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 shadow-sm hover:shadow-md transition-all"
+                      className="flex items-center space-x-2 px-8 py-3 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
                     >
                       <span>Câu tiếp</span>
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                       </svg>
                     </button>
                   )}
@@ -401,15 +455,21 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
         onGoToQuestion={goToQuestion}
       />
 
-      {/* Thêm cảnh báo hết giờ nếu cần thiết - hiện khi còn <= 10% tổng thời gian */}
+      {/* Time Warning Alert */}
       {isTimeRunningOut && !isPaused && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-600 rounded-lg flex items-center gap-2">
-          <span className="text-xl">⏰</span>
-          <span className="font-medium">
-            {isTimeCritical 
-              ? "Chỉ còn ít hơn 1 phút! Hãy hoàn thành ngay." 
-              : "Sắp hết giờ! Chỉ còn 10% thời gian."}
-          </span>
+        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 animate-bounce">
+          <div className={`flex items-center gap-3 px-6 py-3 rounded-full shadow-lg border ${
+            isTimeCritical 
+              ? 'bg-red-600 text-white border-red-700' 
+              : 'bg-yellow-500 text-white border-yellow-600'
+          }`}>
+            <span className="text-2xl">⏰</span>
+            <span className="font-bold">
+              {isTimeCritical 
+                ? "Sắp hết giờ! Nộp bài ngay!" 
+                : "Chú ý: Thời gian sắp hết"}
+            </span>
+          </div>
         </div>
       )}
       
@@ -421,7 +481,7 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
         onExit={handleExitFromPause}
       />
       
-      {/* Settings Modal (can be opened from pause menu) */}
+      {/* Settings Modal */}
       <QuizSettingsModal
         isOpen={showSettingsModal}
         onClose={handleCloseSettings}

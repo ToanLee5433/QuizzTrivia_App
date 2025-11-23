@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Quiz } from '../../../types';
 import Button from '../../../../../shared/components/ui/Button';
 import { toast } from 'react-toastify';
@@ -11,12 +12,13 @@ interface ActionButtonsProps {
 
 export const ActionButtons: React.FC<ActionButtonsProps> = ({ quiz, percentage }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleShareResult = () => {
     navigator.clipboard.writeText(
       `I scored ${percentage}% on "${quiz.title}" quiz! 🎯`
     );
-    toast.success('Result copied to clipboard!');
+    toast.success(t('quiz.result_copied', 'Result copied to clipboard!'));
   };
 
   return (
@@ -25,7 +27,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({ quiz, percentage }
         onClick={() => navigate(`/quiz/${quiz.id}`)}
         className="bg-blue-600 hover:bg-blue-700"
       >
-        🔄 Làm lại Quiz
+        🔄 {t('quiz.retake_quiz', 'Retake Quiz')}
       </Button>
 
 
@@ -36,28 +38,28 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({ quiz, percentage }
         }}
         variant="outline"
       >
-        📚 Xem thêm Quiz
+        📚 {t('quiz.view_more_quizzes', 'View More Quizzes')}
       </Button>
       
       <Button
         onClick={() => navigate('/dashboard')}
         variant="outline"
       >
-        🏠 Về Dashboard
+        🏠 {t('quiz.back_to_dashboard', 'Back to Dashboard')}
       </Button>
       
       <Button
         variant="outline"
         onClick={handleShareResult}
       >
-        📤 Chia sẻ kết quả
+        📤 {t('quiz.share_result', 'Share Result')}
       </Button>
       
       <Button
         onClick={() => navigate('/profile')}
         variant="outline"
       >
-        👤 Xem tất cả kết quả
+        👤 {t('quiz.view_all_results', 'View All Results')}
       </Button>
     </div>
   );

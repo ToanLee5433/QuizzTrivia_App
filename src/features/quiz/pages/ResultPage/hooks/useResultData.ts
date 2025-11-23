@@ -55,8 +55,18 @@ export const useResultData = () => {
             score: typeof raw.score === 'number' ? (raw.score <= 1 ? raw.score * 100 : raw.score) : 0,
             correct: correctAnswers,
             total: totalQuestions,
-            answers: (raw.answers || []).reduce((acc: Record<string,string>, ans: any) => {
-              acc[ans.questionId] = ans.selectedAnswerId;
+            answers: (raw.answers || []).reduce((acc: Record<string, any>, ans: any) => {
+              // Parse selectedAnswerId if it's a JSON string (for arrays/objects from ordering/matching/fill_blanks)
+              let answerValue = ans.selectedAnswerId;
+              if (typeof answerValue === 'string' && (answerValue.startsWith('[') || answerValue.startsWith('{'))) {
+                try {
+                  answerValue = JSON.parse(answerValue);
+                } catch (e) {
+                  // If parse fails, keep as string
+                  console.warn(`Failed to parse answer for ${ans.questionId}:`, answerValue);
+                }
+              }
+              acc[ans.questionId] = answerValue;
               return acc;
             }, {}),
             timeSpent: raw.timeSpent,

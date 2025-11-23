@@ -8,6 +8,7 @@ import { Upload, X, Loader2, Image as ImageIcon, Music, Video } from 'lucide-rea
 import { storageService } from '../../../services/firebase/storageService';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
+import { VideoPlayer } from '../../../shared/components/ui/VideoPlayer';
 
 interface MediaUploaderProps {
   type: 'image' | 'audio' | 'video';
@@ -174,10 +175,11 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
               </div>
             )}
             {type === 'video' && (
-              <video controls className="w-full max-h-64">
-                <source src={previewUrl} />
-                {t('mediaUploader.videoNotSupported')}
-              </video>
+              <VideoPlayer 
+                url={previewUrl} 
+                className="w-full" 
+                style={{ maxHeight: '256px' }}
+              />
             )}
           </div>
 

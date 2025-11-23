@@ -19,7 +19,7 @@ export const SimilarQuizzes: React.FC<SimilarQuizzesProps> = ({ quizzes, isLoadi
         <div className="flex items-center justify-center space-x-3">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
           <div className="text-gray-600 dark:text-gray-400">
-            Đang tìm quiz tương tự...
+            {t('result.finding_similar_quizzes', 'Finding similar quizzes...')}
           </div>
         </div>
       </div>
@@ -44,10 +44,10 @@ export const SimilarQuizzes: React.FC<SimilarQuizzesProps> = ({ quizzes, isLoadi
         </div>
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {t('result.similar_quizzes', 'Quiz tương tự')}
+            {t('result.similar_quizzes', 'Similar Quizzes')}
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            {t('result.similar_quizzes_subtitle', 'Tiếp tục rèn luyện với những quiz này')}
+            {t('result.similar_quizzes_subtitle', 'Continue practicing with these quizzes')}
           </p>
         </div>
       </div>

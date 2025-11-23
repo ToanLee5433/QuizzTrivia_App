@@ -27,7 +27,7 @@ interface QuizReviewSystemProps {
 
 const QuizReviewSystem: React.FC<QuizReviewSystemProps> = ({ 
   quizId, 
-  quizTitle = 'Quiz này',
+  quizTitle = 'This Quiz',
   showSubmitForm = true 
 }) => {
   const { t } = useTranslation();
@@ -129,7 +129,7 @@ const QuizReviewSystem: React.FC<QuizReviewSystemProps> = ({
       const newReview: Omit<QuizReview, 'id'> = {
         quizId,
         userId: user.uid,
-        userName: user.displayName || user.email || 'Người dùng ẩn danh',
+        userName: user.displayName || user.email || 'Anonymous User',
         userAvatar: userPhotoURL,
         rating: userRating,
         comment: userComment.trim(),

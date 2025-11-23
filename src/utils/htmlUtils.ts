@@ -48,6 +48,28 @@ export const stripHTML = (html: string): string => {
 };
 
 /**
+ * Clean up double or nested paragraph tags (e.g., <p><p>content</p></p>)
+ * This can happen with rich text editors when content is wrapped multiple times
+ */
+export const cleanDoublePTags = (html: string): string => {
+  if (!html) return html;
+  
+  // Remove double opening <p> tags: <p><p> → <p>
+  let cleaned = html.replace(/<p>\s*<p>/gi, '<p>');
+  
+  // Remove double closing </p> tags: </p></p> → </p>
+  cleaned = cleaned.replace(/<\/p>\s*<\/p>/gi, '</p>');
+  
+  // Remove nested empty paragraphs: <p><p></p></p> → <p></p>
+  cleaned = cleaned.replace(/<p>\s*<p>\s*<\/p>\s*<\/p>/gi, '<p></p>');
+  
+  // Remove completely empty paragraphs
+  cleaned = cleaned.replace(/<p>\s*<\/p>/gi, '');
+  
+  return cleaned;
+};
+
+/**
  * Render safe HTML content - main utility function
  * Tự động detect HTML và xử lý phù hợp
  */
@@ -56,11 +78,14 @@ export const renderSafeHTML = (content: string | undefined | null): {
 } => {
   if (!content) return { __html: '' };
   
+  // Clean up double paragraph tags first
+  const cleanedContent = cleanDoublePTags(content);
+  
   // Nếu đã là HTML, sanitize và return
-  if (isHTML(content)) {
-    return { __html: sanitizeHTML(content) };
+  if (isHTML(cleanedContent)) {
+    return { __html: sanitizeHTML(cleanedContent) };
   }
   
   // Nếu là plain text, convert line breaks và return
-  return { __html: sanitizeHTML(normalizeLineBreaks(content)) };
+  return { __html: sanitizeHTML(normalizeLineBreaks(cleanedContent)) };
 };

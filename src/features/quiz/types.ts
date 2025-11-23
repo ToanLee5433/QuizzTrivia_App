@@ -8,7 +8,7 @@ export interface Answer {
   videoUrl?: string; // For video answers
 }
 
-export type AnswerValue = string | string[] | number | boolean | null;
+export type AnswerValue = string | string[] | number | boolean | Record<string, string> | null;
 
 export type AnswerMap = Record<string, AnswerValue>;
 
@@ -17,11 +17,12 @@ export type QuestionType =
   | 'multiple'      // Multiple choice (single answer)
   | 'boolean'       // True/False
   | 'short_answer'  // Short text answer
-  | 'image'         // Image-based multiple choice
+  | 'multimedia'    // 🆕 Multimedia question (image/audio/video) with flexible answers
+  | 'image'         // [Deprecated] Use 'multimedia' instead
   | 'checkbox'      // Multiple choice (multiple answers)
   | 'rich_content'  // Rich text content question
-  | 'audio'         // Audio listening comprehension
-  | 'video'         // Video watching comprehension
+  | 'audio'         // [Deprecated] Use 'multimedia' instead
+  | 'video'         // [Deprecated] Use 'multimedia' instead
   | 'ordering'      // Order items in correct sequence
   | 'matching'      // Match pairs (drag & drop)
   | 'fill_blanks';  // Fill in the blanks (cloze test / Essay)
@@ -83,6 +84,16 @@ export interface Question {
   matchingPairs?: MatchingPair[];      // For 'matching' type
   blanks?: BlankItem[];                // For 'fill_blanks' type
   textWithBlanks?: string;             // Template text with {blank} markers
+}
+
+export interface QuizStats {
+  views: number;
+  attempts: number;
+  completions: number;
+  averageScore: number;
+  totalScore: number;
+  completionRate: number;
+  lastUpdated?: Date;
 }
 
 export interface Quiz {
@@ -161,6 +172,9 @@ export interface Quiz {
   archivedAt?: Date;
   views?: number; // Number of views
   completionRate?: number; // Percentage of users who complete the quiz
+  
+  // **STATISTICS**: Nested statistics object for tracking
+  stats?: QuizStats;
   
   // **EDIT WORKFLOW**: Quiz edit approval workflow
   canEdit?: boolean; // Whether creator can edit this quiz

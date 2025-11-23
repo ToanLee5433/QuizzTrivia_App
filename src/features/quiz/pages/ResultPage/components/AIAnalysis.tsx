@@ -18,7 +18,7 @@ export const AIAnalysis: React.FC<AIAnalysisProps> = ({ analysis, isLoading }) =
         <div className="flex items-center justify-center space-x-3">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
           <div className="text-lg font-medium text-gray-700 dark:text-gray-300">
-            🤖 {t('result.ai_analyzing', 'AI đang phân tích kết quả của bạn...')}
+            🤖 {t('result.ai_analyzing', 'AI is analyzing your results...')}
           </div>
         </div>
       </div>
@@ -73,10 +73,10 @@ export const AIAnalysis: React.FC<AIAnalysisProps> = ({ analysis, isLoading }) =
           </div>
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {t('result.ai_analysis', 'Phân tích AI')}
+              {t('result.ai_analysis', 'AI Analysis')}
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              {t('result.ai_provided_by', 'Được cung cấp bởi Gemini AI')}
+              {t('result.ai_provided_by', 'Powered by Gemini AI')}
             </p>
           </div>
         </div>
@@ -84,10 +84,10 @@ export const AIAnalysis: React.FC<AIAnalysisProps> = ({ analysis, isLoading }) =
         <div className={`px-4 py-2 rounded-lg font-semibold flex items-center space-x-2 ${config.bgColor} ${config.borderColor} border-2`}>
           <span className="text-2xl">{config.icon}</span>
           <span className={config.color}>
-            {analysis.performanceLevel === 'excellent' && t('result.performance_excellent', 'Xuất sắc')}
-            {analysis.performanceLevel === 'good' && t('result.performance_good', 'Tốt')}
-            {analysis.performanceLevel === 'average' && t('result.performance_average', 'Khá')}
-            {analysis.performanceLevel === 'needs-improvement' && t('result.performance_needs_improvement', 'Cần cải thiện')}
+            {analysis.performanceLevel === 'excellent' && t('result.performance_excellent', 'Excellent')}
+            {analysis.performanceLevel === 'good' && t('result.performance_good', 'Good')}
+            {analysis.performanceLevel === 'average' && t('result.performance_average', 'Average')}
+            {analysis.performanceLevel === 'needs-improvement' && t('result.performance_needs_improvement', 'Needs improvement')}
           </span>
         </div>
       </div>
@@ -113,7 +113,7 @@ export const AIAnalysis: React.FC<AIAnalysisProps> = ({ analysis, isLoading }) =
                 <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
               </div>
               <h3 className="font-semibold text-gray-900 dark:text-white">
-                {t('result.strengths', 'Điểm mạnh')}
+                {t('result.strengths', 'Strengths')}
               </h3>
             </div>
             <ul className="space-y-2">
@@ -146,7 +146,7 @@ export const AIAnalysis: React.FC<AIAnalysisProps> = ({ analysis, isLoading }) =
                 <Target className="w-5 h-5 text-orange-600 dark:text-orange-400" />
               </div>
               <h3 className="font-semibold text-gray-900 dark:text-white">
-                {t('result.areas_to_improve', 'Điểm cần cải thiện')}
+                {t('result.areas_to_improve', 'Areas to improve')}
               </h3>
             </div>
             <ul className="space-y-2">
@@ -180,7 +180,7 @@ export const AIAnalysis: React.FC<AIAnalysisProps> = ({ analysis, isLoading }) =
               <Lightbulb className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
             <h3 className="font-semibold text-gray-900 dark:text-white">
-              {t('result.study_tips', 'Lời khuyên học tập')}
+              {t('result.study_tips', 'Study tips')}
             </h3>
           </div>
           <ul className="space-y-3">
@@ -216,7 +216,7 @@ export const AIAnalysis: React.FC<AIAnalysisProps> = ({ analysis, isLoading }) =
                 <Target className="w-5 h-5 text-purple-600 dark:text-purple-400" />
               </div>
               <h3 className="font-semibold text-gray-900 dark:text-white">
-                {t('result.focus_areas', 'Khu vực tập trung')}
+                {t('result.focus_areas', 'Focus areas')}
               </h3>
             </div>
             <ul className="space-y-2">
@@ -249,7 +249,7 @@ export const AIAnalysis: React.FC<AIAnalysisProps> = ({ analysis, isLoading }) =
                 <BookOpen className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
               </div>
               <h3 className="font-semibold text-gray-900 dark:text-white">
-                {t('result.next_steps', 'Bước tiếp theo')}
+                {t('result.next_steps', 'Next steps')}
               </h3>
             </div>
             <ul className="space-y-2">
@@ -275,7 +275,7 @@ export const AIAnalysis: React.FC<AIAnalysisProps> = ({ analysis, isLoading }) =
       {/* Footer */}
       <div className="mt-6 pt-4 border-t border-purple-200 dark:border-purple-800 text-center">
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          💡 {t('result.ai_disclaimer', 'Phân tích này được tạo bởi AI và mang tính chất tham khảo')}
+          💡 {t('result.ai_disclaimer', 'This analysis is generated by AI and is for reference only')}
         </p>
       </div>
     </motion.div>

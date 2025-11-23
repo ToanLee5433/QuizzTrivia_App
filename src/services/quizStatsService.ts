@@ -32,11 +32,19 @@ export interface UserQuizActivity {
 }
 
 class QuizStatsService {
-  // Track when user views a quiz
+  // Track when user views a quiz (only for approved quizzes)
   async trackView(quizId: string, userId?: string) {
     try {
-      // Update quiz stats
       const quizRef = doc(db, 'quizzes', quizId);
+      
+      // Check if quiz is approved before tracking
+      const quizDoc = await getDoc(quizRef);
+      if (!quizDoc.exists() || quizDoc.data().status !== 'approved') {
+        console.log('Quiz not approved, skipping view tracking');
+        return;
+      }
+      
+      // Update quiz stats
       await updateDoc(quizRef, {
         'stats.views': increment(1),
         'stats.lastUpdated': serverTimestamp()
@@ -71,11 +79,19 @@ class QuizStatsService {
     }
   }
 
-  // Track when user starts attempting a quiz
+  // Track when user starts attempting a quiz (only for approved quizzes)
   async trackAttempt(quizId: string, userId: string) {
     try {
-      // Update quiz stats
       const quizRef = doc(db, 'quizzes', quizId);
+      
+      // Check if quiz is approved before tracking
+      const quizDoc = await getDoc(quizRef);
+      if (!quizDoc.exists() || quizDoc.data().status !== 'approved') {
+        console.log('Quiz not approved, skipping attempt tracking');
+        return;
+      }
+      
+      // Update quiz stats
       await updateDoc(quizRef, {
         'stats.attempts': increment(1),
         'stats.lastUpdated': serverTimestamp()
@@ -109,7 +125,7 @@ class QuizStatsService {
     }
   }
 
-  // Track when user completes a quiz with score
+  // Track when user completes a quiz with score (only for approved quizzes)
   async trackCompletion(quizId: string, userId: string, score: number, totalQuestions: number) {
     try {
       const percentage = Math.round((score / totalQuestions) * 100);
@@ -118,26 +134,45 @@ class QuizStatsService {
       const quizRef = doc(db, 'quizzes', quizId);
       const quizDoc = await getDoc(quizRef);
       
+      // Check if quiz is approved before tracking stats
+      if (!quizDoc.exists() || quizDoc.data().status !== 'approved') {
+        console.log('Quiz not approved, skipping completion tracking for stats');
+        return;
+      }
+      
       if (quizDoc.exists()) {
         const currentStats = quizDoc.data().stats || {};
         const currentCompletions = currentStats.completions || 0;
+        const currentAttempts = currentStats.attempts || 0;
         const currentTotalScore = currentStats.totalScore || 0;
         const newTotalScore = currentTotalScore + percentage;
         const newCompletions = currentCompletions + 1;
         const newAverageScore = Math.round(newTotalScore / newCompletions);
+        
+        // ✅ NEW LOGIC: Completion rate = (attempts with score >= 50%) / total attempts
+        // Count this attempt as "completed" only if score >= 50%
+        const isCompleted = percentage >= 50;
+        const currentCompletedCount = currentStats.completedCount || 0;
+        const newCompletedCount = isCompleted ? currentCompletedCount + 1 : currentCompletedCount;
+        const newCompletionRate = currentAttempts > 0 ? Math.round((newCompletedCount / currentAttempts) * 100) : 0;
 
         await updateDoc(quizRef, {
-          'stats.completions': increment(1),
+          'stats.completions': increment(1), // Total times trackCompletion was called
+          'stats.completedCount': isCompleted ? increment(1) : currentCompletedCount, // Count of scores >= 50%
           'stats.totalScore': increment(percentage),
           'stats.averageScore': newAverageScore,
+          'stats.completionRate': newCompletionRate,
           'stats.lastUpdated': serverTimestamp()
         });
       } else {
         // Initialize stats if not exists
+        const isCompleted = percentage >= 50;
         await updateDoc(quizRef, {
           'stats.completions': 1,
+          'stats.completedCount': isCompleted ? 1 : 0,
           'stats.totalScore': percentage,
           'stats.averageScore': percentage,
+          'stats.completionRate': isCompleted ? 100 : 0,
           'stats.views': increment(0),
           'stats.attempts': increment(0),
           'stats.lastUpdated': serverTimestamp()

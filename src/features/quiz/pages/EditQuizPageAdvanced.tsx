@@ -11,7 +11,7 @@ import {
   FileText, Tag, Star, Clock, ImageIcon, Lock, Key
 } from 'lucide-react';
 import { db } from '../../../firebase/config';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
 import { useTranslation } from 'react-i18next';
@@ -127,7 +127,7 @@ const EditQuizPageAdvanced: React.FC = () => {
         quizType: quizInfo.quizType,
         // Save resources for with-materials quizzes
         resources: quizInfo.quizType === 'with-materials' ? (quizInfo.resources?.filter(r => ['image', 'video', 'pdf', 'link', 'slides'].includes(r.type)) as any || []) : [],
-        updatedAt: new Date()
+        updatedAt: Timestamp.now() as any  // ✅ Update timestamp, but createdAt stays the same
       };
 
       // ✅ HANDLE RESUBMISSION AFTER EDIT APPROVAL

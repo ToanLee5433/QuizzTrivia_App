@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../lib/store';
 import { ROUTES } from '../../../../config/routes';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../../../../lib/firebase/config';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
@@ -15,10 +15,11 @@ import { QuizFormData, Question } from './types';
 import { defaultQuiz, stepKeys } from './constants';
 import { generateId } from './utils';
 import { createPasswordHash } from '../../../../lib/utils/passwordHash'; // 🔒 Password hash utility
+import { cleanDoublePTags } from '../../../../utils/htmlUtils';
 import QuizTypeStep from './components/QuizTypeStep'; // 🆕
 import QuizInfoStep from './components/QuizInfoStep';
-import QuestionsStep from './components/QuestionsStep';
 import ResourcesStep from './components/ResourcesStep';
+import QuestionsStep from './components/QuestionsStep';
 import ReviewStep from './components/ReviewStep';
 
 const CreateQuizPage: React.FC = () => {
@@ -220,10 +221,17 @@ const CreateQuizPage: React.FC = () => {
             case 'boolean':
             case 'multiple':
             case 'checkbox':
+              // Standard types: Must have text for all answers
+              return !q.answers.some(a => a.isCorrect) || !q.answers.every(a => a.text);
             case 'image':
             case 'audio':
             case 'video':
+              // Legacy media types: Must have text
               return !q.answers.some(a => a.isCorrect) || !q.answers.every(a => a.text);
+            case 'multimedia': // 🆕 Multimedia: Answer must have text OR media
+              if (!q.answers.some(a => a.isCorrect)) return true; // Must have correct answer
+              // Each answer must have either text OR media (image/audio/video)
+              return !q.answers.every(a => a.text || a.imageUrl || a.audioUrl || a.videoUrl);
             case 'ordering':
               return !q.orderingItems || q.orderingItems.length < 2;
             case 'matching':
@@ -302,7 +310,7 @@ const CreateQuizPage: React.FC = () => {
     // Clean up undefined values - Firestore doesn't accept undefined
     const baseQuizData = {
         title: quiz.title || '',
-        description: quiz.description || '',
+        description: cleanDoublePTags(quiz.description || ''), // Clean double <p> tags
         category: quiz.category || 'general',
         difficulty: quiz.difficulty || 'easy',
         duration: quiz.duration || 15,
@@ -319,13 +327,52 @@ const CreateQuizPage: React.FC = () => {
           answers: (q.answers || []).map(a => ({
             id: a.id || '',
             text: a.text || '',
-            isCorrect: a.isCorrect !== undefined ? a.isCorrect : false
+            isCorrect: a.isCorrect !== undefined ? a.isCorrect : false,
+            ...(a.imageUrl && { imageUrl: a.imageUrl }),
+            ...(a.audioUrl && { audioUrl: a.audioUrl }),
+            ...(a.videoUrl && { videoUrl: a.videoUrl }),
+            ...(a.richText && { richText: a.richText })
           })),
           explanation: q.explanation || '',
           points: q.points !== undefined ? q.points : 1,
-          imageUrl: q.imageUrl || null,
           correctAnswer: q.correctAnswer || null,
-          acceptedAnswers: q.acceptedAnswers || []
+          acceptedAnswers: q.acceptedAnswers || [],
+          // 🆕 Support for multimedia question types - only save media URLs if they exist
+          ...(q.imageUrl && { imageUrl: q.imageUrl }),
+          ...(q.audioUrl && { audioUrl: q.audioUrl }),
+          ...(q.videoUrl && { videoUrl: q.videoUrl }),
+          ...(q.richText && { richText: q.richText }),
+          ...(q.richExplanation && { richExplanation: q.richExplanation }),
+          // 🆕 Support for ordering questions
+          ...(q.orderingItems && q.orderingItems.length > 0 && {
+            orderingItems: q.orderingItems.map(item => ({
+              id: item.id || '',
+              text: item.text || '',
+              correctOrder: item.correctOrder || 0,
+              ...(item.imageUrl && { imageUrl: item.imageUrl })
+            }))
+          }),
+          // 🆕 Support for matching questions
+          ...(q.matchingPairs && q.matchingPairs.length > 0 && {
+            matchingPairs: q.matchingPairs.map(pair => ({
+              id: pair.id || '',
+              left: pair.left || '',
+              right: pair.right || '',
+              ...(pair.leftImageUrl && { leftImageUrl: pair.leftImageUrl }),
+              ...(pair.rightImageUrl && { rightImageUrl: pair.rightImageUrl })
+            }))
+          }),
+          // 🆕 Support for fill_blanks questions
+          ...(q.textWithBlanks && { textWithBlanks: q.textWithBlanks }),
+          ...(q.blanks && q.blanks.length > 0 && {
+            blanks: q.blanks.map(blank => ({
+              id: blank.id || '',
+              position: blank.position || 0,
+              correctAnswer: blank.correctAnswer || '',
+              acceptedAnswers: blank.acceptedAnswers || [],
+              caseSensitive: blank.caseSensitive || false
+            }))
+          })
         })),
         resources: (quiz.resources || []).map(r => ({
           id: r.id || '',
@@ -344,8 +391,8 @@ const CreateQuizPage: React.FC = () => {
           updatedAt: r.updatedAt || new Date()
         })),
         createdBy: currentUser.uid,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
         isPublished: true,
         tags: quiz.tags || [],
         imageUrl: quiz.imageUrl || null,
@@ -353,6 +400,19 @@ const CreateQuizPage: React.FC = () => {
         allowRetake: quiz.allowRetake !== undefined ? quiz.allowRetake : true,
         status: 'pending' // 📤 Submit for admin approval
       };
+
+      console.log('🔍 [PUBLISH] Quiz data BEFORE clean - sample question:', baseQuizData.questions[0]);
+      console.log('🔍 [PUBLISH] Sample question media fields:', {
+        imageUrl: baseQuizData.questions[0]?.imageUrl,
+        audioUrl: baseQuizData.questions[0]?.audioUrl,
+        videoUrl: baseQuizData.questions[0]?.videoUrl,
+        answers: baseQuizData.questions[0]?.answers?.map((a: any) => ({
+          text: a.text,
+          imageUrl: a.imageUrl,
+          audioUrl: a.audioUrl,
+          videoUrl: a.videoUrl
+        }))
+      });
 
       const cleanQuizData = deepCleanValue(baseQuizData) as Record<string, unknown>;
 
@@ -420,7 +480,7 @@ const CreateQuizPage: React.FC = () => {
 
     const baseDraftData = {
         title: quiz.title || '',
-        description: quiz.description || '',
+        description: cleanDoublePTags(quiz.description || ''), // Clean double <p> tags
         category: quiz.category || 'general',
         difficulty: quiz.difficulty || 'easy',
         duration: quiz.duration || 15,
@@ -437,13 +497,52 @@ const CreateQuizPage: React.FC = () => {
           answers: (q.answers || []).map(a => ({
             id: a.id || '',
             text: a.text || '',
-            isCorrect: a.isCorrect !== undefined ? a.isCorrect : false
+            isCorrect: a.isCorrect !== undefined ? a.isCorrect : false,
+            ...(a.imageUrl && { imageUrl: a.imageUrl }),
+            ...(a.audioUrl && { audioUrl: a.audioUrl }),
+            ...(a.videoUrl && { videoUrl: a.videoUrl }),
+            ...(a.richText && { richText: a.richText })
           })),
           explanation: q.explanation || '',
           points: q.points !== undefined ? q.points : 1,
-          imageUrl: q.imageUrl || null,
           correctAnswer: q.correctAnswer || null,
-          acceptedAnswers: q.acceptedAnswers || []
+          acceptedAnswers: q.acceptedAnswers || [],
+          // 🆕 Support for multimedia question types - only save media URLs if they exist
+          ...(q.imageUrl && { imageUrl: q.imageUrl }),
+          ...(q.audioUrl && { audioUrl: q.audioUrl }),
+          ...(q.videoUrl && { videoUrl: q.videoUrl }),
+          ...(q.richText && { richText: q.richText }),
+          ...(q.richExplanation && { richExplanation: q.richExplanation }),
+          // 🆕 Support for ordering questions
+          ...(q.orderingItems && q.orderingItems.length > 0 && {
+            orderingItems: q.orderingItems.map(item => ({
+              id: item.id || '',
+              text: item.text || '',
+              correctOrder: item.correctOrder || 0,
+              ...(item.imageUrl && { imageUrl: item.imageUrl })
+            }))
+          }),
+          // 🆕 Support for matching questions
+          ...(q.matchingPairs && q.matchingPairs.length > 0 && {
+            matchingPairs: q.matchingPairs.map(pair => ({
+              id: pair.id || '',
+              left: pair.left || '',
+              right: pair.right || '',
+              ...(pair.leftImageUrl && { leftImageUrl: pair.leftImageUrl }),
+              ...(pair.rightImageUrl && { rightImageUrl: pair.rightImageUrl })
+            }))
+          }),
+          // 🆕 Support for fill_blanks questions
+          ...(q.textWithBlanks && { textWithBlanks: q.textWithBlanks }),
+          ...(q.blanks && q.blanks.length > 0 && {
+            blanks: q.blanks.map(blank => ({
+              id: blank.id || '',
+              position: blank.position || 0,
+              correctAnswer: blank.correctAnswer || '',
+              acceptedAnswers: blank.acceptedAnswers || [],
+              caseSensitive: blank.caseSensitive || false
+            }))
+          })
         })),
         resources: (quiz.resources || []).map(r => ({
           id: r.id || '',
@@ -462,8 +561,8 @@ const CreateQuizPage: React.FC = () => {
           updatedAt: r.updatedAt || new Date()
         })),
         createdBy: currentUser.uid,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
         isPublished: false,
         tags: quiz.tags || [],
         imageUrl: quiz.imageUrl || null,

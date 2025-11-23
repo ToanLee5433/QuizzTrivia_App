@@ -1,6 +1,25 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { Question, AnswerValue } from '../../../types';
+import { useTranslation } from 'react-i18next';
+import { GripVertical } from 'lucide-react';
+import { VideoPlayer } from '../../../../../shared/components/ui/VideoPlayer';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface QuestionRendererProps {
   question: Question;
@@ -16,12 +35,30 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
   onChange,
 }) => {
   const { t } = useTranslation();
+  
+  // Hooks for matching question - must be at top level
+  const [selectedLeft, setSelectedLeft] = React.useState<string | null>(null);
+  
+  // Hooks for ordering question - must be at top level
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+  
+  // Memoize shuffled right items for matching - only shuffle once, not on every render
+  const shuffledRightItems = React.useMemo(() => {
+    if (question.type === 'matching' && question.matchingPairs) {
+      return [...question.matchingPairs].map(p => p.right).sort(() => Math.random() - 0.5);
+    }
+    return [];
+  }, [question.type, question.matchingPairs]);
 
   const shortAnswerHint = t('quiz.questionRenderer.shortAnswerHint', '💡 Nhập đáp án vào ô bên dưới:');
   const imageLoadError = t('quiz.questionRenderer.imageLoadError', 'Không thể tải ảnh');
   const noImageText = t('quiz.questionRenderer.noImage', 'Chưa có ảnh');
   const checkboxHint = t('quiz.questionRenderer.checkboxHint', '💡 Bạn có thể chọn nhiều đáp án cho câu hỏi này.');
-  const checkboxIndicator = t('quiz.questionRenderer.checkboxSelectionIndicator', '✓');
 
   const getImageFallbackLabel = (displayIndex: number) =>
     t('quiz.questionRenderer.imageFallback', {
@@ -38,36 +75,51 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
   const singleAnswerValue = typeof value === 'string' ? value : '';
 
   const renderMultipleChoice = () => (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {question.answers.map((answer, index) => {
         const isSelected = singleAnswerValue === answer.id;
+        const letter = String.fromCharCode(65 + index);
         return (
           <button
             key={answer.id}
             onClick={() => onChange(answer.id)}
-            className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
+            className={`group relative w-full p-5 text-left rounded-2xl border-2 transition-all duration-200 ${
               isSelected
-                ? 'border-blue-500 bg-blue-50 text-blue-700'
-                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                ? 'border-blue-500 bg-blue-50/50 shadow-md'
+                : 'border-gray-100 bg-white hover:border-blue-200 hover:bg-blue-50/30 hover:shadow-sm'
             }`}
           >
-            <div className="flex items-center space-x-3">
-              <div className={`w-4 h-4 rounded-full border-2 ${
+            <div className="flex items-center space-x-4">
+              {/* Letter Badge */}
+              <div className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full text-lg font-bold transition-colors ${
+                isSelected
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 text-gray-500 group-hover:bg-blue-100 group-hover:text-blue-600'
+              }`}>
+                {letter}
+              </div>
+
+              <div className="flex-1">
+                <span
+                  className={`text-lg leading-relaxed transition-colors ${
+                    isSelected ? 'text-gray-900 font-medium' : 'text-gray-700 group-hover:text-gray-900'
+                  }`}
+                  dangerouslySetInnerHTML={{ __html: answer.text || '' }}
+                />
+              </div>
+
+              {/* Selection Indicator */}
+              <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
                 isSelected
                   ? 'border-blue-500 bg-blue-500'
-                  : 'border-gray-300'
+                  : 'border-gray-300 group-hover:border-blue-300'
               }`}>
                 {isSelected && (
-                  <div className="w-2 h-2 bg-white rounded-full mx-auto mt-0.5"></div>
+                  <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
                 )}
               </div>
-              <span className="font-medium mr-3">
-                {String.fromCharCode(65 + index)}.
-              </span>
-              <span
-                className="flex-1"
-                dangerouslySetInnerHTML={{ __html: answer.text || '' }}
-              />
             </div>
           </button>
         );
@@ -76,37 +128,55 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
   );
 
   const renderBoolean = () => (
-    <div className="space-y-3">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       {question.answers.map((answer, index) => {
         const isSelected = singleAnswerValue === answer.id;
+        const isTrue = answer.text === t('quiz.boolean.true');
+        const letter = String.fromCharCode(65 + index);
+        
         return (
           <button
             key={answer.id}
             onClick={() => onChange(answer.id)}
-            className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
+            className={`group relative p-8 text-center rounded-2xl border-2 transition-all duration-200 ${
               isSelected
-                ? 'border-blue-500 bg-blue-50 text-blue-700'
-                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                ? isTrue
+                  ? 'border-green-500 bg-green-50/50 shadow-md'
+                  : 'border-red-500 bg-red-50/50 shadow-md'
+                : 'border-gray-100 bg-white hover:border-gray-300 hover:shadow-sm'
             }`}
           >
-            <div className="flex items-center space-x-3">
-              <div className={`w-4 h-4 rounded-full border-2 ${
-                isSelected
-                  ? 'border-blue-500 bg-blue-500'
-                  : 'border-gray-300'
+            <div className="flex flex-col items-center space-y-4">
+              <div className={`w-16 h-16 flex items-center justify-center rounded-full text-2xl font-bold transition-colors ${
+                 isSelected
+                  ? isTrue ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                  : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200'
               }`}>
-                {isSelected && (
-                  <div className="w-2 h-2 bg-white rounded-full mx-auto mt-0.5"></div>
-                )}
+                {isTrue ? 'T' : 'F'}
               </div>
-              <span className="font-medium mr-3">
-                {String.fromCharCode(65 + index)}.
-              </span>
-              <span
-                className={`flex-1 font-medium ${answer.text === t('quiz.boolean.true') ? 'text-green-600' : 'text-red-600'}`}
-                dangerouslySetInnerHTML={{ __html: answer.text || '' }}
-              />
+              
+              <div className="space-y-1">
+                <span
+                  className={`text-xl font-semibold block ${
+                    isSelected
+                      ? isTrue ? 'text-green-700' : 'text-red-700'
+                      : 'text-gray-700 group-hover:text-gray-900'
+                  }`}
+                  dangerouslySetInnerHTML={{ __html: answer.text || '' }}
+                />
+                <span className="text-sm text-gray-400 font-medium">Option {letter}</span>
+              </div>
             </div>
+            
+            {isSelected && (
+              <div className={`absolute top-4 right-4 w-6 h-6 rounded-full flex items-center justify-center ${
+                isTrue ? 'bg-green-500' : 'bg-red-500'
+              }`}>
+                <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            )}
           </button>
         );
       })}
@@ -114,85 +184,150 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
   );
 
   const renderShortAnswer = () => (
-    <div className="space-y-4">
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm text-blue-700 mb-3">{shortAnswerHint}</p>
-        <input
-          type="text"
-          value={typeof value === 'string' ? value : ''}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={t('quiz.enterAnswer')}
-          className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg"
-        />
+    <div className="space-y-6">
+      <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6">
+        <div className="flex items-center space-x-3 mb-5">
+          <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </div>
+          <p className="text-gray-600 font-medium">{shortAnswerHint}</p>
+        </div>
+        <div className="relative">
+          <input
+            type="text"
+            value={typeof value === 'string' ? value : ''}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={t('quiz.enterAnswer', 'Nhập câu trả lời của bạn...')}
+            className="w-full p-4 pl-5 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none text-lg transition-all bg-white"
+          />
+          {typeof value === 'string' && value && (
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-green-500">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 
   const renderImageQuestion = () => (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="space-y-6">
+      {/* Hiển thị ảnh câu hỏi nếu có */}
+      {question.imageUrl && (
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border-2 border-blue-200 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="text-sm font-semibold text-blue-900">
+              {t('quiz.questionImage', '🖼️ Ảnh minh họa câu hỏi')}
+            </span>
+          </div>
+          <div className="w-full max-h-96 rounded-xl overflow-hidden bg-white shadow-md">
+            <img
+              src={question.imageUrl}
+              alt="Question illustration"
+              className="w-full h-full object-contain"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Các đáp án */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {question.answers.map((answer, index) => {
         const isSelected = singleAnswerValue === answer.id;
+        const letter = String.fromCharCode(65 + index);
         return (
           <button
             key={answer.id}
             onClick={() => onChange(answer.id)}
-            className={`relative p-4 rounded-lg border-2 transition-all ${
+            className={`group relative p-4 rounded-2xl border-2 transition-all duration-200 ${
               isSelected
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                ? 'border-blue-500 bg-blue-50/50 shadow-md'
+                : 'border-gray-200 hover:border-blue-200 hover:bg-blue-50/30 hover:shadow-sm'
             }`}
           >
             {answer.imageUrl ? (
-              <div className="w-full h-32 mb-3 rounded-lg overflow-hidden bg-gray-100">
+              <div className="w-full h-48 mb-4 rounded-xl overflow-hidden bg-gray-100 relative group-hover:shadow-inner transition-shadow">
                 <img
                   src={answer.imageUrl}
-                  alt={answer.text || getOptionAltLabel(String.fromCharCode(65 + index))}
-                  className="w-full h-full object-cover"
+                  alt={answer.text || getOptionAltLabel(letter)}
+                  className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
                     target.nextElementSibling?.classList.remove('hidden');
                   }}
                 />
-                <div className="hidden w-full h-full flex items-center justify-center text-gray-400">
-                  <span className="text-sm">{imageLoadError}</span>
+                <div className="hidden w-full h-full flex items-center justify-center text-gray-400 bg-gray-50">
+                  <div className="text-center">
+                    <svg className="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-sm">{imageLoadError}</span>
+                  </div>
                 </div>
               </div>
             ) : (
-              <div className="w-full h-32 mb-3 rounded-lg bg-gray-100 flex items-center justify-center">
-                <span className="text-gray-400 text-sm">{noImageText}</span>
+              <div className="w-full h-40 mb-4 rounded-xl bg-gray-50 flex items-center justify-center border border-dashed border-gray-200">
+                <span className="text-gray-400 text-sm font-medium">{noImageText}</span>
               </div>
             )}
 
-            <div className="flex items-center justify-between">
-              <span className="font-medium text-gray-700">
-                {String.fromCharCode(65 + index)}. {answer.text || getImageFallbackLabel(index + 1)}
-              </span>
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+            <div className="flex items-center justify-between px-2">
+              <div className="flex items-center space-x-3">
+                 <div className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold transition-colors ${
+                  isSelected
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 text-gray-500 group-hover:bg-blue-100 group-hover:text-blue-600'
+                }`}>
+                  {letter}
+                </div>
+                <span className={`font-medium text-lg ${
+                  isSelected ? 'text-gray-900' : 'text-gray-700 group-hover:text-gray-900'
+                }`}>
+                  {answer.text || getImageFallbackLabel(index + 1)}
+                </span>
+              </div>
+              
+              <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
                 isSelected
                   ? 'border-blue-500 bg-blue-500'
-                  : 'border-gray-300'
+                  : 'border-gray-300 group-hover:border-blue-300'
               }`}>
                 {isSelected && (
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                  <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
                 )}
               </div>
             </div>
           </button>
         );
       })}
+      </div>
     </div>
   );
 
   const renderCheckbox = () => {
     const currentValues = Array.isArray(value) ? value : [];
     return (
-      <div className="space-y-3">
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-          <p className="text-sm text-yellow-700">{checkboxHint}</p>
+      <div className="space-y-4">
+        <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium inline-block mb-2">
+          {checkboxHint}
         </div>
         {question.answers.map((answer, index) => {
           const isSelected = currentValues.includes(answer.id);
+          const letter = String.fromCharCode(65 + index);
           return (
             <button
               key={answer.id}
@@ -202,35 +337,530 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
                   : [...currentValues, answer.id];
                 onChange(newValue);
               }}
-              className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
+              className={`group relative w-full p-5 text-left rounded-2xl border-2 transition-all duration-200 ${
                 isSelected
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  ? 'border-blue-500 bg-blue-50/50 shadow-md'
+                  : 'border-gray-100 bg-white hover:border-blue-200 hover:bg-blue-50/30 hover:shadow-sm'
               }`}
             >
-              <div className="flex items-center space-x-3">
-                <div className={`w-4 h-4 rounded border-2 ${
+              <div className="flex items-center space-x-4">
+                 {/* Letter Badge */}
+                <div className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg text-lg font-bold transition-colors ${
+                  isSelected
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 text-gray-500 group-hover:bg-blue-100 group-hover:text-blue-600'
+                }`}>
+                  {letter}
+                </div>
+
+                <div className="flex-1">
+                  <span
+                    className={`text-lg leading-relaxed transition-colors ${
+                      isSelected ? 'text-gray-900 font-medium' : 'text-gray-700 group-hover:text-gray-900'
+                    }`}
+                    dangerouslySetInnerHTML={{ __html: answer.text || '' }}
+                  />
+                </div>
+
+                 {/* Checkbox Indicator */}
+                <div className={`flex-shrink-0 w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
                   isSelected
                     ? 'border-blue-500 bg-blue-500'
-                    : 'border-gray-300'
+                    : 'border-gray-300 group-hover:border-blue-300'
                 }`}>
                   {isSelected && (
-                    <div className="text-white text-xs flex items-center justify-center h-full">
-                      {checkboxIndicator}
-                    </div>
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
                   )}
                 </div>
-                <span className="font-medium mr-3">
-                  {String.fromCharCode(65 + index)}.
-                </span>
-                <span
-                  className="flex-1"
-                  dangerouslySetInnerHTML={{ __html: answer.text || '' }}
-                />
               </div>
             </button>
           );
         })}
+      </div>
+    );
+  };
+
+  const renderRichContent = () => (
+    <div className="space-y-4">
+      {question.richText && (
+        <div className="prose max-w-none bg-gray-50 p-6 rounded-xl" dangerouslySetInnerHTML={{ __html: question.richText }} />
+      )}
+      {renderMultipleChoice()}
+    </div>
+  );
+
+  const renderAudioQuestion = () => (
+    <div className="space-y-6">
+      {question.audioUrl && (
+        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+              </svg>
+            </div>
+            <p className="text-gray-600 font-medium">{t('quiz.questionRenderer.audioHint', '🎧 Nghe audio và trả lời câu hỏi:')}</p>
+          </div>
+          <audio controls className="w-full">
+            <source src={question.audioUrl} type="audio/mpeg" />
+            {t('quiz.questionRenderer.audioNotSupported', 'Trình duyệt không hỗ trợ phát audio')}
+          </audio>
+        </div>
+      )}
+      {renderMultipleChoice()}
+    </div>
+  );
+
+  const renderVideoQuestion = () => (
+    <div className="space-y-6">
+      {question.videoUrl && (
+        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <p className="text-gray-600 font-medium">{t('quiz.questionRenderer.videoHint', '🎬 Xem video và trả lời câu hỏi:')}</p>
+          </div>
+          <VideoPlayer url={question.videoUrl} className="w-full rounded-lg" />
+        </div>
+      )}
+      {renderMultipleChoice()}
+    </div>
+  );
+
+  // Sortable Item Component for Ordering
+  const SortableOrderingItem: React.FC<{
+    id: string;
+    item: any;
+    index: number;
+  }> = ({ id, item, index }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+    };
+
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={`flex items-center space-x-4 p-4 bg-white border-2 border-gray-200 rounded-xl transition-all ${
+          isDragging ? 'opacity-50 shadow-lg' : ''
+        }`}
+      >
+        <div
+          {...attributes}
+          {...listeners}
+          className="flex-shrink-0 cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <GripVertical className="w-5 h-5 text-gray-400" />
+        </div>
+        <div className="flex-shrink-0 w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">
+          {index + 1}
+        </div>
+        <div className="flex-1 text-lg">{item.text}</div>
+        {item.imageUrl && (
+          <img 
+            src={item.imageUrl} 
+            alt={item.text} 
+            className="w-16 h-16 object-cover rounded-lg border-2 border-gray-200"
+          />
+        )}
+      </div>
+    );
+  };
+
+  const renderOrdering = () => {
+    const items = question.orderingItems || [];
+    
+    if (items.length === 0) {
+      return (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+          <svg className="w-12 h-12 mx-auto mb-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-red-800 font-medium">
+            {t('quiz.questionRenderer.noOrderingItems', 'Câu hỏi không có các mục để sắp xếp')}
+          </p>
+        </div>
+      );
+    }
+    
+    const currentOrder = Array.isArray(value) ? value : items.map(item => item.id);
+
+    const handleDragEnd = (event: DragEndEvent) => {
+      const { active, over } = event;
+
+      if (over && active.id !== over.id) {
+        const oldIndex = currentOrder.indexOf(active.id as string);
+        const newIndex = currentOrder.indexOf(over.id as string);
+        const newOrder = arrayMove(currentOrder, oldIndex, newIndex);
+        onChange(newOrder);
+      }
+    };
+    
+    return (
+      <div className="space-y-4">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 text-blue-800 px-5 py-3 rounded-xl text-sm font-medium inline-flex items-center gap-2 mb-2">
+          <GripVertical className="w-5 h-5" />
+          <span>{t('quiz.questionRenderer.orderingHint', '💡 Kéo thả để sắp xếp các mục theo thứ tự đúng.')}</span>
+        </div>
+        
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={currentOrder}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-3">
+              {currentOrder.map((itemId: string, index: number) => {
+                const item = items.find(i => i.id === itemId);
+                if (!item) return null;
+                
+                return (
+                  <SortableOrderingItem
+                    key={item.id}
+                    id={item.id}
+                    item={item}
+                    index={index}
+                  />
+                );
+              })}
+            </div>
+          </SortableContext>
+        </DndContext>
+      </div>
+    );
+  };
+
+  const renderMatching = () => {
+    const pairs = question.matchingPairs || [];
+    
+    if (pairs.length === 0) {
+      return (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+          <svg className="w-12 h-12 mx-auto mb-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-red-800 font-medium">
+            {t('quiz.questionRenderer.noMatchingPairs', 'Câu hỏi không có các cặp để ghép')}
+          </p>
+        </div>
+      );
+    }
+    
+    const currentMatches = typeof value === 'object' && value !== null && !Array.isArray(value) ? value as Record<string, string> : {};
+    
+    const handleLeftClick = (leftValue: string) => {
+      setSelectedLeft(leftValue);
+    };
+    
+    const handleRightClick = (rightValue: string) => {
+      if (selectedLeft) {
+        const newMatches = { ...currentMatches, [selectedLeft]: rightValue };
+        onChange(newMatches as AnswerValue);
+        setSelectedLeft(null);
+      }
+    };
+    
+    const getMatchedLeft = (rightValue: string) => {
+      return Object.entries(currentMatches).find(([_, v]) => v === rightValue)?.[0];
+    };
+    
+    return (
+      <div className="space-y-6">
+        {/* Modern Hint with Gradient */}
+        <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-4 rounded-2xl shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0 w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div>
+              <div className="font-bold text-lg">{t('quiz.questionRenderer.matchingTitle', 'Nối các cặp')}</div>
+              <div className="text-sm text-white/90">{t('quiz.questionRenderer.matchingHint', 'Chọn 1 ô bên trái, sau đó chọn 1 ô bên phải để ghép cặp')}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Modern Two Column Layout */}
+        <div className="grid grid-cols-2 gap-8">
+          {/* Left Column */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">A</span>
+              </div>
+              <h4 className="font-bold text-gray-900 text-lg">{t('quiz.questionRenderer.leftColumn', 'Cột trái')}</h4>
+            </div>
+            {pairs.map((pair, index) => {
+              const isSelected = selectedLeft === pair.left;
+              const isMatched = currentMatches[pair.left];
+              
+              return (
+                <button
+                  key={pair.id}
+                  onClick={() => handleLeftClick(pair.left)}
+                  className={`w-full p-4 rounded-xl border-2 transition-all duration-200 transform hover:scale-[1.02] ${
+                    isSelected
+                      ? 'border-purple-500 bg-purple-50 shadow-lg ring-4 ring-purple-200'
+                      : isMatched
+                      ? 'border-green-500 bg-green-50'
+                      : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+                      isSelected
+                        ? 'bg-purple-500 text-white'
+                        : isMatched
+                        ? 'bg-green-500 text-white'
+                        : 'bg-gray-200 text-gray-600'
+                    }`}>
+                      {index + 1}
+                    </div>
+                    <div className="flex-1 text-left font-medium text-gray-900">
+                      {pair.leftImageUrl ? (
+                        <img src={pair.leftImageUrl} alt={pair.left} className="w-full h-auto object-contain rounded-lg" style={{ maxHeight: '120px' }} />
+                      ) : (
+                        pair.left
+                      )}
+                    </div>
+                    {isMatched && (
+                      <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 bg-pink-500 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">B</span>
+              </div>
+              <h4 className="font-bold text-gray-900 text-lg">{t('quiz.questionRenderer.rightColumn', 'Cột phải')}</h4>
+            </div>
+            {shuffledRightItems.map((rightValue: string, index: number) => {
+              const matchedLeft = getMatchedLeft(rightValue);
+              const isMatched = !!matchedLeft;
+              
+              return (
+                <button
+                  key={index}
+                  onClick={() => handleRightClick(rightValue)}
+                  disabled={!selectedLeft || isMatched}
+                  className={`w-full p-4 rounded-xl border-2 transition-all duration-200 transform hover:scale-[1.02] ${
+                    isMatched
+                      ? 'border-green-500 bg-green-50 cursor-not-allowed'
+                      : selectedLeft
+                      ? 'border-purple-300 bg-purple-50 hover:border-purple-500 hover:shadow-lg cursor-pointer'
+                      : 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+                      isMatched
+                        ? 'bg-green-500 text-white'
+                        : 'bg-gray-200 text-gray-400'
+                    }`}>
+                      {String.fromCharCode(65 + index)}
+                    </div>
+                    <div className="flex-1 text-left font-medium text-gray-900">
+                      {pairs.find(p => p.right === rightValue)?.rightImageUrl ? (
+                        <img src={pairs.find(p => p.right === rightValue)!.rightImageUrl} alt={rightValue} className="w-full h-auto object-contain rounded-lg" style={{ maxHeight: '120px' }} />
+                      ) : (
+                        rightValue
+                      )}
+                    </div>
+                    {isMatched && (
+                      <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Progress Indicator */}
+        {Object.keys(currentMatches).length > 0 && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-semibold text-gray-700">
+                {t('quiz.questionRenderer.matchingProgress', 'Tiến độ:')}
+              </span>
+              <span className="text-sm font-bold text-blue-600">
+                {Object.keys(currentMatches).length} / {pairs.length}
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-blue-500 to-indigo-500 h-full transition-all duration-500"
+                style={{ width: `${(Object.keys(currentMatches).length / pairs.length) * 100}%` }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderFillBlanks = () => {
+    const blanks = question.blanks || [];
+    const textWithBlanks = question.textWithBlanks || '';
+    const currentAnswers = typeof value === 'object' && value !== null && !Array.isArray(value) ? value as Record<string, string> : {};
+    
+    return (
+      <div className="space-y-6">
+        <div className="bg-green-50 text-green-700 px-4 py-2 rounded-lg text-sm font-medium inline-block mb-2">
+          {t('quiz.questionRenderer.fillBlanksHint', '💡 Điền vào chỗ trống để hoàn thành câu.')}
+        </div>
+        <div className="bg-white border-2 border-gray-200 rounded-xl p-6 text-lg leading-relaxed">
+          {textWithBlanks.split(/\{blank\}/).map((text, index) => (
+            <React.Fragment key={index}>
+              {text}
+              {index < blanks.length && (
+                <input
+                  type="text"
+                  value={currentAnswers[blanks[index].id] || ''}
+                  onChange={(e) => {
+                    const newAnswers = { ...currentAnswers, [blanks[index].id]: e.target.value };
+                    onChange(newAnswers as AnswerValue);
+                  }}
+                  className="inline-block mx-2 px-3 py-1 border-b-2 border-blue-500 focus:border-blue-700 focus:outline-none min-w-[120px] text-center bg-blue-50"
+                  placeholder="___"
+                />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderMultimedia = () => {
+    // Render multimedia question with flexible media types
+    const singleAnswerValue = typeof value === 'string' ? value : '';
+    
+    return (
+      <div className="space-y-6">
+        {/* Question Media */}
+        {(question.imageUrl || question.audioUrl || question.videoUrl) && (
+          <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-2xl border-2 border-purple-200 shadow-sm space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-100 rounded-lg">
+              <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              <span className="text-xs font-bold text-purple-900 uppercase tracking-wide">
+                {t('quiz.questionMedia', 'Phương tiện câu hỏi')}
+              </span>
+            </div>
+            {question.imageUrl && (
+              <div className="w-full rounded-xl overflow-hidden bg-white shadow-md">
+                <img src={question.imageUrl} alt="Question" className="w-full object-contain" style={{ maxHeight: '400px' }} />
+              </div>
+            )}
+            {question.audioUrl && (
+              <audio controls className="w-full">
+                <source src={question.audioUrl} />
+              </audio>
+            )}
+            {question.videoUrl && (
+              <VideoPlayer 
+                url={question.videoUrl} 
+                className="w-full rounded-xl shadow-md" 
+                style={{ maxHeight: '500px' }}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Answers */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {question.answers.map((answer, index) => {
+            const isSelected = singleAnswerValue === answer.id;
+            const letter = String.fromCharCode(65 + index);
+            
+            return (
+              <button
+                key={answer.id}
+                onClick={() => onChange(answer.id)}
+                className={`group p-4 rounded-xl border-2 transition-all ${
+                  isSelected
+                    ? 'border-purple-500 bg-purple-50 shadow-lg'
+                    : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50/30'
+                }`}
+              >
+                {/* Answer Media */}
+                {answer.imageUrl && (
+                  <div className="w-full h-48 mb-3 rounded-lg overflow-hidden bg-gray-100">
+                    <img src={answer.imageUrl} alt={answer.text} className="w-full h-full object-contain" />
+                  </div>
+                )}
+                {answer.audioUrl && (
+                  <div className="mb-3">
+                    <audio controls className="w-full" onClick={(e) => e.stopPropagation()}>
+                      <source src={answer.audioUrl} />
+                    </audio>
+                  </div>
+                )}
+                {answer.videoUrl && (
+                  <div className="mb-3" onClick={(e) => e.stopPropagation()}>
+                    <VideoPlayer 
+                      url={answer.videoUrl} 
+                      className="w-full rounded-lg" 
+                      style={{ maxHeight: '200px' }}
+                    />
+                  </div>
+                )}
+
+                {/* Answer Label */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-8 h-8 flex items-center justify-center rounded-full font-bold ${
+                      isSelected ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {letter}
+                    </div>
+                    <span className="font-medium">{answer.text}</span>
+                  </div>
+                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                    isSelected ? 'border-purple-500 bg-purple-500' : 'border-gray-300'
+                  }`}>
+                    {isSelected && (
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
     );
   };
@@ -243,32 +873,67 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
         return renderBoolean();
       case 'short_answer':
         return renderShortAnswer();
+      case 'multimedia':
+        return renderMultimedia();
       case 'image':
         return renderImageQuestion();
       case 'checkbox':
         return renderCheckbox();
+      case 'rich_content':
+        return renderRichContent();
+      case 'audio':
+        return renderAudioQuestion();
+      case 'video':
+        return renderVideoQuestion();
+      case 'ordering':
+        return renderOrdering();
+      case 'matching':
+        return renderMatching();
+      case 'fill_blanks':
+        return renderFillBlanks();
       default:
-        return <div>{t('quiz.unsupportedType')}</div>;
+        return (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-center">
+            <svg className="w-12 h-12 mx-auto mb-3 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <p className="text-yellow-800 font-medium">
+              {t('quiz.unsupportedType', 'Loại câu hỏi không được hỗ trợ')}: {question.type}
+            </p>
+          </div>
+        );
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-sm font-medium text-blue-600">
-            {t('quiz.question')} {questionNumber} / {question.points} {t('common.points')}
+        <div className="flex items-center justify-between mb-6">
+          <span className="px-4 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm font-bold tracking-wide uppercase">
+            {t('quiz.question')} {questionNumber}
           </span>
-          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-            {question.type === 'multiple' && t('quiz.questionTypes.multiple')}
-            {question.type === 'boolean' && t('quiz.questionTypes.boolean')}
-            {question.type === 'short_answer' && t('quiz.questionTypes.short_answer')}
-            {question.type === 'image' && t('quiz.questionTypes.image')}
-            {question.type === 'checkbox' && t('quiz.questionTypes.checkbox')}
-          </span>
+          <div className="flex items-center space-x-3">
+            <span className="text-sm font-medium text-gray-500">
+              {question.points} {t('common.points')}
+            </span>
+             <span className="h-4 w-px bg-gray-300"></span>
+            <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-md uppercase tracking-wide">
+              {question.type === 'multiple' && t('quiz.questionTypes.multiple')}
+              {question.type === 'boolean' && t('quiz.questionTypes.boolean')}
+              {question.type === 'short_answer' && t('quiz.questionTypes.short_answer')}
+              {question.type === 'image' && t('quiz.questionTypes.image')}
+              {question.type === 'checkbox' && t('quiz.questionTypes.checkbox')}
+              {question.type === 'rich_content' && t('quiz.questionTypes.rich_content', 'Rich Content')}
+              {question.type === 'audio' && t('quiz.questionTypes.audio', 'Audio')}
+              {question.type === 'video' && t('quiz.questionTypes.video', 'Video')}
+              {question.type === 'ordering' && t('quiz.questionTypes.ordering', 'Ordering')}
+              {question.type === 'matching' && t('quiz.questionTypes.matching', 'Matching')}
+              {question.type === 'fill_blanks' && t('quiz.questionTypes.fill_blanks', 'Fill Blanks')}
+            </span>
+          </div>
         </div>
         {/* Render tiêu đề câu hỏi KHÔNG tự bọc <p> */}
-        <h2 className="text-xl font-semibold text-gray-800 mb-6">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
           {typeof question.text === 'string' ? question.text.replace(/^<p>|<\/p>$/g, '') : ''}
         </h2>
       </div>

@@ -51,13 +51,14 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
         newQuestion.acceptedAnswers = [];
         break;
       case 'image':
-        // Chọn ảnh: tạo 4 đáp án có imageUrl
+        // Câu hỏi hình ảnh: câu hỏi có thể có ảnh + đáp án có thể có ảnh
         newAnswers = Array.from({ length: 4 }, (_, i) => ({
           id: generateId(),
           text: t('createQuiz.questions.defaultImageLabel', { index: i + 1 }),
           isCorrect: i === 0,
           imageUrl: '',
         }));
+        newQuestion.imageUrl = ''; // Thêm imageUrl cho câu hỏi
         break;
       case 'audio':
         // Câu hỏi nghe: audio URL + 4 đáp án trắc nghiệm
@@ -76,6 +77,18 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
           isCorrect: i === 0,
         }));
         newQuestion.videoUrl = '';
+        break;
+      case 'multimedia':
+        // 🆕 Câu hỏi đa phương tiện: Câu hỏi và đáp án có thể có image/audio/video
+        newAnswers = Array.from({ length: 4 }, (_, i) => ({
+          id: generateId(),
+          text: '',
+          isCorrect: i === 0,
+        }));
+        // Initialize với undefined để không hiển thị uploader mặc định
+        newQuestion.imageUrl = undefined;
+        newQuestion.audioUrl = undefined;
+        newQuestion.videoUrl = undefined;
         break;
       case 'ordering':
         // Sắp xếp: tạo 4 items mặc định
@@ -106,7 +119,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
     onChange({ ...newQuestion, answers: newAnswers });
   };
 
-  const handleAnswerChange = (idx: number, field: keyof Answer, value: string | boolean | undefined) => {
+  const handleAnswerChange = (idx: number, field: string, value: string | boolean | undefined) => {
     const newAnswers = question.answers.map((a, i) =>
       i === idx ? { ...a, [field]: value } : a
     );
@@ -114,15 +127,16 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
   };
 
   const handleAddAnswer = () => {
-    if (question.type === 'multiple' || question.type === 'checkbox' || question.type === 'image' || question.type === 'audio' || question.type === 'video') {
+    if (question.type === 'multiple' || question.type === 'checkbox' || question.type === 'image' || question.type === 'audio' || question.type === 'video' || question.type === 'multimedia') {
       const newAnswer: Answer = {
         id: generateId(),
         text:
-          question.type === 'image'
+          question.type === 'image' || question.type === 'multimedia'
             ? t('createQuiz.questions.defaultImageLabel', { index: question.answers.length + 1 })
             : '',
         isCorrect: false,
         ...(question.type === 'image' && { imageUrl: '' }),
+        ...(question.type === 'multimedia' && { imageUrl: '', audioUrl: '', videoUrl: '' }),
       };
       onChange({
         ...question,
@@ -209,9 +223,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
           <option value="boolean">{t('quizCreation.trueFalse')}</option>
           <option value="short_answer">{t('quizCreation.fillInBlank')}</option>
           <option value="checkbox">{t('quizCreation.multipleAnswers')}</option>
-          <option value="image">{t('quizCreation.imageChoice')}</option>
-          <option value="audio">{t('quizCreation.audioQuestion')}</option>
-          <option value="video">{t('quizCreation.videoQuestion')}</option>
+          <option value="multimedia">{t('quizCreation.multimediaQuestion', 'Đa phương tiện')}</option>
           <option value="ordering">{t('quizCreation.orderingQuestion')}</option>
           <option value="matching">{t('quizCreation.matchingQuestion')}</option>
           <option value="fill_blanks">{t('quizCreation.essayQuestion')}</option>
@@ -401,9 +413,27 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
 
       {question.type === 'image' && (
         <div className="space-y-3">
+          {/* Upload ảnh cho câu hỏi */}
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+            <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-3">
+              🖼️ {t('quizCreation.questionImage', 'Ảnh câu hỏi (tùy chọn)')}
+            </h4>
+            <MediaUploader
+              type="image"
+              currentUrl={question.imageUrl}
+              onUploadComplete={(url) => onChange({ ...question, imageUrl: url })}
+              onRemove={() => onChange({ ...question, imageUrl: '' })}
+              maxSizeMB={5}
+            />
+            <p className="text-xs text-gray-500 mt-2">
+              💡 {t('quizCreation.questionImageHint', 'Thêm ảnh minh họa cho câu hỏi của bạn')}
+            </p>
+          </div>
+
+          {/* Upload ảnh cho các đáp án */}
           <div className="flex justify-between items-center">
-            <h4 className="font-medium text-gray-700">{t('quizCreation.imageAnswers')}</h4>
-            <Button onClick={handleAddAnswer} variant="outline" size="sm">{t('quizCreation.addImage')}</Button>
+            <h4 className="font-medium text-gray-700">{t('quizCreation.imageAnswers', 'Đáp án (có thể có ảnh)')}</h4>
+            <Button onClick={handleAddAnswer} variant="outline" size="sm">{t('quizCreation.addImage', 'Thêm đáp án')}</Button>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {question.answers.map((a, idx) => (
@@ -424,18 +454,23 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
                 
                 <input
                   className="w-full border p-2 rounded text-sm"
-                  placeholder={t('placeholders.imageDescription')}
+                  placeholder={t('placeholders.imageDescription', 'Mô tả đáp án')}
                   value={a.text}
                   onChange={e => handleAnswerChange(idx, 'text', e.target.value)}
                 />
                 
-                <MediaUploader
-                  type="image"
-                  currentUrl={a.imageUrl}
-                  onUploadComplete={(url) => handleAnswerChange(idx, 'imageUrl', url)}
-                  onRemove={() => handleAnswerChange(idx, 'imageUrl', '')}
-                  maxSizeMB={5}
-                />
+                <div>
+                  <label className="text-xs text-gray-600 mb-1 block">
+                    📷 {t('quizCreation.answerImage', 'Ảnh đáp án (tùy chọn)')}
+                  </label>
+                  <MediaUploader
+                    type="image"
+                    currentUrl={a.imageUrl}
+                    onUploadComplete={(url) => handleAnswerChange(idx, 'imageUrl', url)}
+                    onRemove={() => handleAnswerChange(idx, 'imageUrl', '')}
+                    maxSizeMB={5}
+                  />
+                </div>
                 
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -551,6 +586,253 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* 🆕 Multimedia Question */}
+      {question.type === 'multimedia' && (
+        <div className="space-y-4">
+          {/* Question Media Section */}
+          <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-xl border-2 border-purple-200">
+            <h4 className="font-semibold text-purple-900 mb-3">
+              {t('quizCreation.questionMedia', 'Phương tiện câu hỏi (tùy chọn)')}
+            </h4>
+            
+            {/* Media Type Selector */}
+            <div className="flex gap-2 mb-3 flex-wrap">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name={`q-media-${question.id}`}
+                  checked={question.imageUrl === undefined && question.audioUrl === undefined && question.videoUrl === undefined}
+                  onChange={() => onChange({ ...question, imageUrl: undefined, audioUrl: undefined, videoUrl: undefined })}
+                />
+                <span className="text-sm">{t('quizCreation.mediaTypes.text', 'Text')}</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name={`q-media-${question.id}`}
+                  checked={question.imageUrl !== undefined && question.imageUrl !== null}
+                  onChange={() => onChange({ ...question, imageUrl: '', audioUrl: undefined, videoUrl: undefined })}
+                />
+                <span className="text-sm">{t('quizCreation.mediaTypes.image', 'Hình ảnh')}</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name={`q-media-${question.id}`}
+                  checked={question.audioUrl !== undefined && question.audioUrl !== null}
+                  onChange={() => onChange({ ...question, imageUrl: undefined, audioUrl: '', videoUrl: undefined })}
+                />
+                <span className="text-sm">{t('quizCreation.mediaTypes.audio', 'Âm thanh')}</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name={`q-media-${question.id}`}
+                  checked={question.videoUrl !== undefined && question.videoUrl !== null}
+                  onChange={() => onChange({ ...question, imageUrl: undefined, audioUrl: undefined, videoUrl: '' })}
+                />
+                <span className="text-sm">{t('quizCreation.mediaTypes.video', 'Video')}</span>
+              </label>
+            </div>
+
+            {/* Upload Components - Only show when media type is selected */}
+            {question.imageUrl !== undefined && question.imageUrl !== null && !question.audioUrl && !question.videoUrl && (
+              <MediaUploader
+                type="image"
+                currentUrl={question.imageUrl}
+                onUploadComplete={(url) => onChange({ ...question, imageUrl: url })}
+                onRemove={() => onChange({ ...question, imageUrl: '' })}
+                maxSizeMB={5}
+              />
+            )}
+            {question.audioUrl !== undefined && question.audioUrl !== null && !question.imageUrl && !question.videoUrl && (
+              <MediaUploader
+                type="audio"
+                currentUrl={question.audioUrl}
+                onUploadComplete={(url) => onChange({ ...question, audioUrl: url })}
+                onRemove={() => onChange({ ...question, audioUrl: '' })}
+                maxSizeMB={10}
+              />
+            )}
+            {question.videoUrl !== undefined && question.videoUrl !== null && !question.imageUrl && !question.audioUrl && (
+              <MediaUploader
+                type="video"
+                currentUrl={question.videoUrl}
+                onUploadComplete={(url) => onChange({ ...question, videoUrl: url })}
+                onRemove={() => onChange({ ...question, videoUrl: '' })}
+                maxSizeMB={100}
+              />
+            )}
+          </div>
+
+          {/* Answers Section */}
+          <div className="flex justify-between items-center">
+            <h4 className="font-medium text-gray-700">
+              {t('quizCreation.multimediaAnswers', 'Đáp án (có thể có phương tiện)')}
+            </h4>
+            <Button onClick={handleAddAnswer} variant="outline" size="sm">
+              {t('quizCreation.addAnswer')}
+            </Button>
+          </div>
+
+          <div className="space-y-3">
+            {question.answers.map((a, idx) => (
+              <div key={a.id} className="bg-white p-4 rounded-lg border-2 border-gray-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-mono bg-purple-100 px-3 py-1 rounded-full font-bold text-purple-700">
+                    {String.fromCharCode(65 + idx)}
+                  </span>
+                  {question.answers.length > 2 && (
+                    <Button 
+                      variant="outline" 
+                      onClick={() => handleRemoveAnswer(idx)} 
+                      className="text-red-600 border-red-300 px-2 py-1"
+                      size="sm"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  )}
+                </div>
+
+                {/* Answer Text */}
+                <input
+                  className="w-full border p-2 rounded"
+                  placeholder={t('createQuiz.questions.answerPlaceholder', { label: String.fromCharCode(65 + idx) })}
+                  value={a.text}
+                  onChange={e => handleAnswerChange(idx, 'text', e.target.value)}
+                />
+
+                {/* Answer Media Type Selector */}
+                <div className="flex gap-2 text-xs flex-wrap">
+                  <label className="flex items-center gap-1 cursor-pointer">
+                    <input
+                      type="radio"
+                      name={`a-media-${a.id}`}
+                      checked={a.imageUrl === undefined && a.audioUrl === undefined && a.videoUrl === undefined}
+                      onChange={() => {
+                        const updatedAnswer = {
+                          ...a,
+                          imageUrl: undefined,
+                          audioUrl: undefined,
+                          videoUrl: undefined
+                        };
+                        const newAnswers = question.answers.map((ans, i) => 
+                          i === idx ? updatedAnswer : ans
+                        );
+                        onChange({ ...question, answers: newAnswers });
+                      }}
+                    />
+                    <span>{t('quizCreation.mediaTypes.text', 'Text')}</span>
+                  </label>
+                  <label className="flex items-center gap-1 cursor-pointer">
+                    <input
+                      type="radio"
+                      name={`a-media-${a.id}`}
+                      checked={a.imageUrl !== undefined && a.imageUrl !== null}
+                      onChange={() => {
+                        const updatedAnswer = {
+                          ...a,
+                          imageUrl: '',
+                          audioUrl: undefined,
+                          videoUrl: undefined
+                        };
+                        const newAnswers = question.answers.map((ans, i) => 
+                          i === idx ? updatedAnswer : ans
+                        );
+                        onChange({ ...question, answers: newAnswers });
+                      }}
+                    />
+                    <span>{t('quizCreation.mediaTypes.image', 'Image')}</span>
+                  </label>
+                  <label className="flex items-center gap-1 cursor-pointer">
+                    <input
+                      type="radio"
+                      name={`a-media-${a.id}`}
+                      checked={a.audioUrl !== undefined && a.audioUrl !== null}
+                      onChange={() => {
+                        const updatedAnswer = {
+                          ...a,
+                          imageUrl: undefined,
+                          audioUrl: '',
+                          videoUrl: undefined
+                        };
+                        const newAnswers = question.answers.map((ans, i) => 
+                          i === idx ? updatedAnswer : ans
+                        );
+                        onChange({ ...question, answers: newAnswers });
+                      }}
+                    />
+                    <span>{t('quizCreation.mediaTypes.audio', 'Audio')}</span>
+                  </label>
+                  <label className="flex items-center gap-1 cursor-pointer">
+                    <input
+                      type="radio"
+                      name={`a-media-${a.id}`}
+                      checked={a.videoUrl !== undefined && a.videoUrl !== null}
+                      onChange={() => {
+                        const updatedAnswer = {
+                          ...a,
+                          imageUrl: undefined,
+                          audioUrl: undefined,
+                          videoUrl: ''
+                        };
+                        const newAnswers = question.answers.map((ans, i) => 
+                          i === idx ? updatedAnswer : ans
+                        );
+                        onChange({ ...question, answers: newAnswers });
+                      }}
+                    />
+                    <span>{t('quizCreation.mediaTypes.video', 'Video')}</span>
+                  </label>
+                </div>
+
+                {/* Media Uploader for Answer - Only show when media type is selected */}
+                {a.imageUrl !== undefined && a.imageUrl !== null && !a.audioUrl && !a.videoUrl && (
+                  <MediaUploader
+                    type="image"
+                    currentUrl={a.imageUrl}
+                    onUploadComplete={(url) => handleAnswerChange(idx, 'imageUrl', url)}
+                    onRemove={() => handleAnswerChange(idx, 'imageUrl', '')}
+                    maxSizeMB={5}
+                  />
+                )}
+                {a.audioUrl !== undefined && a.audioUrl !== null && !a.imageUrl && !a.videoUrl && (
+                  <MediaUploader
+                    type="audio"
+                    currentUrl={a.audioUrl}
+                    onUploadComplete={(url) => handleAnswerChange(idx, 'audioUrl', url)}
+                    onRemove={() => handleAnswerChange(idx, 'audioUrl', '')}
+                    maxSizeMB={10}
+                  />
+                )}
+                {a.videoUrl !== undefined && a.videoUrl !== null && !a.imageUrl && !a.audioUrl && (
+                  <MediaUploader
+                    type="video"
+                    currentUrl={a.videoUrl}
+                    onUploadComplete={(url) => handleAnswerChange(idx, 'videoUrl', url)}
+                    onRemove={() => handleAnswerChange(idx, 'videoUrl', '')}
+                    maxSizeMB={50}
+                  />
+                )}
+
+                {/* Correct Answer Checkbox */}
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name={`correct-${question.id}`}
+                    checked={a.isCorrect}
+                    onChange={() => handleSetCorrect(idx)}
+                  />
+                  <span className="text-sm font-medium text-green-600">
+                    ✓ {t('quizCreation.correctAnswerLabel')}
+                  </span>
+                </label>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

@@ -70,7 +70,10 @@ export const useQuizSession = ({ quiz }: UseQuizSessionProps) => {
     switch (question.type) {
       case 'boolean':
       case 'multiple':
-      case 'image': {
+      case 'image':
+      case 'audio':
+      case 'video':
+      case 'multimedia': {
         const correctAnswerId = question.answers.find(a => a.isCorrect)?.id;
         return userAnswer === correctAnswerId;
       }
@@ -85,7 +88,67 @@ export const useQuizSession = ({ quiz }: UseQuizSessionProps) => {
         }
         return false;
       }
+      case 'ordering': {
+        // User answer is array of item IDs in their order
+        const userOrder = Array.isArray(userAnswer) ? userAnswer : [];
+        const items = question.orderingItems || [];
+        
+        // Check if length matches
+        if (userOrder.length !== items.length) return false;
+        
+        // Create correct order array
+        const correctOrder = [...items]
+          .sort((a, b) => a.correctOrder - b.correctOrder)
+          .map(item => item.id);
+        
+        // Compare arrays
+        return JSON.stringify(userOrder) === JSON.stringify(correctOrder);
+      }
+      case 'matching': {
+        // User answer is object: { leftItem: rightItem }
+        const userMatches = typeof userAnswer === 'object' && !Array.isArray(userAnswer) 
+          ? userAnswer as Record<string, string>
+          : {};
+        const pairs = question.matchingPairs || [];
+        
+        // Check if all pairs are matched correctly
+        if (Object.keys(userMatches).length !== pairs.length) return false;
+        
+        return pairs.every(pair => userMatches[pair.left] === pair.right);
+      }
+      case 'fill_blanks': {
+        // User answer is object: { blankId: userText }
+        const userAnswers = typeof userAnswer === 'object' && !Array.isArray(userAnswer)
+          ? userAnswer as Record<string, string>
+          : {};
+        const blanks = question.blanks || [];
+        
+        // Check all blanks
+        return blanks.every(blank => {
+          const userText = (userAnswers[blank.id] || '').trim();
+          const correctText = blank.correctAnswer.trim();
+          
+          // Check case sensitivity
+          const matches = blank.caseSensitive
+            ? userText === correctText
+            : userText.toLowerCase() === correctText.toLowerCase();
+          
+          if (matches) return true;
+          
+          // Check accepted answers
+          if (blank.acceptedAnswers && blank.acceptedAnswers.length > 0) {
+            return blank.acceptedAnswers.some(accepted => 
+              blank.caseSensitive
+                ? userText === accepted.trim()
+                : userText.toLowerCase() === accepted.trim().toLowerCase()
+            );
+          }
+          
+          return false;
+        });
+      }
       default:
+        console.warn(`⚠️ Unknown question type: ${question.type}`);
         return false;
     }
   }, []);
