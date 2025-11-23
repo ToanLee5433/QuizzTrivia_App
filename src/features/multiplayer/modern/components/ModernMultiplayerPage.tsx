@@ -29,8 +29,9 @@ const ModernMultiplayerPage: React.FC = () => {
   const navigate = useNavigate();
   const { roomId: urlRoomId } = useParams<{ roomId?: string }>();
   const { showToast } = useToast();
-  const [currentView, setCurrentView] = useState<'quiz-selection' | 'room-lobby' | 'game-play' | 'game-results'>('quiz-selection');
-  const [roomId, setRoomId] = useState<string | null>(null);
+  // ✅ FIX: If URL has roomId, start with room-lobby to avoid flashing quiz-selection
+  const [currentView, setCurrentView] = useState<'quiz-selection' | 'room-lobby' | 'game-play' | 'game-results'>(urlRoomId ? 'room-lobby' : 'quiz-selection');
+  const [roomId, setRoomId] = useState<string | null>(urlRoomId || null);
   const [selectedQuiz, setSelectedQuiz] = useState<any>(null);
   const [showJoinModal, setShowJoinModal] = useState(false);
 

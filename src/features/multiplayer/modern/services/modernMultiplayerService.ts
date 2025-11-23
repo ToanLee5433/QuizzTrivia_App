@@ -140,6 +140,9 @@ export class ModernMultiplayerService {
   private callbacks: Map<string, Map<string, Function>> = new Map();
   private callbackIdCounter = 0;
   private networkMonitor = networkMonitor;
+  // ✅ FIX: Store onDisconnect refs to cancel them when leaving properly
+  private presenceDisconnectRef: any = null;
+  private playerDisconnectRef: any = null;
 
   constructor() {
     this.rtdb = getDatabase();
@@ -671,11 +674,21 @@ export class ModernMultiplayerService {
           const playerRef = ref(this.rtdb, `rooms/${roomRef.id}/players/${user.uid}`);
           await set(playerRef, playerData);
           
-          // Set up presence
-          const presenceRef = ref(this.rtdb, `rooms/${roomRef.id}/players/${user.uid}/isOnline`);
-          await set(presenceRef, true);
+          // Set up presence tracking
+          const presenceRef = ref(this.rtdb, `rooms/${roomRef.id}/presence/${user.uid}`);
+          await set(presenceRef, {
+            isOnline: true,
+            lastSeen: Date.now(),
+            username: user.displayName || 'Player'
+          });
           
-          onDisconnect(presenceRef).set(false);
+          // Set up onDisconnect handlers to auto-cleanup when connection is lost
+          const presenceDisconnectRef = onDisconnect(presenceRef);
+          const playerDisconnectRef = onDisconnect(playerRef);
+          
+          // Schedule removal on disconnect
+          await presenceDisconnectRef.remove();
+          await playerDisconnectRef.remove();
         }
         
         logger.success('Room created', { roomId: this.roomId, code: roomCode, roomName, maxPlayers });
@@ -1001,11 +1014,15 @@ export class ModernMultiplayerService {
       username: player.name
     });
     
-    onDisconnect(presenceRef).set({
-      isOnline: false,
-      lastSeen: Date.now(),
-      username: player.name
-    });
+    // Set up onDisconnect handlers to auto-cleanup when connection is lost
+    this.presenceDisconnectRef = onDisconnect(presenceRef);
+    this.playerDisconnectRef = onDisconnect(playerRef);
+    
+    // Schedule removal on disconnect
+    await this.presenceDisconnectRef.remove();
+    await this.playerDisconnectRef.remove();
+    
+    console.log('✅ Set up onDisconnect handlers for presence tracking');
   }
 
   // Update player ready status
@@ -1131,6 +1148,73 @@ export class ModernMultiplayerService {
         
         console.log('👋 Leaving room:', { roomId: this.roomId, userId: this.userId });
         
+        // Check if leaving player is host
+        const roomRef = doc(this.db, 'multiplayer_rooms', this.roomId);
+        const roomSnapshot = await getDoc(roomRef);
+        const roomData = roomSnapshot.data() as ModernRoom;
+        
+        const isHost = roomData.hostId === this.userId;
+        
+        // If host is leaving, transfer host to another online player first
+        if (isHost) {
+          console.log('🔄 Host is leaving, transferring host privileges...');
+          
+          // Find all online players (exclude self)
+          const playersRef = ref(this.rtdb, `rooms/${this.roomId}/players`);
+          const playersSnapshot = await get(playersRef);
+          const players = playersSnapshot.val() || {};
+          
+          const onlinePlayers = Object.entries(players)
+            .filter(([playerId, playerData]: [string, any]) => 
+              playerId !== this.userId && 
+              playerData?.isOnline === true
+            )
+            .map(([playerId]) => playerId);
+          
+          if (onlinePlayers.length > 0) {
+            // Transfer to first available online player
+            const newHostId = onlinePlayers[0];
+            console.log('✅ Transferring host to:', newHostId);
+            
+            // Update new host in Firestore
+            await updateDoc(roomRef, {
+              hostId: newHostId,
+              lastUpdated: new Date()
+            });
+            
+            // Update roles in RTDB
+            const newHostRef = ref(this.rtdb, `rooms/${this.roomId}/players/${newHostId}`);
+            await update(newHostRef, {
+              role: 'host' as PlayerRole,
+              isParticipating: true
+            });
+            
+            // Send system message about host transfer
+            const messagesRef = collection(this.db, 'multiplayer_rooms', this.roomId, 'messages');
+            const newHostData = players[newHostId];
+            await addDoc(messagesRef, {
+              type: 'system',
+              content: `Host left. ${newHostData?.name || 'Player'} is now the host.`,
+              timestamp: new Date(),
+              senderId: 'system',
+              senderName: 'System'
+            });
+          } else {
+            console.log('⚠️ No other players online, room will be empty');
+          }
+        }
+        
+        // ✅ FIX: Cancel onDisconnect handlers before manually removing
+        // This prevents race condition where onDisconnect triggers after manual removal
+        if (this.presenceDisconnectRef) {
+          await this.presenceDisconnectRef.cancel();
+          console.log('✅ Cancelled presence onDisconnect handler');
+        }
+        if (this.playerDisconnectRef) {
+          await this.playerDisconnectRef.cancel();
+          console.log('✅ Cancelled player onDisconnect handler');
+        }
+        
         // Remove player from RTDB
         const rtdbPlayerRef = ref(this.rtdb, `rooms/${this.roomId}/players/${this.userId}`);
         await remove(rtdbPlayerRef);
@@ -1149,7 +1233,7 @@ export class ModernMultiplayerService {
         // Clean up listeners
         this.cleanupListeners();
         
-        logger.info('Left room successfully', { roomId: this.roomId });
+        logger.info('Left room successfully', { roomId: this.roomId, wasHost: isHost });
         this.roomId = '';
       } catch (error) {
         logger.error('Failed to leave room', error);

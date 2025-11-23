@@ -249,7 +249,8 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
 
   // Memoized derived state to prevent unnecessary recalculations
   const playersList = useMemo(() => {
-    return Object.values(players);
+    // ✅ CRITICAL FIX: Only show online players (filter out disconnected/offline)
+    return Object.values(players).filter(p => p.isOnline !== false);
   }, [players]);
   
   // Spectators = those who are watching (spectator role + host not participating)
@@ -839,6 +840,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
                 roomId={roomId}
                 currentUserId={currentUserId}
                 isHost={isHost}
+                hostIsParticipating={players[currentUserId]?.isParticipating !== false}
                 players={playersList}
                 onGameStart={handleStartGame}
                 onGamePause={() => {}}

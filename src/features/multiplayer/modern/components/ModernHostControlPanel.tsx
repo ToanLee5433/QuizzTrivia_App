@@ -46,6 +46,7 @@ interface ModernHostControlPanelProps {
   roomId: string;
   currentUserId: string;
   isHost: boolean;
+  hostIsParticipating?: boolean;
   players: Player[];
   onGameStart: () => void;
   onGamePause: () => void;
@@ -60,6 +61,7 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
   roomId,
   currentUserId,
   isHost,
+  hostIsParticipating = true,
   players,
   onGameStart,
   onGamePause,
@@ -253,7 +255,7 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
         </div>
 
         {/* Management Buttons */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -271,11 +273,24 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
               // Host toggles participation mode (play vs spectate)
               onToggleHostParticipation?.();
             }}
-            className="flex items-center justify-center space-x-2 p-3 bg-gradient-to-r from-green-100 to-emerald-100 hover:from-green-200 hover:to-emerald-200 rounded-xl transition-all duration-200"
-            title={t('switchToPlayerMode')}
+            className={`flex items-center justify-center space-x-2 p-3 rounded-xl transition-all duration-200 ${
+              hostIsParticipating
+                ? 'bg-gradient-to-r from-purple-100 to-pink-100 hover:from-purple-200 hover:to-pink-200'
+                : 'bg-gradient-to-r from-green-100 to-emerald-100 hover:from-green-200 hover:to-emerald-200'
+            }`}
+            title={hostIsParticipating ? t('switchToSpectator') : t('joinGameButton')}
           >
-            <Users className="w-4 h-4 text-green-600" />
-            <span className="text-sm font-semibold text-green-700">{t('joinGameButton')}</span>
+            {hostIsParticipating ? (
+              <>
+                <Users className="w-4 h-4 text-purple-600" />
+                <span className="text-sm font-semibold text-purple-700">{t('switchToSpectator')}</span>
+              </>
+            ) : (
+              <>
+                <Users className="w-4 h-4 text-green-600" />
+                <span className="text-sm font-semibold text-green-700">{t('joinGameButton')}</span>
+              </>
+            )}
           </motion.button>
 
           <motion.button
@@ -289,6 +304,22 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
               {t('manageButton')} ({players.length})
             </span>
           </motion.button>
+
+          {/* TODO: Implement change quiz feature
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => {
+              // TODO: Open quiz selector modal or implement quiz change
+              alert('Change quiz feature coming soon!');
+            }}
+            className="flex items-center justify-center space-x-2 p-3 bg-gradient-to-r from-amber-100 to-orange-100 hover:from-amber-200 hover:to-orange-200 rounded-xl transition-all duration-200"
+            title={t('changeQuiz')}
+          >
+            <Trophy className="w-4 h-4 text-amber-600" />
+            <span className="text-sm font-semibold text-amber-700">{t('changeQuiz')}</span>
+          </motion.button>
+          */}
         </div>
 
         {/* Settings Panel */}

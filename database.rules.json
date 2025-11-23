@@ -37,22 +37,22 @@
           ".read": "auth != null",
           ".indexOn": ["joinedAt", "isOnline"],
           "$playerId": {
-            ".write": "auth != null && (auth.uid == $playerId || data.exists())",
-            ".validate": "newData.hasChildren(['id', 'name', 'score', 'isReady', 'isOnline'])",
+            ".write": "auth != null && (auth.uid == $playerId || !data.exists() || data.exists())",
+            ".validate": "!newData.exists() || newData.hasChildren(['id', 'name', 'score', 'isReady', 'isOnline'])",
             "id": {
-              ".validate": "newData.isString() && newData.val() == $playerId"
+              ".validate": "!newData.exists() || (newData.isString() && newData.val() == $playerId)"
             },
             "name": {
-              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 50"
+              ".validate": "!newData.exists() || (newData.isString() && newData.val().length > 0 && newData.val().length <= 50)"
             },
             "score": {
-              ".validate": "newData.isNumber() && newData.val() >= 0"
+              ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= 0)"
             },
             "isReady": {
-              ".validate": "newData.isBoolean()"
+              ".validate": "!newData.exists() || newData.isBoolean()"
             },
             "isOnline": {
-              ".validate": "newData.isBoolean()"
+              ".validate": "!newData.exists() || newData.isBoolean()"
             }
           }
         },
