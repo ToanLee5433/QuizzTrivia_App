@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Settings, 
   Users, 
@@ -71,14 +72,15 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
     timePerQuestion: 30,
     difficulty: 'medium',
     isPrivate: false,
-    autoStart: false,
-    soundEnabled: true,
+    autoStart: true,      // Auto start ON by default
+    soundEnabled: true,   // Sound ON by default
     chatEnabled: true,    // Chat ON by default
-    screenEnabled: false  // Screen OFF by default
+    screenEnabled: false  // Screen OFF by default (as requested)
   });
   const [showSettings, setShowSettings] = useState(false);
   const [showPlayerManagement, setShowPlayerManagement] = useState(false);
   const [gameStatus, setGameStatus] = useState<'waiting' | 'playing' | 'paused'>('waiting');
+  const { t } = useTranslation('multiplayer');
 
   const db = getDatabase();
 
@@ -123,7 +125,7 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
   };
 
   const handleKickPlayer = (playerId: string) => {
-    if (window.confirm(`Bạn có chắc muốn đuổi người chơi này?`)) {
+    if (window.confirm(t('kickPlayerTooltip') + '?')) {
       onKickPlayer(playerId);
       
       // Update database
@@ -135,8 +137,8 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
   const handleTransferHost = (playerId: string) => {
     const isSelf = playerId === currentUserId;
     const confirmMessage = isSelf 
-      ? 'Bạn có chắc muốn chuyển sang chế độ chơi? Bạn sẽ không còn quyền host.'
-      : 'Bạn có chắc muốn chuyển quyền host cho người chơi này?';
+      ? t('switchToPlayerMode') + '?'
+      : t('transferHostTooltip') + '?';
       
     if (window.confirm(confirmMessage)) {
       onTransferHost(playerId);
@@ -163,10 +165,10 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
 
   const getGameStatusText = () => {
     switch (gameStatus) {
-      case 'waiting': return 'Đang chờ';
-      case 'playing': return 'Đang chơi';
-      case 'paused': return 'Tạm dừng';
-      default: return 'Không xác định';
+      case 'waiting': return t('gameWaiting');
+      case 'playing': return t('gamePlaying');
+      case 'paused': return t('gamePaused');
+      default: return t('gameWaiting');
     }
   };
 
@@ -184,8 +186,8 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
             <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full border-2 border-white animate-pulse"></div>
           </div>
           <div>
-            <h3 className="text-white font-bold text-lg">Điều Khiển Host</h3>
-            <p className="text-purple-100 text-xs">Quản lý phòng và game</p>
+            <h3 className="text-white font-bold text-lg">{t('hostControl')}</h3>
+            <p className="text-purple-100 text-xs">{t('manageRoomAndGame')}</p>
           </div>
         </div>
         <div className={`px-3 py-1 rounded-full text-xs font-bold ${getGameStatusColor()}`}>
@@ -209,7 +211,7 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
             }`}
           >
             <Play className="w-6 h-6 mb-2" />
-            <span className="text-sm font-bold">Bắt đầu</span>
+            <span className="text-sm font-bold">{t('startButton')}</span>
           </motion.button>
 
           <motion.button
@@ -226,7 +228,7 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
             }`}
           >
             {gameStatus === 'playing' ? <Pause className="w-6 h-6 mb-2" /> : <Play className="w-6 h-6 mb-2" />}
-            <span className="text-sm font-bold">{gameStatus === 'playing' ? 'Tạm dừng' : 'Tiếp tục'}</span>
+            <span className="text-sm font-bold">{gameStatus === 'playing' ? t('pauseButton') : t('resumeButton')}</span>
           </motion.button>
 
           <motion.button
@@ -235,7 +237,7 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
             className="flex flex-col items-center justify-center p-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
           >
             <SkipForward className="w-6 h-6 mb-2" />
-            <span className="text-sm font-bold">Bỏ qua</span>
+            <span className="text-sm font-bold">{t('skipButton')}</span>
           </motion.button>
 
           <motion.button
@@ -244,7 +246,7 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
             className="flex flex-col items-center justify-center p-4 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
           >
             <RotateCcw className="w-6 h-6 mb-2" />
-            <span className="text-sm font-bold">Reset</span>
+            <span className="text-sm font-bold">{t('resetButton')}</span>
           </motion.button>
         </div>
 
@@ -257,7 +259,7 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
             className="flex items-center justify-center space-x-2 p-3 bg-gradient-to-r from-blue-100 to-indigo-100 hover:from-blue-200 hover:to-indigo-200 rounded-xl transition-all duration-200"
           >
             <Settings className="w-4 h-4 text-blue-600" />
-            <span className="text-sm font-semibold text-blue-700">Cài đặt</span>
+            <span className="text-sm font-semibold text-blue-700">{t('settingsButton')}</span>
           </motion.button>
 
           <motion.button
@@ -269,14 +271,14 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
               if (targetPlayer) {
                 handleTransferHost(targetPlayer.id);
               } else {
-                alert('Không có người chơi nào khác online để chuyển host!');
+                alert(t('noOtherOnlinePlayer'));
               }
             }}
             className="flex items-center justify-center space-x-2 p-3 bg-gradient-to-r from-green-100 to-emerald-100 hover:from-green-200 hover:to-emerald-200 rounded-xl transition-all duration-200"
-            title="Chuyển sang chế độ người chơi"
+            title={t('switchToPlayerMode')}
           >
             <Users className="w-4 h-4 text-green-600" />
-            <span className="text-sm font-semibold text-green-700">Vào chơi</span>
+            <span className="text-sm font-semibold text-green-700">{t('joinGameButton')}</span>
           </motion.button>
 
           <motion.button
@@ -287,7 +289,7 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
           >
             <Users className="w-4 h-4 text-purple-600" />
             <span className="text-sm font-semibold text-purple-700">
-              Quản lý ({players.length})
+              {t('manageButton')} ({players.length})
             </span>
           </motion.button>
         </div>
@@ -301,7 +303,7 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
               exit={{ opacity: 0, height: 0 }}
               className="space-y-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200/50"
             >
-              <h4 className="font-bold text-blue-900 mb-3">Cài đặt phòng</h4>
+              <h4 className="font-bold text-blue-900 mb-3">{t('roomSettingsTitle')}</h4>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Time per question */}
@@ -309,7 +311,7 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
                   <label className="flex items-center justify-between text-sm font-medium text-gray-700 mb-2">
                     <span className="flex items-center space-x-1">
                       <Clock className="w-4 h-4" />
-                      <span>Thời gian/câu hỏi</span>
+                      <span>{t('timePerQuestion')}</span>
                     </span>
                     <span className="text-blue-600 font-bold">{settings.timePerQuestion}s</span>
                   </label>
@@ -328,7 +330,7 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
                   <label className="flex items-center justify-between text-sm font-medium text-gray-700 mb-2">
                     <span className="flex items-center space-x-1">
                       <Users className="w-4 h-4" />
-                      <span>Số người chơi tối đa</span>
+                      <span>{t('maxPlayersLabel')}</span>
                     </span>
                     <span className="text-blue-600 font-bold">{settings.maxPlayers}</span>
                   </label>
@@ -346,10 +348,10 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
               {/* Toggle Settings */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
-                  { key: 'chatEnabled', icon: MessageSquare, label: 'Chat', color: 'blue' },
-                  { key: 'screenEnabled', icon: Monitor, label: 'Màn hình', color: 'purple' },
-                  { key: 'soundEnabled', icon: Volume2, label: 'Âm thanh', color: 'green' },
-                  { key: 'autoStart', icon: Play, label: 'Tự động bắt đầu', color: 'yellow' }
+                  { key: 'chatEnabled', icon: MessageSquare, label: t('chatLabel'), color: 'blue' },
+                  { key: 'screenEnabled', icon: Monitor, label: t('screenLabel'), color: 'purple' },
+                  { key: 'soundEnabled', icon: Volume2, label: t('soundLabel'), color: 'green' },
+                  { key: 'autoStart', icon: Play, label: t('autoStartLabel'), color: 'yellow' }
                 ].map(({ key, icon: Icon, label, color }) => (
                   <motion.button
                     key={key}
@@ -383,7 +385,7 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
               exit={{ opacity: 0, height: 0 }}
               className="space-y-3 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200/50"
             >
-              <h4 className="font-bold text-purple-900 mb-3">Quản lý người chơi</h4>
+              <h4 className="font-bold text-purple-900 mb-3">{t('playerManagementTitle')}</h4>
               
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {players.map((player) => (
@@ -417,11 +419,11 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
                         <div className="flex items-center space-x-2 text-xs text-gray-500">
                           <span className={`flex items-center space-x-1 ${player.isReady ? 'text-green-600' : 'text-yellow-600'}`}>
                             {player.isReady ? <CheckCircle className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
-                            <span>{player.isReady ? 'Sẵn sàng' : 'Chưa sẵn sàng'}</span>
+                            <span>{player.isReady ? t('readyStatus') : t('notReadyStatus')}</span>
                           </span>
                           <span className={`flex items-center space-x-1 ${player.isOnline ? 'text-green-600' : 'text-gray-400'}`}>
                             <div className={`w-2 h-2 rounded-full ${player.isOnline ? 'bg-green-500' : 'bg-gray-400'} ${player.isOnline ? 'animate-pulse' : ''}`}></div>
-                            <span>{player.isOnline ? 'Online' : 'Offline'}</span>
+                            <span>{player.isOnline ? t('onlineStatus') : t('offlineStatus')}</span>
                           </span>
                         </div>
                       </div>
@@ -434,7 +436,7 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
                           whileTap={{ scale: 0.9 }}
                           onClick={() => handleTransferHost(player.id)}
                           className="p-2 text-purple-600 hover:bg-purple-100 rounded-lg transition-colors"
-                          title="Chuyển host"
+                          title={t('transferHostTooltip')}
                         >
                           <Crown className="w-4 h-4" />
                         </motion.button>
@@ -443,7 +445,7 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
                           whileTap={{ scale: 0.9 }}
                           onClick={() => handleKickPlayer(player.id)}
                           className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                          title="Đuổi người chơi"
+                          title={t('kickPlayerTooltip')}
                         >
                           <UserMinus className="w-4 h-4" />
                         </motion.button>
@@ -461,21 +463,21 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
           <div className="text-center">
             <Trophy className="w-5 h-5 text-yellow-500 mx-auto mb-1" />
             <p className="text-lg font-bold text-gray-800">{players.length}</p>
-            <p className="text-xs text-gray-600">Người chơi</p>
+            <p className="text-xs text-gray-600">{t('playersCount')}</p>
           </div>
           <div className="text-center">
             <CheckCircle className="w-5 h-5 text-green-500 mx-auto mb-1" />
             <p className="text-lg font-bold text-gray-800">
               {players.filter(p => p.isReady).length}
             </p>
-            <p className="text-xs text-gray-600">Sẵn sàng</p>
+            <p className="text-xs text-gray-600">{t('readyCount')}</p>
           </div>
           <div className="text-center">
             <Zap className="w-5 h-5 text-blue-500 mx-auto mb-1" />
             <p className="text-lg font-bold text-gray-800">
               {Math.max(0, players.filter(p => p.isReady && p.isOnline).length - 1)}
             </p>
-            <p className="text-xs text-gray-600">Đối thủ</p>
+            <p className="text-xs text-gray-600">{t('opponentsCount')}</p>
           </div>
         </div>
       </div>

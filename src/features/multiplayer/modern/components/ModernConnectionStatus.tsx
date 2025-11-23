@@ -11,7 +11,7 @@ import {
   CloudOff
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getDatabase, ref, onValue, off, update } from 'firebase/database';
+import { getDatabase, ref, onValue, off } from 'firebase/database';
 
 interface ConnectionStatus {
   isConnected: boolean;
@@ -110,70 +110,64 @@ const ModernConnectionStatus: React.FC<ModernConnectionStatusProps> = ({
     };
   }, [roomId, db]);
 
-  // Monitor latency
+  // Monitor latency - OPTIMIZED: No writes to Firebase + Stability check
+  // ✅ Uses Firebase connection info only, no database writes
   useEffect(() => {
     if (!roomId || !db) return;
-
-    console.log('🏃 Starting REAL latency measurement for room:', roomId);
+    
+    let latencyHistory: number[] = [];
     
     const measureLatency = async () => {
       const startTime = Date.now();
       try {
-        // Write timestamp to measure round-trip time
-        const testRef = ref(db, `rooms/${roomId}/ping`);
-        const timestamp = Date.now();
-        
-        // Write to database
-        await update(testRef, { 
-          timestamp,
-          test: 'latency_check'
-        });
-        
-        // Read it back to measure RTT
-        const readRef = ref(db, `rooms/${roomId}/ping/timestamp`);
-        await onValue(readRef, () => {}, { onlyOnce: true });
-        
+        // ✅ Only READ from Firebase info - no writes that trigger listeners
+        const connectivityRef = ref(db, '.info/serverTimeOffset');
+        await onValue(connectivityRef, () => {}, { onlyOnce: true });
         const latency = Date.now() - startTime;
-        console.log('⏱️ REAL measured latency:', latency, 'ms');
         
+        // ✅ Keep last 3 measurements for stability
+        latencyHistory.push(latency);
+        if (latencyHistory.length > 3) {
+          latencyHistory.shift();
+        }
+        
+        // ✅ Use average latency for more stable quality assessment
+        const avgLatency = latencyHistory.reduce((a, b) => a + b, 0) / latencyHistory.length;
+        const newQuality = getConnectionQuality(avgLatency);
+        
+        // ✅ Only update if quality actually changed to prevent flickering
         setConnectionStatus(prev => {
-          const newQuality = getConnectionQuality(latency);
-          console.log('📊 Connection quality updated:', newQuality, 'from latency:', latency);
+          if (prev.connectionQuality !== newQuality) {
+            return {
+              ...prev,
+              latency: Math.round(avgLatency),
+              connectionQuality: newQuality
+            };
+          }
+          // Just update latency without quality change
           return {
             ...prev,
-            latency,
-            connectionQuality: newQuality
+            latency: Math.round(avgLatency)
           };
         });
       } catch (error) {
-        // Try alternative method - simple Firebase connectivity test
-        try {
-          const connectivityRef = ref(db, '.info/serverTimeOffset');
-          await onValue(connectivityRef, () => {}, { onlyOnce: true });
-          const fallbackLatency = Date.now() - startTime;
-          
-          setConnectionStatus(prev => ({
-            ...prev,
-            latency: fallbackLatency,
-            connectionQuality: getConnectionQuality(fallbackLatency)
-          }));
-        } catch (fallbackError) {
-          setConnectionStatus(prev => ({
-            ...prev,
-            latency: 0,
-            connectionQuality: 'disconnected'
-          }));
-        }
+        setConnectionStatus(prev => ({
+          ...prev,
+          latency: 0,
+          connectionQuality: 'disconnected'
+        }));
       }
     };
 
-    // Initial measurement
-    setTimeout(measureLatency, 1000); // Wait 1s for Firebase to connect
+    // Initial measurement after connection
+    setTimeout(measureLatency, 2000);
     
-    const latencyTestInterval = setInterval(measureLatency, 10000); // Test every 10 seconds
+    // ✅ Reduced frequency: 30s instead of 10s to save Firebase quota
+    const latencyTestInterval = setInterval(measureLatency, 30000);
 
     return () => {
       clearInterval(latencyTestInterval);
+      latencyHistory = [];
     };
   }, [roomId, db]);
 

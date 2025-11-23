@@ -69,7 +69,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
     isKicking: false
   });
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const isInitializedRef = useRef(false); // ✅ Prevent double init in strict mode
+  const initializingRef = useRef(false); // Track if currently initializing
 
   // Enhanced features hooks
   const announcements = useGameAnnouncements(roomId);
@@ -249,33 +249,22 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
 
   // Memoized derived state to prevent unnecessary recalculations
   const playersList = useMemo(() => {
-    const list = Object.values(players);
-    console.log('🎯 PlayersList computed:', {
-      playersObjectKeys: Object.keys(players),
-      listLength: list.length,
-      players: list.map(p => ({ id: p.id, name: p.name, role: p.role }))
-    });
-    return list;
+    return Object.values(players);
   }, [players]);
   
   // Spectators = those who are watching (spectator role + host not participating)
   const spectators = useMemo(() => {
-    const spectatorList = playersList.filter(p => {
+    return playersList.filter(p => {
       return p.role === 'spectator' || (p.role === 'host' && p.isParticipating === false);
     });
-    console.log('🔍 Spectators Debug:', {
-      playersList: playersList.map(p => ({ id: p.id, name: p.name, role: p.role, isParticipating: p.isParticipating })),
-      spectatorList: spectatorList.map(p => ({ id: p.id, name: p.name, role: p.role, isParticipating: p.isParticipating })),
-      spectatorCount: spectatorList.length,
-      currentUserId: currentUserId,
-      currentUserInSpectators: spectatorList.some(p => p.id === currentUserId)
-    });
-    return spectatorList;
-  }, [playersList, currentUserId]);
+  }, [playersList]);
   
   // Active players = those who are actually playing (not spectators, and host if participating)
   const activePlayers = useMemo(() => {
     return playersList.filter(p => {
+      if (!p || !p.role) {
+        return true; // ✅ Include players without role (assume they are active)
+      }
       if (p.role === 'spectator') return false;
       if (p.role === 'host') return p.isParticipating !== false;
       return true; // regular players
@@ -291,26 +280,45 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
   }, [activePlayers, roomData?.hostId]);
   const isHost = useMemo(() => {
     // Only check roomData.hostId - no fallback to first player
-    const result = roomData?.hostId === currentUserId;
-    console.log('🎯 [IS_HOST CHECK]:', {
-      roomHostId: roomData?.hostId,
-      currentUserId,
-      isHost: result,
-      hasRoomData: !!roomData,
-      roomDataKeys: roomData ? Object.keys(roomData) : []
-    });
-    return result;
+    return roomData?.hostId === currentUserId;
   }, [roomData?.hostId, currentUserId]);
 
-  useEffect(() => {
-    // ✅ Prevent double initialization in React strict mode
-    if (isInitializedRef.current) {
-      console.log('⚠️ [INIT] Already initialized, skipping');
-      return; // ✅ No cleanup needed for skipped init
+  // ✅ CRITICAL: Define handlers BEFORE useEffect so they have correct dependencies
+  const handlePlayersUpdate = useCallback((playersData: { [key: string]: ModernPlayer }) => {
+    // ✅ Force immediate update
+    setPlayers(playersData);
+    
+    // Check if current player was kicked
+    if (currentUserId && !playersData[currentUserId]) {
+      alert('You have been removed from this room by the host.');
+      setTimeout(() => {
+        window.location.href = '/multiplayer';
+      }, 1000);
     }
-    isInitializedRef.current = true;
+  }, [currentUserId]);
 
-    console.log('🚀 [INIT] Starting lobby initialization');
+  const handleGameStateUpdate = useCallback((_gameStateData: any) => {
+    // Game state updates handled by RTDB listeners
+  }, []);
+
+  const handleRoomUpdate = useCallback((updatedRoom: any) => {
+    setRoomData(updatedRoom);
+    if (updatedRoom.quiz) {
+      setQuiz(updatedRoom.quiz);
+    }
+  }, []);
+
+  const handleError = useCallback((error: any) => {
+    console.error('❌ Lobby error:', error);
+  }, []);
+
+  useEffect(() => {
+    // ✅ Prevent duplicate initialization while one is in progress
+    if (initializingRef.current) {
+      return;
+    }
+    
+    initializingRef.current = true;
 
     const initializeLobby = async () => {
       try {
@@ -339,13 +347,13 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
           })()
         ]);
         
-        // Set data immediately after parallel fetch
-        console.log('✅ [INIT] Setting players data:', {
-          playerCount: Object.keys(playersData).length,
-          playerIds: Object.keys(playersData),
-          currentUserId: userId,
-          currentUserInPlayers: !!playersData[userId]
-        });
+        // ✅ Set up real-time listeners FIRST (before setting state)
+        const playersUpdateId = modernMultiplayerService.on('players:updated', handlePlayersUpdate);
+        const gameUpdateId = modernMultiplayerService.on('game:updated', handleGameStateUpdate);
+        const roomUpdateId = modernMultiplayerService.on('room:updated', handleRoomUpdate);
+        const errorId = modernMultiplayerService.on('error', handleError);
+
+        // ✅ NOW set initial data after listeners are ready
         setPlayers(playersData);
         if (roomData) {
           setRoomData(roomData);
@@ -353,12 +361,6 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
         }
         
         setIsLoadingRoom(false);
-
-        // Set up real-time listeners
-        const playersUpdateId = modernMultiplayerService.on('players:updated', handlePlayersUpdate);
-        const gameUpdateId = modernMultiplayerService.on('game:updated', handleGameStateUpdate);
-        const roomUpdateId = modernMultiplayerService.on('room:updated', handleRoomUpdate);
-        const errorId = modernMultiplayerService.on('error', handleError);
 
         // Set up chat listener
         let chatUnsubscribe: (() => void) | undefined;
@@ -386,12 +388,6 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
             (docSnapshot) => {
               if (docSnapshot.exists()) {
                 const data = docSnapshot.data();
-                console.log('📊 Room data updated:', {
-                  hasQuiz: !!data.quiz,
-                  hostId: data.hostId,
-                  status: data.status,
-                  questionCount: data.quiz?.questions?.length
-                });
                 setRoomData(data);
                 if (data.quiz) {
                   setQuiz(data.quiz);
@@ -418,18 +414,27 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
           modernMultiplayerService.off('room:updated', roomUpdateId);
           modernMultiplayerService.off('error', errorId);
           
-          // Clear large state objects to prevent memory leaks
-          setPlayers({});
-          setMessages([]);
+          // Note: Don't clear state here as it causes race conditions in StrictMode
+          // State will be cleaned up when component truly unmounts
+          
+          // Reset initializing flag
+          initializingRef.current = false;
         };
       } catch (error) {
         console.error('❌ Failed to initialize lobby:', error);
+        initializingRef.current = false;
       }
     };
 
-    const cleanup = initializeLobby();
+    let cleanupFn: (() => void) | undefined;
+    initializeLobby().then(fn => {
+      cleanupFn = fn;
+    });
+
     return () => {
-      cleanup.then(fn => fn?.());
+      if (cleanupFn) {
+        cleanupFn();
+      }
     };
   }, [roomId]);
 
@@ -438,52 +443,14 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handlePlayersUpdate = useCallback((playersData: { [key: string]: ModernPlayer }) => {
-    console.log('🎮 [PLAYERS UPDATE] Received from service:', {
-      playerCount: Object.keys(playersData).length,
-      playerIds: Object.keys(playersData),
-      players: Object.values(playersData).map(p => ({ id: p.id, name: p.name, role: p.role, isReady: p.isReady })),
-      currentUserId,
-      isCurrentUserInPlayers: !!playersData[currentUserId],
-      timestamp: new Date().toISOString()
-    });
-    
-    // ✅ Update players state
-    setPlayers(playersData);
-    
-    console.log('✅ [PLAYERS UPDATE] State updated');
-  
-    
-    // Check if current player was kicked (no longer in players list)
-    if (currentUserId && !playersData[currentUserId]) {
-      // Current player was kicked - show notification and redirect
-      console.log('🚫 Player was kicked from room');
-      
-      // Show alert to user
-      alert('You have been removed from this room by the host.');
-      
-      // Redirect back to multiplayer main page
-      setTimeout(() => {
-        window.location.href = '/multiplayer';
-      }, 1000);
-    }
-  }, [currentUserId]);
-
-  const handleGameStateUpdate = useCallback((_gameStateData: any) => {
-    // Game state updates handled by RTDB listeners
-  }, []);
-
   // Listen to RTDB room data for real-time updates (including sharedScreen)
   useEffect(() => {
     if (!roomId) return;
-
-    console.log('🔍 Setting up RTDB room listener for:', roomId);
     
     const database = getDatabase();
     const roomRef = ref(database, `rooms/${roomId}`);
     const unsubscribe = onValue(roomRef, (snapshot) => {
       const data = snapshot.val();
-      console.log('📡 RTDB room data updated:', data);
       
       if (data) {
         // ⚠️ CRITICAL: RTDB has players at rooms/{roomId}/players (separate from room data)
@@ -491,13 +458,6 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
         // Players are managed separately via handlePlayersUpdate
         
         const { players: rtdbPlayers, ...rtdbData } = data;
-        
-        if (rtdbPlayers && Object.keys(rtdbPlayers).length > 0) {
-          console.warn('⚠️ [RTDB] Found players in room data - this should not happen!', {
-            rtdbPlayerCount: Object.keys(rtdbPlayers).length,
-            playerIds: Object.keys(rtdbPlayers)
-          });
-        }
         
         // Update roomData with RTDB data EXCLUDING players
         // Players state is managed separately to avoid race conditions
@@ -517,22 +477,9 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
     });
 
     return () => {
-      console.log('🔌 Cleaning up RTDB room listener');
       unsubscribe();
     };
   }, [roomId]);
-
-  const handleRoomUpdate = useCallback((updatedRoom: any) => {
-    console.log('📡 Room updated from service:', updatedRoom);
-    setRoomData(updatedRoom);
-    if (updatedRoom.quiz) {
-      setQuiz(updatedRoom.quiz);
-    }
-  }, []);
-
-  const handleError = useCallback((error: any) => {
-    console.error('❌ Lobby error:', error);
-  }, []);
 
   const handleReconnect = useCallback(async () => {
     try {
