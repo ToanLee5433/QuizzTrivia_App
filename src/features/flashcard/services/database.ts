@@ -73,9 +73,13 @@ export interface CachedResult {
   quizId: string;
   userId: string;
   score: number;
+  correctAnswers: number;
+  totalQuestions: number;
   answers: any[];
   completedAt: number;
   synced: boolean;
+  quizTitle?: string;
+  timeSpent?: number;
 }
 
 export interface CachedPost {

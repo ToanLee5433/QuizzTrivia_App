@@ -45,6 +45,8 @@ const SettingsPage: React.FC = () => {
     toggleTheme,
     isMusicPlayerEnabled,
     toggleMusicPlayer,
+    showSyncNotifications,
+    toggleSyncNotifications,
     notificationsEnabled,
     toggleNotifications,
     soundEffectsEnabled,
@@ -347,6 +349,47 @@ const SettingsPage: React.FC = () => {
                   <div
                     className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-md transition-all duration-300 ${
                       soundEffectsEnabled ? 'translate-x-7' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Sync & Offline Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 transition-all duration-300 hover:shadow-2xl">
+            <div className="flex items-center gap-3 mb-6">
+              <RefreshCw className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <h2 className="text-xl font-bold text-gray-800 dark:text-white transition-colors">{t('settings.sync.title')}</h2>
+            </div>
+
+            <div className="space-y-4">
+              {/* Sync Notifications Toggle */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-all duration-200 group">
+                <div className="flex items-center gap-3">
+                  <Bell className="w-5 h-5 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
+                  <div>
+                    <p className="font-semibold text-gray-800 dark:text-white transition-colors">{t('settings.sync.syncNotifications')}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 transition-colors">
+                      {t('settings.sync.syncNotificationsDesc')}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    toggleSyncNotifications();
+                    toast.success(showSyncNotifications 
+                      ? t('settings.sync.syncNotificationsDisabled') 
+                      : t('settings.sync.syncNotificationsEnabled')
+                    );
+                  }}
+                  className={`relative w-14 h-7 rounded-full transition-all duration-300 ${
+                    showSyncNotifications ? 'bg-blue-600 shadow-lg shadow-blue-500/30' : 'bg-gray-300'
+                  }`}
+                >
+                  <div
+                    className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-md transition-all duration-300 ${
+                      showSyncNotifications ? 'translate-x-7' : 'translate-x-0'
                     }`}
                   />
                 </button>

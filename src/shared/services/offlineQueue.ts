@@ -96,14 +96,21 @@ export async function enqueueDeckCreate(
 
 /**
  * Helper: Enqueue quiz result submission
+ * @param quizId - Quiz ID
+ * @param answers - ALL question answers (including unanswered as isCorrect: false)
+ * @param score - Score percentage (0-100)
+ * @param userId - User ID
  */
 export async function enqueueQuizResult(
   quizId: string,
-  answers: any[],
+  answers: any[], // Must include ALL questions
   score: number,
   userId: string
 ): Promise<string> {
   const resultId = uuidv4();
+  
+  // Validate: answers must include all questions
+  console.log(`[enqueueQuizResult] Queueing result: ${answers.length} answers, score: ${score}%`);
   
   return enqueueAction({
     type: 'submit_result',

@@ -6,6 +6,7 @@ import { getQuizById } from '../../services/quiz';
 import { QuizResult, Quiz } from '../../types';
 import { toast } from 'react-toastify';
 import QuizReviewSystem from '../../../../shared/components/QuizReviewSystem';
+import { db } from '../../../flashcard/services/database';
 import {
   Confetti,
   LoadingSpinner,
@@ -54,8 +55,42 @@ export const QuizResultViewer: React.FC<QuizResultViewerProps> = () => {
         setLoading(true);
         console.log('🔍 Loading quiz result:', resultId);
 
-        // Fetch quiz result
-        const resultData = await getQuizResultById(resultId);
+        let resultData: any = null;
+
+        // 🔥 Check if this is an offline result (starts with "local_")
+        if (resultId.startsWith('local_')) {
+          console.log('📦 Loading offline result from IndexedDB...');
+          try {
+            resultData = await db.results.get(resultId);
+            
+            if (resultData) {
+              console.log('✅ Loaded offline result from IndexedDB:', resultData);
+              // Transform IndexedDB format to QuizResult format
+              resultData = {
+                id: resultData.id,
+                quizId: resultData.quizId,
+                userId: resultData.userId,
+                score: resultData.score,
+                correctAnswers: resultData.correctAnswers,
+                totalQuestions: resultData.totalQuestions,
+                answers: resultData.answers,
+                completedAt: new Date(resultData.completedAt).toISOString(),
+                timeSpent: resultData.timeSpent,
+                // Additional fields from IndexedDB
+                quizTitle: resultData.quizTitle
+              };
+            }
+          } catch (indexedDBError) {
+            console.error('❌ Failed to load from IndexedDB:', indexedDBError);
+          }
+        }
+
+        // If not found in IndexedDB, try Firebase
+        if (!resultData) {
+          console.log('☁️ Loading result from Firebase...');
+          resultData = await getQuizResultById(resultId);
+        }
+
         if (!resultData) {
           console.error('❌ Quiz result not found:', resultId);
           toast.error(t('result.quiz_not_found', 'Không tìm thấy kết quả quiz!'));
@@ -69,10 +104,34 @@ export const QuizResultViewer: React.FC<QuizResultViewerProps> = () => {
         // Fetch quiz details
         if (resultData.quizId) {
           console.log('🔍 Loading quiz details:', resultData.quizId);
-          const quizData = await getQuizById(resultData.quizId);
-          if (quizData) {
-            console.log('✅ Loaded quiz details:', quizData.title);
-            setQuiz(quizData);
+          
+          try {
+            const quizData = await getQuizById(resultData.quizId);
+            if (quizData) {
+              console.log('✅ Loaded quiz details:', quizData.title);
+              setQuiz(quizData);
+            }
+          } catch (quizError) {
+            console.warn('⚠️ Could not load quiz details (offline?):', quizError);
+            // If offline, try to create a minimal quiz object from cached data
+            if (!navigator.onLine && resultData.quizTitle) {
+              setQuiz({
+                id: resultData.quizId,
+                title: resultData.quizTitle,
+                description: '',
+                category: '',
+                difficulty: 'medium',
+                duration: 0,
+                questions: [],
+                createdBy: '',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                status: 'approved',
+                visibility: 'public',
+                isPublished: true,
+                tags: []
+              } as Quiz);
+            }
           }
         }
       } catch (error) {
@@ -85,7 +144,7 @@ export const QuizResultViewer: React.FC<QuizResultViewerProps> = () => {
     };
 
     loadData();
-  }, [resultId, navigate]);
+  }, [resultId, navigate, t]);
 
   // Calculate percentage with unified logic (same as before)
   const getPercentage = () => {

@@ -346,16 +346,85 @@ async function processProgressUpdate(item: PendingAction): Promise<void> {
 // QUIZ PROCESSORS
 // ============================================================================
 
-async function processQuizResult(item: PendingAction, _userId: string): Promise<void> {
-  const { id, quizId, score } = item.payload;
+async function processQuizResult(item: PendingAction, userId: string): Promise<void> {
+  const { id, quizId, answers, score, completedAt } = item.payload;
   
-  // TODO: Implement quiz result submission
-  // await quizService.submitResult(id, quizId, userId, answers, score, completedAt);
+  // 🔥 Validate answers array includes ALL questions
+  const correctAnswers = answers.filter((a: any) => a.isCorrect).length;
+  const totalQuestions = answers.length;
+  const calculatedScore = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
   
-  console.log('Processing quiz result:', { id, quizId, score });
+  console.log('🔍 [processQuizResult] Validating:', { 
+    id, 
+    quizId, 
+    correctAnswers,
+    totalQuestions,
+    providedScore: score,
+    calculatedScore,
+    completedAt 
+  });
   
-  // For now, just log
-  // In production, this would call your quiz service
+  // 🔥 CRITICAL: Use calculated score to ensure accuracy
+  // In case client-side score was miscalculated
+  const finalScore = calculatedScore;
+  
+  if (Math.abs(score - calculatedScore) > 1) {
+    console.warn(`⚠️ Score mismatch! Provided: ${score}%, Calculated: ${calculatedScore}%`);
+  }
+  
+  // Import submitQuizResult dynamically to avoid circular deps
+  const { submitQuizResult } = await import('../../features/quiz/api/base');
+  
+  // Get user info from auth state
+  const { auth } = await import('../../lib/firebase/config');
+  const currentUser = auth.currentUser;
+  
+  if (!currentUser) {
+    throw new Error('User not authenticated');
+  }
+  
+  // Prepare result data in the format expected by submitQuizResult
+  const resultData = {
+    userId: currentUser.uid,
+    userEmail: currentUser.email || '',
+    userName: currentUser.displayName || currentUser.email?.split('@')[0] || 'Anonymous',
+    quizId,
+    score: finalScore, // Use recalculated score
+    correctAnswers,
+    totalQuestions,
+    timeSpent: 0, // Not available from queue payload
+    answers,
+    completedAt: new Date(completedAt)
+  };
+  
+  // Submit to Firebase
+  const firebaseResultId = await submitQuizResult(resultData);
+  console.log('✅ Quiz result synced to Firebase:', firebaseResultId);
+  
+  // Update IndexedDB to mark as synced
+  try {
+    const localResultId = `local_${quizId}_${userId}_${completedAt}`;
+    await db.results.where('id').equals(localResultId).modify({ synced: true });
+    console.log('✅ IndexedDB result marked as synced');
+  } catch (dbError) {
+    console.warn('⚠️ Failed to update IndexedDB sync status:', dbError);
+    // Non-critical, result is already in Firebase
+  }
+  
+  // Track completion in quiz stats
+  try {
+    const { quizStatsService } = await import('../../services/quizStatsService');
+    await quizStatsService.trackCompletion(
+      quizId,
+      userId,
+      correctAnswers,
+      totalQuestions
+    );
+    console.log('✅ Quiz stats updated');
+  } catch (statsError) {
+    console.warn('⚠️ Failed to update quiz stats:', statsError);
+    // Non-critical
+  }
 }
 
 async function processQuizAnswer(item: PendingAction, _userId: string): Promise<void> {

@@ -7,6 +7,8 @@ import { QuizSession } from '../types';
 import { checkShortAnswer, isAnswerProvided } from '../utils';
 import { quizStatsService } from '../../../../../services/quizStatsService';
 import { toast } from 'react-toastify';
+import { db } from '../../../../flashcard/services/database';
+import { enqueueQuizResult } from '../../../../../shared/services/offlineQueue';
 
 interface UseQuizSessionProps {
   quiz: Quiz;
@@ -189,88 +191,108 @@ export const useQuizSession = ({ quiz }: UseQuizSessionProps) => {
     // Calculate score
     const score = calculateScore(quiz.questions, finalSession.answers);
 
-    let resultId: string | undefined;
+    // 🔥 CRITICAL FIX: Convert answers to UserAnswer[] format
+    // Must include ALL questions (even unanswered ones) to calculate correct percentage
+    const userAnswers = quiz.questions.map((question) => {
+      const answer = finalSession.answers[question.id];
+      const hasAnswer = isAnswerProvided(answer as AnswerValue);
+      const isCorrect = hasAnswer ? isAnswerCorrect(question, answer as AnswerValue) : false;
+      
+      return {
+        questionId: question.id,
+        selectedAnswerId: hasAnswer 
+          ? (typeof answer === 'string' ? answer : JSON.stringify(answer))
+          : '', // Empty string for unanswered questions
+        isCorrect,
+        timeSpent: 0 // Not tracking per-question time yet
+      };
+    });
+
+    // Generate local ID for offline mode
+    const localResultId = `local_${quiz.id}_${user?.uid || 'anonymous'}_${Date.now()}`;
+
+    // 🔥 STEP 1: Save to IndexedDB FIRST (Offline-First)
     try {
-      // Save result to Firestore for leaderboard
-      if (user) {
-        console.log('💾 Saving quiz result to Firestore...');
-        
-        // Convert answers to UserAnswer[] format using the same logic
-        const userAnswers = Object.entries(finalSession.answers).map(([questionId, answer]) => {
-          const question = quiz.questions.find(q => q.id === questionId);
-          const answerValue: AnswerValue = answer as AnswerValue;
-          const isCorrect = question ? isAnswerCorrect(question, answerValue) : false;
-          
-          return {
-            questionId,
-            selectedAnswerId: typeof answer === 'string' ? answer : JSON.stringify(answer),
-            isCorrect,
-            timeSpent: 0 // Not tracking per-question time yet
-          };
-        });
-        
-  const resultData = {
-          userId: user.uid,
-          userEmail: user.email || '',
-          userName: user.displayName || user.email?.split('@')[0] || 'Anonymous',
-          quizId: quiz.id,
-          score: score.percentage, // Always 0-100
-          correctAnswers: score.correct,
-          totalQuestions: score.total,
-          timeSpent: Math.round(finalSession.timeSpent / 1000), // Convert to seconds
-          answers: userAnswers,
-          completedAt: new Date()
-        };
-        
-        console.log('💾 Submitting quiz result:', resultData);
-        
-        // Import submitQuizResult function
-    const { submitQuizResult } = await import('../../../api/base');
-    resultId = await submitQuizResult(resultData);
-    console.log('✅ Quiz result saved with ID:', resultId);
-    
-    // ✅ NEW: Track completion in quiz stats
-    try {
-      const { quizStatsService } = await import('../../../../../services/quizStatsService');
-      await quizStatsService.trackCompletion(
-        quiz.id,
-        user.uid,
-        score.correct,
-        score.total
-      );
-      console.log('✅ Quiz stats updated');
-    } catch (statsError) {
-      console.error('❌ Failed to update quiz stats:', statsError);
-      // Don't block user flow if stats update fails
+      const offlineResult = {
+        id: localResultId,
+        quizId: quiz.id,
+        userId: user?.uid || 'anonymous',
+        score: score.percentage,
+        correctAnswers: score.correct,
+        totalQuestions: score.total,
+        answers: userAnswers,
+        completedAt: Date.now(),
+        synced: false, // Mark as not synced yet
+        // Store full data for offline display
+        quizTitle: quiz.title,
+        timeSpent: Math.round(finalSession.timeSpent / 1000)
+      };
+
+      await db.results.add(offlineResult);
+      console.log('✅ Quiz result saved to IndexedDB:', localResultId);
+    } catch (indexedDBError) {
+      console.error('❌ Failed to save to IndexedDB:', indexedDBError);
+      // Continue anyway
     }
+
+    // 🔥 STEP 2: Navigate immediately with local data (don't wait for Firebase)
+    console.log('✅ Navigating to result viewer with local ID:', localResultId);
+    navigate(`/quiz-result/${localResultId}`, { 
+      state: { 
+        quiz, 
+        session: finalSession, 
+        score,
+        correct: score.correct,
+        total: score.total,
+        answers: finalSession.answers,
+        timeSpent: Math.round(finalSession.timeSpent / 1000),
+        quizId: quiz.id,
+        resultId: localResultId,
+        isOffline: true // Flag to indicate offline result
+      } 
+    });
+
+    // 🔥 STEP 3: Enqueue for sync using offline queue system
+    if (user) {
+      try {
+        // Use existing offlineQueue system for automatic sync
+        await enqueueQuizResult(
+          quiz.id,
+          userAnswers,
+          score.percentage,
+          user.uid
+        );
+        console.log('✅ Quiz result enqueued for sync');
+
+        // If online, trigger immediate sync (handled by autoSync)
+        // Note: Notification will be shown by App.tsx sync-completed listener
+        if (navigator.onLine) {
+          // Dispatch event to trigger sync worker
+          window.dispatchEvent(new CustomEvent('offline-queue-changed'));
+          console.log('🔄 Triggered immediate sync (device online)');
+        } else {
+          // Only show offline info if sync notifications are enabled
+          const showSyncNotif = localStorage.getItem('showSyncNotifications') === 'true';
+          if (showSyncNotif) {
+            toast.info('Đang offline. Kết quả sẽ được đồng bộ khi có mạng.', { autoClose: 3000 });
+          }
+        }
+
+        // Track completion in quiz stats (non-blocking)
+        if (navigator.onLine) {
+          quizStatsService.trackCompletion(
+            quiz.id,
+            user.uid,
+            score.correct,
+            score.total
+          ).catch(statsError => {
+            console.error('⚠️ Failed to update quiz stats:', statsError);
+          });
+        }
+      } catch (enqueueError) {
+        console.error('❌ Failed to enqueue quiz result:', enqueueError);
+        toast.error('Lỗi lưu kết quả. Vui lòng thử lại.', { autoClose: 3000 });
       }
-  } catch (error) {
-      console.error('❌ Failed to save quiz result:', error);
-      // Continue to results page even if save fails
-  }
-    
-    // Navigate to unified result viewer using the actual result document ID
-    // This ensures we always have a valid resultId to fetch data
-    if (resultId) {
-      console.log('✅ Navigating to result viewer with resultId:', resultId);
-      navigate(`/quiz-result/${resultId}`, { 
-        state: { 
-          // Keep state for immediate display, but component will also fetch from Firestore
-          quiz, 
-          session: finalSession, 
-          score,
-          correct: score.correct,
-          total: score.total,
-          answers: finalSession.answers,
-          timeSpent: Math.round(finalSession.timeSpent / 1000),
-          quizId: quiz.id,
-          resultId: resultId
-        } 
-      });
-    } else {
-      console.error('❌ Failed to save quiz result, redirecting to quiz list');
-      toast.error('Không thể lưu kết quả quiz. Vui lòng thử lại!');
-      navigate('/quizzes');
     }
   }, [session, quiz, navigate, calculateScore, user, isAnswerCorrect]);
 

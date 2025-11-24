@@ -91,6 +91,13 @@
       "vietnamese": "Vietnamese",
       "english": "English"
     },
+    "sync": {
+      "title": "Sync & Offline",
+      "syncNotifications": "Sync Notifications",
+      "syncNotificationsDesc": "Show notifications when syncing offline data",
+      "syncNotificationsEnabled": "Sync notifications enabled",
+      "syncNotificationsDisabled": "Sync notifications disabled"
+    },
     "data": {
       "title": "Data & Storage",
       "description": "Manage data and storage",
@@ -103,6 +110,16 @@
       "title": "💡 Tip",
       "description": "Your settings are automatically saved and synced on this device. Dark mode helps reduce eye strain during extended use."
     }
+  },
+  "sync": {
+    "success": "✅ Successfully synced {{count}} items",
+    "partial": "⚠️ Synced {{synced}} items, {{failed}} failed",
+    "error": "❌ Sync failed: {{count}} items",
+    "synced": "Synced",
+    "items": "items",
+    "successfully": "successfully",
+    "failed": "failed",
+    "syncFailed": "Sync failed"
   },
   "emoji": {
     "books": "📚",
@@ -2029,7 +2046,20 @@
     "sync": "Sync",
     "syncing": "Syncing...",
     "title": "Offline Quizzes",
-    "totalPlays": "Total Plays"
+    "totalPlays": "Total Plays",
+    "indicator": {
+      "syncing": "Syncing...",
+      "offline": "Offline",
+      "connected": "Connected",
+      "noConnection": "No connection",
+      "syncingChanges": "Syncing changes...",
+      "workingOffline": "Working offline",
+      "allSynced": "All synced",
+      "pendingActions": "{{count}} pending actions",
+      "filesUploading": "{{count}} files uploading",
+      "actionsQueued": "{{count}} actions queued",
+      "filesQueued": "{{count}} files queued"
+    }
   },
   "ok": "OK",
   "open": "Open",

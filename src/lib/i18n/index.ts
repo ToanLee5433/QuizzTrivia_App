@@ -5,7 +5,7 @@ import Backend from 'i18next-http-backend';
 
 const CACHE_BUSTER = import.meta.env.DEV ? Date.now() : 1731754800000;
 
-// i18n configuration - using external locale files only
+// i18n configuration - using external locale files with offline support
 
 i18n
   .use(Backend)
@@ -31,7 +31,61 @@ i18n
 
     backend: {
       loadPath: `/locales/{{lng}}/{{ns}}.json?v=${CACHE_BUSTER}`,
-      addPath: '/locales/{{lng}}/{{ns}}.json'
+      addPath: '/locales/{{lng}}/{{ns}}.json',
+      
+      // 🔥 CRITICAL: Add request options for offline support
+      requestOptions: {
+        mode: 'cors',
+        credentials: 'same-origin',
+        cache: 'default' // Use browser cache when available
+      },
+      
+      // 🔥 Custom loader with offline fallback
+      request: async (options: any, url: string, _payload: any, callback: any) => {
+        try {
+          // Try normal fetch first
+          const response = await fetch(url, {
+            method: options.method || 'GET',
+            mode: 'cors',
+            credentials: 'same-origin',
+            cache: 'default' // Use cache-first strategy
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          
+          const data = await response.json();
+          
+          // Cache in localStorage as backup
+          const cacheKey = `i18n_cache_${url}`;
+          try {
+            localStorage.setItem(cacheKey, JSON.stringify(data));
+          } catch (e) {
+            console.warn('Failed to cache translation in localStorage:', e);
+          }
+          
+          callback(null, { status: 200, data });
+        } catch (error) {
+          console.warn(`[i18n] Failed to fetch ${url}, trying localStorage cache...`);
+          
+          // Fallback to localStorage cache
+          const cacheKey = `i18n_cache_${url}`;
+          const cached = localStorage.getItem(cacheKey);
+          
+          if (cached) {
+            try {
+              const data = JSON.parse(cached);
+              console.log(`[i18n] Using cached translation for ${url}`);
+              callback(null, { status: 200, data });
+            } catch (e) {
+              callback(error, { status: 500, data: null });
+            }
+          } else {
+            callback(error, { status: 500, data: null });
+          }
+        }
+      }
     },
 
     // Performance optimizations

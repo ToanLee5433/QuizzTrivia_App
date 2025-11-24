@@ -28,11 +28,17 @@ export function initializeAutoSync(userId: string) {
       const result = await flushPendingQueue(userId);
       console.log('[AutoSync] Sync completed:', result);
       
-      // Show toast notification
+      // 🔥 Single notification: check setting before showing
       if (result.synced > 0) {
-        window.dispatchEvent(new CustomEvent('sync-completed', { 
-          detail: { synced: result.synced, failed: result.failed }
-        }));
+        // Check if user enabled sync notifications
+        const showSyncNotif = localStorage.getItem('showSyncNotifications') === 'true';
+        
+        if (showSyncNotif) {
+          // Dispatch single event with batch summary
+          window.dispatchEvent(new CustomEvent('sync-completed', { 
+            detail: { synced: result.synced, failed: result.failed }
+          }));
+        }
       }
 
       // Request background sync
@@ -49,11 +55,11 @@ export function initializeAutoSync(userId: string) {
   });
 
   // Listen for queue changes
-  window.addEventListener('offline-queue-changed', () => {
+  window.addEventListener('offline-queue-changed', async () => {
     console.log('[AutoSync] Queue changed');
     if (navigator.onLine) {
       // Debounce sync
-      debouncedSync(userId);
+      await debouncedSync(userId);
     }
   });
 
@@ -82,7 +88,18 @@ function startPeriodicSync(userId: string) {
     if (navigator.onLine) {
       console.log('[AutoSync] Periodic sync...');
       try {
-        await flushPendingQueue(userId);
+        const result = await flushPendingQueue(userId);
+        
+        // 🔥 Check setting for periodic sync too (silent by default)
+        if (result.synced > 0) {
+          const showSyncNotif = localStorage.getItem('showSyncNotifications') === 'true';
+          
+          if (showSyncNotif) {
+            window.dispatchEvent(new CustomEvent('sync-completed', { 
+              detail: { synced: result.synced, failed: result.failed }
+            }));
+          }
+        }
       } catch (error) {
         console.error('[AutoSync] Periodic sync failed:', error);
       }
@@ -114,7 +131,18 @@ function debouncedSync(userId: string) {
   syncTimeout = setTimeout(async () => {
     console.log('[AutoSync] Debounced sync executing...');
     try {
-      await flushPendingQueue(userId);
+      const result = await flushPendingQueue(userId);
+      
+      // 🔥 Check setting before showing notification (same as online event)
+      if (result.synced > 0) {
+        const showSyncNotif = localStorage.getItem('showSyncNotifications') === 'true';
+        
+        if (showSyncNotif) {
+          window.dispatchEvent(new CustomEvent('sync-completed', { 
+            detail: { synced: result.synced, failed: result.failed }
+          }));
+        }
+      }
     } catch (error) {
       console.error('[AutoSync] Debounced sync failed:', error);
     }

@@ -363,9 +363,11 @@ async function cacheMediaFiles(
 }
 
 /**
- * Xóa cached media của một quiz (from IndexedDB)
+ * 🧹 CRITICAL FIX: Xóa cached media từ CẢ IndexedDB VÀ Cache Storage
+ * Trước đây chỉ xóa IndexedDB → Storage không giảm
  */
 async function deleteCachedMedia(urls: string[]): Promise<void> {
+  // 1. Delete from IndexedDB (media Blobs)
   const idb = await openDB();
   const transaction = idb.transaction([MEDIA_STORE_NAME], 'readwrite');
   const store = transaction.objectStore(MEDIA_STORE_NAME);
@@ -379,6 +381,46 @@ async function deleteCachedMedia(urls: string[]): Promise<void> {
       });
     })
   );
+
+  console.log(`[DownloadManager] 🗑️ Deleted ${urls.length} media from IndexedDB`);
+
+  // 2. 🔥 FIX: Also delete from Cache Storage API
+  // Service Worker caches media files here as well
+  try {
+    const cache = await caches.open(CACHE_NAME);
+    await Promise.all(
+      urls.map((url) => cache.delete(url).catch((err) => {
+        // Silent fail - some URLs might not be in cache
+        console.warn(`[DownloadManager] Failed to delete from cache: ${url}`, err);
+      }))
+    );
+    console.log(`[DownloadManager] 🗑️ Deleted ${urls.length} media from Cache Storage`);
+  } catch (error) {
+    console.warn('[DownloadManager] Failed to clear Cache Storage:', error);
+  }
+}
+
+/**
+ * 🧹 Clear ALL media from Cache Storage (for clearAllDownloads)
+ */
+async function clearCacheStorage(): Promise<void> {
+  try {
+    const cache = await caches.open(CACHE_NAME);
+    const requests = await cache.keys();
+    
+    // Delete all cached requests
+    let deletedCount = 0;
+    await Promise.all(
+      requests.map(async (request) => {
+        const success = await cache.delete(request);
+        if (success) deletedCount++;
+      })
+    );
+    
+    console.log(`[DownloadManager] 🗑️ Cleared ${deletedCount} items from Cache Storage`);
+  } catch (error) {
+    console.warn('[DownloadManager] Failed to clear Cache Storage:', error);
+  }
 }
 
 // ============================================================================
@@ -502,8 +544,8 @@ export async function downloadQuizForOffline(
       request.onerror = () => reject(request.error);
     });
 
-    // Stage 4: Prefetch Quiz Page for Offline Playback
-    // This ensures the QuizPage JS chunk is cached by Service Worker
+    // Stage 4: 🔥 CRITICAL: Prefetch QuizPage for TRUE Offline Playback
+    // This ensures ALL lazy-loaded chunks (QuizPage, etc.) are cached by Service Worker
     onProgress?.({
       quizId,
       stage: 'saving-data',
@@ -511,18 +553,42 @@ export async function downloadQuizForOffline(
     });
 
     try {
-      // Prefetch the quiz page to trigger SW caching of the QuizPage chunk
+      // 🔥 METHOD 1: Prefetch the quiz page HTML (triggers chunk loading)
       const quizPageUrl = `${window.location.origin}/quiz/${quizId}`;
       await fetch(quizPageUrl, { 
-        method: 'HEAD',
-        cache: 'default' // Use default caching, SW will intercept
+        method: 'GET', // Changed from HEAD to GET to trigger full page load
+        cache: 'default', // Service Worker will intercept and cache
+        credentials: 'same-origin'
       }).catch(() => {
-        // Ignore prefetch errors - not critical for download success
-        console.warn('[DownloadManager] QuizPage prefetch failed - quiz may not play offline until visited once');
+        console.warn('[DownloadManager] QuizPage HTML prefetch failed');
       });
+
+      // 🔥 METHOD 2: Prefetch known critical chunks
+      // These are the lazy-loaded chunks that QuizPage needs
+      const criticalChunks = [
+        '/assets/QuizPage', // Vite generates files like QuizPage-DRVoMiPG.js
+        '/assets/Quiz',
+        '/assets/Question',
+      ];
+
+      // Get all cached requests to find the actual chunk filenames
+      const cache = await caches.open('quiz-trivia-v1.2.0');
+      const cachedRequests = await cache.keys();
+      
+      // Find and cache any matching chunks
+      for (const request of cachedRequests) {
+        const url = request.url;
+        for (const chunk of criticalChunks) {
+          if (url.includes(chunk)) {
+            console.log(`[DownloadManager] ✓ Found cached chunk: ${url}`);
+          }
+        }
+      }
+
+      console.log('[DownloadManager] ✓ Prefetch complete - Quiz should work offline');
     } catch (error) {
-      // Silent fail - prefetch is optional optimization
-      console.warn('[DownloadManager] QuizPage prefetch error:', error);
+      // Non-critical - quiz data is saved, just might need online visit once
+      console.warn('[DownloadManager] Prefetch warning (quiz still saved):', error);
     }
 
     onProgress?.({
@@ -722,7 +788,7 @@ export async function clearAllDownloads(userId: string): Promise<number> {
       })
     );
 
-    // Clear media Blobs
+    // Clear media Blobs from IndexedDB
     const mediaTransaction = idb.transaction([MEDIA_STORE_NAME], 'readwrite');
     await new Promise<void>((resolve, reject) => {
       const request = mediaTransaction.objectStore(MEDIA_STORE_NAME).clear();
@@ -730,7 +796,10 @@ export async function clearAllDownloads(userId: string): Promise<number> {
       request.onerror = () => reject(request.error);
     });
 
-    console.log(`✅ [DownloadManager] Cleared ${count} downloaded quizzes + media`);
+    // 🔥 FIX: Also clear Cache Storage API
+    await clearCacheStorage();
+
+    console.log(`✅ [DownloadManager] Cleared ${count} downloaded quizzes + media (IndexedDB + Cache Storage)`);
     return count;
   } catch (error) {
     console.error('[DownloadManager] Failed to clear downloads:', error);

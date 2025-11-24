@@ -288,7 +288,7 @@ const LeaderboardPage: React.FC = () => {
 
         setStats({
           totalUsers: userStats.size,
-          totalQuizzes: quizStats.size,
+          totalQuizzes: quizzesSnapshot.size, // ✅ Count ALL approved quizzes (matching Admin Dashboard logic)
           totalAttempts,
           averageScore: totalAttempts > 0 ? Math.round((totalScore / totalAttempts) * 10) / 10 : 0,
           activeToday,

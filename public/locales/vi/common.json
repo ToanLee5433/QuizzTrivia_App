@@ -91,6 +91,13 @@
       "vietnamese": "Tiếng Việt",
       "english": "English"
     },
+    "sync": {
+      "title": "Đồng bộ & Offline",
+      "syncNotifications": "Thông báo đồng bộ",
+      "syncNotificationsDesc": "Hiển thị thông báo khi đồng bộ dữ liệu offline",
+      "syncNotificationsEnabled": "Đã bật thông báo đồng bộ",
+      "syncNotificationsDisabled": "Đã tắt thông báo đồng bộ"
+    },
     "data": {
       "title": "Dữ liệu & Lưu trữ",
       "description": "Quản lý dữ liệu và bộ nhớ",
@@ -103,6 +110,16 @@
       "title": "💡 Mẹo",
       "description": "Các cài đặt của bạn được lưu tự động và đồng bộ trên thiết bị này. Chế độ tối giúp giảm mỏi mắt khi sử dụng lâu dài."
     }
+  },
+  "sync": {
+    "success": "✅ Đã đồng bộ {{count}} mục thành công",
+    "partial": "⚠️ Đã đồng bộ {{synced}} mục, {{failed}} thất bại",
+    "error": "❌ Đồng bộ thất bại: {{count}} mục",
+    "synced": "Đã đồng bộ",
+    "items": "mục",
+    "successfully": "thành công",
+    "failed": "thất bại",
+    "syncFailed": "Đồng bộ thất bại"
   },
   "emoji": {
     "books": "📚",

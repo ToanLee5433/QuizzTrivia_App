@@ -1,6 +1,7 @@
 /* eslint-disable no-undef */
 // Service Worker for Quiz Trivia App - Offline Support
-const CACHE_NAME = 'quiz-trivia-v1.1.0';
+// 🔥 UPGRADED: Now caches ALL chunks (including lazy-loaded) for true offline playback
+const CACHE_NAME = 'quiz-trivia-v1.3.0'; // Bumped version to force update
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -8,18 +9,65 @@ const APP_SHELL = [
   '/logo.svg'
 ];
 
-// Install - cache app shell
+// 🔥 CRITICAL: Track which chunks we've already cached to avoid duplicates
+const cachedChunks = new Set();
+
+// 🔥 NEW: Fetch and cache all chunks during install (PRECACHING)
+async function precacheAllChunks(cache) {
+  try {
+    // Fetch the index.html to get all chunk references
+    const response = await fetch('/index.html');
+    const html = await response.text();
+    
+    // Extract all JS and CSS file paths from HTML
+    const assetRegex = /<script[^>]+src="([^"]+)"[^>]*>|<link[^>]+href="([^"]+\.css)"[^>]*>/g;
+    const assets = [];
+    let match;
+    
+    while ((match = assetRegex.exec(html)) !== null) {
+      const asset = match[1] || match[2];
+      if (asset && (asset.includes('.js') || asset.includes('.css'))) {
+        assets.push(asset);
+      }
+    }
+    
+    console.log('[SW] Precaching chunks:', assets.length);
+    
+    // Cache all found assets
+    for (const asset of assets) {
+      try {
+        await cache.add(asset);
+        cachedChunks.add(asset);
+        console.log('[SW] ✓ Precached:', asset);
+      } catch (err) {
+        console.warn('[SW] Failed to precache:', asset, err);
+      }
+    }
+    
+    return assets.length;
+  } catch (error) {
+    console.error('[SW] Precaching failed:', error);
+    return 0;
+  }
+}
+
+// Install - cache app shell + ALL chunks for true offline support
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing...');
+  console.log('[SW] Installing v1.3.0 - TRUE OFFLINE support with precaching...');
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
+    caches.open(CACHE_NAME).then(async (cache) => {
+      // 1. Cache app shell first (fast)
       console.log('[SW] Caching app shell');
-      return cache.addAll(APP_SHELL).catch(err => {
+      await cache.addAll(APP_SHELL).catch(err => {
         console.warn('[SW] Cache failed for some assets:', err);
       });
+      
+      // 2. 🔥 CRITICAL: Precache ALL chunks (including lazy-loaded)
+      const cachedCount = await precacheAllChunks(cache);
+      console.log('[SW] ✅ Precached', cachedCount, 'chunks - Ready for offline!');
     })
   );
-  self.skipWaiting();
+  self.skipWaiting(); // Activate immediately
 });
 
 // Activate - cleanup old caches
@@ -83,7 +131,8 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
         if (cachedResponse) {
-          // Return cached version immediately
+          // 🔥 CRITICAL: Return cached version immediately (TRUE OFFLINE)
+          console.log('[SW] ✓ Serving from cache:', url.pathname);
           return cachedResponse;
         }
         
@@ -91,15 +140,35 @@ self.addEventListener('fetch', (event) => {
         return fetch(event.request).then((response) => {
           if (response && response.status === 200) {
             const responseToCache = response.clone();
+            
+            // 🔥 AGGRESSIVE CACHING: Cache ALL JS chunks (including lazy-loaded)
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(event.request, responseToCache);
+              
+              // Track cached chunks
+              if (event.request.url.includes('.js')) {
+                cachedChunks.add(event.request.url);
+                console.log('[SW] ✓ Cached JS chunk:', url.pathname);
+              }
             });
           }
           return response;
-        }).catch(() => {
-          console.log('[SW] Failed to fetch:', event.request.url);
-          // No network and no cache
-          return new Response('Offline - asset not cached', { status: 503 });
+        }).catch((error) => {
+          console.error('[SW] ❌ Failed to fetch (OFFLINE):', event.request.url, error);
+          
+          // 🔥 CRITICAL ERROR: This is where offline quiz fails
+          // The QuizPage chunk was never cached because user didn't visit it before going offline
+          return new Response(
+            JSON.stringify({
+              error: 'Offline - Resource not cached',
+              url: event.request.url,
+              help: 'This file was not cached. Please visit this page once while online.'
+            }),
+            { 
+              status: 503,
+              headers: { 'Content-Type': 'application/json' }
+            }
+          );
         });
       })
     );

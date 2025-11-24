@@ -66,8 +66,11 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({ user, onRoleSelected }) =
       // Gọi callback ngay lập tức, không delay
       onRoleSelected(role);
       
-      // Hiển thị thông báo nhẹ nhàng
-      toast.info('Vai trò đã được chọn. Dữ liệu sẽ được đồng bộ khi kết nối ổn định.');
+      // Hiển thị thông báo nhẹ nhàng nếu sync notifications được bật
+      const showSyncNotif = localStorage.getItem('showSyncNotifications') === 'true';
+      if (showSyncNotif) {
+        toast.info('Vai trò đã được chọn. Dữ liệu sẽ được đồng bộ khi kết nối ổn định.');
+      }
       
     } finally {
       setIsLoading(false);

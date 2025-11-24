@@ -9,6 +9,10 @@ interface SettingsContextType {
   isMusicPlayerEnabled: boolean;
   toggleMusicPlayer: () => void;
   
+  // Sync Notifications
+  showSyncNotifications: boolean;
+  toggleSyncNotifications: () => void;
+  
   // Notifications
   notificationsEnabled: boolean;
   toggleNotifications: () => void;
@@ -47,6 +51,11 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
   const [isMusicPlayerEnabled, setIsMusicPlayerEnabled] = useState(() => {
     const saved = localStorage.getItem('musicPlayerEnabled');
     return saved === 'true'; // Default false
+  });
+
+  const [showSyncNotifications, setShowSyncNotifications] = useState(() => {
+    const saved = localStorage.getItem('showSyncNotifications');
+    return saved === 'true'; // Default false (like music player)
   });
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
@@ -109,6 +118,10 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
   }, [isMusicPlayerEnabled]);
 
   useEffect(() => {
+    localStorage.setItem('showSyncNotifications', String(showSyncNotifications));
+  }, [showSyncNotifications]);
+
+  useEffect(() => {
     localStorage.setItem('notificationsEnabled', String(notificationsEnabled));
   }, [notificationsEnabled]);
 
@@ -126,6 +139,10 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
 
   const toggleMusicPlayer = () => {
     setIsMusicPlayerEnabled(prev => !prev);
+  };
+
+  const toggleSyncNotifications = () => {
+    setShowSyncNotifications(prev => !prev);
   };
 
   const toggleNotifications = () => {
@@ -155,6 +172,8 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
         toggleTheme,
         isMusicPlayerEnabled,
         toggleMusicPlayer,
+        showSyncNotifications,
+        toggleSyncNotifications,
         notificationsEnabled,
         toggleNotifications,
         soundEffectsEnabled,

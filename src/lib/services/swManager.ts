@@ -1,15 +1,18 @@
 /**
  * Service Worker Registration & Management
+ * Note: VitePWA plugin auto-registers SW, but we keep this for manual control
  */
 
 export function registerServiceWorker() {
+  // VitePWA auto-registers the service worker via registerSW.js
+  // This function is now mainly for backwards compatibility and manual updates
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker
-        .register('/sw.js')
-        .then((registration) => {
-          console.log('[SW] Registered:', registration.scope);
-
+      // Check if VitePWA already registered a SW
+      navigator.serviceWorker.getRegistration().then((registration) => {
+        if (registration) {
+          console.log('[SW] Already registered by VitePWA:', registration.scope);
+          
           // Check for updates periodically
           setInterval(() => {
             registration.update();
@@ -33,10 +36,8 @@ export function registerServiceWorker() {
               });
             }
           });
-        })
-        .catch((error) => {
-          console.error('[SW] Registration failed:', error);
-        });
+        }
+      });
 
       // Listen for controller change
       navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -81,4 +82,40 @@ export async function unregisterServiceWorker() {
       console.log('[SW] Unregistered');
     }
   }
+}
+
+/**
+ * 🔥 Force update Service Worker (for new version deployment)
+ * Call this after upgrading SW version
+ */
+export async function forceUpdateServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const registration of registrations) {
+        await registration.update();
+        console.log('[SW] Force update triggered');
+      }
+    } catch (error) {
+      console.error('[SW] Force update failed:', error);
+    }
+  }
+}
+
+/**
+ * 🔥 Clear all caches (for debugging storage issues)
+ */
+export async function clearAllCaches() {
+  if ('caches' in window) {
+    try {
+      const cacheNames = await caches.keys();
+      await Promise.all(cacheNames.map((name) => caches.delete(name)));
+      console.log('[SW] Cleared all caches:', cacheNames);
+      return cacheNames.length;
+    } catch (error) {
+      console.error('[SW] Failed to clear caches:', error);
+      return 0;
+    }
+  }
+  return 0;
 }

@@ -8,7 +8,7 @@ import { auth, db } from './lib/firebase/config';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { loginSuccess, logout, authCheckComplete } from './features/auth/store';
 import I18nProvider from './shared/components/I18nProvider';
-import { SettingsProvider } from './contexts/SettingsContext';
+import { SettingsProvider, useSettings } from './contexts/SettingsContext';
 
 // Stage 1: Basic Landing & Authentication
 import { LandingPage } from './shared/pages/LandingPage';
@@ -59,6 +59,13 @@ const BuildIndexPage = React.lazy(() => import('./features/admin/pages/BuildInde
 import { ChatbotButton } from './components/rag';
 import MusicPlayer from './components/MusicPlayer';
 const StatsDashboard = React.lazy(() => import('./features/admin/pages/StatsDashboard'));
+
+// Conditional Offline Indicator - only show if sync notifications enabled
+const ConditionalOfflineIndicator: React.FC = () => {
+  const { showSyncNotifications } = useSettings();
+  if (!showSyncNotifications) return null;
+  return <OfflineIndicator className="fixed top-4 right-4 z-50" />;
+};
 const CategoryManagement = React.lazy(() => import('./features/admin/pages/CategoryManagement'));
 const AdminStats = React.lazy(() => import('./features/admin/components/AdminStats'));
 const AdminUtilities = React.lazy(() => import('./features/admin/components/AdminUtilities'));
@@ -74,18 +81,32 @@ import AdminProtectedRoute from './features/admin/components/AdminProtectedRoute
 import NotificationBanner from './shared/components/NotificationBanner';
 import RoleBasedRedirect from './shared/components/RoleBasedRedirect';
 import ScrollToTop from './shared/components/ScrollToTop';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { initializeAutoSync, cleanupAutoSync } from './shared/services/autoSync';
 import { downloadManager } from './features/offline/DownloadManager';
 import { enhancedSyncService } from './services/EnhancedSyncService';
 import { usePresence } from './hooks/usePresence';
+import { backgroundPreloadChunks } from './lib/services/chunkPreloader';
 
 const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const dispatch = useDispatch();
 
   // Initialize Presence System (Facebook-style Online/Offline/Idle tracking)
   usePresence();
+
+  // 🔥 CRITICAL FIX: Preload all lazy chunks for offline support
+  useEffect(() => {
+    // Wait for app to stabilize, then preload chunks in background
+    const preloadTimer = setTimeout(() => {
+      if (navigator.onLine) {
+        console.log('[App] 🚀 Starting background chunk preload for offline support...');
+        backgroundPreloadChunks();
+      }
+    }, 3000); // Wait 3s after app mount
+
+    return () => clearTimeout(preloadTimer);
+  }, []);
 
   useEffect(() => {
     const mounted = true;
@@ -327,6 +348,40 @@ const AppContent: React.FC = () => {
     }
   }, [user]);
 
+  // ============================================================================
+  // 🔔 SYNC NOTIFICATION LISTENER (Single notification per sync batch)
+  // ============================================================================
+  useEffect(() => {
+    const handleSyncCompleted = (event: Event) => {
+      const customEvent = event as CustomEvent<{ synced: number; failed: number }>;
+      const { synced, failed } = customEvent.detail;
+      
+      // Show single notification for all synced items (i18n support)
+      if (synced > 0 && failed === 0) {
+        toast.success(
+          t('sync.success', { count: synced }) || `✅ ${t('sync.synced', 'Đã đồng bộ')} ${synced} ${t('sync.items', 'mục')} ${t('sync.successfully', 'thành công')}`,
+          { autoClose: 3000 }
+        );
+      } else if (synced > 0 && failed > 0) {
+        toast.warning(
+          t('sync.partial', { synced, failed }) || `⚠️ ${t('sync.synced', 'Đã đồng bộ')} ${synced} ${t('sync.items', 'mục')}, ${failed} ${t('sync.failed', 'thất bại')}`,
+          { autoClose: 4000 }
+        );
+      } else if (failed > 0) {
+        toast.error(
+          t('sync.error', { count: failed }) || `❌ ${t('sync.syncFailed', 'Đồng bộ thất bại')}: ${failed} ${t('sync.items', 'mục')}`,
+          { autoClose: 4000 }
+        );
+      }
+    };
+
+    window.addEventListener('sync-completed', handleSyncCompleted);
+
+    return () => {
+      window.removeEventListener('sync-completed', handleSyncCompleted);
+    };
+  }, [t]);
+
   // Show loading while checking authentication
   if (isLoading || !authChecked) {
     console.log('📱 App: Showing loading screen', { isLoading, authChecked });
@@ -364,7 +419,7 @@ const AppContent: React.FC = () => {
 
   return (
     <div>
-      <OfflineIndicator className="fixed top-4 right-4 z-50" />
+      <ConditionalOfflineIndicator />
       <Routes>
         {/* Stage 1: Landing Routes */}
         <Route path="/landing" element={<LandingPage />} />
