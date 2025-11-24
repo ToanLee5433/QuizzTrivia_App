@@ -1,7 +1,12 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
-import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
+import { 
+  getFirestore, 
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager
+} from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getDatabase } from "firebase/database"; // ✅ ENABLED for multiplayer real-time sync
 import { getAnalytics } from "firebase/analytics";
@@ -34,7 +39,25 @@ setPersistence(auth, browserLocalPersistence)
     console.error("Auth persistence error:", error);
   });
 
-export const db = getFirestore(app);
+// 🔥 HOT LAYER: Initialize Firestore with persistent cache (multi-tab support)
+let dbInstance: any = null;
+try {
+  dbInstance = initializeFirestore(app, {
+    localCache: persistentLocalCache({
+      tabManager: persistentMultipleTabManager()
+    })
+  });
+  console.log('✅ Firestore initialized with persistentLocalCache');
+} catch (error: any) {
+  // If already initialized, get existing instance
+  if (error.code === 'failed-precondition' || error.message?.includes('already been called')) {
+    console.log('⚠️ Firestore already initialized, using existing instance');
+    dbInstance = getFirestore(app);
+  } else {
+    throw error;
+  }
+}
+export const db = dbInstance;
 export const storage = getStorage(app);
 export const rtdb = getDatabase(app); // ✅ Realtime Database instance for multiplayer
 
@@ -49,27 +72,8 @@ if (typeof window !== "undefined" && window.location.hostname !== "localhost") {
 }
 export { analytics };
 
-// Initialize offline support for Firestore
-let firestoreOfflineInitialized = false;
-
-export async function initializeFirestoreOffline() {
-  if (firestoreOfflineInitialized || typeof window === 'undefined') {
-    return;
-  }
-
-  try {
-    await enableIndexedDbPersistence(db);
-    console.log('✅ Firestore offline persistence enabled');
-  } catch (err: any) {
-    if (err.code === 'failed-precondition') {
-      console.warn('⚠️ Multiple tabs open, persistence can only be enabled in one tab at a time.');
-    } else if (err.code === 'unimplemented') {
-      console.warn('⚠️ The current browser does not support offline persistence');
-    }
-  }
-  
-  firestoreOfflineInitialized = true;
-}
+// Note: Offline persistence is now handled automatically by persistentLocalCache
+// No need for manual enableIndexedDbPersistence
 
 // Preload data for offline usage - Simplified version
 export async function preloadOfflineData() {

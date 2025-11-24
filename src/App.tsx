@@ -76,6 +76,8 @@ import ScrollToTop from './shared/components/ScrollToTop';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { initializeAutoSync, cleanupAutoSync } from './shared/services/autoSync';
+import { downloadManager } from './features/offline/DownloadManager';
+import { enhancedSyncService } from './services/EnhancedSyncService';
 
 const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const dispatch = useDispatch();
@@ -272,6 +274,53 @@ const AppContent: React.FC = () => {
     isAuthenticated,
     needsRoleSelection
   });
+
+  // ============================================================================
+  // 🔄 AUTO-SYNC SETUP (Event-driven + 60s fallback)
+  // Tối ưu: online event + visibility change + periodic (60s)
+  // ============================================================================
+  useEffect(() => {
+    if (user?.uid) {
+      console.log('[App] Starting auto-sync for user:', user.uid);
+      
+      // Start auto-sync service (60s interval, event-driven)
+      enhancedSyncService.startAutoSync(user.uid, 60000); // 60 seconds (optimized)
+      
+      return () => {
+        console.log('[App] Stopping auto-sync');
+        enhancedSyncService.stopAutoSync();
+      };
+    }
+  }, [user]);
+
+  // ============================================================================
+  // 🧹 ORPHANED MEDIA CLEANUP (Run weekly)
+  // ============================================================================
+  useEffect(() => {
+    if (user?.uid) {
+      console.log('[App] Scheduling media cleanup for user:', user.uid);
+      
+      // Schedule periodic cleanup (checks if 7 days passed since last cleanup)
+      downloadManager.scheduleMediaCleanup(user.uid);
+      
+      // Also run on app startup if more than 7 days passed
+      const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+      const lastCleanup = parseInt(localStorage.getItem('last_media_cleanup') || '0', 10);
+      const now = Date.now();
+      
+      if (now - lastCleanup > WEEK_MS) {
+        console.log('[App] Running overdue media cleanup...');
+        
+        downloadManager.cleanupOrphanedMedia(user.uid).then((deleted) => {
+          if (deleted > 0) {
+            console.log(`[App] ✅ Cleaned up ${deleted} orphaned media files`);
+          }
+        }).catch((err) => {
+          console.error('[App] Media cleanup failed:', err);
+        });
+      }
+    }
+  }, [user]);
 
   // Show loading while checking authentication
   if (isLoading || !authChecked) {

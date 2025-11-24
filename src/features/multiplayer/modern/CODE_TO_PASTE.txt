@@ -1,0 +1,146 @@
+================================================================================
+📋 CODE TO PASTE - ModernRoomLobby.tsx
+================================================================================
+
+=== 1. IMPORT (Add after line 27, sau import SharedScreen) ===
+
+import { gameEngine } from '../services/gameEngine';
+
+
+=== 2. REPLACE handleStartGame Function (Line ~221) ===
+
+FIND THIS:
+----------------------------------------
+  const handleStartGame = async () => {
+    try {
+      setIsStarting(true);
+      
+      // Make announcement
+      announcements.announceGameStarting(5);
+      
+      await modernMultiplayerService.startGame();
+      setTimeout(() => {
+        onGameStart();
+      }, 1000);
+    } catch (error) {
+      console.error('❌ Failed to start game:', error);
+      setIsStarting(false);
+    }
+  };
+----------------------------------------
+
+REPLACE WITH THIS:
+----------------------------------------
+  const handleStartGame = async () => {
+    try {
+      setIsStarting(true);
+      console.log('🎮 Starting game with new engine...');
+      
+      // Make announcement
+      announcements.announceGameStarting(5);
+      
+      // Validate room data
+      if (!roomData || !roomData.quizId) {
+        throw new Error('Invalid room data');
+      }
+      
+      // Get quiz questions from Firestore
+      console.log('📚 Fetching quiz questions...');
+      const questions = await modernMultiplayerService.getQuizQuestions(roomData.quizId);
+      
+      if (!questions || questions.length === 0) {
+        throw new Error('No questions found in quiz');
+      }
+      
+      console.log(`✅ Loaded ${questions.length} questions`);
+      
+      // Initialize game engine with RTDB
+      console.log('🎯 Initializing game engine...');
+      await gameEngine.initializeGame(
+        roomId,
+        roomData.quizId,
+        quiz?.title || roomData.quizTitle || 'Quiz Game',
+        questions,
+        currentUserId,
+        {
+          timePerQuestion: 30,
+          showAnswerReview: true,
+          reviewDuration: 5,
+          leaderboardDuration: 3,
+          powerUpsEnabled: true,
+          streakEnabled: true,
+          spectatorMode: true,
+          autoStart: false,
+        }
+      );
+      
+      console.log('✅ Game engine initialized');
+      
+      // Start the game (countdown + first question)
+      console.log('🚀 Starting game countdown...');
+      await gameEngine.startGame(roomId, questions);
+      
+      console.log('✅ Game started successfully!');
+      
+      // Navigate to game view
+      setTimeout(() => {
+        onGameStart();
+      }, 1000);
+      
+    } catch (error) {
+      console.error('❌ Failed to start game:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      alert('Không thể bắt đầu trò chơi: ' + errorMessage);
+      setIsStarting(false);
+    }
+  };
+----------------------------------------
+
+
+=== 3. DONE! ===
+
+Save file và test!
+
+Expected console logs khi start:
+  🎮 Starting game with new engine...
+  📚 Fetching quiz questions...
+  ✅ Loaded 10 questions
+  🎯 Initializing game engine...
+  ✅ Game engine initialized
+  🚀 Starting game countdown...
+  ✅ Game started successfully!
+
+
+================================================================================
+📋 BONUS: ModernMultiplayerPage.tsx - Verify This
+================================================================================
+
+Make sure ModernGamePlay receives correct props:
+
+{view === 'game-play' && roomId && (
+  <ModernGamePlay
+    roomId={roomId}
+    currentUserId={currentUser?.uid || ''}
+    onGameEnd={() => setView('game-results')}
+  />
+)}
+
+If currentUser is undefined, add at top of component:
+
+import { getAuth } from 'firebase/auth';
+
+const ModernMultiplayerPage: React.FC = () => {
+  const [currentUser, setCurrentUser] = useState(getAuth().currentUser);
+
+  useEffect(() => {
+    const unsubscribe = getAuth().onAuthStateChanged(setCurrentUser);
+    return unsubscribe;
+  }, []);
+
+  // ... rest of code
+};
+
+
+================================================================================
+✅ THAT'S ALL! NOW TEST!
+================================================================================

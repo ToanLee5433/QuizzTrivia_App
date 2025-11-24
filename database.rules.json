@@ -28,6 +28,12 @@
         ".write": "auth != null && auth.uid == $userId"
       }
     },
+    "games": {
+      "$gameId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
     "rooms": {
       "$roomId": {
         ".read": "auth != null",
@@ -59,22 +65,80 @@
         
         "gameState": {
           ".read": "auth != null",
-          ".write": "auth != null"
+          ".write": "auth != null && (root.child('rooms').child($roomId).child('hostId').val() == auth.uid || root.child('rooms').child($roomId).child('players').child(auth.uid).exists())",
+          ".validate": "newData.hasChild('status')",
+          "status": {
+            ".validate": "newData.isString() && (newData.val() == 'waiting' || newData.val() == 'playing' || newData.val() == 'paused' || newData.val() == 'finished')"
+          },
+          "currentQuestion": {
+            ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= 0)"
+          },
+          "questionStartTime": {
+            ".validate": "!newData.exists() || newData.isNumber()"
+          },
+          "timeLeft": {
+            ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= 0)"
+          },
+          "pausedAt": {
+            ".validate": "!newData.exists() || newData.isNumber()"
+          },
+          "finishedAt": {
+            ".validate": "!newData.exists() || newData.isNumber()"
+          }
         },
         
         "answers": {
           "$questionIndex": {
             "$userId": {
               ".read": "auth != null",
-              ".write": false
+              ".write": "auth != null && auth.uid == $userId && !data.exists() && root.child('rooms').child($roomId).child('players').child($userId).child('role').val() != 'spectator'",
+              ".validate": "newData.hasChildren(['questionId', 'answer', 'timeSpent', 'isCorrect', 'points', 'submittedAt'])",
+              "questionId": {
+                ".validate": "newData.isString()"
+              },
+              "answer": {
+                ".validate": "newData.isNumber() && newData.val() >= 0"
+              },
+              "timeSpent": {
+                ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 120000"
+              },
+              "isCorrect": {
+                ".validate": "newData.isBoolean()"
+              },
+              "points": {
+                ".validate": "newData.isNumber() && newData.val() >= 0"
+              },
+              "submittedAt": {
+                ".validate": "newData.isNumber() && newData.val() <= now + 5000"
+              }
             }
           }
         },
         
         "leaderboard": {
-          "$userId": {
-            ".read": "auth != null",
-            ".write": false
+          ".read": "auth != null",
+          ".write": "auth != null && root.child('rooms').child($roomId).child('hostId').val() == auth.uid",
+          ".indexOn": ["score"],
+          "$index": {
+            ".validate": "newData.hasChildren(['userId', 'name', 'score'])",
+            "userId": {
+              ".validate": "newData.isString()"
+            },
+            "name": {
+              ".validate": "newData.isString()"
+            },
+            "score": {
+              ".validate": "newData.isNumber() && newData.val() >= 0"
+            },
+            "correctAnswers": {
+              ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= 0)"
+            },
+            "totalAnswers": {
+              ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= 0)"
+            },
+            "photoURL": {
+              ".validate": "!newData.exists() || newData.isString()"
+            }
           }
         },
         
@@ -185,6 +249,36 @@
                 ".write": "auth != null && auth.uid == $userId"
               }
             }
+          }
+        },
+        
+        "sharedScreen": {
+          ".read": "auth != null",
+          ".write": "auth != null && root.child('rooms').child($roomId).child('hostId').val() == auth.uid",
+          ".validate": "newData.hasChildren(['type']) && (newData.child('type').val() == 'empty' || newData.child('type').val() == 'youtube' || newData.child('type').val() == 'webpage')",
+          "type": {
+            ".validate": "newData.isString() && (newData.val() == 'empty' || newData.val() == 'youtube' || newData.val() == 'webpage')"
+          },
+          "url": {
+            ".validate": "!newData.exists() || newData.isString()"
+          },
+          "videoId": {
+            ".validate": "!newData.exists() || newData.isString()"
+          },
+          "timestamp": {
+            ".validate": "!newData.exists() || newData.isNumber()"
+          },
+          "isPlaying": {
+            ".validate": "!newData.exists() || newData.isBoolean()"
+          },
+          "title": {
+            ".validate": "!newData.exists() || newData.isString()"
+          },
+          "updatedAt": {
+            ".validate": "!newData.exists() || newData.isNumber()"
+          },
+          "updatedBy": {
+            ".validate": "!newData.exists() || (newData.isString() && newData.val() == auth.uid)"
           }
         }
       }

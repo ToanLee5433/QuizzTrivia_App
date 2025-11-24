@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { getAuth } from 'firebase/auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -34,6 +35,13 @@ const ModernMultiplayerPage: React.FC = () => {
   const [roomId, setRoomId] = useState<string | null>(urlRoomId || null);
   const [selectedQuiz, setSelectedQuiz] = useState<any>(null);
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [currentUser, setCurrentUser] = useState(getAuth().currentUser);
+
+  // Listen for auth changes
+  useEffect(() => {
+    const unsubscribe = getAuth().onAuthStateChanged(setCurrentUser);
+    return unsubscribe;
+  }, []);
 
   // Refs for keyboard navigation
   const mainContentRef = useRef<HTMLDivElement>(null);
@@ -334,11 +342,11 @@ const ModernMultiplayerPage: React.FC = () => {
             />
           )}
 
-          {currentView === 'game-play' && roomId && (
+          {currentView === 'game-play' && roomId && currentUser && (
             <ModernGamePlay
               key="game-play"
               roomId={roomId}
-              quiz={selectedQuiz}
+              currentUserId={currentUser.uid}
               onGameEnd={handleGameEnd}
             />
           )}

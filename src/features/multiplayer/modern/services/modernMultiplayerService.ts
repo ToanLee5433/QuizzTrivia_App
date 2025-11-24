@@ -121,12 +121,32 @@ export interface PlayerAnswer {
   points: number;
 }
 
+export interface PauseRequest {
+  playerId: string;
+  playerName: string;
+  requestedAt: number;
+  reason?: string;
+}
+
 export interface GameState {
-  status: 'waiting' | 'playing' | 'finished';
+  status: 'waiting' | 'playing' | 'paused' | 'finished';
   currentQuestion: number;
   timeLeft: number;
   questionStartTime: number;
+  pausedAt?: number;
+  pauseRequests?: { [playerId: string]: PauseRequest };
   players: { [playerId: string]: ModernPlayer };
+}
+
+export interface SharedScreenData {
+  type: 'youtube' | 'webpage' | 'empty';
+  url?: string;
+  videoId?: string;
+  timestamp?: number;
+  isPlaying?: boolean;
+  title?: string;
+  updatedAt?: number;
+  updatedBy?: string;
 }
 
 // Modern Multiplayer Service
@@ -285,6 +305,29 @@ export class ModernMultiplayerService {
   private stripHtml(html: string): string {
     if (!html) return '';
     return html.replace(/<[^>]*>/g, '').trim();
+  }
+
+  // URL validation for shared screen security
+  private isUrlSafe(url: string): boolean {
+    try {
+      const parsed = new URL(url);
+      const allowedDomains = [
+        'youtube.com',
+        'youtu.be',
+        'vimeo.com',
+        'drive.google.com',
+        'docs.google.com',
+        'slides.google.com',
+        'forms.google.com'
+      ];
+      
+      return allowedDomains.some(domain => 
+        parsed.hostname === domain || parsed.hostname.endsWith(`.${domain}`)
+      );
+    } catch (error) {
+      logger.warn('Invalid URL format', { url });
+      return false;
+    }
   }
 
   // ✅ Get quizzes metadata only (no questions) - saves Firebase reads
@@ -960,6 +1003,23 @@ export class ModernMultiplayerService {
     );
     
     this.listeners[`gameState_${roomId}`] = unsubscribeGameState;
+    
+    // Shared screen listener (RTDB for real-time screen sharing)
+    const sharedScreenRef = ref(this.rtdb, `rooms/${roomId}/sharedScreen`);
+    const unsubscribeSharedScreen = onValue(
+      sharedScreenRef,
+      (snapshot) => {
+        const sharedScreenData = snapshot.val() || { type: 'empty' };
+        console.log('📺 Shared screen updated:', sharedScreenData);
+        this.emit('sharedScreen:updated', sharedScreenData);
+      },
+      (error) => {
+        console.error('Shared screen listener error:', error);
+        this.emit('error', error);
+      }
+    );
+    
+    this.listeners[`sharedScreen_${roomId}`] = unsubscribeSharedScreen;
   }
 
   // Enhanced cleanup method
@@ -1025,6 +1085,55 @@ export class ModernMultiplayerService {
     console.log('✅ Set up onDisconnect handlers for presence tracking');
   }
 
+  // Update shared screen (host only)
+  async updateSharedScreen(data: SharedScreenData): Promise<void> {
+    return this.executeOperation(async () => {
+      try {
+        this.ensureAuthenticated();
+        
+        if (!this.roomId) {
+          throw new RoomNotFoundError('No active room');
+        }
+        
+        // Rate limiting
+        if (!rateLimiter.canPerform(this.userId, 'updateSharedScreen')) {
+          throw new RateLimitError('update shared screen', 10);
+        }
+        
+        // Validate URL if provided
+        if (data.type === 'webpage' && data.url) {
+          if (!this.isUrlSafe(data.url)) {
+            throw new ValidationError('url', 'URL not allowed. Only YouTube, Vimeo, and Google Drive links are supported.');
+          }
+        }
+        
+        if (data.type === 'youtube' && data.url) {
+          if (!this.isUrlSafe(data.url)) {
+            throw new ValidationError('url', 'Invalid YouTube URL');
+          }
+        }
+        
+        // Add metadata
+        const screenData: SharedScreenData = {
+          ...data,
+          updatedAt: Date.now(),
+          updatedBy: this.userId
+        };
+        
+        // Update RTDB
+        const sharedScreenRef = ref(this.rtdb, `rooms/${this.roomId}/sharedScreen`);
+        await set(sharedScreenRef, this.removeUndefined(screenData));
+        
+        logger.success('Shared screen updated', { type: data.type });
+        this.emit('sharedScreen:updated', screenData);
+      } catch (error) {
+        logger.error('Failed to update shared screen', error);
+        this.emit('error', error);
+        throw error;
+      }
+    }, retryStrategies.standard);
+  }
+
   // Update player ready status
   async toggleReady() {
     return this.executeOperation(async () => {
@@ -1079,6 +1188,70 @@ export class ModernMultiplayerService {
     }, retryStrategies.standard);
   }
 
+  // Request pause (any player can request)
+  async requestPause(reason?: string): Promise<void> {
+    return this.executeOperation(async () => {
+      try {
+        this.ensureAuthenticated();
+        
+        if (!this.roomId) {
+          throw new RoomNotFoundError('No active room');
+        }
+        
+        // Get player info
+        const playerRef = ref(this.rtdb, `rooms/${this.roomId}/players/${this.userId}`);
+        const playerSnapshot = await get(playerRef);
+        const playerData = playerSnapshot.val() as ModernPlayer;
+        
+        if (!playerData) {
+          throw new Error('Player not found');
+        }
+        
+        // Only active players can request pause (not spectators)
+        if (playerData.role === 'spectator') {
+          throw new UnauthorizedError('pause');
+        }
+        
+        // Add pause request
+        const pauseRequestRef = ref(this.rtdb, `rooms/${this.roomId}/gameState/pauseRequests/${this.userId}`);
+        await set(pauseRequestRef, {
+          playerId: this.userId,
+          playerName: playerData.name,
+          requestedAt: Date.now(),
+          reason: reason || 'Player requested pause'
+        });
+        
+        logger.info('Pause requested by player', { playerId: this.userId, playerName: playerData.name });
+        this.emit('game:pauseRequested', { playerId: this.userId, playerName: playerData.name });
+      } catch (error) {
+        logger.error('Failed to request pause', error);
+        this.emit('error', error);
+        throw error;
+      }
+    }, retryStrategies.standard);
+  }
+
+  // Cancel pause request
+  async cancelPauseRequest(): Promise<void> {
+    return this.executeOperation(async () => {
+      try {
+        this.ensureAuthenticated();
+        
+        if (!this.roomId) {
+          throw new RoomNotFoundError('No active room');
+        }
+        
+        const pauseRequestRef = ref(this.rtdb, `rooms/${this.roomId}/gameState/pauseRequests/${this.userId}`);
+        await remove(pauseRequestRef);
+        
+        logger.info('Pause request cancelled', { playerId: this.userId });
+      } catch (error) {
+        logger.error('Failed to cancel pause request', error);
+        throw error;
+      }
+    }, retryStrategies.standard);
+  }
+
   // Submit answer
   async submitAnswer(questionId: string, answer: number, timeSpent: number): Promise<boolean> {
     return this.executeOperation(async () => {
@@ -1088,6 +1261,19 @@ export class ModernMultiplayerService {
         // Rate limiting
         if (!rateLimiter.canPerform(this.userId, 'submitAnswer')) {
           throw new RateLimitError('submit answer', 60);
+        }
+        
+        // Check if player is allowed to submit (not spectator)
+        const playerRef = ref(this.rtdb, `rooms/${this.roomId}/players/${this.userId}`);
+        const playerSnapshot = await get(playerRef);
+        const playerData = playerSnapshot.val() as ModernPlayer;
+        
+        if (!playerData) {
+          throw new Error('Player not found');
+        }
+        
+        if (playerData.role === 'spectator') {
+          throw new UnauthorizedError('submit answer as spectator');
         }
         
         // Get question data to check if answer is correct
@@ -1136,6 +1322,259 @@ export class ModernMultiplayerService {
         throw error;
       }
     }, retryStrategies.critical);
+  }
+
+  // Move to next question (host only)
+  async nextQuestion(): Promise<void> {
+    return this.executeOperation(async () => {
+      try {
+        this.ensureAuthenticated();
+        
+        if (!this.roomId) {
+          throw new RoomNotFoundError('No active room');
+        }
+        
+        // Get current game state
+        const gameStateRef = ref(this.rtdb, `rooms/${this.roomId}/gameState`);
+        const gameStateSnapshot = await get(gameStateRef);
+        const currentGameState = gameStateSnapshot.val();
+        
+        if (!currentGameState || currentGameState.status !== 'playing') {
+          throw new Error('Game is not in playing state');
+        }
+        
+        // Get room data to check question count
+        const roomRef = doc(this.db, 'multiplayer_rooms', this.roomId);
+        const roomSnapshot = await getDoc(roomRef);
+        const roomData = roomSnapshot.data() as ModernRoom;
+        
+        const totalQuestions = roomData.quiz?.questions?.length || 0;
+        const nextQuestionIndex = (currentGameState.currentQuestion || 0) + 1;
+        
+        if (nextQuestionIndex >= totalQuestions) {
+          // No more questions, end game
+          await this.endGame();
+          return;
+        }
+        
+        // Update to next question
+        await update(gameStateRef, {
+          currentQuestion: nextQuestionIndex,
+          questionStartTime: Date.now(),
+          timeLeft: roomData.settings?.timePerQuestion || 30
+        });
+        
+        logger.info('Moved to next question', { nextQuestionIndex, totalQuestions });
+        this.emit('game:nextQuestion', { questionIndex: nextQuestionIndex });
+      } catch (error) {
+        logger.error('Failed to move to next question', error);
+        this.emit('error', error);
+        throw error;
+      }
+    }, retryStrategies.standard);
+  }
+
+  // Pause game (host only)
+  async pauseGame(pausedBy?: string, reason?: string): Promise<void> {
+    return this.executeOperation(async () => {
+      try {
+        this.ensureAuthenticated();
+        
+        if (!this.roomId) {
+          throw new RoomNotFoundError('No active room');
+        }
+        
+        const gameStateRef = ref(this.rtdb, `rooms/${this.roomId}/gameState`);
+        const updates: any = {
+          status: 'paused',
+          pausedAt: Date.now(),
+          pausedBy: pausedBy || this.userId,
+          pauseReason: reason || 'Host paused the game'
+        };
+        
+        await update(gameStateRef, updates);
+        
+        // Clear all pause requests after pausing
+        const pauseRequestsRef = ref(this.rtdb, `rooms/${this.roomId}/gameState/pauseRequests`);
+        await remove(pauseRequestsRef);
+        
+        logger.info('Game paused', { pausedBy, reason });
+        this.emit('game:paused', { pausedBy, reason });
+      } catch (error) {
+        logger.error('Failed to pause game', error);
+        this.emit('error', error);
+        throw error;
+      }
+    }, retryStrategies.standard);
+  }
+
+  // Resume game (host only)
+  async resumeGame(): Promise<void> {
+    return this.executeOperation(async () => {
+      try {
+        this.ensureAuthenticated();
+        
+        if (!this.roomId) {
+          throw new RoomNotFoundError('No active room');
+        }
+        
+        const gameStateRef = ref(this.rtdb, `rooms/${this.roomId}/gameState`);
+        const gameStateSnapshot = await get(gameStateRef);
+        const currentGameState = gameStateSnapshot.val();
+        
+        if (currentGameState?.pausedAt) {
+          const pauseDuration = Date.now() - currentGameState.pausedAt;
+          const adjustedStartTime = (currentGameState.questionStartTime || Date.now()) + pauseDuration;
+          
+          await update(gameStateRef, {
+            status: 'playing',
+            questionStartTime: adjustedStartTime,
+            pausedAt: null
+          });
+        } else {
+          await update(gameStateRef, {
+            status: 'playing'
+          });
+        }
+        
+        logger.info('Game resumed');
+        this.emit('game:resumed');
+      } catch (error) {
+        logger.error('Failed to resume game', error);
+        this.emit('error', error);
+        throw error;
+      }
+    }, retryStrategies.standard);
+  }
+
+  // Get current player's role
+  async getPlayerRole(): Promise<PlayerRole | null> {
+    try {
+      this.ensureAuthenticated();
+      
+      if (!this.roomId) {
+        return null;
+      }
+      
+      const playerRef = ref(this.rtdb, `rooms/${this.roomId}/players/${this.userId}`);
+      const playerSnapshot = await get(playerRef);
+      const playerData = playerSnapshot.val() as ModernPlayer;
+      
+      return playerData?.role || null;
+    } catch (error) {
+      logger.error('Failed to get player role', error);
+      return null;
+    }
+  }
+
+  // Check if current player can participate (not spectator)
+  async canParticipate(): Promise<boolean> {
+    const role = await this.getPlayerRole();
+    return role !== 'spectator';
+  }
+
+  // Check if current player is host
+  async isHost(): Promise<boolean> {
+    const role = await this.getPlayerRole();
+    return role === 'host';
+  }
+
+  // Change player role (host only)
+  async changePlayerRole(playerId: string, newRole: PlayerRole): Promise<void> {
+    return this.executeOperation(async () => {
+      try {
+        this.ensureAuthenticated();
+        
+        if (!this.roomId) {
+          throw new RoomNotFoundError('No active room');
+        }
+        
+        // Verify current user is host
+        const isHost = await this.isHost();
+        if (!isHost) {
+          throw new UnauthorizedError('change player role');
+        }
+        
+        // Cannot change host's own role
+        if (playerId === this.userId) {
+          throw new ValidationError('role', 'Cannot change your own role');
+        }
+        
+        const playerRef = ref(this.rtdb, `rooms/${this.roomId}/players/${playerId}`);
+        await update(playerRef, {
+          role: newRole,
+          isParticipating: newRole !== 'spectator'
+        });
+        
+        logger.info('Player role changed', { playerId, newRole });
+        this.emit('player:roleChanged', { playerId, newRole });
+      } catch (error) {
+        logger.error('Failed to change player role', error);
+        this.emit('error', error);
+        throw error;
+      }
+    }, retryStrategies.standard);
+  }
+
+  // End game and calculate final results
+  async endGame(): Promise<void> {
+    return this.executeOperation(async () => {
+      try {
+        this.ensureAuthenticated();
+        
+        if (!this.roomId) {
+          throw new RoomNotFoundError('No active room');
+        }
+        
+        // Update game state to finished
+        const gameStateRef = ref(this.rtdb, `rooms/${this.roomId}/gameState`);
+        await update(gameStateRef, {
+          status: 'finished',
+          finishedAt: Date.now()
+        });
+        
+        // Update Firestore room status
+        const roomRef = doc(this.db, 'multiplayer_rooms', this.roomId);
+        await updateDoc(roomRef, {
+          status: 'finished',
+          finishedAt: new Date()
+        });
+        
+        // Get all players and their scores for leaderboard
+        const playersRef = ref(this.rtdb, `rooms/${this.roomId}/players`);
+        const playersSnapshot = await get(playersRef);
+        const players = playersSnapshot.val() || {};
+        
+        // Calculate final leaderboard (only include players, not spectators)
+        const leaderboard = Object.entries(players)
+          .filter(([, playerData]: [string, any]) => playerData.role !== 'spectator')
+          .map(([playerId, playerData]: [string, any]) => ({
+            userId: playerId,
+            name: playerData.name || 'Unknown',
+            score: playerData.score || 0,
+            correctAnswers: Object.values(playerData.answers || {}).filter((a: any) => a?.isCorrect).length,
+            totalAnswers: Object.keys(playerData.answers || {}).length,
+            photoURL: playerData.photoURL,
+            role: playerData.role
+          }))
+          .sort((a, b) => b.score - a.score); // Sort by score descending
+        
+        // Save leaderboard to RTDB
+        const leaderboardRef = ref(this.rtdb, `rooms/${this.roomId}/leaderboard`);
+        await set(leaderboardRef, leaderboard);
+        
+        logger.success('Game ended', { 
+          playerCount: leaderboard.length,
+          winner: leaderboard[0]?.name
+        });
+        
+        this.emit('game:ended', { leaderboard });
+      } catch (error) {
+        logger.error('Failed to end game', error);
+        this.emit('error', error);
+        throw error;
+      }
+    }, retryStrategies.standard);
   }
 
   // Leave room
@@ -1441,57 +1880,36 @@ export class ModernMultiplayerService {
           throw new Error('Cannot transfer host to offline player');
         }
 
-        // Update roles in RTDB FIRST (while still host), then update room hostId
-        const oldHostRef = ref(this.rtdb, `rooms/${this.roomId}/players/${this.userId}`);
-        const wasParticipating = playerData?.isParticipating ?? true; // Get current participation state
+        // ✅ Use multi-location update for atomicity
+        const wasParticipating = rtdbPlayerData?.isParticipating ?? true;
         
-        // Debug logging to track the issue
-        console.log('🔍 Host Transfer Debug:', {
+        console.log('🔄 Transferring host atomically...', {
           oldHostId: this.userId,
           newHostId: newHostId,
-          playerDataIsParticipating: playerData?.isParticipating,
-          wasParticipating: wasParticipating,
-          willBeRole: wasParticipating ? 'player' : 'spectator'
+          wasParticipating
         });
         
-        // Update old host role FIRST - with granular error handling
+        // Prepare all updates for atomic write
+        const updates: Record<string, any> = {};
+        
+        // Update old host role
+        updates[`rooms/${this.roomId}/players/${this.userId}/role`] = wasParticipating ? 'player' : 'spectator';
+        updates[`rooms/${this.roomId}/players/${this.userId}/isParticipating`] = wasParticipating;
+        
+        // Update new host role
+        updates[`rooms/${this.roomId}/players/${newHostId}/role`] = 'host';
+        updates[`rooms/${this.roomId}/players/${newHostId}/isParticipating`] = true;
+        
+        // Update room hostId
+        updates[`rooms/${this.roomId}/hostId`] = newHostId;
+        
+        // ✅ Execute all updates atomically - either all succeed or all fail
         try {
-          console.log('🔄 Updating old host role...');
-          await update(oldHostRef, {
-            role: wasParticipating ? 'player' as PlayerRole : 'spectator' as PlayerRole,
-            isParticipating: wasParticipating
-          });
-          console.log('✅ Old host role updated successfully');
+          await update(ref(this.rtdb), updates);
+          console.log('✅ Host transfer completed atomically in RTDB');
         } catch (error) {
-          console.error('❌ Failed to update old host role:', error);
-          throw error;
-        }
-
-        // Update new host role - with granular error handling
-        try {
-          console.log('🔄 Updating new host role...');
-          const newHostRef = ref(this.rtdb, `rooms/${this.roomId}/players/${newHostId}`);
-          await update(newHostRef, {
-            role: 'host' as PlayerRole,
-            isParticipating: true
-          });
-          console.log('✅ New host role updated successfully');
-        } catch (error) {
-          console.error('❌ Failed to update new host role:', error);
-          throw error;
-        }
-
-        // Update room hostId - with granular error handling
-        try {
-          console.log('🔄 Updating room hostId...');
-          const rtdbRoomRef = ref(this.rtdb, `rooms/${this.roomId}`);
-          await update(rtdbRoomRef, {
-            hostId: newHostId
-          });
-          console.log('✅ Room hostId updated successfully');
-        } catch (error) {
-          console.error('❌ Failed to update room hostId:', error);
-          throw error;
+          console.error('❌ Atomic host transfer failed:', error);
+          throw new Error('Failed to transfer host roles atomically');
         }
 
         // Update Firestore room document LAST (after RTDB updates succeed)
@@ -1551,36 +1969,6 @@ export class ModernMultiplayerService {
   }
 
   // Update shared screen content
-  async updateSharedScreen(screenData: any) {
-    return this.executeOperation(async () => {
-      try {
-        this.ensureAuthenticated();
-        
-        if (!this.roomId) throw new RoomNotFoundError('current');
-
-        console.log('🔍 updateSharedScreen Debug:', {
-          roomId: this.roomId,
-          userId: this.userId,
-          screenData: screenData
-        });
-
-        const rtdbRoomRef = ref(this.rtdb, `rooms/${this.roomId}`);
-        await update(rtdbRoomRef, {
-          sharedScreen: screenData,
-          updatedAt: Date.now()
-        });
-        
-        console.log('✅ SharedScreen updated to RTDB successfully');
-        logger.info('Shared screen updated', { screenData });
-      } catch (error) {
-        console.error('❌ Failed to update shared screen:', error);
-        logger.error('Failed to update shared screen', error);
-        this.emit('error', error);
-        throw error;
-      }
-    }, retryStrategies.standard);
-  }
-
   // Save game submission for history tracking
   async saveGameSubmission(submissionData: {
     playerId: string;

@@ -22,16 +22,13 @@ import { collection, onSnapshot, query, orderBy, deleteDoc, getDocs } from 'fire
 import { ref, onValue, getDatabase } from 'firebase/database';
 import QRCodeLib from 'qrcode';
 import { modernMultiplayerService, ModernPlayer, ModernQuiz } from '../services/modernMultiplayerService';
-import MemoizedPlayerCard from './MemoizedPlayerCard';
 import KickPlayerConfirmDialog from './KickPlayerConfirmDialog';
 import SharedScreen from './SharedScreen';
+import { gameEngine } from '../services/gameEngine';
 
 // Import enhanced components
 import ModernRealtimeChat from './ModernRealtimeChat';
-import ModernLiveLeaderboard from './ModernLiveLeaderboard';
-import ModernHostControlPanel from './ModernHostControlPanel';
 import ModernConnectionStatus from './ModernConnectionStatus';
-import ModernPowerUpsPanel from './ModernPowerUpsPanel';
 import ModernGameAnnouncements from './ModernGameAnnouncements';
 import { useGameAnnouncements } from './ModernGameAnnouncements';
 
@@ -83,14 +80,15 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
     });
   }, []);
 
-  const handleToggleReady = useCallback(async () => {
-    try {
-      await modernMultiplayerService.toggleReady();
-      console.log('✅ Ready status toggled');
-    } catch (error) {
-      console.error('❌ Failed to toggle ready:', error);
-    }
-  }, []);
+  // Removed - not used in simplified UI
+  // const handleToggleReady = useCallback(async () => {
+  //   try {
+  //     await modernMultiplayerService.toggleReady();
+  //     console.log('✅ Ready status toggled');
+  //   } catch (error) {
+  //     console.error('❌ Failed to toggle ready:', error);
+  //   }
+  // }, []);
 
   const handleToggleHostParticipation = useCallback(async () => {
     try {
@@ -110,26 +108,18 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
     }
   }, []);
 
-  const handleTransferHost = useCallback(async (player: ModernPlayer) => {
-    try {
-      const confirmed = window.confirm(`Chuyển quyền host cho ${player.name}?`);
-      if (confirmed) {
-        await modernMultiplayerService.transferHost(player.id);
-        console.log('✅ Host transferred to:', player.name);
-      }
-    } catch (error) {
-      console.error('❌ Failed to transfer host:', error);
-    }
-  }, []);
-
-  const handleSharedScreenUpdate = useCallback(async (screenData: any) => {
-    try {
-      await modernMultiplayerService.updateSharedScreen(screenData);
-      console.log('✅ Shared screen updated:', screenData);
-    } catch (error) {
-      console.error('❌ Failed to update shared screen:', error);
-    }
-  }, []);
+  // Removed - not used in simplified UI
+  // const handleTransferHost = useCallback(async (player: ModernPlayer) => {
+  //   try {
+  //     const confirmed = window.confirm(`Chuyển quyền host cho ${player.name}?`);
+  //     if (confirmed) {
+  //       await modernMultiplayerService.transferHost(player.id);
+  //       console.log('✅ Host transferred to:', player.name);
+  //     }
+  //   } catch (error) {
+  //     console.error('❌ Failed to transfer host:', error);
+  //   }
+  // }, []);
 
   const handleKickPlayer = useCallback(async () => {
     if (!kickDialog.player) return;
@@ -230,6 +220,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
   const handleStartGame = async () => {
     try {
       setIsStarting(true);
+      console.log('🎮 Starting game with new engine...');
       
       // Clear chat messages before starting game
       await clearChatMessages();
@@ -237,12 +228,58 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
       // Make announcement
       announcements.announceGameStarting(5);
       
-      await modernMultiplayerService.startGame();
+      // Validate room data
+      if (!roomData || !roomData.quizId) {
+        throw new Error('Invalid room data');
+      }
+      
+      // Get quiz questions from Firestore
+      console.log('📚 Fetching quiz questions...');
+      const questions = await modernMultiplayerService.getQuizQuestions(roomData.quizId);
+      
+      if (!questions || questions.length === 0) {
+        throw new Error('No questions found in quiz');
+      }
+      
+      console.log(`✅ Loaded ${questions.length} questions`);
+      
+      // Initialize game engine with RTDB
+      console.log('🎯 Initializing game engine...');
+      await gameEngine.initializeGame(
+        roomId,
+        roomData.quizId,
+        quiz?.title || roomData.quizTitle || 'Quiz Game',
+        questions as any, // Type conversion for compatibility
+        currentUserId,
+        {
+          timePerQuestion: 30,
+          showAnswerReview: true,
+          reviewDuration: 5,
+          leaderboardDuration: 3,
+          powerUpsEnabled: true,
+          streakEnabled: true,
+          spectatorMode: true,
+          autoStart: false,
+        }
+      );
+      
+      console.log('✅ Game engine initialized');
+      
+      // Start the game (countdown + first question)
+      console.log('🚀 Starting game countdown...');
+      await gameEngine.startGame(roomId, questions as any);
+      
+      console.log('✅ Game started successfully!');
+      
+      // Navigate to game view
       setTimeout(() => {
         onGameStart();
       }, 1000);
+      
     } catch (error) {
       console.error('❌ Failed to start game:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      alert('Không thể bắt đầu trò chơi: ' + errorMessage);
       setIsStarting(false);
     }
   };
@@ -281,7 +318,13 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
   }, [activePlayers, roomData?.hostId]);
   const isHost = useMemo(() => {
     // Only check roomData.hostId - no fallback to first player
-    return roomData?.hostId === currentUserId;
+    const result = roomData?.hostId === currentUserId;
+    console.log('🎮 isHost calculation:', { 
+      hostId: roomData?.hostId, 
+      currentUserId, 
+      isHost: result 
+    });
+    return result;
   }, [roomData?.hostId, currentUserId]);
 
   // ✅ CRITICAL: Define handlers BEFORE useEffect so they have correct dependencies
@@ -491,10 +534,11 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
     }
   }, []);
 
-  const handlePowerUpUse = (powerUpId: any) => {
-    console.log('Power-up used:', powerUpId);
-    // Power-up logic will be handled in game play
-  };
+  // Removed - not used in simplified lobby UI
+  // const handlePowerUpUse = (powerUpId: any) => {
+  //   console.log('Power-up used:', powerUpId);
+  //   // Power-up logic will be handled in game play
+  // };
 
   return (
     <motion.div
@@ -672,7 +716,6 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
             <SharedScreen
               roomData={roomData}
               isHost={isHost}
-              onScreenUpdate={handleSharedScreenUpdate}
             />
           ) : (
             <motion.div
@@ -729,18 +772,9 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
             <div className="space-y-3">
               <AnimatePresence>
                 {spectators.map((spectator) => (
-                  <MemoizedPlayerCard
-                    key={spectator.id}
-                    player={spectator}
-                    isHost={isHost}
-                    currentUserId={currentUserId}
-                    hostId={roomData?.hostId || ''}
-                    onKickPlayer={handleKickPlayerClick}
-                    onTransferHost={handleTransferHost}
-                    onToggleReady={handleToggleReady}
-                    onToggleHostParticipation={handleToggleHostParticipation}
-                    onToggleRole={handleToggleRole}
-                  />
+                  <div key={spectator.id} className="p-4 bg-white/10 rounded-xl">
+                    <p className="text-white">{spectator.name} (Spectator)</p>
+                  </div>
                 ))}
               </AnimatePresence>
 
@@ -797,18 +831,29 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
             <div className="space-y-3">
               <AnimatePresence>
                 {activePlayers.map((player) => (
-                  <MemoizedPlayerCard
-                    key={player.id}
-                    player={player}
-                    isHost={isHost}
-                    currentUserId={currentUserId}
-                    hostId={roomData?.hostId || ''}
-                    onKickPlayer={handleKickPlayerClick}
-                    onTransferHost={handleTransferHost}
-                    onToggleReady={handleToggleReady}
-                    onToggleHostParticipation={handleToggleHostParticipation}
-                    onToggleRole={handleToggleRole}
-                  />
+                  <div key={player.id} className="p-4 bg-white/10 rounded-xl flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      {player.photoURL ? (
+                        <img src={player.photoURL} alt={player.name} className="w-10 h-10 rounded-full" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+                          {player.name.charAt(0)}
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-white font-semibold">{player.name}</p>
+                        <p className="text-sm text-gray-400">{player.isReady ? '✅ Ready' : '⏳ Not Ready'}</p>
+                      </div>
+                    </div>
+                    {isHost && player.id !== currentUserId && (
+                      <button
+                        onClick={() => handleKickPlayerClick(player)}
+                        className="px-3 py-1 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30"
+                      >
+                        Kick
+                      </button>
+                    )}
+                  </div>
                 ))}
               </AnimatePresence>
 
@@ -835,24 +880,21 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
+              className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20"
             >
-              <ModernHostControlPanel
-                roomId={roomId}
-                currentUserId={currentUserId}
-                isHost={isHost}
-                hostIsParticipating={players[currentUserId]?.isParticipating !== false}
-                players={playersList}
-                onGameStart={handleStartGame}
-                onGamePause={() => {}}
-                onGameResume={() => {}}
-                onKickPlayer={() => {}}
-                onTransferHost={(playerId) => {
-                  const player = playersList.find(p => p.id === playerId);
-                  if (player) handleTransferHost(player);
-                }}
-                onToggleHostParticipation={handleToggleHostParticipation}
-                onSettingsUpdate={() => {}}
-              />
+              <h3 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+                <Crown className="w-5 h-5 text-yellow-400" />
+                <span>Host Controls</span>
+              </h3>
+              <div className="space-y-3">
+                <button
+                  onClick={handleToggleHostParticipation}
+                  className="w-full px-4 py-2 bg-purple-500/20 text-purple-300 rounded-xl hover:bg-purple-500/30"
+                >
+                  {players[currentUserId]?.isParticipating !== false ? 'Switch to Spectator' : 'Join Game'}
+                </button>
+                <p className="text-xs text-gray-400 text-center">Game will start when ready</p>
+              </div>
             </motion.div>
           )}
 
@@ -903,34 +945,29 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
             />
           </motion.div>
 
-          {/* Live Leaderboard */}
-          <motion.div
+          {/* Live Leaderboard - Will be available in game */}
+          {/* <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}
           >
-            <ModernLiveLeaderboard
-              roomId={roomId}
-              currentUserId={currentUserId}
-              compact={true}
-              showTop={5}
-              showAnimations={true}
-            />
-          </motion.div>
+            <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20">
+              <h3 className="text-lg font-bold text-white mb-4">Leaderboard</h3>
+              <p className="text-gray-400 text-sm text-center">Available during game</p>
+            </div>
+          </motion.div> */}
 
-          {/* Power-ups Panel */}
-          <motion.div
+          {/* Power-ups Panel - Will be available in game */}
+          {/* <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.6 }}
           >
-            <ModernPowerUpsPanel
-              roomId={roomId}
-              currentUserId={currentUserId}
-              onPowerUpUse={handlePowerUpUse}
-              compact={true}
-            />
-          </motion.div>
+            <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20">
+              <h3 className="text-lg font-bold text-white mb-4">Power-ups</h3>
+              <p className="text-gray-400 text-sm text-center">Available during game</p>
+            </div>
+          </motion.div> */}
         </div>
       </div>
 

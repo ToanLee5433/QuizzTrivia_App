@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../../lib/store';
 import { useSettings } from '../../../contexts/SettingsContext';
 import { useTranslation } from 'react-i18next';
+import { downloadManager } from '../../../features/offline/DownloadManager';
 import { 
   Settings as SettingsIcon,
   Moon, 
@@ -18,13 +21,25 @@ import {
   Globe,
   Shield,
   Database,
-  Download
+  Download,
+  Trash2,
+  HardDrive,
+  RefreshCw
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
+  const user = useSelector((state: RootState) => state.auth.user);
+  
+  // Storage management state
+  const [storageStats, setStorageStats] = useState<{
+    totalQuizzes: number;
+    totalSize: string;
+    lastCleanup: string;
+  } | null>(null);
+  const [isCleaningUp, setIsCleaningUp] = useState(false);
   const {
     theme,
     toggleTheme,
@@ -53,6 +68,89 @@ const SettingsPage: React.FC = () => {
       localStorage.removeItem('quizCache');
       sessionStorage.clear();
       toast.success(t('settings.clearCacheSuccess'));
+    }
+  };
+
+  // Load storage stats on mount
+  useEffect(() => {
+    loadStorageStats();
+  }, [user]);
+
+  const loadStorageStats = async () => {
+    if (!user?.uid) return;
+
+    try {
+      const quizzes = await downloadManager.getDownloadedQuizzes(user.uid);
+      const totalSize = quizzes.reduce((sum, q) => sum + (q.size || 0), 0);
+      const lastCleanup = parseInt(localStorage.getItem('last_media_cleanup') || '0', 10);
+      
+      setStorageStats({
+        totalQuizzes: quizzes.length,
+        totalSize: formatBytes(totalSize),
+        lastCleanup: lastCleanup 
+          ? new Date(lastCleanup).toLocaleDateString('vi-VN')
+          : 'Chưa dọn dẹp'
+      });
+    } catch (error) {
+      console.error('Failed to load storage stats:', error);
+    }
+  };
+
+  const formatBytes = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const handleManualCleanup = async () => {
+    if (!user?.uid) {
+      toast.error('Vui lòng đăng nhập để dọn dẹp dữ liệu');
+      return;
+    }
+
+    setIsCleaningUp(true);
+    try {
+      const deleted = await downloadManager.cleanupOrphanedMedia(user.uid);
+      localStorage.setItem('last_media_cleanup', Date.now().toString());
+      await loadStorageStats();
+      
+      if (deleted > 0) {
+        toast.success(`✅ Đã dọn dẹp ${deleted} file media không sử dụng`);
+      } else {
+        toast.info('✅ Không có media nào cần dọn dẹp');
+      }
+    } catch (error) {
+      console.error('Cleanup failed:', error);
+      toast.error('❌ Lỗi khi dọn dẹp dữ liệu. Vui lòng thử lại.');
+    } finally {
+      setIsCleaningUp(false);
+    }
+  };
+
+  const handleClearAllOfflineData = async () => {
+    if (!user?.uid) return;
+
+    const confirmed = window.confirm(
+      '⚠️ XÓA TẤT CẢ DỮ LIỆU OFFLINE?\n\n' +
+      'Thao tác này sẽ xóa tất cả bài quiz đã tải xuống và media. Không thể hoàn tác!'
+    );
+
+    if (!confirmed) return;
+
+    setIsCleaningUp(true);
+    try {
+      const count = await downloadManager.clearAllDownloads(user.uid);
+      localStorage.removeItem('last_media_cleanup');
+      await loadStorageStats();
+      
+      toast.success(`✅ Đã xóa ${count} quiz offline`);
+    } catch (error) {
+      console.error('Failed to clear data:', error);
+      toast.error('❌ Lỗi khi xóa dữ liệu');
+    } finally {
+      setIsCleaningUp(false);
     }
   };
 
@@ -339,6 +437,63 @@ const SettingsPage: React.FC = () => {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Offline Storage Management Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 transition-all duration-300 hover:shadow-2xl">
+            <div className="flex items-center gap-3 mb-6">
+              <HardDrive className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <h2 className="text-xl font-bold text-gray-800 dark:text-white transition-colors">Quản lý bộ nhớ offline</h2>
+            </div>
+
+            {storageStats && (
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                  <div className="text-gray-600 dark:text-gray-400 text-sm mb-1">Bài quiz đã tải</div>
+                  <div className="text-2xl font-bold text-gray-800 dark:text-white">{storageStats.totalQuizzes}</div>
+                </div>
+                <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                  <div className="text-gray-600 dark:text-gray-400 text-sm mb-1">Dung lượng</div>
+                  <div className="text-2xl font-bold text-gray-800 dark:text-white">{storageStats.totalSize}</div>
+                </div>
+                <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                  <div className="text-gray-600 dark:text-gray-400 text-sm mb-1">Dọn dẹp lần cuối</div>
+                  <div className="text-lg font-semibold text-gray-800 dark:text-white">{storageStats.lastCleanup}</div>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <button
+                onClick={handleManualCleanup}
+                disabled={isCleaningUp || !user}
+                className="w-full flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-xl hover:bg-green-100 dark:hover:bg-green-900/40 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <div className="flex items-center gap-3">
+                  <RefreshCw className={`w-5 h-5 text-green-600 dark:text-green-400 transition-transform ${isCleaningUp ? 'animate-spin' : 'group-hover:rotate-180'}`} />
+                  <div className="text-left">
+                    <p className="font-semibold text-green-700 dark:text-green-400">
+                      {isCleaningUp ? 'Đang dọn dẹp...' : 'Dọn dẹp file không dùng'}
+                    </p>
+                    <p className="text-sm text-green-600 dark:text-green-500">Xóa media của quiz đã bị xóa</p>
+                  </div>
+                </div>
+              </button>
+
+              <button
+                onClick={handleClearAllOfflineData}
+                disabled={isCleaningUp || !user}
+                className="w-full flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/20 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/40 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <div className="flex items-center gap-3">
+                  <Trash2 className="w-5 h-5 text-red-600 dark:text-red-400 group-hover:scale-110 transition-transform" />
+                  <div className="text-left">
+                    <p className="font-semibold text-red-700 dark:text-red-400">Xóa toàn bộ dữ liệu offline</p>
+                    <p className="text-sm text-red-600 dark:text-red-500">Xóa tất cả quiz và media đã tải</p>
+                  </div>
+                </div>
+              </button>
             </div>
           </div>
 
