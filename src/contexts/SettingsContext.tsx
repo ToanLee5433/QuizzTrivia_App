@@ -46,7 +46,7 @@ export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) 
 
   const [isMusicPlayerEnabled, setIsMusicPlayerEnabled] = useState(() => {
     const saved = localStorage.getItem('musicPlayerEnabled');
-    return saved !== 'false'; // Default true
+    return saved === 'true'; // Default false
   });
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(() => {

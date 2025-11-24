@@ -40,7 +40,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch - Network first, fallback to cache
+// Fetch - Cache-First for static assets, Network-First for others
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
@@ -67,40 +67,71 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // Cache static assets on successful fetch
-        if (response && response.status === 200) {
-          const responseToCache = response.clone();
-          if (
-            event.request.url.includes('.js') ||
-            event.request.url.includes('.css') ||
-            event.request.url.includes('.png') ||
-            event.request.url.includes('.jpg') ||
-            event.request.url.includes('.svg') ||
-            event.request.url.includes('.woff')
-          ) {
+  // Check if this is a static asset (JS, CSS, images, fonts)
+  const isStaticAsset = 
+    event.request.url.includes('/assets/') ||
+    event.request.url.includes('.js') ||
+    event.request.url.includes('.css') ||
+    event.request.url.includes('.png') ||
+    event.request.url.includes('.jpg') ||
+    event.request.url.includes('.svg') ||
+    event.request.url.includes('.woff') ||
+    event.request.url.includes('.ttf');
+
+  // ✅ CACHE-FIRST for static assets (JS chunks, CSS, images)
+  if (isStaticAsset) {
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          // Return cached version immediately
+          return cachedResponse;
+        }
+        
+        // Not in cache, fetch from network and cache it
+        return fetch(event.request).then((response) => {
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(event.request, responseToCache);
             });
           }
-        }
-        return response;
-      })
-      .catch(() => {
-        // Network failed, try cache
-        return caches.match(event.request).then((response) => {
-          if (response) {
-            return response;
-          }
-          // Return offline page for navigation
-          if (event.request.mode === 'navigate') {
-            return caches.match('/index.html');
-          }
+          return response;
+        }).catch(() => {
+          console.log('[SW] Failed to fetch:', event.request.url);
+          // No network and no cache
+          return new Response('Offline - asset not cached', { status: 503 });
         });
       })
-  );
+    );
+  } 
+  // ✅ NETWORK-FIRST for HTML and API
+  else {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          // Cache HTML pages on successful fetch
+          if (response && response.status === 200 && event.request.mode === 'navigate') {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          // Network failed, try cache
+          return caches.match(event.request).then((response) => {
+            if (response) {
+              return response;
+            }
+            // Return offline page for navigation
+            if (event.request.mode === 'navigate') {
+              return caches.match('/index.html');
+            }
+          });
+        })
+    );
+  }
 });
 
 // Background sync for offline actions

@@ -6,11 +6,13 @@ import { RootState } from '../../../lib/store';
 import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 // import { toast } from 'react-toastify';
-import { Star, Eye, Play } from 'lucide-react';
+import { Heart, Star, Eye, Play, HardDrive } from 'lucide-react';
 import { reviewService } from '../services/reviewService';
 import { QuizReviewStats } from '../types/review';
 import SafeHTML from '../../../shared/components/ui/SafeHTML';
 import { useTranslation } from 'react-i18next';
+import { downloadManager } from '../../offline/DownloadManager';
+import { toast } from 'react-toastify';
 
 
 interface QuizCardProps {
@@ -163,18 +165,23 @@ interface QuizCardProps {
     [translate]
   );
 
-  const reviewsButtonLabel = useMemo(
-    () => translate('quiz.card.reviewsButton', 'Đánh giá'),
+  const downloadedLabel = useMemo(
+    () => translate('quiz.card.downloaded', 'Đã tải'),
     [translate]
   );
 
-  const favoriteButtonAddedLabel = useMemo(
-    () => translate('quiz.card.favoriteAdded', 'Đã thích'),
+  const downloadLabel = useMemo(
+    () => translate('quiz.card.download', 'Tải về'),
     [translate]
   );
 
-  const favoriteButtonAddLabel = useMemo(
-    () => translate('quiz.card.favoriteAction', 'Yêu thích'),
+  const downloadForOfflineLabel = useMemo(
+    () => translate('quiz.card.downloadForOffline', 'Tải về để chơi offline'),
+    [translate]
+  );
+
+  const downloadSuccessMsg = useMemo(
+    () => translate('quiz.card.downloadSuccess', '✅ Đã tải quiz thành công! Bạn có thể chơi offline.'),
     [translate]
   );
 
@@ -211,6 +218,8 @@ interface QuizCardProps {
   const [isFavorite, setIsFavorite] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
   const [reviewStats, setReviewStats] = useState<QuizReviewStats | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isDownloaded, setIsDownloaded] = useState(false);
 
   // Fetch review stats
   useEffect(() => {
@@ -239,6 +248,17 @@ interface QuizCardProps {
       }
     };
     checkFavorite();
+
+    // Check if quiz is already downloaded
+    const checkDownloaded = async () => {
+      try {
+        const downloaded = await downloadManager.isQuizDownloaded(quiz.id, user.uid);
+        setIsDownloaded(downloaded);
+      } catch (error) {
+        console.error('Error checking download status:', error);
+      }
+    };
+    checkDownloaded();
   }, [user, quiz.id]);
 
   const handleToggleFavorite = async (e: React.MouseEvent) => {
@@ -267,6 +287,34 @@ interface QuizCardProps {
       // toast.error('Lỗi khi cập nhật yêu thích!');
     } finally {
       setFavLoading(false);
+    }
+  };
+
+  const handleDownload = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user || isDownloading || isDownloaded) return;
+
+    setIsDownloading(true);
+    toast.info('Đang tải quiz...', { autoClose: 2000 });
+
+    try {
+      const result = await downloadManager.downloadQuizForOffline(quiz.id, user.uid, (progress) => {
+        // Optionally update UI with progress
+        console.log(`Download progress: ${progress.progress}%`);
+      });
+      
+      if (result.success) {
+        setIsDownloaded(true);
+        toast.success(downloadSuccessMsg);
+      } else {
+        toast.error(`❌ ${result.error || 'Không thể tải quiz. Vui lòng thử lại.'}`);
+      }
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('❌ Lỗi khi tải quiz');
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -371,12 +419,10 @@ interface QuizCardProps {
             <button
               onClick={handleToggleFavorite}
               disabled={!user || favLoading}
-              className={`p-2 border rounded-lg transition-colors ${isFavorite ? 'bg-yellow-100 border-yellow-400 text-yellow-600' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+              className={`p-2 border rounded-lg transition-colors ${isFavorite ? 'bg-red-100 border-red-400 text-red-600' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
               title={isFavorite ? favoriteTooltipRemove : favoriteTooltipAdd}
             >
-              <svg className="w-5 h-5" fill={isFavorite ? 'gold' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-              </svg>
+              <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
             </button>
             <Link
               to={`/quiz/${quiz.id}/reviews`}
@@ -385,6 +431,23 @@ interface QuizCardProps {
             >
               <Eye className="w-5 h-5" />
             </Link>
+            {/* Download Button */}
+            <button
+              onClick={handleDownload}
+              disabled={!user || isDownloading || isDownloaded}
+              className={`p-2 border rounded-lg transition-colors ${
+                isDownloaded 
+                  ? 'bg-green-100 border-green-400 text-green-600 cursor-not-allowed' 
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+              title={isDownloaded ? downloadedLabel : downloadForOfflineLabel}
+            >
+              {isDownloading ? (
+                <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+              ) : (
+                <HardDrive className="w-5 h-5" />
+              )}
+            </button>
             <button
               onClick={() => onStartQuiz?.(quiz)}
               className="bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 px-6 rounded-lg font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-200"
@@ -439,12 +502,10 @@ interface QuizCardProps {
           <button
             onClick={handleToggleFavorite}
             disabled={!user || favLoading}
-            className={`p-2.5 backdrop-blur-sm rounded-2xl shadow-lg transition-all duration-300 ${isFavorite ? 'bg-yellow-400/90 border border-yellow-300 text-yellow-900' : 'bg-white/20 border border-white/30 text-white hover:bg-white/30'}`}
+            className={`p-2.5 backdrop-blur-sm rounded-2xl shadow-lg transition-all duration-300 ${isFavorite ? 'bg-red-400/90 border border-red-300 text-red-900' : 'bg-white/20 border border-white/30 text-white hover:bg-white/30'}`}
             title={isFavorite ? favoriteTooltipRemove : favoriteTooltipAdd}
           >
-            <svg className="w-5 h-5" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-            </svg>
+            <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
           </button>
         </div>
 
@@ -564,28 +625,43 @@ interface QuizCardProps {
             <span>{quiz.isCompleted ? retakeLabel : startLabel}</span>
           </button>
           
-          <div className="flex gap-2 mt-3">
+          <div className="grid grid-cols-3 gap-2 mt-3">
             <Link
               to={`/quiz/${quiz.id}/reviews`}
-              className="flex-1 px-3 py-2 border border-gray-200 hover:border-blue-300 text-gray-700 hover:text-blue-600 rounded-lg transition-all duration-300 hover:bg-blue-50 text-sm text-center flex items-center justify-center"
+              className="px-2 py-2 border border-gray-200 hover:border-blue-300 text-gray-700 hover:text-blue-600 rounded-lg transition-all duration-300 hover:bg-blue-50 text-xs text-center flex items-center justify-center"
               title={viewReviewsLabel}
             >
-              <Eye className="w-4 h-4 mr-2" />
-              {reviewsButtonLabel}
+              <Eye className="w-4 h-4" />
             </Link>
+            
+            <button
+              onClick={handleDownload}
+              disabled={!user || isDownloading || isDownloaded}
+              className={`px-2 py-2 rounded-lg text-xs transition-all duration-300 flex items-center justify-center ${
+                isDownloaded
+                  ? 'bg-green-100 text-green-700 cursor-not-allowed'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+              title={isDownloaded ? downloadedLabel : downloadLabel}
+            >
+              {isDownloading ? (
+                <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+              ) : (
+                <HardDrive className="w-4 h-4" />
+              )}
+            </button>
             
             <button
               onClick={handleToggleFavorite}
               disabled={favLoading}
-              className={`flex-1 px-3 py-2 rounded-lg text-sm transition-all duration-300 flex items-center justify-center ${
+              className={`px-2 py-2 rounded-lg text-xs transition-all duration-300 flex items-center justify-center ${
                 isFavorite
-                  ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+                  ? 'bg-red-100 text-red-700 hover:bg-red-200'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
               title={isFavorite ? favoriteTooltipRemove : favoriteTooltipAdd}
             >
-              <Star className={`w-4 h-4 mr-2 ${isFavorite ? 'fill-current' : ''}`} />
-              {isFavorite ? favoriteButtonAddedLabel : favoriteButtonAddLabel}
+              <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
             </button>
           </div>
         </div>

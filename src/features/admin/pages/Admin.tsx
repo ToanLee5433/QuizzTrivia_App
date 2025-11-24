@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { RootState } from '../../../lib/store';
 import AdminLayout from '../components/AdminLayout';
 import { toast } from 'react-toastify';
-import { collection, addDoc, getDocs, updateDoc, doc, query, where, orderBy, limit, getCountFromServer } from 'firebase/firestore';
+import { collection, addDoc, getDocs, updateDoc, doc, query, where, limit, getCountFromServer } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 
 const Admin: React.FC = () => {
@@ -14,51 +14,60 @@ const Admin: React.FC = () => {
   const [stats, setStats] = useState({
     totalQuizzes: 0,
     totalUsers: 0,
-    completedQuizzes: 0,
+    totalPlays: 0,
     totalCreators: 0,
   });
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        console.log('📊 [Admin] Fetching stats with getCountFromServer...');
+        console.log('📊 [Admin] Fetching stats...');
         
-        // ✅ OPTIMIZED: Sử dụng getCountFromServer - KHÔNG tốn reads!
-        // Count only ACTIVE users (không đếm deleted users)
-        const [quizzesCount, usersCount, quizResultsSnap, usersSample] = await Promise.all([
+        // ✅ OPTIMIZED: Fetch all data with simple queries
+        const [quizzesCount, totalPlaysCount, allUsers] = await Promise.all([
+          // Total quizzes (approved only)
           getCountFromServer(query(collection(db, 'quizzes'), where('status', '==', 'approved'))),
-          getCountFromServer(query(collection(db, 'users'), where('isDeleted', '!=', true))),
-          getDocs(query(collection(db, 'quizResults'), orderBy('completedAt', 'desc'), limit(100))),
-          getDocs(query(collection(db, 'users'), where('isDeleted', '!=', true), limit(100))) // Sample để đếm creators
+          // Total plays = tất cả quiz results
+          getCountFromServer(collection(db, 'quizResults')),
+          // Fetch ALL users to count properly (avoid isDeleted filter issues)
+          getDocs(collection(db, 'users'))
         ]);
 
         const totalQuizzes = quizzesCount.data().count;
-        const totalUsers = usersCount.data().count;
+        const totalPlays = totalPlaysCount.data().count;
         
-        console.log('✅ [Admin] Total users (active only):', totalUsers);
-        console.log('✅ [Admin] Total quizzes (approved):', totalQuizzes);
-
-        // Đếm creators từ sample (tối ưu hơn là đếm chính xác)
-        const users = usersSample.docs.map(doc => doc.data() as any);
-        const activeUsers = users.filter(u => u?.isActive !== false && u?.isDeleted !== true);
-        const totalCreators = activeUsers.filter(u => u?.role === 'creator' || u?.role === 'admin').length;
+        // Filter users in memory
+        const users = allUsers.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
         
-        console.log('👥 [Admin] Sample - Active users:', activeUsers.length, 'Creators:', totalCreators);
-
-        // Đếm số quiz đã hoàn thành từ quizResults collection
-        const completedQuizzes = quizResultsSnap.docs.filter(doc => {
-          const data = doc.data();
-          return data.completed === true || data.score !== undefined;
-        }).length;
+        // Count active users (not deleted)
+        const activeUsers = users.filter(u => 
+          u?.isDeleted !== true && u?.isActive !== false
+        );
+        const totalUsers = activeUsers.length;
+        
+        // Count creators/admins among active users
+        const totalCreators = activeUsers.filter(u => 
+          u?.role === 'creator' || u?.role === 'admin'
+        ).length;
+        
+        console.log('✅ [Admin] Stats:', {
+          totalQuizzes,
+          totalUsers,
+          totalCreators,
+          totalPlays,
+          allUsersCount: users.length,
+          activeUsersCount: activeUsers.length
+        });
 
         setStats({
           totalQuizzes,
           totalUsers,
-          completedQuizzes,
+          totalPlays,
           totalCreators,
         });
-      } catch (_) {
-        // silent
+      } catch (error) {
+        console.error('❌ [Admin] Error fetching stats:', error);
+        // Silent fail but log error
       }
     };
     fetchStats();
@@ -252,8 +261,8 @@ const Admin: React.FC = () => {
               <span className="text-2xl">✅</span>
             </div>
             <div className="ml-4">
-              <h3 className="text-sm md:text-base font-semibold text-gray-900">{t('dashboard.completedQuizzes')}</h3>
-              <div className="text-xl md:text-3xl font-bold text-purple-600">{stats.completedQuizzes}</div>
+              <h3 className="text-sm md:text-base font-semibold text-gray-900">{t('dashboard.totalPlays')}</h3>
+              <div className="text-xl md:text-3xl font-bold text-purple-600">{stats.totalPlays}</div>
             </div>
           </div>
         </div>

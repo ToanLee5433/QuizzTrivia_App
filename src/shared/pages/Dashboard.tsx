@@ -82,10 +82,18 @@ const Dashboard = React.memo(() => {
           
           <DashboardCard
             to="/favorites"
-            emoji="⭐"
-            bgColor="bg-yellow-100"
+            emoji="❤️"
+            bgColor="bg-red-100"
             title={t('nav.favorites')}
             description={t('dashboard.favoriteQuizzes')}
+          />
+          
+          <DashboardCard
+            to="/downloaded"
+            emoji="💾"
+            bgColor="bg-green-100"
+            title={t('nav.downloaded')}
+            description={t('dashboard.downloadedQuizzes')}
           />
           
           <DashboardCard

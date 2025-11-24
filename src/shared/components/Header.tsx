@@ -10,7 +10,7 @@ import { logout } from '../../features/auth/store';
 import { toast } from 'react-toastify';
 import NotificationCenter from './NotificationCenter';
 import LanguageSwitcher from './LanguageSwitcher';
-import { LogOut, Settings, Crown, Zap, Home, BookOpen, Heart, Trophy, UserCircle, Plus, ChevronDown } from 'lucide-react';
+import { LogOut, Settings, Crown, Zap, Home, BookOpen, Heart, Trophy, UserCircle, Plus, ChevronDown, HardDrive } from 'lucide-react';
 import { setUserOffline } from '../../utils/presenceUtils';
 
 interface HeaderProps {
@@ -89,6 +89,7 @@ const Header: React.FC<HeaderProps> = () => {
     { path: '/', label: t('nav.home'), icon: Home },
     { path: '/quizzes', label: t('nav.quizzes'), icon: BookOpen },
     { path: '/favorites', label: t('nav.favorites'), icon: Heart },
+    { path: '/downloaded', label: t('nav.downloaded'), icon: HardDrive },
     { path: '/leaderboard', label: t('nav.leaderboard'), icon: Trophy },
   ];
 

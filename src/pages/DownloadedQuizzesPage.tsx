@@ -11,7 +11,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTranslation } from 'react-i18next';
+// import { useTranslation } from 'react-i18next'; // TODO: Add translations
 import { useSelector } from 'react-redux';
 import type { RootState } from '../lib/store';
 import {
@@ -48,7 +48,7 @@ function formatDate(timestamp: number): string {
 // ============================================================================
 
 export const DownloadedQuizzesPage: React.FC = () => {
-  const { t } = useTranslation();
+  // const { t } = useTranslation(); // Unused for now
   const navigate = useNavigate();
 
   // 🔐 SECURITY: Get current user ID from Redux

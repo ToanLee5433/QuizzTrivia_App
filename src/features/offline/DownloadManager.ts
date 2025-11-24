@@ -8,7 +8,7 @@
  */
 
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../../firebase/config';
+import { db } from '../../lib/firebase/config';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -501,6 +501,29 @@ export async function downloadQuizForOffline(
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
     });
+
+    // Stage 4: Prefetch Quiz Page for Offline Playback
+    // This ensures the QuizPage JS chunk is cached by Service Worker
+    onProgress?.({
+      quizId,
+      stage: 'saving-data',
+      progress: 95,
+    });
+
+    try {
+      // Prefetch the quiz page to trigger SW caching of the QuizPage chunk
+      const quizPageUrl = `${window.location.origin}/quiz/${quizId}`;
+      await fetch(quizPageUrl, { 
+        method: 'HEAD',
+        cache: 'default' // Use default caching, SW will intercept
+      }).catch(() => {
+        // Ignore prefetch errors - not critical for download success
+        console.warn('[DownloadManager] QuizPage prefetch failed - quiz may not play offline until visited once');
+      });
+    } catch (error) {
+      // Silent fail - prefetch is optional optimization
+      console.warn('[DownloadManager] QuizPage prefetch error:', error);
+    }
 
     onProgress?.({
       quizId,

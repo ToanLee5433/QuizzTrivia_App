@@ -37,6 +37,7 @@ const CreateQuizPage = React.lazy(() => import('./features/quiz/pages/CreateQuiz
 // Offline Management
 import { OfflineIndicator } from './components/OfflineIndicator';
 const OfflineQueuePage = React.lazy(() => import('./pages/OfflineQueuePage'));
+const DownloadedQuizzesPage = React.lazy(() => import('./pages/DownloadedQuizzesPage'));
 const EditQuizPageAdvanced = React.lazy(() => import('./features/quiz/pages/EditQuizPageAdvanced'));
 const CreatorLayout = React.lazy(() => import('./features/creator/layouts/CreatorLayout'));
 
@@ -78,9 +79,13 @@ import 'react-toastify/dist/ReactToastify.css';
 import { initializeAutoSync, cleanupAutoSync } from './shared/services/autoSync';
 import { downloadManager } from './features/offline/DownloadManager';
 import { enhancedSyncService } from './services/EnhancedSyncService';
+import { usePresence } from './hooks/usePresence';
 
 const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const dispatch = useDispatch();
+
+  // Initialize Presence System (Facebook-style Online/Offline/Idle tracking)
+  usePresence();
 
   useEffect(() => {
     const mounted = true;
@@ -653,6 +658,15 @@ const AppContent: React.FC = () => {
             </Suspense>
           </ProtectedRoute>
         } />
+        
+        <Route path="/downloaded" element={
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingFallback />}>
+              <DownloadedQuizzesPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        
         <Route path="/leaderboard" element={
           <ProtectedRoute>
             <Suspense fallback={<LoadingFallback />}>
