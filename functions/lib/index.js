@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.kickPlayer = exports.archiveCompletedRooms = exports.checkRateLimit = exports.getPlayerQuestions = exports.validateAnswer = exports.askRAGHealth = exports.askRAG = exports.analyzeQuizResult = exports.processFile = exports.sendOTP = exports.generateQuestionsHTTP = exports.testAI = exports.generateQuestions = void 0;
+exports.kickPlayer = exports.archiveCompletedRooms = exports.checkRateLimit = exports.getPlayerQuestions = exports.validateAnswer = exports.onQuizDeleted = exports.onQuizCreatedApproved = exports.onQuizApproved = exports.askRAGHealth = exports.askRAG = exports.analyzeQuizResult = exports.processFile = exports.sendOTP = exports.generateQuestionsHTTP = exports.testAI = exports.generateQuestions = void 0;
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const generative_ai_1 = require("@google/generative-ai");
@@ -514,6 +514,14 @@ Chỉ trả lời JSON, không giải thích thêm.`;
 var ask_1 = require("./rag/ask");
 Object.defineProperty(exports, "askRAG", { enumerable: true, get: function () { return ask_1.askRAG; } });
 Object.defineProperty(exports, "askRAGHealth", { enumerable: true, get: function () { return ask_1.askRAGHealth; } });
+// ============================================================
+// 🎯 RAG Index Auto-Update Triggers
+// Event-Driven Architecture - No manual index building needed!
+// ============================================================
+var triggers_1 = require("./triggers");
+Object.defineProperty(exports, "onQuizApproved", { enumerable: true, get: function () { return triggers_1.onQuizApproved; } });
+Object.defineProperty(exports, "onQuizCreatedApproved", { enumerable: true, get: function () { return triggers_1.onQuizCreatedApproved; } });
+Object.defineProperty(exports, "onQuizDeleted", { enumerable: true, get: function () { return triggers_1.onQuizDeleted; } });
 // ============================================================
 // 🎮 Multiplayer Functions (Security & Anti-Cheat)
 // ============================================================

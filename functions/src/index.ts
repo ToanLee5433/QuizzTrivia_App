@@ -626,6 +626,16 @@ Chỉ trả lời JSON, không giải thích thêm.`;
 export { askRAG, askRAGHealth } from './rag/ask';
 
 // ============================================================
+// 🎯 RAG Index Auto-Update Triggers
+// Event-Driven Architecture - No manual index building needed!
+// ============================================================
+export {
+  onQuizApproved,
+  onQuizCreatedApproved,
+  onQuizDeleted,
+} from './triggers';
+
+// ============================================================
 // 🎮 Multiplayer Functions (Security & Anti-Cheat)
 // ============================================================
 export {

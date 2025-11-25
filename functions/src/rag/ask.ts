@@ -126,8 +126,9 @@ export const askRAG = functions.region('us-central1').runWith({
         targetLang: validatedLang,
       });
 
-      // 4. Call RAG flow with simple implementation
-      const { askQuestion } = await import('./simpleRAG');
+      // 4. Call RAG flow with OPTIMIZED implementation
+      // Uses: Global Caching, Fast Path, Hybrid Search, AI Reranking
+      const { askQuestion } = await import('./optimizedRAG');
       
       const result = await askQuestion({
         question: validatedQuestion,
@@ -144,6 +145,11 @@ export const askRAG = functions.region('us-central1').runWith({
         processingTime: result.processingTime,
         totalTime: Date.now() - startTime,
         tokensUsed: result.tokensUsed,
+        // NEW: Search metrics for monitoring
+        fastPathUsed: result.searchMetrics?.fastPathUsed,
+        avgScore: result.searchMetrics?.avgScore?.toFixed(3),
+        topScore: result.searchMetrics?.topScore?.toFixed(3),
+        confidence: result.searchMetrics?.confidence,
       });
 
       // 6. Return response

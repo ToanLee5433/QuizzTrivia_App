@@ -81,6 +81,7 @@ exports.askRAG = functions.region('us-central1').runWith({
     maxInstances: 10,
     secrets: ['GOOGLE_AI_API_KEY'],
 }).https.onCall(async (data, context) => {
+    var _a, _b, _c, _d, _e, _f;
     const startTime = Date.now();
     try {
         // 1. Validate authentication
@@ -105,8 +106,9 @@ exports.askRAG = functions.region('us-central1').runWith({
             topK: validatedTopK,
             targetLang: validatedLang,
         });
-        // 4. Call RAG flow with simple implementation
-        const { askQuestion } = await Promise.resolve().then(() => require('./simpleRAG'));
+        // 4. Call RAG flow with OPTIMIZED implementation
+        // Uses: Global Caching, Fast Path, Hybrid Search, AI Reranking
+        const { askQuestion } = await Promise.resolve().then(() => require('./optimizedRAG'));
         const result = await askQuestion({
             question: validatedQuestion,
             topK: validatedTopK,
@@ -121,6 +123,11 @@ exports.askRAG = functions.region('us-central1').runWith({
             processingTime: result.processingTime,
             totalTime: Date.now() - startTime,
             tokensUsed: result.tokensUsed,
+            // NEW: Search metrics for monitoring
+            fastPathUsed: (_a = result.searchMetrics) === null || _a === void 0 ? void 0 : _a.fastPathUsed,
+            avgScore: (_c = (_b = result.searchMetrics) === null || _b === void 0 ? void 0 : _b.avgScore) === null || _c === void 0 ? void 0 : _c.toFixed(3),
+            topScore: (_e = (_d = result.searchMetrics) === null || _d === void 0 ? void 0 : _d.topScore) === null || _e === void 0 ? void 0 : _e.toFixed(3),
+            confidence: (_f = result.searchMetrics) === null || _f === void 0 ? void 0 : _f.confidence,
         });
         // 6. Return response
         return {
