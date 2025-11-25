@@ -997,8 +997,18 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
   // Keyboard shortcuts - Only Space for Play/Pause
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      // Only handle shortcuts when not typing in input fields
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      // CRITICAL: Skip shortcuts when user is editing text (including Rich Text Editor)
+      const activeElement = document.activeElement;
+      const isEditingText = activeElement && (
+        activeElement instanceof HTMLInputElement ||
+        activeElement instanceof HTMLTextAreaElement ||
+        activeElement.getAttribute('contenteditable') === 'true' ||
+        activeElement.classList.contains('ql-editor') ||
+        activeElement.closest('.ql-container') !== null ||
+        activeElement.closest('.rich-text-editor') !== null
+      );
+      
+      if (isEditingText) {
         return;
       }
       

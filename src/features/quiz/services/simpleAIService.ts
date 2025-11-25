@@ -62,8 +62,8 @@ class SimpleAIService {
 
       const firebaseConfig: FirebaseAIConfig = {
         temperature: config.temperature || 0.7,
-        model: 'gemini-2.0-flash-exp' as const,
-        maxTokens: Math.max(2000, (config.numQuestions || 5) * 300) // ⚡ Dynamic: ~300 tokens per question
+        model: 'gemini-2.5-flash-lite' as const,
+        maxTokens: Math.max(4000, (config.numQuestions || 5) * 500) // ⚡ gemini-2.5-flash-lite: ~500 tokens per question
       };
 
       const questions = await FirebaseAIService.generateQuestions(

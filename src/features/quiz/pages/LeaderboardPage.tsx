@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
+import SafeHTML from '../../../shared/components/ui/SafeHTML';
 import { FaCrown, FaUserCircle, FaTrophy, FaMedal, FaAward, FaFire, FaStar } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
@@ -616,7 +617,7 @@ const LeaderboardPage: React.FC = () => {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2">{quiz.title}</h3>
-                      <p className="text-gray-600 text-sm line-clamp-2 mb-3">{quiz.description}</p>
+                      <SafeHTML content={quiz.description} className="text-gray-600 text-sm line-clamp-2 mb-3" plainText />
                     </div>
                     <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded-full">
                       #{idx + 1}

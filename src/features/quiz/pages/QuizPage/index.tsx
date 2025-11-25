@@ -197,9 +197,21 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
     soundService.setEnabled(settings.soundEffects);
   }, [settings.soundEffects]);
   
-  // Keyboard shortcuts for pause
+  // Keyboard shortcuts for pause - with focus check
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
+      // Skip shortcuts when user is editing text
+      const activeElement = document.activeElement;
+      const isEditingText = activeElement && (
+        activeElement.tagName === 'INPUT' ||
+        activeElement.tagName === 'TEXTAREA' ||
+        activeElement.getAttribute('contenteditable') === 'true' ||
+        activeElement.classList.contains('ql-editor') ||
+        activeElement.closest('.ql-container') !== null
+      );
+      
+      if (isEditingText) return;
+      
       if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
         if (!showSettingsModal && !session.isCompleted) {
           setIsPaused(prev => !prev);

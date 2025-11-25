@@ -62,10 +62,21 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
     }
   };
 
-  // Handle ESC key
+  // Handle ESC key - with focus check
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        // Skip when user is editing text
+        const activeElement = document.activeElement;
+        const isEditingText = activeElement && (
+          activeElement.tagName === 'INPUT' ||
+          activeElement.tagName === 'TEXTAREA' ||
+          activeElement.getAttribute('contenteditable') === 'true' ||
+          activeElement.classList.contains('ql-editor') ||
+          activeElement.closest('.ql-container') !== null
+        );
+        
+        if (isEditingText) return;
         onClose();
       }
     };

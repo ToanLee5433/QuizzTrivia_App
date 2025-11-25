@@ -358,6 +358,13 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.userId == request.auth.uid;
     }
     
+    // Quiz completions (global activity log for tracking quiz completions)
+    match /quizCompletions/{completionId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if signedIn() && resource.data.userId == request.auth.uid;
+    }
+    
     // Quiz results
     match /quizResults/{resultId} {
       allow read: if signedIn();

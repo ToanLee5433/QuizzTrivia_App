@@ -4064,7 +4064,7 @@
     "generateButtonWithFile": "Tạo {{count}} câu hỏi {{difficulty}} từ file",
     "infoTitle": "💡 Thông tin:",
     "infoCloudFunctions": "Sử dụng Firebase Cloud Functions + Google Gemini AI",
-    "infoModel": "Model: gemini-2.0-flash-exp (mới nhất)",
+    "infoModel": "Model: gemini-2.5-flash-lite (mới nhất)",
     "infoSecurity": "Xử lý thông qua server (bảo mật API key)",
     "infoFileSupport": "Hỗ trợ đọc file ảnh, PDF, Word, Text",
     "infoNoQuota": "Không giới hạn quota client-side",
@@ -4870,5 +4870,42 @@
   },
   "notAvailable": "Không có",
   "you": "Bạn",
-  "tat_ca": "Tất cả"
+  "tat_ca": "Tất cả",
+  "chatbot": {
+    "askAssistant": "Hỏi AI Learning Assistant",
+    "title": "AI Learning Assistant",
+    "beta": "Beta",
+    "subtitle": "Trợ lý học tập thông minh được hỗ trợ bởi Google AI",
+    "welcome": "Chào mừng đến với AI Learning Assistant! 👋",
+    "welcomeMessage": "Hỏi tôi bất cứ điều gì về các quiz bạn đã học. Tôi sẽ trả lời chi tiết và gợi ý quiz phù hợp cho bạn.",
+    "suggestions": {
+      "explain": {
+        "title": "Giải thích khái niệm",
+        "description": "Tìm hiểu chi tiết về chủ đề bạn quan tâm"
+      },
+      "summarize": {
+        "title": "Tóm tắt nội dung",
+        "description": "Xem tổng quan kiến thức quan trọng"
+      },
+      "examples": {
+        "title": "Ví dụ thực tế",
+        "description": "Học qua các trường hợp cụ thể"
+      },
+      "recommend": {
+        "title": "Gợi ý quiz",
+        "description": "Tìm quiz phù hợp để thực hành"
+      }
+    },
+    "error": "Đã xảy ra lỗi",
+    "tip": "💡 Tip: Hỏi về nội dung bạn đã học trong các quiz đã mở khóa",
+    "citations": "📚 Nguồn tham khảo:",
+    "processingTime": "⚡ {{ms}}ms",
+    "chunksUsed": "📄 {{count}} chunks",
+    "quizSuggestions": "🎯 Quiz gợi ý cho bạn",
+    "clickToStart": "Click vào quiz để bắt đầu làm bài ngay! 👇",
+    "quizRecommendation": {
+      "questions": "câu",
+      "startQuiz": "Làm quiz ngay"
+    }
+  }
 }

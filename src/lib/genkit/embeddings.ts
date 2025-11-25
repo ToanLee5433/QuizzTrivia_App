@@ -1,23 +1,40 @@
 /**
  * 🧠 Embedding Generation with Google AI
  * 
- * Note: Using direct Google AI API instead of Genkit embedder
- * for better compatibility with text-embedding-004
+ * ⚠️ WARNING: This file should only be used for admin-side index building
+ * For production, consider moving index building to Cloud Functions
+ * 
+ * API key should be provided via environment variable VITE_GOOGLE_AI_API_KEY
+ * DO NOT hardcode API keys in production
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Initialize Google AI with API key
-// Use process.env for Node.js scripts, import.meta.env for browser/Vite
-const GOOGLE_AI_API_KEY = typeof process !== 'undefined' && process.env?.VITE_GOOGLE_AI_API_KEY 
-  ? process.env.VITE_GOOGLE_AI_API_KEY 
-  : 'AIzaSyDQT4sxlCRVxm0xqvfzaBIobv-3y8KfV-k';
+// Get API key from environment variable only
+// Will be empty string if not set - requires proper env configuration
+const GOOGLE_AI_API_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY || '';
+
+if (!GOOGLE_AI_API_KEY) {
+  console.warn(
+    '⚠️ VITE_GOOGLE_AI_API_KEY is not set. Embedding generation will fail.',
+    'For index building, set the key in .env.local or use Cloud Functions.'
+  );
+}
+
 const genAI = new GoogleGenerativeAI(GOOGLE_AI_API_KEY);
 
 /**
  * Generate embedding for a text using Google AI text-embedding-004
+ * ⚠️ Only use this for admin-side index building with proper API key configuration
  */
 export async function generateEmbedding(text: string): Promise<number[]> {
+  if (!GOOGLE_AI_API_KEY) {
+    throw new Error(
+      'VITE_GOOGLE_AI_API_KEY is not configured. ' +
+      'Set it in your .env.local file for admin index building.'
+    );
+  }
+  
   try {
     const model = genAI.getGenerativeModel({ model: 'text-embedding-004' });
     
@@ -32,6 +49,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 
 /**
  * Generate embeddings for multiple texts (batch)
+ * ⚠️ Only use this for admin-side index building
  */
 export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
   const embeddings: number[][] = [];

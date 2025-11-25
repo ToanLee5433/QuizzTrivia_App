@@ -78,13 +78,8 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
 
     setIsProcessingFile(true);
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      if (!apiKey) {
-        toast.error(t('aiGenerator.apiKeyNotConfigured'));
-        return;
-      }
-
-      const fileProcessor = new FileProcessor(apiKey);
+      // FileProcessor now uses Cloud Functions - no API key needed in frontend
+      const fileProcessor = new FileProcessor();
       const result = await fileProcessor.processFile(file);
       
       if (result.content && !result.error) {
@@ -128,7 +123,7 @@ const ClientSideAIGenerator: React.FC<AIGeneratorProps> = ({ onQuestionsGenerate
       // Gọi Firebase Cloud Function để generate câu hỏi
       const questions = await FirebaseAIService.generateQuestions(
         { 
-          model: 'gemini-2.0-flash-exp',
+          model: 'gemini-2.5-flash-lite',
           temperature: 0.7 
         },
         {

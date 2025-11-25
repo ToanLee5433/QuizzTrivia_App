@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Quiz } from '../types';
+import SafeHTML from '../../../shared/components/ui/SafeHTML';
 
 interface QuizPreviewModalProps {
   isOpen: boolean;
@@ -53,9 +54,11 @@ export const QuizPreviewModal: React.FC<QuizPreviewModalProps> = ({
             <h3 className="text-2xl font-bold text-gray-900 mb-2">
               {quiz.title || t('quiz.untitled')}
             </h3>
-            <p className="text-gray-600 leading-relaxed">
-              {quiz.description || t('quiz.noDescription')}
-            </p>
+            {quiz.description ? (
+              <SafeHTML content={quiz.description} className="text-gray-600 leading-relaxed" />
+            ) : (
+              <p className="text-gray-600 leading-relaxed">{t('quiz.noDescription')}</p>
+            )}
           </div>
 
           {/* Quiz Stats */}

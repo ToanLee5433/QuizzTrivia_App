@@ -6,7 +6,7 @@ import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getAuth } from 'firebase/auth';
 
 export interface FirebaseAIConfig {
-  model?: 'gemini-2.0-flash-exp' | 'gemini-pro' | 'gemini-pro-vision';
+  model?: 'gemini-2.5-flash-lite' | 'gemini-pro' | 'gemini-pro-vision';
   temperature?: number;
   maxTokens?: number;
 }
@@ -56,7 +56,7 @@ export class FirebaseAIService {
         numQuestions,
         difficulty,
         language,
-        model: config.model || 'gemini-2.0-flash-exp'
+        model: config.model || 'gemini-2.5-flash-lite'
       });
 
       // Gọi Firebase Function
@@ -66,9 +66,9 @@ export class FirebaseAIService {
         prompt: systemPrompt,
         content: content,
         config: {
-          model: config.model || 'gemini-2.0-flash-exp',
+          model: config.model || 'gemini-2.5-flash-lite',
           temperature: config.temperature || 0.7,
-          maxTokens: config.maxTokens || 8000 // ⚡ Increased from 2000 to 8000
+          maxTokens: config.maxTokens || 16000 // ⚡ gemini-2.5-flash-lite supports high token limits
         }
       });
 
@@ -135,14 +135,45 @@ export class FirebaseAIService {
       'rich_content': 'nội dung phong phú'
     };
     
-    const typesDescription = questionTypes && questionTypes.length > 0
-      ? `\n- Loại câu hỏi yêu cầu: ${questionTypes.map(t => typeMap[t] || t).join(', ')}\n- Phân bố đều các loại câu hỏi này trong ${numQuestions} câu\n- Đối với checkbox: có thể có nhiều đáp án isCorrect: true\n- Đối với ordering: trả về orderingItems với correctOrder\n- Đối với matching: trả về matchingPairs với left và right\n- Đối với fill_blanks: trả về textWithBlanks và blanks\n- Đối với short_answer: trả về correctAnswer và acceptedAnswers`
-      : '- Loại: Câu hỏi trắc nghiệm (multiple choice)';
+    // Build strict type restrictions
+    const allowedTypes: QuestionType[] = questionTypes && questionTypes.length > 0 ? questionTypes : ['multiple'];
+    const allowedTypesStr = allowedTypes.map(t => `"${t}"`).join(', ');
+    const allowedTypesDescription = allowedTypes.map(t => `${t} (${typeMap[t] || t})`).join(', ');
     
+    // Calculate distribution
+    const questionsPerType = Math.floor(numQuestions / allowedTypes.length);
+    const remainder = numQuestions % allowedTypes.length;
+    const distributionStr = allowedTypes.map((t, i) => 
+      `${t}: ${questionsPerType + (i < remainder ? 1 : 0)} câu`
+    ).join(', ');
+
+    const typesDescription = `
+QUAN TRỌNG - CHỈ TẠO CÁC LOẠI CÂU HỎI SAU (KHÔNG TẠO LOẠI KHÁC):
+- Các loại được phép: ${allowedTypesDescription}
+- Phân bố: ${distributionStr}
+- CẢNH BÁO: Chỉ sử dụng type: ${allowedTypesStr}. Nếu type không nằm trong danh sách này, câu hỏi sẽ bị từ chối.
+${allowedTypes.includes('checkbox') ? '- Đối với checkbox: có thể có nhiều đáp án isCorrect: true' : ''}
+${allowedTypes.includes('ordering') ? '- Đối với ordering: trả về orderingItems với correctOrder' : ''}
+${allowedTypes.includes('matching') ? '- Đối với matching: trả về matchingPairs với left và right' : ''}
+${allowedTypes.includes('fill_blanks') ? '- Đối với fill_blanks: trả về textWithBlanks và blanks' : ''}
+${allowedTypes.includes('short_answer') ? '- Đối với short_answer: trả về correctAnswer và acceptedAnswers' : ''}`;
+    
+    // Map difficulty to description
+    const difficultyMap: Record<string, string> = {
+      'easy': 'dễ (kiến thức cơ bản, ai cũng biết)',
+      'medium': 'trung bình (cần suy nghĩ một chút)',
+      'hard': 'khó (đòi hỏi kiến thức chuyên sâu)',
+      'mixed': 'hỗn hợp (phân bố đều: 1/3 dễ, 1/3 trung bình, 1/3 khó)'
+    };
+    const difficultyDesc = difficultyMap[difficulty] || difficulty;
+
     return `Generate ${numQuestions} quiz questions in ${lang} for the following topic.
-Difficulty level: ${difficulty}
-- Language: Use ${lang} for all questions and answers
-- Format: Return ONLY valid JSON array, no markdown, no code blocks
+
+STRICT REQUIREMENTS (BẮT BUỘC):
+1. Language: ALL questions and answers MUST be in ${lang}. Do NOT mix languages.
+2. Difficulty: ${difficultyDesc}
+${difficulty === 'mixed' ? '   - Đánh dấu từng câu hỏi với độ khó tương ứng trong field "difficulty": "easy" | "medium" | "hard"' : `   - TẤT CẢ câu hỏi phải có độ khó: ${difficulty}`}
+3. Format: Return ONLY valid JSON array, no markdown, no code blocks
 ${typesDescription}
 
 Structure requirements:

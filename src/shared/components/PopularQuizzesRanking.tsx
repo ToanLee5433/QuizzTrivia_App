@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Quiz } from '../../features/quiz/types';
 import { Clock, Users, Target, TrendingUp } from 'lucide-react';
+import SafeHTML from './ui/SafeHTML';
 
 interface PopularQuiz extends Quiz {
   attempts: number;
@@ -108,7 +109,7 @@ const PopularQuizzesRanking: React.FC<PopularQuizzesRankingProps> = ({ timeFilte
                     {formatDifficulty(quiz.difficulty)}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600 truncate">{quiz.description}</p>
+                <SafeHTML content={quiz.description} className="text-sm text-gray-600 truncate" plainText />
                 
                 <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
                   <div className="flex items-center space-x-1">

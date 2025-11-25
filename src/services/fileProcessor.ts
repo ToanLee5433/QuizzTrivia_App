@@ -1,5 +1,15 @@
-// File processing utilities for different file types
-import { GoogleGenerativeAI } from "@google/generative-ai";
+/**
+ * 📁 File Processing Service - Secure Cloud Functions Implementation
+ * 
+ * This service calls Cloud Functions instead of directly calling Google AI APIs
+ * to keep API keys secure and prevent exposure in the browser bundle.
+ */
+
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import app from '../lib/firebase/config';
+
+// Initialize Firebase Functions
+const functions = getFunctions(app, 'us-central1');
 
 export interface FileProcessingResult {
   content: string;
@@ -7,32 +17,34 @@ export interface FileProcessingResult {
   error?: string;
 }
 
-export class FileProcessor {
-  private genAI: GoogleGenerativeAI;
+interface ProcessFileResponse {
+  success: boolean;
+  content?: string;
+  type?: string;
+  error?: string;
+}
 
-  constructor(apiKey: string) {
-    this.genAI = new GoogleGenerativeAI(apiKey);
-  }
+export class FileProcessor {
+  // No longer needs API key - uses Cloud Functions
 
   async processFile(file: File): Promise<FileProcessingResult> {
     const fileType = this.getFileType(file);
     
-    switch (fileType) {
-      case 'image':
-        return this.processImage(file);
-      case 'pdf':
-        return this.processPDF(file);
-      case 'doc':
-        return this.processDocument(file);
-      case 'text':
-        return this.processTextFile(file);
-      default:
-        return {
-          content: '',
-          type: 'text',
-          error: `Loại file không được hỗ trợ: ${file.type}`
-        };
+    // Text files can be processed locally
+    if (fileType === 'text') {
+      return this.processTextFile(file);
     }
+
+    // For AI-processed files (images, PDFs, docs), use Cloud Function
+    if (['image', 'pdf', 'doc'].includes(fileType)) {
+      return this.processWithCloudFunction(file, fileType);
+    }
+
+    return {
+      content: '',
+      type: 'text',
+      error: `Loại file không được hỗ trợ: ${file.type}`
+    };
   }
 
   private getFileType(file: File): string {
@@ -47,118 +59,59 @@ export class FileProcessor {
     return 'unknown';
   }
 
-  private async processImage(file: File): Promise<FileProcessingResult> {
+  private async processWithCloudFunction(
+    file: File, 
+    fileType: string
+  ): Promise<FileProcessingResult> {
     try {
-      const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      
       // Convert file to base64
       const base64Data = await this.fileToBase64(file);
       
-      const prompt = `
-Phân tích hình ảnh này và trích xuất nội dung văn bản. 
-Nếu có biểu đồ, bảng, hoặc thông tin trực quan, hãy mô tả chi tiết.
-Trả về nội dung một cách có cấu trúc và rõ ràng để có thể tạo câu hỏi.
-`;
+      // Call Cloud Function
+      const processFileFunc = httpsCallable<
+        { base64Data: string; mimeType: string; fileType: string },
+        ProcessFileResponse
+      >(functions, 'processFile');
 
-      const result = await model.generateContent([
-        prompt,
-        {
-          inlineData: {
-            data: base64Data,
-            mimeType: file.type
-          }
-        }
-      ]);
+      const result = await processFileFunc({
+        base64Data,
+        mimeType: file.type || this.getDefaultMimeType(fileType),
+        fileType: fileType === 'doc' ? 'document' : fileType
+      });
 
-      const response = await result.response;
-      const content = response.text();
+      if (result.data.success && result.data.content) {
+        return {
+          content: result.data.content,
+          type: (result.data.type as 'text' | 'image' | 'document') || 'document'
+        };
+      } else {
+        return {
+          content: '',
+          type: fileType === 'image' ? 'image' : 'document',
+          error: result.data.error || 'Không thể xử lý file'
+        };
+      }
 
-      return {
-        content,
-        type: 'image'
-      };
     } catch (error) {
+      console.error('File processing error:', error);
       return {
         content: '',
-        type: 'image',
-        error: `Lỗi xử lý ảnh: ${error instanceof Error ? error.message : 'Unknown error'}`
+        type: fileType === 'image' ? 'image' : 'document',
+        error: `Lỗi xử lý file: ${error instanceof Error ? error.message : 'Unknown error'}`
       };
     }
   }
 
-  private async processPDF(file: File): Promise<FileProcessingResult> {
-    try {
-      // Convert to base64 for AI processing
-      const base64Data = await this.fileToBase64(file);
-      const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-      const prompt = `
-Đây là file PDF. Hãy trích xuất và phân tích nội dung văn bản từ file này.
-Tóm tắt nội dung chính và cung cấp thông tin chi tiết để có thể tạo câu hỏi.
-Nếu có bảng, biểu đồ hoặc hình ảnh, hãy mô tả chúng.
-`;
-
-      const result = await model.generateContent([
-        prompt,
-        {
-          inlineData: {
-            data: base64Data,
-            mimeType: file.type
-          }
-        }
-      ]);
-
-      const response = await result.response;
-      const content = response.text();
-
-      return {
-        content,
-        type: 'document'
-      };
-    } catch (error) {
-      return {
-        content: '',
-        type: 'document',
-        error: `Lỗi xử lý PDF: ${error instanceof Error ? error.message : 'Unknown error'}`
-      };
-    }
-  }
-
-  private async processDocument(file: File): Promise<FileProcessingResult> {
-    try {
-      // For DOC/DOCX files, convert to base64 and let AI process
-      const base64Data = await this.fileToBase64(file);
-      const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-      const prompt = `
-Đây là file tài liệu Word. Hãy trích xuất và phân tích nội dung văn bản từ file này.
-Tóm tắt nội dung chính và cung cấp thông tin chi tiết để có thể tạo câu hỏi.
-Bao gồm cả định dạng, tiêu đề, và cấu trúc của tài liệu.
-`;
-
-      const result = await model.generateContent([
-        prompt,
-        {
-          inlineData: {
-            data: base64Data,
-            mimeType: file.type || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-          }
-        }
-      ]);
-
-      const response = await result.response;
-      const content = response.text();
-
-      return {
-        content,
-        type: 'document'
-      };
-    } catch (error) {
-      return {
-        content: '',
-        type: 'document',
-        error: `Lỗi xử lý tài liệu: ${error instanceof Error ? error.message : 'Unknown error'}`
-      };
+  private getDefaultMimeType(fileType: string): string {
+    switch (fileType) {
+      case 'image':
+        return 'image/png';
+      case 'pdf':
+        return 'application/pdf';
+      case 'doc':
+        return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      default:
+        return 'application/octet-stream';
     }
   }
 

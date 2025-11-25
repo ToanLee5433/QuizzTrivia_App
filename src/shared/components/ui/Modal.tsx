@@ -19,10 +19,31 @@ const Modal: React.FC<ModalProps> = ({
   closeOnBackdrop = true,
   showCloseButton = true,
 }) => {
-  // Handle ESC key
+  // Handle ESC key - with focus check to not interrupt text editing
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        // Check if user is editing text (input, textarea, rich text editor)
+        const activeElement = document.activeElement;
+        const isEditingText = activeElement && (
+          activeElement.tagName === 'INPUT' ||
+          activeElement.tagName === 'TEXTAREA' ||
+          activeElement.getAttribute('contenteditable') === 'true' ||
+          activeElement.classList.contains('ql-editor') ||
+          activeElement.closest('.ql-container') !== null
+        );
+        
+        // If editing in an input/textarea, allow Escape to blur instead of closing modal
+        if (isEditingText && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+          (activeElement as HTMLElement).blur();
+          return;
+        }
+        
+        // If editing in rich text editor, don't close modal (let Quill handle Escape)
+        if (isEditingText) {
+          return;
+        }
+        
         onClose();
       }
     };

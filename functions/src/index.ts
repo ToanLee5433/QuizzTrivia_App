@@ -10,10 +10,18 @@ admin.initializeApp();
 // Initialize CORS
 const corsHandler = cors({ origin: true });
 
-// Initialize Google Generative AI
-const GOOGLE_AI_API_KEY = 'AIzaSyDQT4sxlCRVxm0xqvfzaBIobv-3y8KfV-k';
-const genAI = new GoogleGenerativeAI(GOOGLE_AI_API_KEY);
-const aiModel = 'gemini-2.0-flash-exp';
+// ✅ Secure: API key from environment variable (set via Firebase Secrets)
+// Updated: 2025-11-25 - Fixed secret configuration
+const aiModel = 'gemini-2.5-flash-lite';
+
+// Lazy initialization to ensure secrets are loaded
+function getGenAI() {
+  const apiKey = process.env.GOOGLE_AI_API_KEY;
+  if (!apiKey) {
+    throw new Error('GOOGLE_AI_API_KEY environment variable is not set');
+  }
+  return new GoogleGenerativeAI(apiKey);
+}
 
 // Configure email transporter (sử dụng Gmail SMTP)
 const transporter = nodemailer.createTransport({
@@ -83,7 +91,9 @@ const getOTPEmailHTML = (otp: string): string => {
 /**
  * Firebase Function để generate câu hỏi sử dụng Vertex AI/Gemini
  */
-export const generateQuestions = functions.https.onCall(async (data, context) => {
+export const generateQuestions = functions
+  .runWith({ secrets: ['GOOGLE_AI_API_KEY'] })
+  .https.onCall(async (data, context) => {
   // Kiểm tra authentication
   if (!context.auth) {
     throw new functions.https.HttpsError(
@@ -103,13 +113,13 @@ export const generateQuestions = functions.https.onCall(async (data, context) =>
 
   try {
     // Tạo request cho Google Generative AI
-    const model = genAI.getGenerativeModel({ 
+    const model = getGenAI().getGenerativeModel({ 
       model: config?.model || aiModel,
       generationConfig: {
         temperature: config?.temperature || 0.7,
         topP: 0.8,
         topK: 40,
-        maxOutputTokens: config?.maxTokens || 8000, // ⚡ Increased to support more questions
+        maxOutputTokens: config?.maxTokens || 16000, // ⚡ gemini-2.5-flash-lite supports high limits
       },
     });
 
@@ -197,7 +207,9 @@ export const generateQuestions = functions.https.onCall(async (data, context) =>
 /**
  * Test function để kiểm tra AI availability
  */
-export const testAI = functions.https.onCall(async (data, context) => {
+export const testAI = functions
+  .runWith({ secrets: ['GOOGLE_AI_API_KEY'] })
+  .https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError(
       'unauthenticated',
@@ -206,7 +218,7 @@ export const testAI = functions.https.onCall(async (data, context) => {
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: aiModel });
+    const model = getGenAI().getGenerativeModel({ model: aiModel });
 
     const response = await model.generateContent('Hello, this is a test. Please respond with "AI is working"');
     const result = response.response;
@@ -229,7 +241,9 @@ export const testAI = functions.https.onCall(async (data, context) => {
 /**
  * HTTP function để handle CORS cho development
  */
-export const generateQuestionsHTTP = functions.https.onRequest((req, res) => {
+export const generateQuestionsHTTP = functions
+  .runWith({ secrets: ['GOOGLE_AI_API_KEY'] })
+  .https.onRequest((req, res) => {
   corsHandler(req, res, async () => {
     if (req.method !== 'POST') {
       res.status(405).send('Method Not Allowed');
@@ -252,7 +266,7 @@ export const generateQuestionsHTTP = functions.https.onRequest((req, res) => {
         return;
       }
 
-      const model = genAI.getGenerativeModel({ 
+      const model = getGenAI().getGenerativeModel({ 
         model: config?.model || aiModel,
         generationConfig: {
           temperature: config?.temperature || 0.7,
@@ -369,6 +383,242 @@ export const sendOTP = functions.https.onCall(async (data, context) => {
     );
   }
 });
+
+// ============================================================
+// 📁 File Processing Function (OCR, PDF, Documents)
+// ============================================================
+export const processFile = functions
+  .region('us-central1')
+  .runWith({ timeoutSeconds: 120, memory: '512MB', secrets: ['GOOGLE_AI_API_KEY'] })
+  .https.onCall(async (data, context) => {
+    // Validate auth
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'Bạn cần đăng nhập để sử dụng tính năng này'
+      );
+    }
+
+    const { base64Data, mimeType, fileType } = data;
+    
+    if (!base64Data || !mimeType) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'Thiếu dữ liệu file hoặc loại file'
+      );
+    }
+
+    try {
+      const model = getGenAI().getGenerativeModel({ model: aiModel });
+      
+      let prompt = '';
+      switch (fileType) {
+        case 'image':
+          prompt = `
+Phân tích hình ảnh này và trích xuất nội dung văn bản. 
+Nếu có biểu đồ, bảng, hoặc thông tin trực quan, hãy mô tả chi tiết.
+Trả về nội dung một cách có cấu trúc và rõ ràng để có thể tạo câu hỏi.
+`;
+          break;
+        case 'pdf':
+          prompt = `
+Đây là file PDF. Hãy trích xuất và phân tích nội dung văn bản từ file này.
+Tóm tắt nội dung chính và cung cấp thông tin chi tiết để có thể tạo câu hỏi.
+Nếu có bảng, biểu đồ hoặc hình ảnh, hãy mô tả chúng.
+`;
+          break;
+        case 'document':
+          prompt = `
+Đây là file tài liệu Word. Hãy trích xuất và phân tích nội dung văn bản từ file này.
+Tóm tắt nội dung chính và cung cấp thông tin chi tiết để có thể tạo câu hỏi.
+Bao gồm cả định dạng, tiêu đề, và cấu trúc của tài liệu.
+`;
+          break;
+        default:
+          throw new functions.https.HttpsError(
+            'invalid-argument',
+            `Loại file không được hỗ trợ: ${fileType}`
+          );
+      }
+
+      const result = await model.generateContent([
+        prompt,
+        {
+          inlineData: {
+            data: base64Data,
+            mimeType: mimeType
+          }
+        }
+      ]);
+
+      const response = result.response;
+      const content = response.text();
+
+      return {
+        success: true,
+        content,
+        type: fileType
+      };
+
+    } catch (error) {
+      console.error('❌ File processing error:', error);
+      throw new functions.https.HttpsError(
+        'internal',
+        `Lỗi xử lý file: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  });
+
+// ============================================================
+// 📊 Quiz Analysis Function (AI-powered feedback)
+// ============================================================
+export const analyzeQuizResult = functions
+  .region('us-central1')
+  .runWith({ timeoutSeconds: 60, memory: '256MB', secrets: ['GOOGLE_AI_API_KEY'] })
+  .https.onCall(async (data, context) => {
+    // Validate auth
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'Bạn cần đăng nhập để sử dụng tính năng này'
+      );
+    }
+
+    const { quizTitle, category, difficulty, totalQuestions, correctAnswers, percentage, timeSpent, incorrectDetails } = data;
+
+    if (typeof percentage !== 'number') {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'Thiếu thông tin kết quả quiz'
+      );
+    }
+
+    try {
+      const model = getGenAI().getGenerativeModel({ model: aiModel });
+      
+      // Build detailed wrong answers section
+      const wrongAnswersSection = (incorrectDetails || []).length > 0
+        ? `**CHI TIẾT CÁC CÂU SAI:**
+${(incorrectDetails || []).map((d: any) => `
+📌 Câu ${d.number}: ${d.questionText || 'Không có nội dung'}
+   - Bạn chọn: "${d.userAnswer || 'Không rõ'}"
+   - Đáp án đúng: "${d.correctAnswer || 'Không rõ'}"
+   - Loại câu hỏi: ${d.type || 'multiple-choice'}
+   - Độ khó: ${d.difficulty || 'medium'}
+`).join('\n')}`
+        : '**CHI TIẾT CÁC CÂU SAI:** Không có câu sai nào!';
+      
+      const prompt = `Bạn là một chuyên gia giáo dục AI. Phân tích kết quả quiz và đưa ra nhận xét CHI TIẾT, CỤ THỂ dựa trên các câu sai thực tế của người chơi.
+
+**THÔNG TIN QUIZ:**
+- Tiêu đề: ${quizTitle || 'Quiz'}
+- Chủ đề: ${category || 'Tổng hợp'}
+- Độ khó: ${difficulty || 'medium'}
+- Tổng số câu: ${totalQuestions}
+
+**KẾT QUẢ:**
+- Điểm: ${percentage}% (${correctAnswers}/${totalQuestions} câu đúng)
+- Thời gian: ${Math.floor((timeSpent || 0) / 60)} phút ${(timeSpent || 0) % 60} giây
+- Số câu sai: ${(incorrectDetails || []).length} câu
+
+${wrongAnswersSection}
+
+**YÊU CẦU PHÂN TÍCH (RẤT QUAN TRỌNG):**
+1. Đánh giá CHÍNH XÁC dựa trên điểm số thực tế (${percentage}%)
+2. Nếu có câu sai, PHẢI đề cập CỤ THỂ đến các lỗi sai trong phần weaknesses
+3. Trong phần study_tips, PHẢI đưa ra gợi ý CỤ THỂ để hiểu đúng các câu đã sai
+4. KHÔNG được khen quá mức nếu điểm dưới 70%
+5. Nếu có nhiều câu sai, cần nghiêm túc chỉ ra vấn đề
+
+Trả về JSON với các trường sau:
+- performance_level: "excellent" (>=90%), "good" (70-89%), "average" (50-69%), "needs-improvement" (<50%)
+- overall_feedback: Nhận xét tổng quan CHÍNH XÁC với điểm số (2-3 câu)
+- strengths: Mảng 2-3 điểm mạnh THỰC TẾ
+- weaknesses: Mảng 2-4 điểm yếu CỤ THỂ dựa trên các câu sai (ví dụ: "Chưa nắm rõ khái niệm X trong câu Y")
+- study_tips: Mảng 3-5 lời khuyên CỤ THỂ để khắc phục các lỗi sai
+- focus_areas: Mảng 2-3 chủ đề CẦN TẬP TRUNG ôn lại
+- next_steps: Mảng 3-4 bước tiếp theo
+
+**ĐỊNH DẠNG JSON:**
+\`\`\`json
+{
+  "performance_level": "...",
+  "overall_feedback": "...",
+  "strengths": ["...", "..."],
+  "weaknesses": ["Câu X: Bạn nhầm lẫn giữa A và B", "..."],
+  "study_tips": ["Để hiểu câu X, bạn cần...", "..."],
+  "focus_areas": ["...", "..."],
+  "next_steps": ["...", "...", "..."]
+}
+\`\`\`
+
+Chỉ trả lời JSON, không giải thích thêm.`;
+
+      const result = await model.generateContent(prompt);
+      const text = result.response.text();
+      
+      // Parse JSON from response
+      const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/) || text.match(/\{[\s\S]*\}/);
+      
+      if (!jsonMatch) {
+        throw new Error('Không thể parse kết quả AI');
+      }
+      
+      const jsonText = jsonMatch[1] || jsonMatch[0];
+      const parsed = JSON.parse(jsonText);
+
+      return {
+        success: true,
+        analysis: {
+          performanceLevel: parsed.performance_level,
+          overallFeedback: parsed.overall_feedback,
+          strengths: parsed.strengths || [],
+          weaknesses: parsed.weaknesses || [],
+          studyTips: parsed.study_tips || [],
+          focusAreas: parsed.focus_areas || [],
+          nextSteps: parsed.next_steps || [],
+          generatedAt: new Date().toISOString(),
+          confidence: 0.85
+        }
+      };
+
+    } catch (error) {
+      console.error('❌ Quiz analysis error:', error);
+      
+      // Return fallback analysis
+      const level = percentage >= 90 ? 'excellent' : percentage >= 70 ? 'good' : percentage >= 50 ? 'average' : 'needs-improvement';
+      const feedbackMap: Record<string, string> = {
+        excellent: 'Xuất sắc! Bạn đã thể hiện sự hiểu biết sâu sắc về chủ đề này.',
+        good: 'Tốt lắm! Bạn đã nắm vững phần lớn kiến thức.',
+        average: 'Khá ổn! Còn một số điểm cần cải thiện thêm.',
+        'needs-improvement': 'Đừng nản lòng! Hãy xem lại và thử lại nhé.'
+      };
+      
+      return {
+        success: true,
+        analysis: {
+          performanceLevel: level,
+          overallFeedback: feedbackMap[level],
+          strengths: ['Hoàn thành quiz', 'Kiên trì làm bài'],
+          weaknesses: percentage < 70 ? ['Cần ôn tập thêm kiến thức cơ bản'] : [],
+          studyTips: [
+            'Xem lại các câu sai và hiểu tại sao',
+            'Làm thêm các quiz tương tự để rèn luyện',
+            'Ghi chú lại những điểm quan trọng'
+          ],
+          focusAreas: percentage < 70 ? ['Kiến thức cơ bản', 'Kỹ năng làm bài'] : [],
+          nextSteps: [
+            'Xem lại đáp án chi tiết',
+            'Làm lại quiz để củng cố',
+            'Thử các quiz khác cùng chủ đề'
+          ],
+          generatedAt: new Date().toISOString(),
+          confidence: 0.5
+        },
+        fallback: true
+      };
+    }
+  });
 
 // ============================================================
 // 🤖 RAG (Retrieval-Augmented Generation) Functions

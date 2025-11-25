@@ -4052,7 +4052,7 @@
     "generateButtonWithFile": "Generate {{count}} questions {{difficulty}} from file",
     "infoTitle": "💡 Information:",
     "infoCloudFunctions": "Using Firebase Cloud Functions + Google Gemini AI",
-    "infoModel": "Model: gemini-2.0-flash-exp (latest)",
+    "infoModel": "Model: gemini-2.5-flash-lite (latest)",
     "infoSecurity": "Processed via server (API key secured)",
     "infoFileSupport": "Supports reading image, PDF, Word, Text files",
     "infoNoQuota": "No client-side quota limits",
@@ -4875,5 +4875,42 @@
   "notAvailable": "N/A",
   "you": "You",
   "all": "All",
-  "tat_ca": "All"
+  "tat_ca": "All",
+  "chatbot": {
+    "askAssistant": "Ask AI Learning Assistant",
+    "title": "AI Learning Assistant",
+    "beta": "Beta",
+    "subtitle": "Smart learning assistant powered by Google AI",
+    "welcome": "Welcome to AI Learning Assistant! 👋",
+    "welcomeMessage": "Ask me anything about the quizzes you've learned. I'll provide detailed answers and suggest suitable quizzes for you.",
+    "suggestions": {
+      "explain": {
+        "title": "Explain concepts",
+        "description": "Learn details about topics you're interested in"
+      },
+      "summarize": {
+        "title": "Summarize content",
+        "description": "Get an overview of important knowledge"
+      },
+      "examples": {
+        "title": "Real examples",
+        "description": "Learn through specific cases"
+      },
+      "recommend": {
+        "title": "Suggest quizzes",
+        "description": "Find suitable quizzes to practice"
+      }
+    },
+    "error": "An error occurred",
+    "tip": "💡 Tip: Ask about content you've learned in unlocked quizzes",
+    "citations": "📚 References:",
+    "processingTime": "⚡ {{ms}}ms",
+    "chunksUsed": "📄 {{count}} chunks",
+    "quizSuggestions": "🎯 Suggested quizzes for you",
+    "clickToStart": "Click on a quiz to start right away! 👇",
+    "quizRecommendation": {
+      "questions": "questions",
+      "startQuiz": "Start quiz now"
+    }
+  }
 }

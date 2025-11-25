@@ -51,6 +51,18 @@ export function AnswerOptions({
     (e: KeyboardEvent) => {
       if (disabled) return;
 
+      // CRITICAL: Skip keyboard navigation when user is editing text
+      const activeElement = document.activeElement;
+      const isEditingText = activeElement && (
+        activeElement.tagName === 'INPUT' ||
+        activeElement.tagName === 'TEXTAREA' ||
+        activeElement.getAttribute('contenteditable') === 'true' ||
+        activeElement.classList.contains('ql-editor') ||
+        activeElement.closest('.ql-container') !== null
+      );
+      
+      if (isEditingText) return;
+
       setKeyboardUsed(true);
 
       switch (e.key) {

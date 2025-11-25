@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
+import SafeHTML from '../../../shared/components/ui/SafeHTML';
 import { ROUTES } from '../../../config/routes';
 import { doc, getDoc, collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
@@ -498,7 +499,7 @@ const QuizDetailedStats: React.FC = () => {
                     </span>
                   )}
                 </div>
-                <p className="text-gray-600 mb-4">{quiz.description}</p>
+                <SafeHTML content={quiz.description} className="text-gray-600 mb-4" />
                 <div className="flex items-center gap-4 text-sm">
                   <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg font-medium">
                     📚 {quiz.category}

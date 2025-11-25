@@ -90,6 +90,7 @@ export const askRAG = functions.region('us-central1').runWith({
   memory: '512MB',
   timeoutSeconds: 30,
   maxInstances: 10,
+  secrets: ['GOOGLE_AI_API_KEY'],
 }).https.onCall(async (data, context) => {
     const startTime = Date.now();
 

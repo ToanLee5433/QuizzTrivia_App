@@ -97,7 +97,7 @@ const RealQuizListPage: React.FC = () => {
                       {quiz.title || t('quiz.noTitle')}
                     </h3>
                     
-                    <SafeHTML content={quiz.description || String(t('quiz.noDescription'))} className="text-gray-600 mb-4 line-clamp-2" as="div" />
+                    <SafeHTML content={quiz.description || String(t('quiz.noDescription'))} className="text-gray-600 mb-4 line-clamp-2" as="div" plainText />
                     
                     <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
                       <span className="flex items-center gap-1">ID: <code className="bg-gray-100 px-2 py-0.5 rounded">{quiz.id}</code></span>

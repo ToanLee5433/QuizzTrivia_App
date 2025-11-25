@@ -8,13 +8,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.askQuestion = void 0;
 const generative_ai_1 = require("@google/generative-ai");
 const admin = require("firebase-admin");
-const GOOGLE_AI_API_KEY = 'AIzaSyDQT4sxlCRVxm0xqvfzaBIobv-3y8KfV-k';
+// ✅ Secure: API key from environment variable (lazy initialization)
+// Updated: 2025-11-25 - Fixed secret configuration
+function getGenAI() {
+    const apiKey = process.env.GOOGLE_AI_API_KEY;
+    if (!apiKey) {
+        throw new Error('GOOGLE_AI_API_KEY environment variable is not set');
+    }
+    return new generative_ai_1.GoogleGenerativeAI(apiKey);
+}
 /**
  * Generate embedding
  */
 async function generateEmbedding(text) {
-    const genAI = new generative_ai_1.GoogleGenerativeAI(GOOGLE_AI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'text-embedding-004' });
+    const model = getGenAI().getGenerativeModel({ model: 'text-embedding-004' });
     const result = await model.embedContent(text);
     return result.embedding.values;
 }
@@ -66,8 +73,7 @@ async function vectorSearch(question, topK = 4) {
  * Generate answer
  */
 async function generateAnswer(question, contexts, targetLang = 'vi') {
-    const genAI = new generative_ai_1.GoogleGenerativeAI(GOOGLE_AI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    const model = getGenAI().getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
     // If no contexts, give a friendly message
     if (contexts.length === 0) {
         return {

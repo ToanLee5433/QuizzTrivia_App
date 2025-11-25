@@ -362,7 +362,7 @@ interface QuizCardProps {
               </div>
             </div>
             
-            <SafeHTML content={quiz.description} className="text-gray-600 text-sm mb-3 line-clamp-1" />
+            <SafeHTML content={quiz.description} className="text-gray-600 text-sm mb-3 line-clamp-1" plainText />
             
             <div className="flex items-center gap-6 text-sm text-gray-500 mb-4">
               <div className="flex items-center">
@@ -536,7 +536,7 @@ interface QuizCardProps {
           </h3>
         </div>
         
-        <SafeHTML content={quiz.description} className="text-gray-600 text-sm mb-6 line-clamp-2 leading-relaxed" />
+        <SafeHTML content={quiz.description} className="text-gray-600 text-sm mb-6 line-clamp-2 leading-relaxed" plainText />
 
         {/* **THÊM MỚI**: Quiz metadata */}
         <div className="space-y-4 mb-6">

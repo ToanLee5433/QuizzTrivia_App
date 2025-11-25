@@ -75,6 +75,18 @@ export const ImageSlidesViewer: React.FC<ImageSlidesViewerProps> = ({
   };
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    // Skip when user is editing text
+    const activeElement = document.activeElement;
+    const isEditingText = activeElement && (
+      activeElement.tagName === 'INPUT' ||
+      activeElement.tagName === 'TEXTAREA' ||
+      activeElement.getAttribute('contenteditable') === 'true' ||
+      activeElement.classList.contains('ql-editor') ||
+      activeElement.closest('.ql-container') !== null
+    );
+    
+    if (isEditingText) return;
+    
     if (e.key === 'ArrowLeft') handlePrevious();
     if (e.key === 'ArrowRight') handleNext();
     if (e.key === 'Escape') setIsFullscreen(false);
