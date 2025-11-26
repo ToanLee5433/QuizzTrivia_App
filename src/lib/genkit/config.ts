@@ -27,12 +27,13 @@ export const GENKIT_CONFIG = {
   // Model for embeddings
   embeddingModel: 'text-embedding-004',
   
-  // Generation parameters
+  // Generation parameters (optimized for gemini-2.5-flash-lite)
+  // Model limits: RPM 4000, TPM 4M, max output 65536 tokens
   generation: {
     temperature: 0.3, // Lower = more focused, deterministic
     topK: 40,
     topP: 0.95,
-    maxOutputTokens: 4096, // gemini-2.5-flash-lite supports high limits
+    maxOutputTokens: 8192, // Increased for gemini-2.5-flash-lite (supports up to 65536)
   },
   
   // RAG parameters

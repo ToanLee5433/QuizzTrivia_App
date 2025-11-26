@@ -24,10 +24,12 @@ export const GEMINI_CONFIG = {
     EMBEDDING: 'text-embedding-004'
   },
   
-  // Rate limits
+  // Rate limits for gemini-2.5-flash-lite (Updated 2025-11)
+  // RPM: 4000, TPM: 4M, RPD: Unlimited
   FREE_TIER: {
-    MAX_REQUESTS_PER_MINUTE: 15,
-    MAX_TOKENS_PER_REQUEST: 8192,
-    SUPPORTED_MODELS: ['gemini-2.5-flash-lite', 'gemini-pro']
+    MAX_REQUESTS_PER_MINUTE: 4000,
+    MAX_TOKENS_PER_MINUTE: 4000000, // 4M TPM
+    MAX_TOKENS_PER_REQUEST: 65536, // Model supports up to 1M tokens
+    SUPPORTED_MODELS: ['gemini-2.5-flash-lite']
   }
 };

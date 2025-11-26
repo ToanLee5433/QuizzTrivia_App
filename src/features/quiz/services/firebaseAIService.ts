@@ -1,12 +1,13 @@
 // Firebase AI Service using Google Generative AI (Gemini)
 // Service để tạo câu hỏi tự động bằng AI
+// Updated: 2025-11 - Using gemini-2.5-flash-lite (RPM: 4000, TPM: 4M)
 
 import { Question, QuestionType } from '../types';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getAuth } from 'firebase/auth';
 
 export interface FirebaseAIConfig {
-  model?: 'gemini-2.5-flash-lite' | 'gemini-pro' | 'gemini-pro-vision';
+  model?: 'gemini-2.5-flash-lite'; // Only use gemini-2.5-flash-lite
   temperature?: number;
   maxTokens?: number;
 }
