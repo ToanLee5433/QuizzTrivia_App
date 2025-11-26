@@ -69,7 +69,7 @@ export class FirebaseAIService {
         config: {
           model: config.model || 'gemini-2.5-flash-lite',
           temperature: config.temperature || 0.7,
-          maxTokens: config.maxTokens || 16000 // ⚡ gemini-2.5-flash-lite supports high token limits
+          maxTokens: config.maxTokens || 32000 // ⚡ gemini-2.5-flash-lite: 32K for long PDF/image input + full Q&A output
         }
       });
 

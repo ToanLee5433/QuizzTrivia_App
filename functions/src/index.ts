@@ -119,7 +119,7 @@ export const generateQuestions = functions
         temperature: config?.temperature || 0.7,
         topP: 0.8,
         topK: 40,
-        maxOutputTokens: config?.maxTokens || 16000, // ⚡ gemini-2.5-flash-lite supports high limits
+        maxOutputTokens: config?.maxTokens || 32000, // ⚡ gemini-2.5-flash-lite: increased for long PDF/image + full Q&A with explanations
       },
     });
 
@@ -272,7 +272,7 @@ export const generateQuestionsHTTP = functions
           temperature: config?.temperature || 0.7,
           topP: 0.8,
           topK: 40,
-          maxOutputTokens: config?.maxTokens || 2000,
+          maxOutputTokens: config?.maxTokens || 32000, // ⚡ gemini-2.5-flash-lite: increased for long content
         },
       });
 
