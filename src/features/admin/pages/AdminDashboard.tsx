@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
-// import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-// import { RootState } from '../../../lib/store';
-// import { logout } from '../../auth/store';
-// import { signOut } from 'firebase/auth';
 import { db } from '../../../lib/firebase/config';
 import { 
   collection, 
@@ -19,6 +16,8 @@ import Modal from '../../../shared/components/ui/Modal';
 import QuickActions from '../components/QuickActions';
 import AdminStats from '../components/AdminStats';
 import { toast } from 'react-toastify';
+import { removeQuiz } from '../../quiz/store';
+import { deleteQuiz as deleteQuizApi } from '../../quiz/api/base';
 
 interface User {
   id: string;
@@ -49,9 +48,7 @@ interface Category {
 
 const AdminDashboard: React.FC = () => {
   const { t } = useTranslation();
-  // const navigate = useNavigate();
-  // const { user } = useSelector((state: RootState) => state.auth);
-  // const dispatch = useDispatch();
+  const dispatch = useDispatch();
   
   // States
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -315,7 +312,13 @@ const AdminDashboard: React.FC = () => {
   const deleteQuiz = async (quizId: string) => {
     setLoading(true);
     try {
-      await deleteDoc(doc(db, 'quizzes', quizId));
+      // Use the proper deleteQuiz API that handles subcollections
+      await deleteQuizApi(quizId);
+      
+      // Remove from Redux store immediately
+      dispatch(removeQuiz(quizId));
+      
+      // Reload admin data
       await loadData();
       toast.success(t('quiz.deleteSuccess'));
     } catch (error) {

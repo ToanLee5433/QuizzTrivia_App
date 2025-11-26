@@ -68,6 +68,7 @@ interface Quiz {
   category: string;
   difficulty: string;
   questions: any[];
+  questionCount?: number;
   createdBy: string;
   createdAt: any;
   status: string;
@@ -513,7 +514,7 @@ const QuizDetailedStats: React.FC = () => {
                   </span>
                   <span className="text-gray-600">
                     <Brain className="w-4 h-4 inline mr-1" />
-                    {quiz.questions.length} câu hỏi
+                    {quiz.questionCount || quiz.questions?.length || 0} câu hỏi
                   </span>
                 </div>
               </div>

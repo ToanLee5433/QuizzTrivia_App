@@ -49,7 +49,7 @@ export const getQuizzes = async (
     let q = query(
       collection(db, QUIZZES_COLLECTION),
       where('status', '==', 'approved'), // CHỈ LẤY QUIZ ĐÃ DUYỆT
-      limit(pageSize || 10)
+      limit(pageSize || 50) // Increased default limit for better coverage
     );
 
     if (filters) {
@@ -62,10 +62,42 @@ export const getQuizzes = async (
     }
 
     const snapshot = await getDocs(q);
-    const quizzes = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...convertTimestamps(doc.data())
-    })) as Quiz[];
+    
+    // Process quizzes with questionCount from metadata or questions subcollection
+    const quizzes: Quiz[] = [];
+    
+    for (const docSnap of snapshot.docs) {
+      const data = docSnap.data();
+      const convertedData = convertTimestamps(data);
+      
+      // Get questionCount - priority: metadata field > questions array length > questions subcollection count
+      let questionCount = convertedData.questionCount || 0;
+      
+      // If no questionCount in metadata, try to get from questions array (old structure)
+      if (questionCount === 0 && convertedData.questions && Array.isArray(convertedData.questions)) {
+        questionCount = convertedData.questions.length;
+      }
+      
+      // If still 0, try to count from subcollection (this is async but we need it for accuracy)
+      if (questionCount === 0) {
+        try {
+          const questionsRef = collection(db, QUIZZES_COLLECTION, docSnap.id, 'questions');
+          const questionsSnap = await getDocs(questionsRef);
+          questionCount = questionsSnap.size;
+        } catch {
+          // Ignore errors - might be permission denied for some quizzes
+        }
+      }
+      
+      quizzes.push({
+        id: docSnap.id,
+        ...convertedData,
+        questionCount, // Ensure questionCount is always set
+        questions: convertedData.questions || [], // Default empty array if questions not loaded
+      } as Quiz);
+    }
+
+    console.log(`📊 Loaded ${quizzes.length} approved quizzes`);
 
     return {
       quizzes,

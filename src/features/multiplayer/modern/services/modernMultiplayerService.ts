@@ -476,50 +476,89 @@ export class ModernMultiplayerService {
   }
 
   // ✅ NEW: Get questions for specific quiz (lazy loading)
-  async getQuizQuestions(quizId: string): Promise<QuizQuestion[]> {
+  // Returns Question[] format compatible with game engine
+  async getQuizQuestions(quizId: string): Promise<any[]> {
     try {
-      let questions: QuizQuestion[] = [];
+      let questions: any[] = [];
       
-      // Try subcollection first
-      try {
-        const questionsQuery = query(
-          collection(this.db, 'quizzes', quizId, 'questions')
-        );
-        const questionsSnapshot = await getDocs(questionsQuery);
-        
-        questionsSnapshot.forEach(qDoc => {
-          const qData = qDoc.data();
-          questions.push({
-            id: qDoc.id,
-            question: qData.question,
-            options: qData.options,
-            correctAnswer: qData.correctAnswer,
-            timeLimit: qData.timeLimit || 30,
-            points: qData.points || 100
-          });
-        });
-      } catch (error) {
-        console.warn(`⚠️ Could not fetch questions subcollection for ${quizId}`);
-      }
-      
-      // Fallback: Get from document field
-      if (questions.length === 0) {
-        const quizDoc = await getDoc(doc(this.db, 'quizzes', quizId));
-        if (quizDoc.exists()) {
-          const data = quizDoc.data();
-          if (data.questions && Array.isArray(data.questions)) {
-            questions = data.questions.map((q: any, idx: number) => ({
+      // Try to get from quiz document first (most common format)
+      const quizDoc = await getDoc(doc(this.db, 'quizzes', quizId));
+      if (quizDoc.exists()) {
+        const data = quizDoc.data();
+        if (data.questions && Array.isArray(data.questions)) {
+          questions = data.questions.map((q: any, idx: number) => {
+            // Convert to Question format expected by game engine
+            const answers = q.answers || q.options?.map((opt: string, optIdx: number) => ({
+              id: `ans_${idx}_${optIdx}`,
+              text: opt,
+              isCorrect: optIdx === q.correctAnswer
+            })) || [];
+            
+            // Build question object, only including defined fields
+            const question: any = {
               id: q.id || `q${idx}`,
-              question: q.question || q.text || q.title,
-              options: q.options || q.answers?.map((a: any) => a.text) || [],
-              correctAnswer: q.correctAnswer ?? q.answers?.findIndex((a: any) => a.isCorrect) ?? 0,
-              timeLimit: q.timeLimit || 30,
-              points: q.points || 100
-            }));
-          }
+              text: q.text || q.question || q.title || '',
+              type: q.type || 'multiple', // Default to multiple choice
+              answers: answers,
+              difficulty: q.difficulty || 'medium',
+              points: q.points || q.timeLimit || 30, // timeLimit as fallback for points
+            };
+            
+            // Only add optional fields if they have values (Firebase RTDB doesn't allow undefined)
+            if (q.correctAnswer !== undefined) question.correctAnswer = q.correctAnswer;
+            if (q.explanation) question.explanation = q.explanation;
+            if (q.imageUrl || q.image) question.imageUrl = q.imageUrl || q.image;
+            if (q.orderingItems) question.orderingItems = q.orderingItems;
+            if (q.matchingPairs) question.matchingPairs = q.matchingPairs;
+            if (q.blanks) question.blanks = q.blanks;
+            if (q.acceptedAnswers) question.acceptedAnswers = q.acceptedAnswers;
+            
+            return question;
+          });
         }
       }
       
+      // Fallback: Try subcollection
+      if (questions.length === 0) {
+        try {
+          const questionsQuery = query(
+            collection(this.db, 'quizzes', quizId, 'questions')
+          );
+          const questionsSnapshot = await getDocs(questionsQuery);
+          
+          let idx = 0;
+          questionsSnapshot.forEach((qDoc) => {
+            const q = qDoc.data();
+            const currentIdx = idx++;
+            const answers = q.answers || q.options?.map((opt: string, optIdx: number) => ({
+              id: `ans_${currentIdx}_${optIdx}`,
+              text: opt,
+              isCorrect: optIdx === q.correctAnswer
+            })) || [];
+            
+            // Build question object, only including defined fields
+            const question: any = {
+              id: qDoc.id,
+              text: q.text || q.question || q.title || '',
+              type: q.type || 'multiple',
+              answers: answers,
+              difficulty: q.difficulty || 'medium',
+              points: q.points || q.timeLimit || 30,
+            };
+            
+            // Only add optional fields if they have values
+            if (q.correctAnswer !== undefined) question.correctAnswer = q.correctAnswer;
+            if (q.explanation) question.explanation = q.explanation;
+            if (q.imageUrl || q.image) question.imageUrl = q.imageUrl || q.image;
+            
+            questions.push(question);
+          });
+        } catch (error) {
+          console.warn(`⚠️ Could not fetch questions subcollection for ${quizId}`);
+        }
+      }
+      
+      console.log(`✅ Loaded ${questions.length} questions for quiz ${quizId}`, questions[0]);
       return questions;
     } catch (error) {
       console.error(`❌ Failed to fetch questions for quiz ${quizId}:`, error);
@@ -703,6 +742,18 @@ export class ModernMultiplayerService {
             answers: []
           };
           
+          // ✅ CRITICAL: Initialize RTDB room structure with hostId FIRST
+          // This must be done BEFORE adding players to satisfy Firebase rules
+          // Rules require hostId to exist for permission checks
+          const rtdbRoomRef = ref(this.rtdb, `rooms/${roomRef.id}`);
+          await set(rtdbRoomRef, {
+            id: roomRef.id,
+            code: roomCode,
+            hostId: user.uid, // ✅ CRITICAL: Set hostId in RTDB for host detection
+            status: 'waiting',
+            createdAt: Date.now()
+          });
+          
           // ✅ Add to Firestore players subcollection (required for permission check)
           const firestorePlayerRef = doc(this.db, 'multiplayer_rooms', roomRef.id, 'players', user.uid);
           await setDoc(firestorePlayerRef, {
@@ -725,13 +776,20 @@ export class ModernMultiplayerService {
             username: user.displayName || 'Player'
           });
           
-          // Set up onDisconnect handlers to auto-cleanup when connection is lost
+          // Set up onDisconnect handlers to mark player as offline (NOT remove)
+          // This allows players to reconnect after page reload
           const presenceDisconnectRef = onDisconnect(presenceRef);
           const playerDisconnectRef = onDisconnect(playerRef);
           
-          // Schedule removal on disconnect
-          await presenceDisconnectRef.remove();
-          await playerDisconnectRef.remove();
+          // ✅ FIX: Mark as offline instead of removing - allows reconnection
+          await presenceDisconnectRef.update({
+            isOnline: false,
+            lastSeen: Date.now()
+          });
+          await playerDisconnectRef.update({
+            isOnline: false,
+            lastActive: Date.now()
+          });
         }
         
         logger.success('Room created', { roomId: this.roomId, code: roomCode, roomName, maxPlayers });
@@ -881,6 +939,107 @@ export class ModernMultiplayerService {
     }, retryStrategies.standard);
   }
 
+  /**
+   * Quick rejoin for page reload - optimized for speed
+   * Checks if player is already in room and just sets up listeners
+   * Falls back to full joinRoom if not in room
+   */
+  async quickRejoin(roomCodeOrId: string): Promise<{ roomId: string; roomCode: string }> {
+    try {
+      this.ensureAuthenticated();
+      
+      console.log('⚡ Quick rejoin attempt:', roomCodeOrId);
+      
+      // Determine roomId from code or direct ID
+      let targetRoomId: string;
+      let roomCode: string;
+      
+      if (roomCodeOrId.length === 6) {
+        // Check cache first
+        const cachedRoomId = sessionStorage.getItem(`room_${roomCodeOrId}`);
+        if (cachedRoomId) {
+          targetRoomId = cachedRoomId;
+          roomCode = roomCodeOrId;
+          console.log('⚡ Using cached roomId:', targetRoomId);
+        } else {
+          // Search by code
+          const roomsQuery = query(
+            collection(this.db, 'multiplayer_rooms'),
+            where('code', '==', roomCodeOrId),
+            limit(1)
+          );
+          const snapshot = await getDocs(roomsQuery);
+          if (snapshot.empty) {
+            throw new RoomNotFoundError(roomCodeOrId);
+          }
+          targetRoomId = snapshot.docs[0].id;
+          roomCode = roomCodeOrId;
+          // Cache for future use
+          sessionStorage.setItem(`room_${roomCodeOrId}`, targetRoomId);
+        }
+      } else {
+        targetRoomId = roomCodeOrId;
+        // Get room code from RTDB or Firestore
+        const rtdbRoomRef = ref(this.rtdb, `rooms/${roomCodeOrId}`);
+        const rtdbSnapshot = await get(rtdbRoomRef);
+        const rtdbData = rtdbSnapshot.val();
+        roomCode = rtdbData?.code || roomCodeOrId.substring(0, 6);
+      }
+      
+      // Check if player already exists in RTDB (fastest check)
+      const playerRef = ref(this.rtdb, `rooms/${targetRoomId}/players/${this.userId}`);
+      const playerSnapshot = await get(playerRef);
+      
+      if (playerSnapshot.exists()) {
+        // Player already in room - just update online status and setup listeners
+        console.log('⚡ Player already in room, quick reconnect!');
+        
+        this.roomId = targetRoomId;
+        
+        // Update online status
+        await update(playerRef, {
+          isOnline: true,
+          lastActive: Date.now()
+        });
+        
+        // Setup listeners
+        this.setupListeners(targetRoomId);
+        
+        // Setup presence tracking
+        const presenceRef = ref(this.rtdb, `rooms/${targetRoomId}/presence/${this.userId}`);
+        await set(presenceRef, {
+          isOnline: true,
+          lastSeen: Date.now(),
+          username: getAuth().currentUser?.displayName || 'Player'
+        });
+        
+        // Setup onDisconnect
+        const presenceDisconnectRef = onDisconnect(presenceRef);
+        const playerDisconnectRef = onDisconnect(playerRef);
+        await presenceDisconnectRef.update({
+          isOnline: false,
+          lastSeen: Date.now()
+        });
+        await playerDisconnectRef.update({
+          isOnline: false,
+          lastActive: Date.now()
+        });
+        
+        console.log('⚡ Quick rejoin successful!');
+        return { roomId: targetRoomId, roomCode };
+      }
+      
+      // Player not in room - do full join
+      console.log('⚡ Player not in room, doing full join...');
+      return this.joinRoom(roomCodeOrId);
+      
+    } catch (error) {
+      console.error('❌ Quick rejoin failed, falling back to full join:', error);
+      // Fallback to regular join
+      return this.joinRoom(roomCodeOrId);
+    }
+  }
+
   // Setup RTDB room for real-time sync
   private async setupRealtimeRoom(roomId: string, roomCode: string) {
     const roomRef = ref(this.rtdb, `rooms/${roomId}`);
@@ -907,6 +1066,7 @@ export class ModernMultiplayerService {
     await set(roomRef, {
       id: roomId,
       code: roomCode,
+      hostId: roomData?.hostId || this.userId, // ✅ CRITICAL: Include hostId for host detection
       status: 'waiting',
       players: {},
       quiz: roomData?.quiz ? {
@@ -1066,6 +1226,11 @@ export class ModernMultiplayerService {
     await set(playerRef, cleanPlayer);
     console.log('✅ Player added to RTDB successfully');
     
+    // ✅ Clear lastEmptyAt when player joins - reset cleanup countdown
+    const lastEmptyAtRef = ref(this.rtdb, `rooms/${this.roomId}/lastEmptyAt`);
+    await remove(lastEmptyAtRef);
+    console.log('✅ Cleared lastEmptyAt - room is now active');
+    
     // Setup presence tracking
     const presenceRef = ref(this.rtdb, `rooms/${this.roomId}/presence/${player.id}`);
     await set(presenceRef, {
@@ -1074,15 +1239,22 @@ export class ModernMultiplayerService {
       username: player.name
     });
     
-    // Set up onDisconnect handlers to auto-cleanup when connection is lost
+    // Set up onDisconnect handlers to mark player as offline (NOT remove)
+    // This allows players to reconnect after page reload
     this.presenceDisconnectRef = onDisconnect(presenceRef);
     this.playerDisconnectRef = onDisconnect(playerRef);
     
-    // Schedule removal on disconnect
-    await this.presenceDisconnectRef.remove();
-    await this.playerDisconnectRef.remove();
+    // ✅ FIX: Mark as offline instead of removing - allows reconnection
+    await this.presenceDisconnectRef.update({
+      isOnline: false,
+      lastSeen: Date.now()
+    });
+    await this.playerDisconnectRef.update({
+      isOnline: false,
+      lastActive: Date.now()
+    });
     
-    console.log('✅ Set up onDisconnect handlers for presence tracking');
+    console.log('✅ Set up onDisconnect handlers for presence tracking (mark offline, not remove)');
   }
 
   // Update shared screen (host only)
@@ -1690,63 +1862,85 @@ export class ModernMultiplayerService {
         
         if (!this.roomId) throw new RoomNotFoundError('current');
         
-        // Check if current user is host
-        const roomRef = doc(this.db, 'multiplayer_rooms', this.roomId);
-        const roomSnapshot = await getDoc(roomRef);
-        const roomData = roomSnapshot.data() as ModernRoom;
+        // ✅ Check host from RTDB (source of truth) instead of Firestore
+        const rtdbRoomRef = ref(this.rtdb, `rooms/${this.roomId}`);
+        const rtdbRoomSnapshot = await get(rtdbRoomRef);
+        const rtdbRoomData = rtdbRoomSnapshot.val();
         
-        if (roomData.hostId !== this.userId) {
+        if (!rtdbRoomData) {
+          throw new RoomNotFoundError(this.roomId);
+        }
+        
+        const currentHostId = rtdbRoomData.hostId;
+        
+        console.log('🔍 Checking kick authorization (RTDB):', {
+          currentHostId,
+          userId: this.userId,
+          isHost: currentHostId === this.userId
+        });
+        
+        if (currentHostId !== this.userId) {
           throw new UnauthorizedError('kick players');
         }
 
         // Prevent kicking host or self
-        if (playerId === roomData.hostId) {
+        if (playerId === currentHostId) {
           throw new Error('Cannot kick the host');
         }
         if (playerId === this.userId) {
           throw new Error('Cannot kick yourself');
         }
         
-        // Get player data for notification
-        const playerRef = doc(this.db, 'multiplayer_rooms', this.roomId, 'players', playerId);
-        const playerSnapshot = await getDoc(playerRef);
-        const playerData = playerSnapshot.data();
+        // ✅ Get player data from RTDB
+        const rtdbPlayerRef = ref(this.rtdb, `rooms/${this.roomId}/players/${playerId}`);
+        const rtdbPlayerSnapshot = await get(rtdbPlayerRef);
+        const playerData = rtdbPlayerSnapshot.val();
         
         if (!playerData) {
           throw new Error('Player not found in room');
         }
+        
+        const playerName = playerData.name || 'Unknown player';
+        const roomName = rtdbRoomData.name || 'Unknown Room';
 
-        // Remove from Firestore players subcollection
-        await deleteDoc(playerRef);
-        
-        // Remove player from RTDB
-        const rtdbPlayerRef = ref(this.rtdb, `rooms/${this.roomId}/players/${playerId}`);
+        // ✅ Remove player from RTDB FIRST (source of truth)
         await remove(rtdbPlayerRef);
+        console.log('✅ Player removed from RTDB');
         
-        // Send system message about player kick
+        // Remove presence
+        const presenceRef = ref(this.rtdb, `rooms/${this.roomId}/presence/${playerId}`);
+        await remove(presenceRef).catch(() => {});
+        
+        // ✅ Remove from Firestore in background (non-blocking)
+        const playerFirestoreRef = doc(this.db, 'multiplayer_rooms', this.roomId, 'players', playerId);
+        deleteDoc(playerFirestoreRef).catch(err => {
+          console.warn('⚠️ Failed to remove player from Firestore (non-critical):', err);
+        });
+        
+        // Send system message about player kick (background)
         const messagesRef = collection(this.db, 'multiplayer_rooms', this.roomId, 'messages');
-        await addDoc(messagesRef, {
+        addDoc(messagesRef, {
           type: 'system',
-          content: `${playerData.name} was kicked from the room`,
+          content: `${playerName} was kicked from the room`,
           timestamp: new Date(),
           senderId: 'system',
           senderName: 'System'
-        });
+        }).catch(err => console.warn('⚠️ Failed to send kick message:', err));
         
-        // Send notification to kicked player
+        // Send notification to kicked player (background)
         const notificationsRef = collection(this.db, 'users', playerId, 'notifications');
-        await addDoc(notificationsRef, {
+        addDoc(notificationsRef, {
           type: 'kicked',
           title: 'Removed from Room',
-          message: `You were kicked from the room "${roomData.name}" by the host.`,
+          message: `You were kicked from the room "${roomName}" by the host.`,
           roomId: this.roomId,
-          roomName: roomData.name,
+          roomName: roomName,
           timestamp: new Date(),
           read: false
-        });
+        }).catch(err => console.warn('⚠️ Failed to send kick notification:', err));
         
         // Emit event for UI updates
-        this.emit('player:kicked', { playerId, playerName: playerData.name });
+        this.emit('player:kicked', { playerId, playerName });
         
         logger.info('Player kicked successfully', { 
           playerId, 
@@ -1848,42 +2042,51 @@ export class ModernMultiplayerService {
         
         if (!this.roomId) throw new RoomNotFoundError('current');
         
-        // Check if current user is host
-        const roomRef = doc(this.db, 'multiplayer_rooms', this.roomId);
-        const roomSnapshot = await getDoc(roomRef);
-        const roomData = roomSnapshot.data() as ModernRoom;
+        // ✅ RTDB is the ONLY source of truth for multiplayer state
+        // Firestore is NOT used for transfer host - eliminates sync issues
+        const rtdbRoomRef = ref(this.rtdb, `rooms/${this.roomId}`);
+        const rtdbRoomSnapshot = await get(rtdbRoomRef);
+        const rtdbRoomData = rtdbRoomSnapshot.val();
         
-        if (roomData.hostId !== this.userId) {
+        if (!rtdbRoomData) {
+          throw new RoomNotFoundError(this.roomId);
+        }
+        
+        const currentHostId = rtdbRoomData.hostId;
+        
+        console.log('🔍 Checking host authorization (RTDB only):', {
+          currentHostId,
+          userId: this.userId,
+          isHost: currentHostId === this.userId
+        });
+        
+        if (currentHostId !== this.userId) {
           throw new UnauthorizedError('transfer host');
         }
 
         // Validate target player
-        if (newHostId === roomData.hostId) {
+        if (newHostId === currentHostId) {
           throw new Error('Player is already the host');
         }
 
-        // Get target player data
-        const playerRef = doc(this.db, 'multiplayer_rooms', this.roomId, 'players', newHostId);
-        const playerSnapshot = await getDoc(playerRef);
-        const playerData = playerSnapshot.data();
-        
-        if (!playerData) {
-          throw new Error('Target player not found in room');
-        }
-
-        // Check if target player is online
+        // ✅ Get target player data from RTDB (not Firestore)
         const rtdbPlayerRef = ref(this.rtdb, `rooms/${this.roomId}/players/${newHostId}`);
         const rtdbSnapshot = await get(rtdbPlayerRef);
         const rtdbPlayerData = rtdbSnapshot.val();
         
-        if (!rtdbPlayerData || !rtdbPlayerData.isOnline) {
+        if (!rtdbPlayerData) {
+          throw new Error('Target player not found in room');
+        }
+
+        // Check if target player is online
+        if (!rtdbPlayerData.isOnline) {
           throw new Error('Cannot transfer host to offline player');
         }
 
-        // ✅ Use multi-location update for atomicity
+        // ✅ Use multi-location update for atomicity - RTDB ONLY
         const wasParticipating = rtdbPlayerData?.isParticipating ?? true;
         
-        console.log('🔄 Transferring host atomically...', {
+        console.log('🔄 Transferring host atomically (RTDB only)...', {
           oldHostId: this.userId,
           newHostId: newHostId,
           wasParticipating
@@ -1900,63 +2103,65 @@ export class ModernMultiplayerService {
         updates[`rooms/${this.roomId}/players/${newHostId}/role`] = 'host';
         updates[`rooms/${this.roomId}/players/${newHostId}/isParticipating`] = true;
         
-        // Update room hostId
+        // Update room hostId in RTDB
         updates[`rooms/${this.roomId}/hostId`] = newHostId;
         
-        // ✅ Execute all updates atomically - either all succeed or all fail
+        // ✅ Execute ALL updates atomically in RTDB - single source of truth
         try {
           await update(ref(this.rtdb), updates);
           console.log('✅ Host transfer completed atomically in RTDB');
         } catch (error) {
           console.error('❌ Atomic host transfer failed:', error);
-          throw new Error('Failed to transfer host roles atomically');
+          throw new Error('Failed to transfer host. Please try again.');
         }
 
-        // Update Firestore room document LAST (after RTDB updates succeed)
-        try {
-          await updateDoc(roomRef, {
-            hostId: newHostId,
-            updatedAt: serverTimestamp()
-          });
-          console.log('✅ Firestore room document updated');
-        } catch (firestoreError) {
-          console.warn('⚠️ Firestore update failed, but RTDB transfer succeeded:', firestoreError);
-          // Don't throw error - RTDB transfer is what matters for functionality
-        }
+        // ✅ Sync to Firestore in background (non-blocking, for persistence only)
+        // This is optional and won't block the transfer
+        const roomRef = doc(this.db, 'multiplayer_rooms', this.roomId);
+        updateDoc(roomRef, {
+          hostId: newHostId,
+          updatedAt: serverTimestamp()
+        }).catch(err => {
+          console.warn('⚠️ Background Firestore sync failed (non-critical):', err);
+        });
 
-        // Send system message about host transfer
+        // Get room name and player name for notifications
+        const roomName = rtdbRoomData.name || 'Unknown Room';
+        const newHostName = rtdbPlayerData.name || 'Unknown player';
+
+        // Send system message about host transfer (background, non-blocking)
         const messagesRef = collection(this.db, 'multiplayer_rooms', this.roomId, 'messages');
-        await addDoc(messagesRef, {
+        addDoc(messagesRef, {
           type: 'system',
-          content: `${playerData?.name || 'Unknown player'} is now the host of the room`,
+          content: `${newHostName} is now the host of the room`,
           timestamp: new Date(),
           senderId: 'system',
           senderName: 'System'
-        });
+        }).catch(err => console.warn('⚠️ Failed to send system message:', err));
 
-        // Send notification to new host
+        // Send notification to new host (background, non-blocking)
         const notificationsRef = collection(this.db, 'users', newHostId, 'notifications');
-        await addDoc(notificationsRef, {
+        addDoc(notificationsRef, {
           type: 'host_transfer',
           title: 'You are now the Host',
-          message: `You have been made the host of the room "${roomData.name}".`,
+          message: `You have been made the host of the room "${roomName}".`,
           roomId: this.roomId,
-          roomName: roomData.name,
+          roomName: roomName,
           timestamp: new Date(),
           read: false
-        });
+        }).catch(err => console.warn('⚠️ Failed to send notification:', err));
         
         // Emit event for UI updates
         this.emit('host:transferred', { 
           oldHostId: this.userId, 
           newHostId, 
-          newHostName: playerData?.name || 'Unknown player' 
+          newHostName: newHostName 
         });
         
-        logger.info('Host transferred successfully', { 
+        logger.info('Host transferred successfully (RTDB only)', { 
           oldHostId: this.userId,
           newHostId,
-          newHostName: playerData?.name || 'Unknown player',
+          newHostName: newHostName,
           roomId: this.roomId
         });
         
@@ -2199,6 +2404,11 @@ export class ModernMultiplayerService {
           console.log('✅ Player found in RTDB, updating online status');
           const presenceRef = ref(this.rtdb, `rooms/${this.roomId}/players/${this.userId}/isOnline`);
           await set(presenceRef, true);
+          
+          // ✅ Clear lastEmptyAt when player reconnects - reset cleanup countdown
+          const lastEmptyAtRef = ref(this.rtdb, `rooms/${this.roomId}/lastEmptyAt`);
+          await remove(lastEmptyAtRef);
+          console.log('✅ Cleared lastEmptyAt - room is now active');
         } else {
           // Player NOT in RTDB, add them back
           console.log('⚠️ Player not found in RTDB, adding back from Firestore...');

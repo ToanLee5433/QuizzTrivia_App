@@ -73,7 +73,7 @@ interface VectorIndex {
 // ============================================================
 
 const EMBEDDING_MODEL = 'text-embedding-004';
-const CHAT_MODEL = 'gemini-2.0-flash-lite';
+const CHAT_MODEL = 'gemini-2.5-flash-lite';
 
 /**
  * Generate tags for a quiz using Gemini

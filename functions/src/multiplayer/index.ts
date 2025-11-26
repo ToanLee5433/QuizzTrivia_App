@@ -403,3 +403,260 @@ function shuffleArray<T>(array: T[], rng: () => number): T[] {
   }
   return shuffled;
 }
+
+/**
+ * Auto-cleanup abandoned rooms after 30 minutes of inactivity
+ * A room is considered abandoned when NO players are online for 30 minutes
+ * This runs every 5 minutes to check and clean up
+ */
+export const cleanupAbandonedRooms = functions.pubsub
+  .schedule('every 5 minutes')
+  .timeZone('Asia/Ho_Chi_Minh')
+  .onRun(async () => {
+    const CLEANUP_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes
+    const now = Date.now();
+
+    try {
+      functions.logger.info('Starting abandoned room cleanup check...');
+      
+      // Get all rooms from RTDB
+      const roomsSnap = await rtdb.ref('rooms').once('value');
+      const rooms = roomsSnap.val() || {};
+      
+      let deletedCount = 0;
+      const deletePromises: Promise<any>[] = [];
+
+      for (const [roomId, roomData] of Object.entries(rooms)) {
+        const room = roomData as any;
+        const players = room.players || {};
+        
+        // Check if any player is online
+        const hasOnlinePlayers = Object.values(players).some(
+          (player: any) => player?.isOnline === true
+        );
+        
+        if (hasOnlinePlayers) {
+          // Room is active - reset or clear lastEmptyAt
+          if (room.lastEmptyAt) {
+            deletePromises.push(
+              rtdb.ref(`rooms/${roomId}/lastEmptyAt`).remove()
+            );
+          }
+          continue;
+        }
+        
+        // No online players - check lastEmptyAt
+        const lastEmptyAt = room.lastEmptyAt;
+        
+        if (!lastEmptyAt) {
+          // First time detecting empty room - set timestamp
+          functions.logger.info(`Room ${roomId} is now empty, starting 30min countdown`);
+          deletePromises.push(
+            rtdb.ref(`rooms/${roomId}/lastEmptyAt`).set(now)
+          );
+          continue;
+        }
+        
+        // Check if 30 minutes have passed since room became empty
+        const emptyDuration = now - lastEmptyAt;
+        
+        if (emptyDuration >= CLEANUP_THRESHOLD_MS) {
+          functions.logger.info(`Deleting abandoned room ${roomId} (empty for ${Math.round(emptyDuration / 60000)} minutes)`);
+          
+          // Delete from RTDB
+          deletePromises.push(rtdb.ref(`rooms/${roomId}`).remove());
+          
+          // Delete from Firestore (multiplayer_rooms collection)
+          deletePromises.push(
+            deleteFirestoreRoom(roomId)
+          );
+          
+          deletedCount++;
+        } else {
+          functions.logger.debug(`Room ${roomId} empty for ${Math.round(emptyDuration / 60000)} minutes, waiting...`);
+        }
+      }
+
+      await Promise.all(deletePromises);
+
+      functions.logger.info('Abandoned room cleanup completed', {
+        totalRooms: Object.keys(rooms).length,
+        deletedRooms: deletedCount,
+      });
+
+      return { success: true, deleted: deletedCount };
+    } catch (error: any) {
+      functions.logger.error('Cleanup abandoned rooms error', { error: error.message });
+      throw error;
+    }
+  });
+
+/**
+ * Helper: Delete Firestore room and all subcollections
+ */
+async function deleteFirestoreRoom(roomId: string): Promise<void> {
+  try {
+    const roomRef = db.collection('multiplayer_rooms').doc(roomId);
+    
+    // Check if room exists
+    const roomDoc = await roomRef.get();
+    if (!roomDoc.exists) {
+      functions.logger.debug(`Firestore room ${roomId} doesn't exist, skipping`);
+      return;
+    }
+    
+    // Delete players subcollection
+    const playersSnap = await roomRef.collection('players').get();
+    const playerDeletes = playersSnap.docs.map(doc => doc.ref.delete());
+    await Promise.all(playerDeletes);
+    
+    // Delete messages subcollection
+    const messagesSnap = await roomRef.collection('messages').get();
+    const messageDeletes = messagesSnap.docs.map(doc => doc.ref.delete());
+    await Promise.all(messageDeletes);
+    
+    // Delete submissions subcollection
+    const submissionsSnap = await roomRef.collection('submissions').get();
+    const submissionDeletes = submissionsSnap.docs.map(doc => doc.ref.delete());
+    await Promise.all(submissionDeletes);
+    
+    // Finally delete the room document itself
+    await roomRef.delete();
+    
+    functions.logger.info(`Deleted Firestore room ${roomId} and all subcollections`);
+  } catch (error: any) {
+    functions.logger.error(`Failed to delete Firestore room ${roomId}`, { error: error.message });
+  }
+}
+
+/**
+ * Trigger: When a player's online status changes
+ * If all players go offline, set lastEmptyAt timestamp
+ * If a player comes online, clear lastEmptyAt (reset countdown)
+ */
+export const onPlayerStatusChange = functions.database
+  .ref('rooms/{roomId}/players/{playerId}/isOnline')
+  .onWrite(async (change, context) => {
+    const { roomId, playerId } = context.params;
+    const isOnline = change.after.val();
+    const wasOnline = change.before.val();
+    
+    // Skip if no actual change
+    if (isOnline === wasOnline) return null;
+    
+    try {
+      const roomRef = rtdb.ref(`rooms/${roomId}`);
+      const roomSnap = await roomRef.once('value');
+      const roomData = roomSnap.val();
+      
+      if (!roomData) {
+        functions.logger.warn(`Room ${roomId} not found during status change`);
+        return null;
+      }
+      
+      const players = roomData.players || {};
+      
+      // Check if any player is online
+      const hasOnlinePlayers = Object.values(players).some(
+        (player: any) => player?.isOnline === true
+      );
+      
+      if (hasOnlinePlayers) {
+        // Someone is online - clear lastEmptyAt if exists
+        if (roomData.lastEmptyAt) {
+          await roomRef.child('lastEmptyAt').remove();
+          functions.logger.info(`Room ${roomId}: Player came online, reset cleanup countdown`);
+        }
+      } else {
+        // No one online - set lastEmptyAt if not already set
+        if (!roomData.lastEmptyAt) {
+          await roomRef.child('lastEmptyAt').set(Date.now());
+          functions.logger.info(`Room ${roomId}: All players offline, starting 30min cleanup countdown`);
+        }
+      }
+      
+      return null;
+    } catch (error: any) {
+      functions.logger.error(`Error handling player status change for room ${roomId}`, {
+        error: error.message,
+        playerId,
+        isOnline
+      });
+      return null;
+    }
+  });
+
+/**
+ * HTTP endpoint to manually trigger cleanup (for admin use)
+ * Can be called to immediately check and clean up abandoned rooms
+ */
+export const manualCleanupRooms = functions.https.onCall(async (data, context) => {
+  // Only allow authenticated admins
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'Must be logged in');
+  }
+  
+  // Check if user is admin (optional: implement admin check)
+  const userDoc = await db.collection('users').doc(context.auth.uid).get();
+  const userData = userDoc.data();
+  
+  if (userData?.role !== 'admin') {
+    throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+  }
+  
+  const forceDelete = data?.forceDelete === true;
+  const CLEANUP_THRESHOLD_MS = forceDelete ? 0 : 30 * 60 * 1000;
+  const now = Date.now();
+  
+  try {
+    const roomsSnap = await rtdb.ref('rooms').once('value');
+    const rooms = roomsSnap.val() || {};
+    
+    let deletedCount = 0;
+    const roomsInfo: any[] = [];
+
+    for (const [roomId, roomData] of Object.entries(rooms)) {
+      const room = roomData as any;
+      const players = room.players || {};
+      
+      const hasOnlinePlayers = Object.values(players).some(
+        (player: any) => player?.isOnline === true
+      );
+      
+      const playerCount = Object.keys(players).length;
+      const onlineCount = Object.values(players).filter(
+        (player: any) => player?.isOnline === true
+      ).length;
+      
+      roomsInfo.push({
+        roomId,
+        playerCount,
+        onlineCount,
+        lastEmptyAt: room.lastEmptyAt,
+        createdAt: room.createdAt,
+        hasOnlinePlayers
+      });
+      
+      // Delete if no online players and (forceDelete or past threshold)
+      if (!hasOnlinePlayers) {
+        const lastEmptyAt = room.lastEmptyAt || now;
+        const emptyDuration = now - lastEmptyAt;
+        
+        if (forceDelete || emptyDuration >= CLEANUP_THRESHOLD_MS) {
+          await rtdb.ref(`rooms/${roomId}`).remove();
+          await deleteFirestoreRoom(roomId);
+          deletedCount++;
+        }
+      }
+    }
+
+    return {
+      success: true,
+      totalRooms: Object.keys(rooms).length,
+      deletedRooms: deletedCount,
+      roomsInfo
+    };
+  } catch (error: any) {
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});

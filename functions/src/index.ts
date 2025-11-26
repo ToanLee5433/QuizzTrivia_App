@@ -652,4 +652,8 @@ export {
   checkRateLimit,
   archiveCompletedRooms,
   kickPlayer,
+  // Auto-cleanup functions (30 min inactivity)
+  cleanupAbandonedRooms,
+  onPlayerStatusChange,
+  manualCleanupRooms,
 } from './multiplayer/index';

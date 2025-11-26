@@ -345,7 +345,7 @@ export const DownloadedQuizzesPage: React.FC = () => {
                             clipRule="evenodd"
                           />
                         </svg>
-                        {quiz.questions.length} câu
+                        {quiz.questions?.length || 0} câu
                       </span>
 
                       <span className="flex items-center gap-1">

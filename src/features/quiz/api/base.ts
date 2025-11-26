@@ -98,11 +98,108 @@ export const updateQuiz = async (quizId: string, updates: Partial<Quiz>): Promis
 };
 
 /**
- * Delete a quiz
+ * Delete a quiz and all its subcollections
+ * This properly cleans up:
+ * - Quiz document
+ * - Questions subcollection
+ * - Access subcollection (password unlocks)
+ * - Related quiz files in Storage (if any)
  */
 export const deleteQuiz = async (quizId: string): Promise<void> => {
   try {
+    console.log(`🗑️ Deleting quiz ${quizId} and all related data...`);
+    
+    // 1. Delete questions subcollection
+    try {
+      const questionsRef = collection(db, QUIZZES_COLLECTION, quizId, 'questions');
+      const questionsSnap = await getDocs(questionsRef);
+      console.log(`   Deleting ${questionsSnap.size} questions...`);
+      
+      const questionDeletes = questionsSnap.docs.map(docSnap => deleteDoc(docSnap.ref));
+      await Promise.all(questionDeletes);
+    } catch (e) {
+      console.warn('   Could not delete questions subcollection:', e);
+    }
+    
+    // 2. Delete access subcollection (password unlock tokens)
+    try {
+      const accessRef = collection(db, QUIZZES_COLLECTION, quizId, 'access');
+      const accessSnap = await getDocs(accessRef);
+      console.log(`   Deleting ${accessSnap.size} access tokens...`);
+      
+      const accessDeletes = accessSnap.docs.map(docSnap => deleteDoc(docSnap.ref));
+      await Promise.all(accessDeletes);
+    } catch (e) {
+      console.warn('   Could not delete access subcollection:', e);
+    }
+    
+    // 3. Delete resources subcollection (if exists)
+    try {
+      const resourcesRef = collection(db, QUIZZES_COLLECTION, quizId, 'resources');
+      const resourcesSnap = await getDocs(resourcesRef);
+      if (resourcesSnap.size > 0) {
+        console.log(`   Deleting ${resourcesSnap.size} resources...`);
+        const resourceDeletes = resourcesSnap.docs.map(docSnap => deleteDoc(docSnap.ref));
+        await Promise.all(resourceDeletes);
+      }
+    } catch (e) {
+      console.warn('   Could not delete resources subcollection:', e);
+    }
+    
+    // 4. Delete quizResults related to this quiz
+    try {
+      const resultsQuery = query(collection(db, QUIZ_RESULTS_COLLECTION), where('quizId', '==', quizId));
+      const resultsSnap = await getDocs(resultsQuery);
+      if (resultsSnap.size > 0) {
+        console.log(`   Deleting ${resultsSnap.size} quiz results...`);
+        const resultDeletes = resultsSnap.docs.map(docSnap => deleteDoc(docSnap.ref));
+        await Promise.all(resultDeletes);
+      }
+    } catch (e) {
+      console.warn('   Could not delete quiz results:', e);
+    }
+    
+    // 5. Delete userQuizActivities related to this quiz
+    try {
+      const activitiesQuery = query(collection(db, 'userQuizActivities'), where('quizId', '==', quizId));
+      const activitiesSnap = await getDocs(activitiesQuery);
+      if (activitiesSnap.size > 0) {
+        console.log(`   Deleting ${activitiesSnap.size} user quiz activities...`);
+        const activityDeletes = activitiesSnap.docs.map(docSnap => deleteDoc(docSnap.ref));
+        await Promise.all(activityDeletes);
+      }
+    } catch (e) {
+      console.warn('   Could not delete user quiz activities:', e);
+    }
+    
+    // 6. Remove quizId from all user_favorites
+    try {
+      const favoritesSnap = await getDocs(collection(db, 'user_favorites'));
+      const updatePromises: Promise<void>[] = [];
+      
+      favoritesSnap.forEach(docSnap => {
+        const data = docSnap.data();
+        if (Array.isArray(data.quizIds) && data.quizIds.includes(quizId)) {
+          updatePromises.push(
+            updateDoc(docSnap.ref, {
+              quizIds: data.quizIds.filter((id: string) => id !== quizId)
+            })
+          );
+        }
+      });
+      
+      if (updatePromises.length > 0) {
+        console.log(`   Removing quiz from ${updatePromises.length} user favorites...`);
+        await Promise.all(updatePromises);
+      }
+    } catch (e) {
+      console.warn('   Could not remove from user favorites:', e);
+    }
+    
+    // 7. Delete main quiz document
     await deleteDoc(doc(db, QUIZZES_COLLECTION, quizId));
+    console.log(`✅ Quiz ${quizId} deleted successfully`);
+    
     toast.success('Xóa quiz thành công!');
   } catch (error) {
     console.error('Error deleting quiz:', error);

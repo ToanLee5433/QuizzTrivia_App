@@ -111,6 +111,7 @@ const QuizPreviewPage: React.FC = () => {
   const [creatorPhotoURL, setCreatorPhotoURL] = useState<string>('');
   const [currentViewers, setCurrentViewers] = useState<number>(0);
   const [activePlayers, setActivePlayers] = useState<number>(0);
+  const [realAverageScore, setRealAverageScore] = useState<number>(0); // Real average from quizResults
 
   const shareUrl = useMemo(() => {
     if (!quiz) return '';
@@ -247,6 +248,16 @@ const QuizPreviewPage: React.FC = () => {
           setReviewStats(stats);
         } catch (err) {
           console.error('Error fetching review stats:', err);
+        }
+        
+        // Fetch real average score from quizResults (most accurate)
+        try {
+          const { quizStatsService } = await import('../../../services/quizStatsService');
+          const realStats = await quizStatsService.getRealAverageScore(id);
+          setRealAverageScore(realStats.averageScore);
+          console.log('📊 Real average score from quizResults:', realStats);
+        } catch (err) {
+          console.error('Error fetching real average score:', err);
         }
       } catch (err) {
         console.error('Error fetching quiz:', err);
@@ -520,7 +531,8 @@ const QuizPreviewPage: React.FC = () => {
   };
   
   const completionRateValue = safePercentage(quiz.stats?.completionRate);
-  const averageScoreValue = safePercentage(quiz.stats?.averageScore);
+  // Use realAverageScore if available (from quizResults), fallback to stats
+  const averageScoreValue = realAverageScore > 0 ? realAverageScore : safePercentage(quiz.stats?.averageScore);
   const questionCount = quiz.questions?.length ?? 0;
   const hasQuestions = questionCount > 0;
   

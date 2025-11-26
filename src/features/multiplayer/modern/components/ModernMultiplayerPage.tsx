@@ -30,9 +30,11 @@ const ModernMultiplayerPage: React.FC = () => {
   const navigate = useNavigate();
   const { roomId: urlRoomId } = useParams<{ roomId?: string }>();
   const { showToast } = useToast();
-  // ✅ FIX: If URL has roomId, start with room-lobby to avoid flashing quiz-selection
-  const [currentView, setCurrentView] = useState<'quiz-selection' | 'room-lobby' | 'game-play' | 'game-results'>(urlRoomId ? 'room-lobby' : 'quiz-selection');
-  const [roomId, setRoomId] = useState<string | null>(urlRoomId || null);
+  // ✅ FIX: Always start with quiz-selection, then switch to room-lobby AFTER joinRoom completes
+  // This prevents race condition where ModernRoomLobby tries to fetch room data before it's ready
+  const [currentView, setCurrentView] = useState<'quiz-selection' | 'room-lobby' | 'game-play' | 'game-results'>('quiz-selection');
+  const [roomId, setRoomId] = useState<string | null>(null);
+  const [isRejoiningRoom, setIsRejoiningRoom] = useState(!!urlRoomId); // Show loading state while rejoining
   const [selectedQuiz, setSelectedQuiz] = useState<any>(null);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [currentUser, setCurrentUser] = useState(getAuth().currentUser);
@@ -96,34 +98,39 @@ const ModernMultiplayerPage: React.FC = () => {
   useEffect(() => {
     const rejoinRoomFromUrl = async () => {
       if (urlRoomId && !roomId) {
-        console.log('🔄 Detected room identifier in URL, attempting to rejoin:', urlRoomId);
+        console.log('🔄 Detected room identifier in URL, attempting quick rejoin:', urlRoomId);
+        setIsRejoiningRoom(true);
         
         try {
-          // Try to rejoin the room (handles both roomCode and roomId)
-          const joinResult = await modernMultiplayerService.joinRoom(urlRoomId);
+          // ⚡ Use quickRejoin for faster page reload - it checks if player is already in room
+          const joinResult = await modernMultiplayerService.quickRejoin(urlRoomId);
           setRoomId(joinResult.roomId);
           setCurrentView('room-lobby');
+          setIsRejoiningRoom(false);
+          
+          // Cache roomCode -> roomId mapping for even faster subsequent reloads
+          if (urlRoomId.length === 6) {
+            sessionStorage.setItem(`room_${urlRoomId}`, joinResult.roomId);
+          }
           
           // Only show toast once (avoid duplicate in strict mode)
           if (!sessionStorage.getItem(`rejoined-${urlRoomId}`)) {
             sessionStorage.setItem(`rejoined-${urlRoomId}`, 'true');
-            showToast({
-              type: 'success',
-              title: 'Reconnected to Room',
-              message: 'Successfully rejoined the game room.',
-              duration: 3000
-            });
+            // Don't show toast on quick rejoin to avoid distraction
           }
         } catch (error) {
           console.error('❌ Failed to rejoin room from URL:', error);
+          setIsRejoiningRoom(false);
           showToast({
             type: 'error',
             title: 'Failed to Rejoin Room',
-            message: 'Could not reconnect to the room. Returning to lobby.',
+            message: 'Could not reconnect to the room. Room may no longer exist.',
             duration: 4000
           });
           navigate('/multiplayer');
         }
+      } else {
+        setIsRejoiningRoom(false);
       }
     };
 
@@ -151,8 +158,14 @@ const ModernMultiplayerPage: React.FC = () => {
   const handleRoomCreated = (newRoomId: string, roomCode?: string) => {
     setRoomId(newRoomId);
     setCurrentView('room-lobby');
-    // Use roomCode in URL if available (6 chars), fallback to roomId
+    // Use roomCode in URL (6 chars) - shorter and easier to share
     const urlIdentifier = roomCode || newRoomId;
+    
+    // Cache roomCode -> roomId mapping for faster reload
+    if (roomCode) {
+      sessionStorage.setItem(`room_${roomCode}`, newRoomId);
+    }
+    
     navigate(`/multiplayer/${urlIdentifier}`);
     showToast({
       type: 'success',
@@ -322,7 +335,22 @@ const ModernMultiplayerPage: React.FC = () => {
           {currentView === 'game-results' && 'Game completed - viewing results'}
         </div>
         <AnimatePresence mode="wait">
-          {currentView === 'quiz-selection' && (
+          {/* Loading state when rejoining room from URL */}
+          {isRejoiningRoom && (
+            <motion.div
+              key="rejoining"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col items-center justify-center min-h-[60vh] text-white"
+            >
+              <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin mb-4" />
+              <p className="text-xl font-medium">{t('loadingRoom')}</p>
+              <p className="text-sm text-white/70 mt-2">{t('pleaseWait')}</p>
+            </motion.div>
+          )}
+
+          {!isRejoiningRoom && currentView === 'quiz-selection' && (
             <ModernQuizSelector
               key="quiz-selection"
               onRoomCreated={handleRoomCreated}
@@ -332,7 +360,7 @@ const ModernMultiplayerPage: React.FC = () => {
             />
           )}
 
-          {currentView === 'room-lobby' && roomId && (
+          {!isRejoiningRoom && currentView === 'room-lobby' && roomId && (
             <ModernRoomLobby
               key="room-lobby"
               roomId={roomId}

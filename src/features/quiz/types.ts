@@ -132,6 +132,7 @@ export interface Quiz {
   }>;
   
   // **THÊM MỚI**: Dashboard và stats properties
+  questionCount?: number; // Number of questions (for when questions array is not loaded)
   isPublic?: boolean;
   allowRetake?: boolean;
   attempts?: number;

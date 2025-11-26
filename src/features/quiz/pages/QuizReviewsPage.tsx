@@ -346,7 +346,7 @@ const QuizReviewsPage: React.FC = () => {
                 </span>
                 <span className="flex items-center space-x-1">
                   <MessageSquare className="w-4 h-4" />
-                  <span>{quiz.questions.length} {t('quizReviews.questions')}</span>
+                  <span>{quiz.questionCount || quiz.questions?.length || 0} {t('quizReviews.questions')}</span>
                 </span>
               </div>
             </div>

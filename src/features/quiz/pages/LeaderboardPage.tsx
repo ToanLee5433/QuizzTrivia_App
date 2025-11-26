@@ -134,6 +134,8 @@ const LeaderboardPage: React.FC = () => {
         let totalScore = 0;
         let totalAttempts = 0;
         let perfectScoresCount = 0;
+        let skippedDeletedQuizResults = 0; // Track skipped results for deleted quizzes
+        const skippedQuizIds = new Set<string>(); // Track unique deleted quiz IDs
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
@@ -182,10 +184,18 @@ const LeaderboardPage: React.FC = () => {
             userStat.lastActivityDate = completedAt;
           }
 
-          // Quiz statistics
+          // Quiz statistics - ONLY include quizzes that still exist in quizzesMap
           const quizId = result.quizId;
+          const quizData = quizzesMap.get(quizId);
+          
+          // Skip this result if the quiz no longer exists (deleted)
+          if (!quizData) {
+            skippedDeletedQuizResults++;
+            skippedQuizIds.add(quizId);
+            return; // Skip this iteration - don't count results for deleted quizzes
+          }
+          
           if (!quizStats.has(quizId)) {
-            const quizData = quizzesMap.get(quizId) || {};
             quizStats.set(quizId, {
               id: quizId,
               title: quizData.title || t('leaderboard.unknownQuiz'),
@@ -296,6 +306,11 @@ const LeaderboardPage: React.FC = () => {
           perfectScoresCount
         });
 
+        // Log summary of skipped results (only once, not per result)
+        if (skippedDeletedQuizResults > 0) {
+          console.warn(`⚠️ Skipped ${skippedDeletedQuizResults} quiz results from ${skippedQuizIds.size} deleted quizzes`);
+        }
+        
         console.log('✅ Leaderboard data processed successfully');
         
       } catch (error: any) {
@@ -557,7 +572,7 @@ const LeaderboardPage: React.FC = () => {
                             </span>
                           </div>
                             <div className="text-sm text-gray-500">
-                              🎯 {user.totalAttempts} {t('nav.quizzes')} • {user.perfectScores} {t('leaderboard.perfect100')} • {t('leaderboard.activity')}: {user.recentActivity}
+                              🎯 {user.totalAttempts} {t('nav.quizzes')} • {user.perfectScores} {t('leaderboard.perfect100')}
                           </div>
                         </div>
                       </div>
@@ -639,10 +654,6 @@ const LeaderboardPage: React.FC = () => {
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600 text-sm">{t('leaderboard.avgScore')}:</span>
                       <span className="font-semibold text-green-600">{Math.round(quiz.averageScore)}%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600 text-sm">{t('leaderboard.activity')}:</span>
-                      <span className="text-gray-500 text-xs">{quiz.recentActivity}</span>
                     </div>
                   </div>
                   

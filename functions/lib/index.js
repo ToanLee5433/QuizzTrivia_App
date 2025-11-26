@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.kickPlayer = exports.archiveCompletedRooms = exports.checkRateLimit = exports.getPlayerQuestions = exports.validateAnswer = exports.getPendingTagReviews = exports.reviewTags = exports.batchGenerateTags = exports.regenerateTags = exports.autoTagOnApproval = exports.getIndexStats = exports.rebuildFullIndex = exports.askRAGHealth = exports.askRAG = exports.analyzeQuizResult = exports.processFile = exports.sendOTP = exports.generateQuestionsHTTP = exports.testAI = exports.generateQuestions = void 0;
+exports.manualCleanupRooms = exports.onPlayerStatusChange = exports.cleanupAbandonedRooms = exports.kickPlayer = exports.archiveCompletedRooms = exports.checkRateLimit = exports.getPlayerQuestions = exports.validateAnswer = exports.getPendingTagReviews = exports.reviewTags = exports.batchGenerateTags = exports.regenerateTags = exports.autoTagOnApproval = exports.getIndexStats = exports.rebuildFullIndex = exports.askRAGHealth = exports.askRAG = exports.analyzeQuizResult = exports.processFile = exports.sendOTP = exports.generateQuestionsHTTP = exports.testAI = exports.generateQuestions = void 0;
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const generative_ai_1 = require("@google/generative-ai");
@@ -540,4 +540,8 @@ Object.defineProperty(exports, "getPlayerQuestions", { enumerable: true, get: fu
 Object.defineProperty(exports, "checkRateLimit", { enumerable: true, get: function () { return index_1.checkRateLimit; } });
 Object.defineProperty(exports, "archiveCompletedRooms", { enumerable: true, get: function () { return index_1.archiveCompletedRooms; } });
 Object.defineProperty(exports, "kickPlayer", { enumerable: true, get: function () { return index_1.kickPlayer; } });
+// Auto-cleanup functions (30 min inactivity)
+Object.defineProperty(exports, "cleanupAbandonedRooms", { enumerable: true, get: function () { return index_1.cleanupAbandonedRooms; } });
+Object.defineProperty(exports, "onPlayerStatusChange", { enumerable: true, get: function () { return index_1.onPlayerStatusChange; } });
+Object.defineProperty(exports, "manualCleanupRooms", { enumerable: true, get: function () { return index_1.manualCleanupRooms; } });
 //# sourceMappingURL=index.js.map

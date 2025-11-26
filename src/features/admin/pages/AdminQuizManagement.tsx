@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ROUTES } from '../../../config/routes';
@@ -9,7 +9,6 @@ import {
   getDocs, 
   doc, 
   updateDoc, 
-  deleteDoc,
   query, 
   orderBy,
   where,
@@ -19,6 +18,8 @@ import { db } from '../../../lib/firebase/config';
 import { RootState } from '../../../lib/store';
 import { useNotifications } from '../../../hooks/useNotifications';
 import { formatDate } from '../../../lib/utils/helpers';
+import { removeQuiz } from '../../quiz/store';
+import { deleteQuiz as deleteQuizApi } from '../../quiz/api/base';
 import { 
   Search, 
   Eye, 
@@ -70,6 +71,7 @@ interface EditRequest {
 
 const AdminQuizManagement: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { notifyQuizApproved, notifyQuizRejected, notifyEditRequestApproved, notifyEditRequestRejected } = useNotifications();
@@ -462,10 +464,17 @@ const AdminQuizManagement: React.FC = () => {
 
     try {
       console.log('🗑️ Deleting quiz from database:', quizId);
-      await deleteDoc(doc(db, 'quizzes', quizId));
+      
+      // Use proper deleteQuiz API that handles subcollections
+      await deleteQuizApi(quizId);
       console.log('✅ Quiz deleted from database successfully');
       
+      // Update local state
       setQuizzes(prev => prev.filter(quiz => quiz.id !== quizId));
+      
+      // Also update Redux store
+      dispatch(removeQuiz(quizId));
+      
       toast.success(t('admin.quizManagement.success.deleted'));
     } catch (error) {
       console.error('❌ Error deleting quiz:', error);

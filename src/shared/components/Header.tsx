@@ -10,7 +10,7 @@ import { logout } from '../../features/auth/store';
 import { toast } from 'react-toastify';
 import NotificationCenter from './NotificationCenter';
 import LanguageSwitcher from './LanguageSwitcher';
-import { LogOut, Settings, Crown, Zap, Home, BookOpen, Heart, Trophy, UserCircle, Plus, ChevronDown, HardDrive } from 'lucide-react';
+import { LogOut, Settings, Crown, GraduationCap, Home, BookOpen, Heart, Trophy, UserCircle, Plus, ChevronDown, HardDrive } from 'lucide-react';
 import { setUserOffline } from '../../utils/presenceUtils';
 
 interface HeaderProps {
@@ -124,7 +124,7 @@ const Header: React.FC<HeaderProps> = () => {
                   ? 'bg-gradient-to-br from-blue-500 to-purple-600 ring-blue-200 dark:ring-blue-800 group-hover:ring-blue-300 dark:group-hover:ring-blue-700' 
                   : 'bg-white/20 backdrop-blur-md ring-white/40 group-hover:ring-white/60'
               } group-hover:scale-110 group-hover:rotate-6`}>
-                <Zap className={`w-4 h-4 sm:w-5 sm:h-5 transition-colors duration-300 ${
+                <GraduationCap className={`w-4 h-4 sm:w-5 sm:h-5 transition-colors duration-300 ${
                   scrolled ? 'text-white' : 'text-white group-hover:text-yellow-200'
                 }`} />
               </div>

@@ -44,7 +44,10 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [pointsEarned, setPointsEarned] = useState(0);
   const [activePowerUps, setActivePowerUps] = useState<PowerUpType[]>([]);
-  const [timeLeft, setTimeLeft] = useState(questionState.timeRemaining);
+  const [timeLeft, setTimeLeft] = useState(questionState?.timeRemaining || 30);
+
+  // Guard: Check if question data is ready (after hooks)
+  const hasQuestionData = questionState?.question?.text && questionState?.question?.answers;
 
   // ============= TIMER =============
   useEffect(() => {
@@ -143,6 +146,22 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
   const nextStreakBonus = useMemo(() => {
     return STREAK_BONUSES.find(b => b.streak > player.streak);
   }, [player.streak]);
+
+  // Show loading if question data not ready
+  if (!hasQuestionData) {
+    return (
+      <div className="h-full flex items-center justify-center bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
+        <div className="text-center">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+            className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"
+          />
+          <p className="text-white text-lg">Đang tải câu hỏi...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">

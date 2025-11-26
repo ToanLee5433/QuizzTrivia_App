@@ -347,7 +347,7 @@ const MultiplayerLobby: React.FC = () => {
                 <div>
                   <div className="font-bold text-gray-900">{selectedQuiz.title}</div>
                   <div className="text-sm text-gray-600">
-                    {t('multiplayer.questionsCount', { count: selectedQuiz.questions.length })} • {selectedQuiz.difficulty === 'easy' ? t('quiz.difficulty.easy') : selectedQuiz.difficulty === 'medium' ? t('quiz.difficulty.medium') : t('quiz.difficulty.hard')}
+                    {t('multiplayer.questionsCount', { count: selectedQuiz.questionCount || selectedQuiz.questions?.length || 0 })} • {selectedQuiz.difficulty === 'easy' ? t('quiz.difficulty.easy') : selectedQuiz.difficulty === 'medium' ? t('quiz.difficulty.medium') : t('quiz.difficulty.hard')}
                   </div>
                 </div>
               </div>

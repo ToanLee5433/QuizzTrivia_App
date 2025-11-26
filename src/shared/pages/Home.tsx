@@ -91,11 +91,38 @@ const Home: React.FC = () => {
   useEffect(() => {
     if (quizzes.length > 0) {
       // **THÊM MỚI**: Set featured quizzes (trending/popular)
+      // Filter by: status === 'approved' (already filtered by service) 
+      // OR visibility === 'public' OR isPublic === true
+      // This handles both old (isPublic) and new (visibility) formats
       const trending = quizzes
-        .filter(q => q.isPublic)
+        .filter(q => {
+          // Basic validation - quiz must have id and title
+          if (!q || !q.id || !q.title) {
+            console.warn('⚠️ Invalid quiz found in Redux store:', q?.id);
+            return false;
+          }
+          
+          // Filter out quizzes with invalid/placeholder titles
+          const invalidTitles = ['quiz không xác định', 'untitled', 'undefined', 'null', ''];
+          if (invalidTitles.includes(q.title.toLowerCase().trim())) {
+            console.warn('⚠️ Quiz with invalid title filtered out:', q.id, q.title);
+            return false;
+          }
+          
+          // Quiz already approved from service, but also check visibility
+          const isVisible = q.isPublic === true || 
+                           q.visibility === 'public' || 
+                           q.visibility === 'unlisted' ||
+                           q.visibility === undefined; // Default public
+          // Also filter out quizzes with no questions
+          const hasQuestions = (q.questionCount && q.questionCount > 0) || 
+                              (q.questions && q.questions.length > 0);
+          return isVisible && hasQuestions;
+        })
         .sort((a, b) => (b.attempts || 0) - (a.attempts || 0))
         .slice(0, 6);
       setFeaturedQuizzes(trending);
+      console.log('🔥 Featured quizzes loaded:', trending.length, trending.map(q => q.title));
     }
   }, [quizzes]);
 

@@ -8,7 +8,10 @@ import {
   collection,
   addDoc,
   serverTimestamp,
-  runTransaction
+  runTransaction,
+  query,
+  where,
+  getDocs
 } from 'firebase/firestore';
 
 export interface QuizStats {
@@ -301,6 +304,47 @@ class QuizStatsService {
       });
     } catch (error) {
       console.error('Error initializing stats:', error);
+    }
+  }
+
+  /**
+   * Get real average score from quizResults collection
+   * This is the most accurate way to calculate average score
+   * because it reads directly from actual quiz results
+   */
+  async getRealAverageScore(quizId: string): Promise<{ averageScore: number; totalAttempts: number; completions: number }> {
+    try {
+      const resultsQuery = query(
+        collection(db, 'quizResults'),
+        where('quizId', '==', quizId)
+      );
+      const resultsSnapshot = await getDocs(resultsQuery);
+      
+      if (resultsSnapshot.empty) {
+        return { averageScore: 0, totalAttempts: 0, completions: 0 };
+      }
+
+      let totalScore = 0;
+      let completions = 0;
+
+      resultsSnapshot.forEach(doc => {
+        const result = doc.data();
+        // Normalize score to 0-100 percentage
+        const score = result.score || 0;
+        totalScore += score;
+        completions++;
+      });
+
+      const averageScore = completions > 0 ? Math.round(totalScore / completions) : 0;
+      
+      return {
+        averageScore: Math.min(100, Math.max(0, averageScore)), // Ensure 0-100 range
+        totalAttempts: completions,
+        completions
+      };
+    } catch (error) {
+      console.error('Error getting real average score:', error);
+      return { averageScore: 0, totalAttempts: 0, completions: 0 };
     }
   }
 }

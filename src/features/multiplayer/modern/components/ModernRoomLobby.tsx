@@ -22,6 +22,7 @@ import { collection, onSnapshot, query, orderBy, deleteDoc, getDocs } from 'fire
 import { ref, onValue, getDatabase } from 'firebase/database';
 import QRCodeLib from 'qrcode';
 import { modernMultiplayerService, ModernPlayer, ModernQuiz } from '../services/modernMultiplayerService';
+import MemoizedPlayerCard from './MemoizedPlayerCard';
 import KickPlayerConfirmDialog from './KickPlayerConfirmDialog';
 import SharedScreen from './SharedScreen';
 import { gameEngine } from '../services/gameEngine';
@@ -29,6 +30,7 @@ import { gameEngine } from '../services/gameEngine';
 // Import enhanced components
 import ModernRealtimeChat from './ModernRealtimeChat';
 import ModernConnectionStatus from './ModernConnectionStatus';
+import ModernHostControlPanel from './ModernHostControlPanel';
 import ModernGameAnnouncements from './ModernGameAnnouncements';
 import { useGameAnnouncements } from './ModernGameAnnouncements';
 
@@ -80,15 +82,14 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
     });
   }, []);
 
-  // Removed - not used in simplified UI
-  // const handleToggleReady = useCallback(async () => {
-  //   try {
-  //     await modernMultiplayerService.toggleReady();
-  //     console.log('✅ Ready status toggled');
-  //   } catch (error) {
-  //     console.error('❌ Failed to toggle ready:', error);
-  //   }
-  // }, []);
+  const handleToggleReady = useCallback(async () => {
+    try {
+      await modernMultiplayerService.toggleReady();
+      console.log('✅ Ready status toggled');
+    } catch (error) {
+      console.error('❌ Failed to toggle ready:', error);
+    }
+  }, []);
 
   const handleToggleHostParticipation = useCallback(async () => {
     try {
@@ -108,18 +109,17 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
     }
   }, []);
 
-  // Removed - not used in simplified UI
-  // const handleTransferHost = useCallback(async (player: ModernPlayer) => {
-  //   try {
-  //     const confirmed = window.confirm(`Chuyển quyền host cho ${player.name}?`);
-  //     if (confirmed) {
-  //       await modernMultiplayerService.transferHost(player.id);
-  //       console.log('✅ Host transferred to:', player.name);
-  //     }
-  //   } catch (error) {
-  //     console.error('❌ Failed to transfer host:', error);
-  //   }
-  // }, []);
+  const handleTransferHost = useCallback(async (player: ModernPlayer) => {
+    try {
+      const confirmed = window.confirm(`Chuyển quyền host cho ${player.name}?`);
+      if (confirmed) {
+        await modernMultiplayerService.transferHost(player.id);
+        console.log('✅ Host transferred to:', player.name);
+      }
+    } catch (error) {
+      console.error('❌ Failed to transfer host:', error);
+    }
+  }, []);
 
   const handleKickPlayer = useCallback(async () => {
     if (!kickDialog.player) return;
@@ -152,7 +152,9 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
   // Helper functions
   const generateQRCode = async () => {
     try {
-      const roomUrl = `${window.location.origin}/multiplayer/${roomId}`;
+      // Use roomCode (6 chars) for shorter, cleaner URL
+      const roomCode = roomData?.code || roomId;
+      const roomUrl = `${window.location.origin}/multiplayer/${roomCode}`;
       const qrDataUrl = await QRCodeLib.toDataURL(roomUrl, {
         width: 256,
         margin: 2,
@@ -182,7 +184,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
   const handleShareRoom = async () => {
     try {
       const roomCode = roomData?.code || roomId;
-      const roomUrl = `${window.location.origin}/multiplayer/${roomId}`;
+      const roomUrl = `${window.location.origin}/multiplayer/${roomCode}`;
       if (navigator.share) {
         await navigator.share({
           title: 'Join my Quiz Room',
@@ -190,7 +192,8 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
           url: roomUrl
         });
       } else {
-        await navigator.clipboard.writeText(roomCode);
+        // Fallback: copy full URL instead of just code
+        await navigator.clipboard.writeText(roomUrl);
         setCopySuccess(true);
         setTimeout(() => setCopySuccess(false), 2000);
       }
@@ -311,11 +314,11 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
   
   const readyCount = useMemo(() => activePlayers.filter((p) => p.isReady).length, [activePlayers]);
   const allReady = useMemo(() => {
-    // Game can start if: at least 2 active players AND at least 1 non-host player is ready
-    const nonHostActivePlayers = activePlayers.filter(p => p.id !== roomData?.hostId);
-    const readyNonHostPlayers = nonHostActivePlayers.filter(p => p.isReady);
-    return activePlayers.length >= 2 && readyNonHostPlayers.length >= 1;
-  }, [activePlayers, roomData?.hostId]);
+    // Game can start if: at least 1 player (role='player') is ready
+    // Host can be spectator or player - doesn't matter, just need 1 ready player
+    const readyPlayers = playersList.filter(p => p.role === 'player' && p.isReady);
+    return readyPlayers.length >= 1;
+  }, [playersList]);
   const isHost = useMemo(() => {
     // Only check roomData.hostId - no fallback to first player
     const result = roomData?.hostId === currentUserId;
@@ -402,6 +405,16 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
         if (roomData) {
           setRoomData(roomData);
           if (roomData.quiz) setQuiz(roomData.quiz);
+        } else {
+          // Room doesn't exist on initial fetch - redirect immediately
+          console.error('❌ Room does not exist on initial fetch');
+          setIsLoadingRoom(false);
+          initializingRef.current = false;
+          import('react-toastify').then(({ toast }) => {
+            toast.error(t('roomNotExist'));
+          });
+          onBack();
+          return; // Exit early - don't set up listeners for non-existent room
         }
         
         setIsLoadingRoom(false);
@@ -438,6 +451,11 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
                 }
               } else {
                 console.error('❌ Room document does not exist');
+                // Room was deleted or doesn't exist - show message and redirect
+                import('react-toastify').then(({ toast }) => {
+                  toast.error(t('roomNotExist'));
+                });
+                onBack();
               }
             },
             (error) => {
@@ -524,6 +542,38 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
       unsubscribe();
     };
   }, [roomId]);
+
+  // ✅ CRITICAL: Listen to game state changes to auto-transition ALL players to game view
+  useEffect(() => {
+    if (!roomId) return;
+    
+    const database = getDatabase();
+    const gameRef = ref(database, `games/${roomId}`);
+    
+    const unsubscribe = onValue(gameRef, (snapshot) => {
+      const gameData = snapshot.val();
+      
+      if (gameData) {
+        const gameStatus = gameData.status;
+        console.log('🎮 Game status update:', gameStatus);
+        
+        // When game status is 'starting', 'answering', or 'question', transition to game view
+        if (gameStatus === 'starting' || gameStatus === 'answering' || gameStatus === 'question') {
+          console.log('🚀 Game is active, transitioning to game view...');
+          // Delay slightly to ensure game state is fully synced
+          setTimeout(() => {
+            onGameStart();
+          }, 500);
+        }
+      }
+    }, (error) => {
+      console.error('❌ Game state listener error:', error);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [roomId, onGameStart]);
 
   const handleReconnect = useCallback(async () => {
     try {
@@ -772,9 +822,18 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
             <div className="space-y-3">
               <AnimatePresence>
                 {spectators.map((spectator) => (
-                  <div key={spectator.id} className="p-4 bg-white/10 rounded-xl">
-                    <p className="text-white">{spectator.name} (Spectator)</p>
-                  </div>
+                  <MemoizedPlayerCard
+                    key={spectator.id}
+                    player={spectator}
+                    isHost={isHost}
+                    currentUserId={currentUserId}
+                    hostId={roomData?.hostId || ''}
+                    onKickPlayer={handleKickPlayerClick}
+                    onTransferHost={handleTransferHost}
+                    onToggleReady={handleToggleReady}
+                    onToggleHostParticipation={handleToggleHostParticipation}
+                    onToggleRole={handleToggleRole}
+                  />
                 ))}
               </AnimatePresence>
 
@@ -831,29 +890,18 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
             <div className="space-y-3">
               <AnimatePresence>
                 {activePlayers.map((player) => (
-                  <div key={player.id} className="p-4 bg-white/10 rounded-xl flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      {player.photoURL ? (
-                        <img src={player.photoURL} alt={player.name} className="w-10 h-10 rounded-full" />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
-                          {player.name.charAt(0)}
-                        </div>
-                      )}
-                      <div>
-                        <p className="text-white font-semibold">{player.name}</p>
-                        <p className="text-sm text-gray-400">{player.isReady ? '✅ Ready' : '⏳ Not Ready'}</p>
-                      </div>
-                    </div>
-                    {isHost && player.id !== currentUserId && (
-                      <button
-                        onClick={() => handleKickPlayerClick(player)}
-                        className="px-3 py-1 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30"
-                      >
-                        Kick
-                      </button>
-                    )}
-                  </div>
+                  <MemoizedPlayerCard
+                    key={player.id}
+                    player={player}
+                    isHost={isHost}
+                    currentUserId={currentUserId}
+                    hostId={roomData?.hostId || ''}
+                    onKickPlayer={handleKickPlayerClick}
+                    onTransferHost={handleTransferHost}
+                    onToggleReady={handleToggleReady}
+                    onToggleHostParticipation={handleToggleHostParticipation}
+                    onToggleRole={handleToggleRole}
+                  />
                 ))}
               </AnimatePresence>
 
@@ -874,27 +922,55 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
 
         {/* Side Panel */}
         <div className="xl:col-span-1 space-y-4 sm:space-y-6">
-          {/* Host Control Panel (only for host) - MOVED TO TOP */}
+          {/* Host Control Panel (only for host) - Full featured component */}
           {isHost && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20"
             >
-              <h3 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
-                <Crown className="w-5 h-5 text-yellow-400" />
-                <span>Host Controls</span>
-              </h3>
-              <div className="space-y-3">
-                <button
-                  onClick={handleToggleHostParticipation}
-                  className="w-full px-4 py-2 bg-purple-500/20 text-purple-300 rounded-xl hover:bg-purple-500/30"
-                >
-                  {players[currentUserId]?.isParticipating !== false ? 'Switch to Spectator' : 'Join Game'}
-                </button>
-                <p className="text-xs text-gray-400 text-center">Game will start when ready</p>
-              </div>
+              <ModernHostControlPanel
+                roomId={roomId}
+                currentUserId={currentUserId}
+                isHost={isHost}
+                hostIsParticipating={players[currentUserId]?.isParticipating !== false}
+                players={playersList.map(p => ({
+                  id: p.id,
+                  name: p.name,
+                  photoURL: p.photoURL,
+                  isReady: p.isReady,
+                  isOnline: p.isOnline !== false,
+                  score: p.score || 0,
+                  joinedAt: p.joinedAt || Date.now()
+                }))}
+                onGameStart={handleStartGame}
+                onGamePause={() => console.log('Game paused')}
+                onGameResume={() => console.log('Game resumed')}
+                onKickPlayer={(playerId) => {
+                  const player = playersList.find(p => p.id === playerId);
+                  if (player) handleKickPlayerClick(player);
+                }}
+                onTransferHost={async (playerId) => {
+                  try {
+                    await modernMultiplayerService.transferHost(playerId);
+                    console.log('✅ Host transferred to:', playerId);
+                  } catch (error) {
+                    console.error('❌ Failed to transfer host:', error);
+                  }
+                }}
+                onToggleHostParticipation={handleToggleHostParticipation}
+                onSettingsUpdate={async (settings) => {
+                  try {
+                    const database = getDatabase();
+                    const settingsRef = ref(database, `rooms/${roomId}/settings`);
+                    const { update } = await import('firebase/database');
+                    await update(settingsRef, settings);
+                    console.log('✅ Settings updated:', settings);
+                  } catch (error) {
+                    console.error('❌ Failed to update settings:', error);
+                  }
+                }}
+              />
             </motion.div>
           )}
 
@@ -1036,7 +1112,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
               {/* Room Code */}
               <div className="text-center mb-4">
                 <p className="text-blue-200 text-sm mb-2">{t('roomCode')}</p>
-                <p className="text-2xl font-bold text-white">{roomId}</p>
+                <p className="text-2xl font-bold text-white tracking-wider">{roomData?.code || roomId}</p>
               </div>
 
               {/* Action Buttons */}

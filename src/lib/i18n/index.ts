@@ -5,6 +5,23 @@ import Backend from 'i18next-http-backend';
 
 const CACHE_BUSTER = import.meta.env.DEV ? Date.now() : 1731754800000;
 
+// 🧹 Cleanup old i18n cache entries when localStorage is full
+function cleanupI18nCache() {
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith('i18n_cache_')) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    console.log(`[i18n] Cleaned up ${keysToRemove.length} old cache entries`);
+  } catch (e) {
+    console.warn('[i18n] Failed to cleanup cache:', e);
+  }
+}
+
 // i18n configuration - using external locale files with offline support
 
 i18n
@@ -61,8 +78,16 @@ i18n
           const cacheKey = `i18n_cache_${url}`;
           try {
             localStorage.setItem(cacheKey, JSON.stringify(data));
-          } catch (e) {
-            console.warn('Failed to cache translation in localStorage:', e);
+          } catch (e: any) {
+            // 🧹 If localStorage is full, cleanup old entries and retry
+            if (e?.name === 'QuotaExceededError') {
+              cleanupI18nCache();
+              try {
+                localStorage.setItem(cacheKey, JSON.stringify(data));
+              } catch {
+                // Still failed, just skip caching
+              }
+            }
           }
           
           callback(null, { status: 200, data });

@@ -5,11 +5,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { getDatabase, ref, onValue, off } from 'firebase/database';
 import PlayerGameView from './PlayerGameView';
 import SpectatorGameView from './SpectatorGameView';
 import HostGameView from './HostGameView';
+import GameResultsView from './GameResultsView';
 import { GameState, RTDB_PATHS } from '../../types/game.types';
 import { gameEngine } from '../../services/gameEngine';
 
@@ -44,12 +45,7 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
           setGameState(data as GameState);
           setIsLoading(false);
           
-          // Handle game finished
-          if (data.status === 'finished') {
-            setTimeout(() => {
-              onGameEnd();
-            }, 2000);
-          }
+          // Game finished is now handled by GameResultsView
         } else {
           setError('Game not found');
           setIsLoading(false);
@@ -69,7 +65,7 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
 
   // Submit answer handler
   const handleAnswerSubmit = async (answer: any) => {
-    if (!gameState || !gameState.currentQuestion) return;
+    if (!gameState || !gameState.currentQuestion || !gameState.players) return;
 
     try {
       const player = gameState.players[currentUserId];
@@ -121,6 +117,22 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
     );
   }
 
+  // Check if players data is available yet
+  if (!gameState.players) {
+    return (
+      <div className="h-full flex items-center justify-center bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
+        <div className="text-center">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+            className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"
+          />
+          <p className="text-white text-lg">Đang tải dữ liệu người chơi...</p>
+        </div>
+      </div>
+    );
+  }
+
   const currentPlayer = gameState.players[currentUserId];
   
   if (!currentPlayer) {
@@ -159,27 +171,12 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
 
   if (gameState.status === 'finished') {
     return (
-      <div className="h-full flex items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-pink-900">
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="text-center"
-        >
-          <motion.div
-            animate={{ rotate: [0, 10, -10, 0] }}
-            transition={{ duration: 0.5, repeat: 2 }}
-            className="mb-6"
-          >
-            <Trophy className="w-24 h-24 text-yellow-400 mx-auto" />
-          </motion.div>
-          <h2 className="text-4xl font-bold text-white mb-4">
-            Trò chơi kết thúc!
-          </h2>
-          <p className="text-xl text-gray-300 mb-8">
-            Đang chuyển đến kết quả...
-          </p>
-        </motion.div>
-      </div>
+      <GameResultsView
+        roomId={roomId}
+        players={gameState.players}
+        currentUserId={currentUserId}
+        onBackToLobby={onGameEnd}
+      />
     );
   }
 

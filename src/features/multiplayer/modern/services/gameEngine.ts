@@ -195,6 +195,52 @@ class GameEngine {
     try {
       logger.info('🎬 Starting game', { roomId, questionCount: questions.length });
 
+      // ✅ CRITICAL: Copy players from rooms/{roomId}/players to games/{roomId}/players
+      const roomPlayersRef = ref(this.db, `rooms/${roomId}/players`);
+      const roomPlayersSnap = await get(roomPlayersRef);
+      const roomPlayers = roomPlayersSnap.val() as Record<string, any> | null;
+
+      if (roomPlayers) {
+        // Transform room players to game players with proper structure
+        const gamePlayers: Record<string, ModernPlayer> = {};
+        const playerOrder: string[] = [];
+
+        Object.entries(roomPlayers).forEach(([playerId, player]) => {
+          gamePlayers[playerId] = {
+            id: playerId,
+            userId: player.id || playerId,
+            name: player.name || 'Player',
+            photoURL: player.photoURL,
+            role: player.role || 'player',
+            status: 'playing',
+            score: 0,
+            correctAnswers: 0,
+            totalAnswers: 0,
+            streak: 0,
+            maxStreak: 0,
+            avgResponseTime: 0,
+            powerUps: [],
+            activePowerUps: [],
+            powerUpPoints: 100,
+            isReady: player.isReady ?? true,
+            isOnline: player.isOnline ?? true,
+            hasAnswered: false,
+            joinedAt: player.joinedAt || Date.now(),
+            lastActiveAt: Date.now(),
+          };
+          playerOrder.push(playerId);
+        });
+
+        // Update game with players
+        const gameRef = ref(this.db, RTDB_PATHS.games(roomId));
+        await update(gameRef, {
+          players: gamePlayers,
+          playerOrder,
+        });
+
+        logger.info('✅ Players synced to game', { roomId, playerCount: playerOrder.length });
+      }
+
       // Update game status
       const gameRef = ref(this.db, RTDB_PATHS.games(roomId));
       await update(gameRef, {
@@ -223,6 +269,25 @@ class GameEngine {
   }
 
   /**
+   * Remove undefined values from object recursively (Firebase RTDB doesn't allow undefined)
+   */
+  private removeUndefined(obj: any): any {
+    if (obj === null || obj === undefined) return null;
+    if (typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.removeUndefined(item));
+    }
+    
+    const cleaned: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (value !== undefined) {
+        cleaned[key] = this.removeUndefined(value);
+      }
+    }
+    return cleaned;
+  }
+
+  /**
    * Start a question
    */
   async startQuestion(roomId: string, questionIndex: number, question: Question): Promise<void> {
@@ -231,9 +296,12 @@ class GameEngine {
 
       const timeLimit = question.points || 30; // Default 30s
 
+      // Clean question object to remove undefined values (Firebase RTDB requirement)
+      const cleanQuestion = this.removeUndefined(question);
+
       const questionState: QuestionState = {
         questionIndex,
-        question,
+        question: cleanQuestion,
         startedAt: Date.now(),
         timeLimit,
         timeRemaining: timeLimit,
@@ -708,7 +776,13 @@ class GameEngine {
     try {
       const playersRef = ref(this.db, RTDB_PATHS.players(roomId));
       const playersSnap = await get(playersRef);
-      const players = playersSnap.val() as Record<string, ModernPlayer>;
+      const players = playersSnap.val() as Record<string, ModernPlayer> | null;
+
+      // Guard: Skip if no players data
+      if (!players) {
+        logger.warn('No players data found for leaderboard update', { roomId });
+        return;
+      }
 
       // Get previous leaderboard for rank changes
       const leaderboardRef = ref(this.db, RTDB_PATHS.leaderboard(roomId));
@@ -803,24 +877,35 @@ class GameEngine {
     try {
       const questionRef = ref(this.db, RTDB_PATHS.currentQuestion(roomId));
       const questionSnap = await get(questionRef);
-      const questionState = questionSnap.val() as QuestionState;
+      const questionState = questionSnap.val() as QuestionState | null;
 
-      if (!questionState) return null;
+      // Guard: No question state yet
+      if (!questionState || !questionState.question) {
+        return null;
+      }
 
       const playersRef = ref(this.db, RTDB_PATHS.players(roomId));
       const playersSnap = await get(playersRef);
-      const players = playersSnap.val() as Record<string, ModernPlayer>;
+      const players = playersSnap.val() as Record<string, ModernPlayer> | null;
+
+      // Guard: No players data
+      if (!players) {
+        return null;
+      }
 
       const playerCount = Object.values(players).filter(p => p.role === 'player').length;
+      const answers = questionState.question.answers || [];
 
       // Build answer distribution for spectators
-      const distribution = Object.entries(questionState.answerDistribution).map(([answerId, playerIds]) => {
-        const answer = questionState.question.answers.find(a => a.id === answerId);
-        const playerList = (playerIds as string[]).map(pid => ({
+      const answerDistribution = questionState.answerDistribution || {};
+      const distribution = Object.entries(answerDistribution).map(([answerId, playerIds]) => {
+        const answer = answers.find((a: any) => a.id === answerId);
+        const pIds = Array.isArray(playerIds) ? playerIds : [];
+        const playerList = pIds.map(pid => ({
           id: pid,
           name: players[pid]?.name || 'Unknown',
           photoURL: players[pid]?.photoURL,
-          answeredAt: questionState.answers[pid]?.answeredAt || 0,
+          answeredAt: questionState.answers?.[pid]?.answeredAt || 0,
         }));
 
         return {
@@ -835,12 +920,13 @@ class GameEngine {
       return {
         question: questionState.question,
         answerDistribution: distribution,
-        totalAnswered: questionState.answerCount,
+        totalAnswered: questionState.answerCount || 0,
         totalPlayers: playerCount,
-        timeRemaining: questionState.timeRemaining,
+        timeRemaining: questionState.timeRemaining || 0,
       };
     } catch (error) {
-      logger.error('❌ Failed to get spectator view data', { error });
+      // Only log occasionally to avoid spam
+      // logger.error('❌ Failed to get spectator view data', { error });
       return null;
     }
   }

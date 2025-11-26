@@ -37,7 +37,21 @@
     "rooms": {
       "$roomId": {
         ".read": "auth != null",
-        ".write": "auth != null",
+        ".write": "auth != null && (!data.exists() || data.child('hostId').val() == auth.uid || !newData.exists() && data.child('hostId').val() == auth.uid)",
+        
+        "hostId": {
+          ".validate": "newData.isString()"
+        },
+        
+        "lastEmptyAt": {
+          ".read": "auth != null",
+          ".write": "auth != null",
+          ".validate": "!newData.exists() || newData.isNumber()"
+        },
+        
+        "createdAt": {
+          ".validate": "newData.isNumber()"
+        },
         
         "players": {
           ".read": "auth != null",

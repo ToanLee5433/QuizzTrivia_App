@@ -347,19 +347,22 @@ export const useGameAnnouncements = (roomId: string) => {
       };
     } = {}
   ) => {
+    // Build announcement object, excluding undefined values (Firebase RTDB doesn't allow undefined)
     const announcement: Omit<GameAnnouncement, 'id'> = {
       type,
       title,
       message,
-      userId: options.userId,
-      username: options.username,
-      photoURL: options.photoURL,
-      data: options.data,
       timestamp: Date.now(),
       priority: options.priority || 'medium',
       duration: options.duration || 5000,
-      action: options.action
     };
+    
+    // Only add optional fields if they have values
+    if (options.userId) announcement.userId = options.userId;
+    if (options.username) announcement.username = options.username;
+    if (options.photoURL) announcement.photoURL = options.photoURL;
+    if (options.data) announcement.data = options.data;
+    if (options.action) announcement.action = options.action;
 
     const announcementsRef = ref(db, `rooms/${roomId}/announcements`);
     push(announcementsRef, announcement);
