@@ -2,10 +2,11 @@
  * 🎯 Quiz Recommendation Card Component
  * 
  * Beautiful card showing quiz recommendations with image, stats, and direct link
+ * v4.2: Added viewCount and averageScore display
  */
 
 import { motion } from 'framer-motion';
-import { Star, Users, ArrowRight, BookOpen } from 'lucide-react';
+import { Star, Users, ArrowRight, BookOpen, Lock, Eye, Trophy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { QuizRecommendation } from '../../lib/genkit/types';
@@ -42,14 +43,26 @@ export function QuizRecommendationCard({ quiz, index, onNavigate }: QuizRecommen
       case 'hard':
         return '🔥 Khó';
       default:
-        return '📝 Chưa xác định';
+        return '📝 Quiz';
     }
   };
 
+  // Strip HTML tags from description (fallback if backend didn't clean)
+  const cleanDescription = (text?: string) => {
+    if (!text) return '';
+    return text
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .trim();
+  };
+
   const handleClick = () => {
-    onNavigate?.(); // Call onNavigate callback if provided
+    onNavigate?.();
     navigate(`/quiz/${quiz.quizId}/preview`);
   };
+
+  const description = cleanDescription(quiz.description);
 
   return (
     <motion.div
@@ -83,47 +96,66 @@ export function QuizRecommendationCard({ quiz, index, onNavigate }: QuizRecommen
         {/* Quiz Info */}
         <div className="flex-1 min-w-0">
           {/* Title */}
-          <h4 className="font-bold text-base text-gray-900 dark:text-white line-clamp-2 mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+          <h4 className="font-bold text-base text-gray-900 dark:text-white line-clamp-2 mb-1 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
             {quiz.title}
           </h4>
 
-          {/* Description */}
-          {quiz.description && (
-            <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">
-              {quiz.description}
+          {/* Description - cleaned */}
+          {description && (
+            <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
+              {description}
             </p>
           )}
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 gap-2">
-            {/* Difficulty */}
-            <div className={`px-2 py-1 rounded-lg border text-xs font-semibold ${getDifficultyColor(quiz.difficulty)}`}>
+          {/* Stats Row - Always show difficulty */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Difficulty - Always visible */}
+            <span className={`px-2 py-0.5 rounded-full border text-xs font-semibold ${getDifficultyColor(quiz.difficulty)}`}>
               {getDifficultyLabel(quiz.difficulty)}
-            </div>
+            </span>
 
-            {/* Question Count */}
+            {/* Password Protected Badge */}
+            {quiz.hasPassword && (
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/50 border border-amber-400 dark:border-amber-600 text-amber-700 dark:text-amber-300 text-xs font-semibold">
+                <Lock className="w-3 h-3" />
+                Có mật khẩu
+              </span>
+            )}
+
+            {/* Question Count - Show if > 0 */}
             {quiz.questionCount && quiz.questionCount > 0 && (
-              <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-lg">
+              <span className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400">
                 <BookOpen className="w-3 h-3" />
-                <span className="font-medium">{quiz.questionCount} {t('chatbot.quizRecommendation.questions')}</span>
-              </div>
+                {quiz.questionCount} câu
+              </span>
             )}
+          </div>
 
-            {/* Rating */}
-            {quiz.averageRating && quiz.averageRating > 0 && (
-              <div className="flex items-center gap-1 text-xs text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded-lg">
-                <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                <span className="font-medium">{quiz.averageRating.toFixed(1)}</span>
-              </div>
-            )}
+          {/* Stats Grid - View, Attempts, Score, Rating */}
+          <div className="flex flex-wrap items-center gap-3 mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+            {/* View Count - Lượt xem */}
+            <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400" title="Lượt xem">
+              <Eye className="w-3 h-3" />
+              <span>{quiz.viewCount || 0}</span>
+            </span>
 
-            {/* Attempts */}
-            {quiz.totalAttempts && quiz.totalAttempts > 0 && (
-              <div className="flex items-center gap-1 text-xs text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg">
-                <Users className="w-3 h-3" />
-                <span className="font-medium">{quiz.totalAttempts}</span>
-              </div>
-            )}
+            {/* Total Attempts - Lượt làm */}
+            <span className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400" title="Lượt làm">
+              <Users className="w-3 h-3" />
+              <span>{quiz.totalAttempts || 0}</span>
+            </span>
+
+            {/* Average Score - Điểm TB */}
+            <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400" title="Điểm trung bình">
+              <Trophy className="w-3 h-3" />
+              <span>{quiz.averageScore ? `${Math.round(quiz.averageScore)}%` : '-'}</span>
+            </span>
+
+            {/* Average Rating - Đánh giá */}
+            <span className="flex items-center gap-1 text-xs text-yellow-600 dark:text-yellow-400" title="Đánh giá">
+              <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+              <span>{quiz.averageRating && quiz.averageRating > 0 ? quiz.averageRating.toFixed(1) : '-'}</span>
+            </span>
           </div>
         </div>
 

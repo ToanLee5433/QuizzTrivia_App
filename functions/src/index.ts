@@ -624,16 +624,24 @@ Chỉ trả lời JSON, không giải thích thêm.`;
 // 🤖 RAG (Retrieval-Augmented Generation) Functions
 // ============================================================
 export { askRAG, askRAGHealth } from './rag/ask';
+export { rebuildFullIndex, getIndexStats } from './rag/rebuildIndex';
 
 // ============================================================
-// 🎯 RAG Index Auto-Update Triggers
-// Event-Driven Architecture - No manual index building needed!
+// 🏷️ Auto-Tagging Pipeline (GĐ4 - Master Plan v4.1)
+// Handles: Auto-tag on approval + Remove from index on delete/unapprove
+// NEW v4.1: Tag quality control with admin review
 // ============================================================
 export {
-  onQuizApproved,
-  onQuizCreatedApproved,
-  onQuizDeleted,
-} from './triggers';
+  autoTagOnApproval,
+  regenerateTags,
+  batchGenerateTags,
+  reviewTags,           // NEW v4.1: Admin approve/reject/modify tags
+  getPendingTagReviews, // NEW v4.1: List pending tag reviews
+} from './rag/autoTagging';
+
+// NOTE: onQuizApproved, onQuizCreatedApproved, onQuizDeleted triggers
+// have been MERGED into autoTagOnApproval (single onWrite trigger)
+// to avoid race conditions and duplicate processing
 
 // ============================================================
 // 🎮 Multiplayer Functions (Security & Anti-Cheat)

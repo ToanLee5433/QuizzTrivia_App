@@ -1,14 +1,17 @@
 "use strict";
 /**
- * 🚀 RAG Cloud Function - Ask Question Endpoint
+ * 🚀 RAG Cloud Function - Ask Question Endpoint v4.2
  *
  * Firebase Function for AI-powered question answering
+ * with Contextual Query Rewriting support
  *
  * Endpoint: askRAG
  * Method: Callable Function (Firebase Auth required)
  *
  * Features:
  * - Firebase Authentication required
+ * - Conversation history support (v4.2)
+ * - Contextual query rewriting
  * - Permission-aware content retrieval
  * - Rate limiting
  * - Comprehensive logging (no sensitive data)
@@ -17,7 +20,11 @@
  * ```typescript
  * const askRAG = httpsCallable(functions, 'askRAG');
  * const result = await askRAG({
- *   question: "Công thức toán học là gì?",
+ *   question: "Thế còn Toán?",
+ *   history: [
+ *     { role: 'user', content: 'Học tiếng Anh khó quá' },
+ *     { role: 'assistant', content: 'Tôi gợi ý...' }
+ *   ],
  *   topK: 4,
  *   targetLang: 'vi'
  * });
@@ -81,7 +88,7 @@ exports.askRAG = functions.region('us-central1').runWith({
     maxInstances: 10,
     secrets: ['GOOGLE_AI_API_KEY'],
 }).https.onCall(async (data, context) => {
-    var _a, _b, _c, _d, _e, _f;
+    var _a, _b, _c, _d, _e, _f, _g;
     const startTime = Date.now();
     try {
         // 1. Validate authentication
@@ -97,22 +104,38 @@ exports.askRAG = functions.region('us-central1').runWith({
             throw new functions.https.HttpsError('resource-exhausted', 'Too many requests. Please try again later.');
         }
         // 3. Validate input
-        const { question, topK, targetLang } = data;
+        const { question, topK, targetLang, history } = data;
         const validatedQuestion = validateQuestion(question);
         const validatedTopK = typeof topK === 'number' && topK > 0 && topK <= 10 ? topK : 4;
         const validatedLang = targetLang === 'en' ? 'en' : 'vi';
+        // Validate history (v4.2)
+        const validatedHistory = Array.isArray(history)
+            ? history
+                .slice(-5) // Only last 5 messages
+                .filter((m) => m &&
+                typeof m.role === 'string' &&
+                typeof m.content === 'string' &&
+                (m.role === 'user' || m.role === 'assistant'))
+                .map((m) => ({
+                role: m.role,
+                content: m.content.substring(0, 500), // Truncate long messages
+            }))
+            : [];
         functions.logger.info('Request validated', {
             questionLength: validatedQuestion.length,
             topK: validatedTopK,
             targetLang: validatedLang,
+            historyLength: validatedHistory.length,
         });
         // 4. Call RAG flow with OPTIMIZED implementation
-        // Uses: Global Caching, Fast Path, Hybrid Search, AI Reranking
+        // Uses: Global Caching, Fast Path, Hybrid Search, AI Reranking, Query Contextualization
         const { askQuestion } = await Promise.resolve().then(() => require('./optimizedRAG'));
         const result = await askQuestion({
             question: validatedQuestion,
             topK: validatedTopK,
             targetLang: validatedLang,
+            userId,
+            history: validatedHistory, // NEW v4.2: Pass conversation history
         });
         // 5. Log metrics (no sensitive data)
         functions.logger.info('RAG request completed', {
@@ -123,11 +146,14 @@ exports.askRAG = functions.region('us-central1').runWith({
             processingTime: result.processingTime,
             totalTime: Date.now() - startTime,
             tokensUsed: result.tokensUsed,
-            // NEW: Search metrics for monitoring
+            // Search metrics for monitoring
             fastPathUsed: (_a = result.searchMetrics) === null || _a === void 0 ? void 0 : _a.fastPathUsed,
             avgScore: (_c = (_b = result.searchMetrics) === null || _b === void 0 ? void 0 : _b.avgScore) === null || _c === void 0 ? void 0 : _c.toFixed(3),
             topScore: (_e = (_d = result.searchMetrics) === null || _d === void 0 ? void 0 : _d.topScore) === null || _e === void 0 ? void 0 : _e.toFixed(3),
             confidence: (_f = result.searchMetrics) === null || _f === void 0 ? void 0 : _f.confidence,
+            // NEW v4.2: Query contextualization metrics
+            queryRewritten: (_g = result.searchMetrics) === null || _g === void 0 ? void 0 : _g.queryRewritten,
+            historyUsed: validatedHistory.length > 0,
         });
         // 6. Return response
         return {

@@ -57,7 +57,7 @@ export function MessageList({ messages, onQuizClick }: MessageListProps) {
             className={`max-w-[85%] ${
               message.role === 'user'
                 ? 'bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 text-white shadow-lg rounded-2xl px-4 py-3'
-                : ''
+                : 'space-y-3'
             }`}
           >
             {/* AI Message Answer */}
@@ -96,6 +96,39 @@ export function MessageList({ messages, onQuizClick }: MessageListProps) {
               </div>
             )}
 
+            {/* Quiz Recommendations - Inside AI message block */}
+            {message.role === 'assistant' && message.quizRecommendations && message.quizRecommendations.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border-2 border-purple-200 dark:border-purple-800 rounded-2xl p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
+                      <BookOpen className="w-5 h-5 text-white" />
+                    </div>
+                    <h4 className="font-bold text-purple-900 dark:text-purple-100">
+                      {t('chatbot.quizSuggestions')}
+                    </h4>
+                  </div>
+                  <p className="text-sm text-purple-700 dark:text-purple-300 mb-4">
+                    {t('chatbot.clickToStart')}
+                  </p>
+                  <div className="space-y-3">
+                    {message.quizRecommendations.map((quiz, i) => (
+                      <QuizRecommendationCard 
+                        key={quiz.quizId} 
+                        quiz={quiz} 
+                        index={i} 
+                        onNavigate={onQuizClick}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             {/* User Message */}
             {message.role === 'user' && (
               <div className="prose prose-sm dark:prose-invert max-w-none">
@@ -103,40 +136,6 @@ export function MessageList({ messages, onQuizClick }: MessageListProps) {
               </div>
             )}
           </div>
-
-          {/* Quiz Recommendations - Separate Block */}
-          {message.role === 'assistant' && message.quizRecommendations && message.quizRecommendations.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="max-w-[85%] mt-3"
-            >
-              <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border-2 border-purple-200 dark:border-purple-800 rounded-2xl p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
-                    <BookOpen className="w-5 h-5 text-white" />
-                  </div>
-                  <h4 className="font-bold text-purple-900 dark:text-purple-100">
-                    {t('chatbot.quizSuggestions')}
-                  </h4>
-                </div>
-                <p className="text-sm text-purple-700 dark:text-purple-300 mb-4">
-                  {t('chatbot.clickToStart')}
-                </p>
-                <div className="space-y-3">
-                  {message.quizRecommendations.map((quiz, i) => (
-                    <QuizRecommendationCard 
-                      key={quiz.quizId} 
-                      quiz={quiz} 
-                      index={i} 
-                      onNavigate={onQuizClick}
-                    />
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
 
           {message.role === 'user' && (
             <motion.div

@@ -1,33 +1,77 @@
 /**
  * 🔨 Build Vector Index - Admin Page
  * 
- * Admin tool to build vector index from browser
- * Uses current user's Firebase Auth for permissions
+ * Admin tool to rebuild vector index via Cloud Function
+ * Secure: Uses Firebase Cloud Functions with proper authentication
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Database, PlayCircle, CheckCircle, XCircle, Loader, AlertTriangle } from 'lucide-react';
+import { Database, PlayCircle, CheckCircle, XCircle, Loader, AlertTriangle, RefreshCw, BarChart3 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../../lib/store';
-import { buildIndex } from '../../../lib/genkit/indexing';
-import type { VectorIndex } from '../../../lib/genkit/types';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import app from '../../../lib/firebase/config';
+
+const functions = getFunctions(app, 'us-central1');
+
+interface IndexStats {
+  exists: boolean;
+  version?: string;
+  totalChunks?: number;
+  uniqueQuizzes?: number;
+  sources?: Record<string, number>;
+  createdAt?: string;
+  message?: string;
+}
+
+interface RebuildResult {
+  success: boolean;
+  message: string;
+  stats?: {
+    totalChunks: number;
+    processedQuizzes: number;
+    failedQuizzes: number;
+    durationMs: number;
+  };
+}
 
 interface BuildStatus {
-  status: 'idle' | 'building' | 'success' | 'error';
+  status: 'idle' | 'loading' | 'building' | 'success' | 'error';
   message: string;
-  index?: VectorIndex;
+  stats?: RebuildResult['stats'];
   error?: string;
-  startTime?: number;
-  endTime?: number;
 }
 
 export function BuildIndexPage() {
   const { user } = useSelector((state: RootState) => state.auth);
   const [buildStatus, setBuildStatus] = useState<BuildStatus>({
     status: 'idle',
-    message: 'Sẵn sàng build vector index',
+    message: 'Sẵn sàng rebuild vector index',
   });
+  const [indexStats, setIndexStats] = useState<IndexStats | null>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
+
+  // Load index stats on mount
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      loadIndexStats();
+    }
+  }, [user]);
+
+  const loadIndexStats = async () => {
+    setLoadingStats(true);
+    try {
+      const getStats = httpsCallable<unknown, IndexStats>(functions, 'getIndexStats');
+      const result = await getStats({});
+      setIndexStats(result.data);
+    } catch (error) {
+      console.error('Failed to load index stats:', error);
+      setIndexStats({ exists: false, message: 'Không thể tải thống kê' });
+    } finally {
+      setLoadingStats(false);
+    }
+  };
 
   // Check if user is admin
   if (!user || user.role !== 'admin') {
@@ -56,68 +100,36 @@ export function BuildIndexPage() {
     );
   }
 
-  const handleBuildIndex = async () => {
+  const handleRebuildIndex = async () => {
     setBuildStatus({
       status: 'building',
-      message: 'Đang build vector index...',
-      startTime: Date.now(),
+      message: 'Đang rebuild vector index từ Cloud Function...',
     });
 
     try {
-      // Build index using current user's auth
-      const index = await buildIndex();
-
-      // Save to localStorage first
-      localStorage.setItem('vector-index', JSON.stringify(index));
-      console.log('✅ Index saved to localStorage');
+      const rebuildIndex = httpsCallable<unknown, RebuildResult>(functions, 'rebuildFullIndex');
+      const result = await rebuildIndex({});
       
-      // Save to Firestore for Cloud Functions
-      try {
-        // Remove undefined values to avoid Firestore errors
-        const sanitizedIndex = JSON.parse(JSON.stringify(index));
-        
-        const { doc, setDoc } = await import('firebase/firestore');
-        const { db } = await import('../../../lib/firebase/config');
-        await setDoc(doc(db, 'system', 'vector-index'), sanitizedIndex);
-        
-        console.log('✅ Index saved to Firestore successfully');
-      } catch (firestoreError) {
-        console.error('❌ Failed to save to Firestore:', firestoreError);
-        throw new Error(
-          `Lỗi khi lưu vào Firestore: ${
-            firestoreError instanceof Error ? firestoreError.message : 'Unknown error'
-          }. Vui lòng kiểm tra:\n` +
-          '1. Bạn đã đăng nhập với tài khoản admin?\n' +
-          '2. Firestore rules đã được deploy?\n' +
-          '3. Tài khoản có role = "admin" trong Firestore?'
-        );
+      if (result.data.success) {
+        setBuildStatus({
+          status: 'success',
+          message: result.data.message,
+          stats: result.data.stats,
+        });
+        // Reload stats
+        await loadIndexStats();
+      } else {
+        throw new Error(result.data.message);
       }
-
-      setBuildStatus({
-        status: 'success',
-        message: 'Build thành công!',
-        index,
-        endTime: Date.now(),
-        startTime: buildStatus.startTime,
-      });
       
     } catch (error) {
-      console.error('❌ Error building index:', error);
+      console.error('❌ Error rebuilding index:', error);
       setBuildStatus({
         status: 'error',
-        message: 'Lỗi khi build index',
+        message: 'Lỗi khi rebuild index',
         error: error instanceof Error ? error.message : String(error),
-        endTime: Date.now(),
-        startTime: buildStatus.startTime,
       });
     }
-  };
-
-  const getDuration = () => {
-    if (buildStatus.startTime && buildStatus.endTime) {
-      return ((buildStatus.endTime - buildStatus.startTime) / 1000).toFixed(2);
-    }
-    return null;
   };
 
   return (
@@ -131,61 +143,125 @@ export function BuildIndexPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Build Vector Index
+                RAG Vector Index Manager
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
-                Tạo vector index từ quiz data cho RAG Chatbot
+                Quản lý vector index cho AI Learning Assistant
               </p>
             </div>
           </div>
         </div>
 
-        {/* Build Button */}
+        {/* Current Index Stats */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <BarChart3 className="w-5 h-5" />
+              Index Statistics
+            </h2>
+            <button
+              onClick={loadIndexStats}
+              disabled={loadingStats}
+              className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+            >
+              <RefreshCw className={`w-4 h-4 ${loadingStats ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+
+          {loadingStats ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader className="w-6 h-6 animate-spin text-purple-500" />
+            </div>
+          ) : indexStats ? (
+            indexStats.exists ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
+                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                    {indexStats.totalChunks}
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Total Chunks</div>
+                </div>
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {indexStats.uniqueQuizzes}
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Quizzes Indexed</div>
+                </div>
+                <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
+                  <div className="text-lg font-bold text-green-600 dark:text-green-400">
+                    v{indexStats.version}
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Version</div>
+                </div>
+                <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4">
+                  <div className="text-sm font-bold text-orange-600 dark:text-orange-400">
+                    {indexStats.createdAt ? new Date(indexStats.createdAt).toLocaleDateString('vi-VN') : 'N/A'}
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Last Updated</div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
+                  <AlertTriangle className="w-5 h-5" />
+                  <span className="font-medium">Index chưa được tạo</span>
+                </div>
+                <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                  Nhấn "Rebuild Index" để tạo index từ các quiz đã approved.
+                </p>
+              </div>
+            )
+          ) : (
+            <div className="text-gray-500 dark:text-gray-400 text-center py-4">
+              Không thể tải thống kê index
+            </div>
+          )}
+        </div>
+
+        {/* Rebuild Button */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+            Rebuild Index
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            Rebuild toàn bộ index từ tất cả các quiz đã được approve. Quá trình này có thể mất vài phút tùy thuộc vào số lượng quiz.
+          </p>
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={handleBuildIndex}
+            onClick={handleRebuildIndex}
             disabled={buildStatus.status === 'building'}
             className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-semibold flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-all"
           >
             {buildStatus.status === 'building' ? (
               <>
                 <Loader className="w-5 h-5 animate-spin" />
-                Đang build...
+                Đang rebuild... (có thể mất vài phút)
               </>
             ) : (
               <>
                 <PlayCircle className="w-5 h-5" />
-                Build Vector Index
+                Rebuild Full Index
               </>
             )}
           </motion.button>
         </div>
 
         {/* Status Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
-        >
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-            Status
-          </h2>
+        {(buildStatus.status === 'success' || buildStatus.status === 'error') && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6"
+          >
+            <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+              Kết quả
+            </h2>
 
-          <div className="space-y-4">
-            {/* Status Message */}
             <div className="flex items-start gap-3">
-              {buildStatus.status === 'idle' && (
-                <Database className="w-6 h-6 text-gray-400 flex-shrink-0 mt-0.5" />
-              )}
-              {buildStatus.status === 'building' && (
-                <Loader className="w-6 h-6 text-blue-500 animate-spin flex-shrink-0 mt-0.5" />
-              )}
-              {buildStatus.status === 'success' && (
+              {buildStatus.status === 'success' ? (
                 <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5" />
-              )}
-              {buildStatus.status === 'error' && (
+              ) : (
                 <XCircle className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" />
               )}
               
@@ -202,89 +278,76 @@ export function BuildIndexPage() {
             </div>
 
             {/* Success Details */}
-            {buildStatus.status === 'success' && buildStatus.index && (
+            {buildStatus.status === 'success' && buildStatus.stats && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 space-y-2"
+                className="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4"
               >
-                <h3 className="font-semibold text-green-900 dark:text-green-100">
-                  📊 Index Statistics
+                <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">
+                  📊 Build Statistics
                 </h3>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-gray-600 dark:text-gray-400">Total Chunks:</span>
                     <span className="ml-2 font-semibold text-gray-900 dark:text-white">
-                      {buildStatus.index.totalChunks}
+                      {buildStatus.stats.totalChunks}
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-600 dark:text-gray-400">Quiz Chunks:</span>
+                    <span className="text-gray-600 dark:text-gray-400">Quizzes Processed:</span>
                     <span className="ml-2 font-semibold text-gray-900 dark:text-white">
-                      {buildStatus.index.sources.quiz || 0}
+                      {buildStatus.stats.processedQuizzes}
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-600 dark:text-gray-400">PDF Chunks:</span>
+                    <span className="text-gray-600 dark:text-gray-400">Failed:</span>
                     <span className="ml-2 font-semibold text-gray-900 dark:text-white">
-                      {buildStatus.index.sources.pdf || 0}
+                      {buildStatus.stats.failedQuizzes}
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-600 dark:text-gray-400">Build Time:</span>
+                    <span className="text-gray-600 dark:text-gray-400">Duration:</span>
                     <span className="ml-2 font-semibold text-gray-900 dark:text-white">
-                      {getDuration()}s
+                      {(buildStatus.stats.durationMs / 1000).toFixed(2)}s
                     </span>
                   </div>
                 </div>
-                <div className="pt-2 border-t border-green-200 dark:border-green-800">
+                <div className="pt-2 mt-2 border-t border-green-200 dark:border-green-800">
                   <p className="text-xs text-green-700 dark:text-green-300">
-                    ✅ Index đã được lưu vào localStorage và Firestore
+                    ✅ Index đã được lưu vào Firebase Storage
                   </p>
                   <p className="text-xs text-green-700 dark:text-green-300">
-                    📂 Firestore: system/vector-index
-                  </p>
-                  <p className="text-xs text-green-700 dark:text-green-300">
-                    🤖 AI chatbot có thể sử dụng ngay!
+                    🤖 AI Learning Assistant đã sẵn sàng sử dụng!
                   </p>
                 </div>
               </motion.div>
             )}
-          </div>
-        </motion.div>
-
-        {/* Instructions */}
-        <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-          <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
-            📝 Hướng dẫn
-          </h3>
-          <ol className="text-sm text-blue-800 dark:text-blue-200 space-y-2 list-decimal list-inside">
-            <li>Click "Build Vector Index" để bắt đầu</li>
-            <li>Chờ hệ thống extract quiz data và generate embeddings</li>
-            <li>Index sẽ được lưu vào localStorage</li>
-            <li>Sử dụng index này để test RAG chatbot</li>
-            <li>Trong production, deploy Cloud Function để build index tự động</li>
-          </ol>
-        </div>
-
-        {/* Next Steps */}
-        {buildStatus.status === 'success' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-6 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-6"
-          >
-            <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">
-              🎉 Next Steps
-            </h3>
-            <ul className="text-sm text-purple-800 dark:text-purple-200 space-y-2 list-disc list-inside">
-              <li>Test RAG chatbot với vector index vừa build</li>
-              <li>Deploy Cloud Functions: <code className="bg-purple-100 dark:bg-purple-900 px-2 py-0.5 rounded">firebase deploy --only functions:askRAG</code></li>
-              <li>Update ChatbotModal để connect với backend</li>
-              <li>Test end-to-end với real questions</li>
-            </ul>
           </motion.div>
         )}
+
+        {/* Instructions */}
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+          <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+            📝 Hướng dẫn sử dụng
+          </h3>
+          <ol className="text-sm text-blue-800 dark:text-blue-200 space-y-2 list-decimal list-inside">
+            <li>Đảm bảo có ít nhất một quiz đã được <strong>approve</strong></li>
+            <li>Click "Rebuild Full Index" để tạo/cập nhật index</li>
+            <li>Chờ Cloud Function xử lý (có thể mất 1-5 phút)</li>
+            <li>Sau khi hoàn thành, AI Learning Assistant sẽ có thể trả lời câu hỏi về quiz</li>
+          </ol>
+          <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800">
+            <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-1">
+              💡 Lưu ý
+            </h4>
+            <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1 list-disc list-inside">
+              <li>Index sẽ tự động cập nhật khi quiz được approve (via triggers)</li>
+              <li>Chỉ cần rebuild thủ công nếu index bị lỗi hoặc khởi tạo lần đầu</li>
+              <li>Chỉ quiz có status = "approved" mới được đưa vào index</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -1,13 +1,16 @@
 /**
- * 🚀 RAG Cloud Function - Ask Question Endpoint
+ * 🚀 RAG Cloud Function - Ask Question Endpoint v4.2
  * 
  * Firebase Function for AI-powered question answering
+ * with Contextual Query Rewriting support
  * 
  * Endpoint: askRAG
  * Method: Callable Function (Firebase Auth required)
  * 
  * Features:
  * - Firebase Authentication required
+ * - Conversation history support (v4.2)
+ * - Contextual query rewriting
  * - Permission-aware content retrieval
  * - Rate limiting
  * - Comprehensive logging (no sensitive data)
@@ -16,7 +19,11 @@
  * ```typescript
  * const askRAG = httpsCallable(functions, 'askRAG');
  * const result = await askRAG({ 
- *   question: "Công thức toán học là gì?",
+ *   question: "Thế còn Toán?",
+ *   history: [
+ *     { role: 'user', content: 'Học tiếng Anh khó quá' },
+ *     { role: 'assistant', content: 'Tôi gợi ý...' }
+ *   ],
  *   topK: 4,
  *   targetLang: 'vi'
  * });
@@ -114,26 +121,45 @@ export const askRAG = functions.region('us-central1').runWith({
       }
 
       // 3. Validate input
-  const { question, topK, targetLang } = data;
+      const { question, topK, targetLang, history } = data;
 
       const validatedQuestion = validateQuestion(question);
       const validatedTopK = typeof topK === 'number' && topK > 0 && topK <= 10 ? topK : 4;
       const validatedLang = targetLang === 'en' ? 'en' : 'vi';
+      
+      // Validate history (v4.2)
+      const validatedHistory = Array.isArray(history) 
+        ? history
+            .slice(-5) // Only last 5 messages
+            .filter((m: any) => 
+              m && 
+              typeof m.role === 'string' && 
+              typeof m.content === 'string' &&
+              (m.role === 'user' || m.role === 'assistant')
+            )
+            .map((m: any) => ({
+              role: m.role as 'user' | 'assistant',
+              content: m.content.substring(0, 500), // Truncate long messages
+            }))
+        : [];
 
       functions.logger.info('Request validated', {
         questionLength: validatedQuestion.length,
         topK: validatedTopK,
         targetLang: validatedLang,
+        historyLength: validatedHistory.length,
       });
 
       // 4. Call RAG flow with OPTIMIZED implementation
-      // Uses: Global Caching, Fast Path, Hybrid Search, AI Reranking
+      // Uses: Global Caching, Fast Path, Hybrid Search, AI Reranking, Query Contextualization
       const { askQuestion } = await import('./optimizedRAG');
       
       const result = await askQuestion({
         question: validatedQuestion,
         topK: validatedTopK,
         targetLang: validatedLang,
+        userId,  // Pass userId for analytics
+        history: validatedHistory,  // NEW v4.2: Pass conversation history
       });
 
       // 5. Log metrics (no sensitive data)
@@ -145,11 +171,14 @@ export const askRAG = functions.region('us-central1').runWith({
         processingTime: result.processingTime,
         totalTime: Date.now() - startTime,
         tokensUsed: result.tokensUsed,
-        // NEW: Search metrics for monitoring
+        // Search metrics for monitoring
         fastPathUsed: result.searchMetrics?.fastPathUsed,
         avgScore: result.searchMetrics?.avgScore?.toFixed(3),
         topScore: result.searchMetrics?.topScore?.toFixed(3),
         confidence: result.searchMetrics?.confidence,
+        // NEW v4.2: Query contextualization metrics
+        queryRewritten: result.searchMetrics?.queryRewritten,
+        historyUsed: validatedHistory.length > 0,
       });
 
       // 6. Return response

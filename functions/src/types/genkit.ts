@@ -48,8 +48,11 @@ export interface QuizRecommendation {
   difficulty?: string;
   category?: string;
   questionCount?: number;
-  averageRating?: number;
-  totalAttempts?: number;
+  averageRating?: number;      // Số sao đánh giá trung bình (0-5)
+  totalAttempts?: number;      // Số lượt làm quiz
+  viewCount?: number;          // Số lượt xem quiz
+  averageScore?: number;       // Điểm trung bình của người làm (0-100)
+  hasPassword?: boolean;       // Quiz requires password to access
 }
 
 // RAG request

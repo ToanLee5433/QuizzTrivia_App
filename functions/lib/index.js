@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.kickPlayer = exports.archiveCompletedRooms = exports.checkRateLimit = exports.getPlayerQuestions = exports.validateAnswer = exports.onQuizDeleted = exports.onQuizCreatedApproved = exports.onQuizApproved = exports.askRAGHealth = exports.askRAG = exports.analyzeQuizResult = exports.processFile = exports.sendOTP = exports.generateQuestionsHTTP = exports.testAI = exports.generateQuestions = void 0;
+exports.kickPlayer = exports.archiveCompletedRooms = exports.checkRateLimit = exports.getPlayerQuestions = exports.validateAnswer = exports.getPendingTagReviews = exports.reviewTags = exports.batchGenerateTags = exports.regenerateTags = exports.autoTagOnApproval = exports.getIndexStats = exports.rebuildFullIndex = exports.askRAGHealth = exports.askRAG = exports.analyzeQuizResult = exports.processFile = exports.sendOTP = exports.generateQuestionsHTTP = exports.testAI = exports.generateQuestions = void 0;
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const generative_ai_1 = require("@google/generative-ai");
@@ -106,7 +106,7 @@ exports.generateQuestions = functions
                 temperature: (config === null || config === void 0 ? void 0 : config.temperature) || 0.7,
                 topP: 0.8,
                 topK: 40,
-                maxOutputTokens: (config === null || config === void 0 ? void 0 : config.maxTokens) || 16000, // ⚡ gemini-2.5-flash-lite supports high limits
+                maxOutputTokens: (config === null || config === void 0 ? void 0 : config.maxTokens) || 32000, // ⚡ gemini-2.5-flash-lite: increased for long PDF/image + full Q&A with explanations
             },
         });
         const promptText = `${prompt}\n\nNội dung để tạo câu hỏi:\n\n${content}`;
@@ -229,7 +229,7 @@ exports.generateQuestionsHTTP = functions
                     temperature: (config === null || config === void 0 ? void 0 : config.temperature) || 0.7,
                     topP: 0.8,
                     topK: 40,
-                    maxOutputTokens: (config === null || config === void 0 ? void 0 : config.maxTokens) || 2000,
+                    maxOutputTokens: (config === null || config === void 0 ? void 0 : config.maxTokens) || 32000, // ⚡ gemini-2.5-flash-lite: increased for long content
                 },
             });
             const promptText = `${prompt}\n\nNội dung để tạo câu hỏi:\n\n${content}`;
@@ -514,14 +514,23 @@ Chỉ trả lời JSON, không giải thích thêm.`;
 var ask_1 = require("./rag/ask");
 Object.defineProperty(exports, "askRAG", { enumerable: true, get: function () { return ask_1.askRAG; } });
 Object.defineProperty(exports, "askRAGHealth", { enumerable: true, get: function () { return ask_1.askRAGHealth; } });
+var rebuildIndex_1 = require("./rag/rebuildIndex");
+Object.defineProperty(exports, "rebuildFullIndex", { enumerable: true, get: function () { return rebuildIndex_1.rebuildFullIndex; } });
+Object.defineProperty(exports, "getIndexStats", { enumerable: true, get: function () { return rebuildIndex_1.getIndexStats; } });
 // ============================================================
-// 🎯 RAG Index Auto-Update Triggers
-// Event-Driven Architecture - No manual index building needed!
+// 🏷️ Auto-Tagging Pipeline (GĐ4 - Master Plan v4.1)
+// Handles: Auto-tag on approval + Remove from index on delete/unapprove
+// NEW v4.1: Tag quality control with admin review
 // ============================================================
-var triggers_1 = require("./triggers");
-Object.defineProperty(exports, "onQuizApproved", { enumerable: true, get: function () { return triggers_1.onQuizApproved; } });
-Object.defineProperty(exports, "onQuizCreatedApproved", { enumerable: true, get: function () { return triggers_1.onQuizCreatedApproved; } });
-Object.defineProperty(exports, "onQuizDeleted", { enumerable: true, get: function () { return triggers_1.onQuizDeleted; } });
+var autoTagging_1 = require("./rag/autoTagging");
+Object.defineProperty(exports, "autoTagOnApproval", { enumerable: true, get: function () { return autoTagging_1.autoTagOnApproval; } });
+Object.defineProperty(exports, "regenerateTags", { enumerable: true, get: function () { return autoTagging_1.regenerateTags; } });
+Object.defineProperty(exports, "batchGenerateTags", { enumerable: true, get: function () { return autoTagging_1.batchGenerateTags; } });
+Object.defineProperty(exports, "reviewTags", { enumerable: true, get: function () { return autoTagging_1.reviewTags; } });
+Object.defineProperty(exports, "getPendingTagReviews", { enumerable: true, get: function () { return autoTagging_1.getPendingTagReviews; } });
+// NOTE: onQuizApproved, onQuizCreatedApproved, onQuizDeleted triggers
+// have been MERGED into autoTagOnApproval (single onWrite trigger)
+// to avoid race conditions and duplicate processing
 // ============================================================
 // 🎮 Multiplayer Functions (Security & Anti-Cheat)
 // ============================================================

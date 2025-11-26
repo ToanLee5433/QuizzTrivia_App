@@ -154,6 +154,16 @@ service firebase.storage {
     }
     
     // ========================================
+    // 7. RAG DATA - Vector index cho chatbot
+    // ========================================
+    match /rag/{allPaths=**} {
+      // Cloud Functions cần đọc/ghi index
+      // Service account tự động có quyền, nhưng cần rule cho admin
+      allow read: if true; // Public readable (index data không nhạy cảm)
+      allow write: if isAuthenticated() && isAdmin();
+    }
+    
+    // ========================================
     // LEGACY SUPPORT - Giữ lại để không break
     // ========================================
     match /images/{folder}/{fileName} {

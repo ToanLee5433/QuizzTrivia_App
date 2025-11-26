@@ -3,11 +3,13 @@
  * 🤖 Simple RAG Implementation for Cloud Functions
  *
  * Direct implementation without Genkit
+ * NOTE: This file is kept for reference. Production uses optimizedRAG.ts
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.askQuestion = void 0;
 const generative_ai_1 = require("@google/generative-ai");
 const admin = require("firebase-admin");
+const storage_1 = require("firebase-admin/storage");
 // ✅ Secure: API key from environment variable (lazy initialization)
 // Updated: 2025-11-25 - Fixed secret configuration
 function getGenAI() {
@@ -17,6 +19,10 @@ function getGenAI() {
     }
     return new generative_ai_1.GoogleGenerativeAI(apiKey);
 }
+// Cache for vector index
+let cachedIndex = null;
+let cacheTime = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 /**
  * Generate embedding
  */
@@ -40,26 +46,42 @@ function cosineSimilarity(a, b) {
     return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 /**
- * Vector search
+ * Vector search - reads from Firebase Storage
  */
 async function vectorSearch(question, topK = 4) {
-    // Get index from Firestore
-    const indexDoc = await admin.firestore()
-        .collection('system')
-        .doc('vector-index')
-        .get();
-    if (!indexDoc.exists) {
-        // Return empty if no index yet
-        return [];
+    const now = Date.now();
+    // Check cache
+    if (cachedIndex && (now - cacheTime) < CACHE_TTL) {
+        console.log('🔥 Using cached index');
     }
-    const index = indexDoc.data();
-    if (!index || !index.chunks || index.chunks.length === 0) {
+    else {
+        // Load from Storage
+        console.log('📥 Loading index from Storage...');
+        try {
+            const bucket = (0, storage_1.getStorage)().bucket();
+            const file = bucket.file('rag/indices/vector-index.json');
+            const [exists] = await file.exists();
+            if (!exists) {
+                console.log('⚠️ Index file does not exist in Storage');
+                return [];
+            }
+            const [content] = await file.download();
+            cachedIndex = JSON.parse(content.toString());
+            cacheTime = now;
+            console.log(`✅ Index loaded: ${cachedIndex.totalChunks} chunks`);
+        }
+        catch (error) {
+            console.error('❌ Failed to load index from Storage:', error);
+            return [];
+        }
+    }
+    if (!cachedIndex || !cachedIndex.chunks || cachedIndex.chunks.length === 0) {
         return [];
     }
     // Generate question embedding
     const questionEmbedding = await generateEmbedding(question);
     // Calculate similarities
-    const results = index.chunks.map((chunk) => ({
+    const results = cachedIndex.chunks.map((chunk) => ({
         text: chunk.text,
         title: chunk.title,
         quizId: chunk.quizId,

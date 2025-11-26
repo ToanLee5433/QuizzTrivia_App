@@ -80,8 +80,19 @@ export function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
       const functions = getFunctions();
       const askRAG = httpsCallable(functions, 'askRAG');
       
+      // NEW v4.2: Build conversation history for contextual queries
+      // Get last 5 messages (excluding the current one we just added)
+      const recentHistory = messages
+        .slice(-5)
+        .filter(m => m.role === 'user' || m.role === 'assistant')
+        .map(m => ({ 
+          role: m.role, 
+          content: m.content 
+        }));
+      
       const result = await askRAG({
         question: userMessage.content,
+        history: recentHistory,  // NEW v4.2: Send conversation history
         topK: 4,
         targetLang: 'vi'
       });
