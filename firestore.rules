@@ -32,6 +32,11 @@ service cloud.firestore {
     function hasAccess(quizId) {
       return exists(/databases/$(database)/documents/quizzes/$(quizId)/access/$(request.auth.uid));
     }
+    
+    // Check if quiz is approved (for result submission)
+    function isQuizApproved(quizId) {
+      return quizDoc(quizId).data.status == 'approved';
+    }
 
     /* ===== Multiplayer Validation Functions ===== */
     // Validate room name
@@ -265,7 +270,7 @@ service cloud.firestore {
       /* --- UPDATE QUIZ ---
          Owner: Có thể sửa quiz draft/rejected của mình
          Admin: Có thể sửa mọi quiz và thay đổi status
-         Special: Mọi user có thể cập nhật stats counters
+         Special: Mọi user có thể cập nhật stats counters (CHỈ CHO QUIZ APPROVED)
       */
       allow update: if signedIn() && (
         // Admin can update any quiz and change status
@@ -273,8 +278,9 @@ service cloud.firestore {
         // Owner can update their draft/rejected quizzes (not approved/pending)
         (resource.data.createdBy == request.auth.uid && 
          resource.data.status in ['draft', 'rejected']) ||
-        // Anyone can update stats counters (views, attempts, completions)
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stats'])
+        // Anyone can update stats counters ONLY for APPROVED quizzes
+        (resource.data.status == 'approved' &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stats']))
       );
       
       /* --- DELETE QUIZ ---
@@ -288,11 +294,20 @@ service cloud.firestore {
          Client ghi /access/{uid} sau khi user nhập password đúng.
          Rules kiểm tra: proofHash client gửi lên === hash trong quizzes/{quizId}.pwd.hash
          
-         TEMPORARY DEBUG: COMPLETELY OPEN - NO RESTRICTIONS AT ALL
+         NOTE: Simplified validation - hash verification happens client-side
       */
       match /access/{uid} {
-        // TEMPORARY: Allow EVERYTHING for debugging
-        allow read, write: if true;
+        // Read: User can read their own access record
+        allow read: if signedIn() && request.auth.uid == uid;
+        
+        // Create: User can create access record for themselves
+        // Hash verification is done client-side before calling this
+        allow create: if signedIn() && 
+          request.auth.uid == uid &&
+          request.resource.data.unlockedAt != null;
+        
+        // No update or delete
+        allow update, delete: if false;
       }
       
       /* --- QUESTIONS SUBCOLLECTION (BẢO VỆ NỘI DUNG ĐỀ) ---
@@ -359,16 +374,25 @@ service cloud.firestore {
     }
     
     // Quiz completions (global activity log for tracking quiz completions)
+    // Only allow creating completions for APPROVED quizzes
     match /quizCompletions/{completionId} {
       allow read: if signedIn();
-      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow create: if signedIn() && 
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.quizId is string &&
+        isQuizApproved(request.resource.data.quizId);
       allow update, delete: if signedIn() && resource.data.userId == request.auth.uid;
     }
     
     // Quiz results
+    // Only allow creating results for APPROVED quizzes
+    // Creator can view their draft/pending quiz but CANNOT save results
     match /quizResults/{resultId} {
       allow read: if signedIn();
-      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow create: if signedIn() && 
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.quizId is string &&
+        isQuizApproved(request.resource.data.quizId);
       allow update, delete: if signedIn() && resource.data.userId == request.auth.uid;
     }
     
