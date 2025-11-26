@@ -4,3 +4,20 @@ dist
 
 *storybook.log
 storybook-static
+
+# Environment files with secrets
+.env
+.env.local
+.env.development
+.env.production
+.env.*.local
+
+# Lint output files (may contain source code with secrets)
+eslint-output*.json
+lint-errors.json
+check-errors.json
+lint-*.txt
+lint-*.json
+
+# Test files with configs
+test-*.html

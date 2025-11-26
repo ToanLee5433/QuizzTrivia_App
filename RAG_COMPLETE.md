@@ -11,7 +11,7 @@ Tôi đã **hoàn thành 100%** việc xây dựng RAG (Retrieval-Augmented Gene
 ### 🧠 Core RAG System (6 files)
 1. **`src/lib/genkit/config.ts`** ✅
    - Cấu hình Genkit & Google AI
-   - API key: `AIzaSyDQT4sxlCRVxm0xqvfzaBIobv-3y8KfV-k`
+   - API key: Firebase Secrets (GOOGLE_AI_API_KEY)
    - Models: gemini-2.0-flash-exp, text-embedding-004
    
 2. **`src/lib/genkit/types.ts`** ✅

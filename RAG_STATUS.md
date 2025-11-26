@@ -5,7 +5,7 @@
 ### Phase 1: Setup & Configuration (100%)
 - ✅ Genkit configuration with Google AI provider
 - ✅ TypeScript interfaces for RAG system
-- ✅ API key configured: `AIzaSyDQT4sxlCRVxm0xqvfzaBIobv-3y8KfV-k`
+- ✅ API key configured via environment variables (GOOGLE_AI_API_KEY)
 
 ### Phase 2: Data Indexing Pipeline (100%)
 - ✅ Embedding service with text-embedding-004

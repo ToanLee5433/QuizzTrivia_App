@@ -68,7 +68,7 @@ src/components/rag/
 
 **Configuration:**
 ```typescript
-// API Key: AIzaSyDQT4sxlCRVxm0xqvfzaBIobv-3y8KfV-k
+// API Key: process.env.GOOGLE_AI_API_KEY (stored in Firebase Secrets)
 // Chat Model: gemini-2.0-flash-exp
 // Embedding Model: text-embedding-004
 // Generation: temp=0.3, maxOutputTokens=1024
@@ -164,7 +164,7 @@ If you get **Firebase authentication** errors:
 - Check Firebase project permissions in console
 
 If embeddings fail with **API errors**:
-- Verify API key: `AIzaSyDQT4sxlCRVxm0xqvfzaBIobv-3y8KfV-k`
+- Verify API key is set in Firebase Secrets (GOOGLE_AI_API_KEY)
 - Check Google AI Studio quota: https://ai.google.dev/
 - Ensure Generative Language API is enabled
 
