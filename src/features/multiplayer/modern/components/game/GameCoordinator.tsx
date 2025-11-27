@@ -1,13 +1,16 @@
 /**
  * 🎯 GAME COORDINATOR
- * Routes to correct view based on player role and game state
+ * Routes to correct view based on player role, game mode, and game state
+ * Supports both SYNCED and FREE game modes
  */
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
-import { getDatabase, ref, onValue, off } from 'firebase/database';
+import { getDatabase, ref, onValue } from 'firebase/database';
 import PlayerGameView from './PlayerGameView';
+import FreeModePlayerView from './FreeModePlayerView';
+import FreeModeSpectatorView from './FreeModeSpectatorView';
 import SpectatorGameView from './SpectatorGameView';
 import HostGameView from './HostGameView';
 import GameResultsView from './GameResultsView';
@@ -37,6 +40,7 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
 
     const gameRef = ref(db, RTDB_PATHS.games(roomId));
     
+    // ✅ onValue returns unsubscribe function directly
     const unsubscribe = onValue(
       gameRef,
       (snapshot) => {
@@ -58,8 +62,9 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
       }
     );
 
+    // ✅ FIX: Just call the unsubscribe function directly
     return () => {
-      off(gameRef, 'value', unsubscribe);
+      unsubscribe();
     };
   }, [roomId, db, onGameEnd]);
 
@@ -180,7 +185,50 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
     );
   }
 
-  // No current question
+  // Get game mode
+  const gameMode = gameState.settings?.gameMode || 'synced';
+  
+  // 🆓 FREE MODE: Different view logic
+  if (gameMode === 'free') {
+    const isHost = currentPlayer.id === gameState.hostId;
+    const role = currentPlayer.role;
+
+    // Free mode doesn't use currentQuestion - each player has their own progress
+    return (
+      <AnimatePresence mode="wait">
+        {isHost ? (
+          // Host in free mode sees Race Track overview of all players
+          <FreeModeSpectatorView
+            key="host-free"
+            roomId={roomId}
+            gameState={gameState}
+            players={gameState.players}
+            leaderboard={gameState.leaderboard}
+          />
+        ) : role === 'player' ? (
+          // Player in free mode gets individual view
+          <FreeModePlayerView
+            key="player-free"
+            roomId={roomId}
+            player={currentPlayer}
+            gameState={gameState}
+          />
+        ) : (
+          // Spectator sees Race Track with rolling leaderboard
+          <FreeModeSpectatorView
+            key="spectator-free"
+            roomId={roomId}
+            gameState={gameState}
+            players={gameState.players}
+            leaderboard={gameState.leaderboard}
+          />
+        )}
+      </AnimatePresence>
+    );
+  }
+
+  // 🔄 SYNCED MODE: Original logic
+  // No current question in synced mode
   if (!gameState.currentQuestion) {
     return (
       <div className="h-full flex items-center justify-center bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
@@ -214,6 +262,7 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
           roomId={roomId}
           player={currentPlayer}
           questionState={gameState.currentQuestion}
+          gameStatus={gameState.status}
           onAnswerSubmit={handleAnswerSubmit}
         />
       ) : (

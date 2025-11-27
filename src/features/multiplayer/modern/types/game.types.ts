@@ -10,6 +10,14 @@ export type PlayerRole = 'host' | 'player' | 'spectator';
 
 export type PlayerStatus = 'waiting' | 'ready' | 'playing' | 'finished' | 'disconnected';
 
+// ============= GAME MODES =============
+/**
+ * Game Mode determines how players progress through questions:
+ * - 'synced': All players answer the same question together, move to next when time ends or all answered
+ * - 'free': Each player has a total time limit for the entire quiz, plays at their own pace
+ */
+export type GameMode = 'synced' | 'free';
+
 // ============= GAME STATE =============
 export type GameStatus = 
   | 'lobby'           // Waiting in lobby
@@ -122,6 +130,15 @@ export interface ModernPlayer {
   joinedAt: number;
   lastActiveAt: number;
   ping?: number;
+  
+  // 🆓 FREE MODE - Individual player progress
+  freeMode?: {
+    currentQuestionIndex: number;  // Which question this player is on
+    timeRemaining: number;         // Individual time remaining (seconds)
+    startedAt: number;             // When this player started
+    finishedAt?: number;           // When this player finished (if done)
+    answers: Record<number, PlayerAnswer>;  // questionIndex -> answer
+  };
 }
 
 // ============= QUESTION STATE =============
@@ -130,7 +147,8 @@ export interface QuestionState {
   question: Question;
   startedAt: number;
   timeLimit: number;             // seconds
-  timeRemaining: number;         // seconds
+  timeRemaining: number;         // seconds - updated by server every second
+  lastTickAt?: number;           // ✅ Server timestamp of last timer update - for sync verification
   isPaused: boolean;
   
   // Answer tracking
@@ -165,6 +183,9 @@ export interface GameState {
   quizTitle: string;
   totalQuestions: number;
   
+  // ✅ NEW: Store ALL questions in RTDB for fast sync
+  questions: Question[];
+  
   // Current state
   currentQuestionIndex: number;
   currentQuestion?: QuestionState;
@@ -197,10 +218,19 @@ export interface GameState {
 }
 
 export interface GameSettings {
-  timePerQuestion: number;       // seconds
+  // 🎮 Game Mode
+  gameMode: GameMode;            // 'synced' or 'free'
+  
+  // ⏱️ Timing
+  timePerQuestion: number;       // seconds (used in synced mode)
+  totalQuizTime?: number;        // seconds (used in free mode - total time for entire quiz)
+  
+  // 📊 Review & Leaderboard
   showAnswerReview: boolean;     // Show review after each question
   reviewDuration: number;        // seconds
   leaderboardDuration: number;   // seconds between questions
+  
+  // 🎯 Features
   powerUpsEnabled: boolean;
   streakEnabled: boolean;
   spectatorMode: boolean;        // Allow spectators to join
@@ -208,7 +238,9 @@ export interface GameSettings {
 }
 
 export const DEFAULT_GAME_SETTINGS: GameSettings = {
+  gameMode: 'synced',            // Default to synchronized mode
   timePerQuestion: 30,
+  totalQuizTime: 300,            // 5 minutes for free mode
   showAnswerReview: true,
   reviewDuration: 5,
   leaderboardDuration: 3,
@@ -242,6 +274,7 @@ export type GameEventType =
   | 'player_joined'
   | 'player_left'
   | 'player_ready'
+  | 'player_finished'      // 🆓 FREE MODE: Player completed all questions
   | 'game_started'
   | 'question_started'
   | 'player_answered'
@@ -275,6 +308,9 @@ export const RTDB_PATHS = {
   gameState: (roomId: string) => `games/${roomId}/state`,
   players: (roomId: string) => `games/${roomId}/players`,
   player: (roomId: string, playerId: string) => `games/${roomId}/players/${playerId}`,
+  // ✅ NEW: Path for questions array
+  questions: (roomId: string) => `games/${roomId}/questions`,
+  question: (roomId: string, index: number) => `games/${roomId}/questions/${index}`,
   currentQuestion: (roomId: string) => `games/${roomId}/currentQuestion`,
   answers: (roomId: string) => `games/${roomId}/currentQuestion/answers`,
   playerAnswer: (roomId: string, playerId: string) => `games/${roomId}/currentQuestion/answers/${playerId}`,

@@ -48,6 +48,22 @@
   "roomCreated": "Room Created!",
   "shareCode": "Share this code with friends",
   "create": "Create",
+  
+  "gameMode": "Game Mode",
+  "arenaMode": "Arena",
+  "arenaModeDesc": "Synced play: Answer together, wait together, advance together",
+  "arenaModeShort": "Synced",
+  "raceMode": "Race",
+  "raceModeDesc": "Free play: Race at your own pace, answer fast to finish first",
+  "raceModeShort": "Free",
+  "syncedMode": "Arena",
+  "syncedModeDesc": "Synced play: Answer together, wait together, advance together",
+  "freeMode": "Race",
+  "freeModeDesc": "Free play: Race at your own pace, answer fast to finish first",
+  "totalQuizTime": "Total Time",
+  "minute": "min",
+  "host": "Host",
+  
   "select": "Select",
   "search": "Search",
   "filter": "Filter",
@@ -224,6 +240,30 @@
   "leaderboard": "Leaderboard",
   "points": "points",
   
+  "game": {
+    "score": "Score",
+    "timeRemaining": "Time",
+    "submitting": "Submitting...",
+    "confirmAnswer": "Confirm Answer",
+    "answerSubmitted": "Answer Submitted!",
+    "waitingForOpponents": "Waiting for your opponents...",
+    "playersAnswered": "{{count}} players answered",
+    "youAreFirst": "You are the first!",
+    "resultsWhenAllFinish": "Results will be revealed when everyone finishes...",
+    "correct": "Correct!",
+    "incorrect": "Wrong!",
+    "streakBonus": "Streak bonus",
+    "explanation": "Explanation",
+    "movingToNext": "Moving to next question...",
+    "yourStats": "Your Stats",
+    "correctAnswers": "Correct",
+    "nextStreak": "Next Streak",
+    "answerCorrectlyMore": "Answer {{count}} more correctly for:",
+    "multiplier": "Multiplier",
+    "bonus": "Bonus",
+    "streak": "Streak"
+  },
+  
   "gameFinished": "Game Finished!",
   "congratulationsToAll": "Congratulations to all players!",
   "yourResult": "Your Result",
@@ -232,5 +272,11 @@
   "backToLobby": "Back to Lobby",
   "accuracy": "Accuracy",
   "avgTime": "Avg Time",
-  "bestStreak": "Best Streak"
+  "bestStreak": "Best Streak",
+  
+  "selectQuizForGame": "Select quiz for the game",
+  "searchQuiz": "Search quiz...",
+  "quizCount": "{{count}} quizzes available",
+  "current": "Current",
+  "quizChanged": "Quiz changed successfully!"
 }

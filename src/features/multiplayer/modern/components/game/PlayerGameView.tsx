@@ -4,8 +4,9 @@
  * Supports all question types with streak system and power-ups
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import {
   Clock,
   Trophy,
@@ -13,6 +14,8 @@ import {
   XCircle,
   Flame,
   TrendingUp,
+  Loader2,
+  Users,
 } from 'lucide-react';
 import { 
   ModernPlayer, 
@@ -21,6 +24,7 @@ import {
   STREAK_BONUSES 
 } from '../../types/game.types';
 import { gameEngine } from '../../services/gameEngine';
+import soundService from '../../../services/soundService';
 import QuestionRenderer from './QuestionRenderer';
 import PowerUpPanel from './PowerUpPanel';
 import StreakIndicator from './StreakIndicator';
@@ -29,6 +33,7 @@ interface PlayerGameViewProps {
   roomId: string;
   player: ModernPlayer;
   questionState: QuestionState;
+  gameStatus?: string; // 'answering' | 'reviewing' | 'leaderboard' - để biết phase hiện tại
   onAnswerSubmit?: (answer: any) => void; // Optional - used by GameCoordinator
 }
 
@@ -36,73 +41,123 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
   roomId,
   player,
   questionState,
+  gameStatus = 'answering', // Default to answering phase
   onAnswerSubmit: _onAnswerSubmit, // Reserved for future use
 }) => {
+  const { t } = useTranslation('multiplayer');
   const [selectedAnswer, setSelectedAnswer] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [pointsEarned, setPointsEarned] = useState(0);
   const [activePowerUps, setActivePowerUps] = useState<PowerUpType[]>([]);
-  const [timeLeft, setTimeLeft] = useState(questionState?.timeRemaining || 30);
+  
+  // ✅ OPTIMIZED: Use server time directly instead of local countdown
+  // This ensures all clients are perfectly synced with server
+  const timeLeft = questionState?.timeRemaining ?? 30;
 
   // Guard: Check if question data is ready (after hooks)
   const hasQuestionData = questionState?.question?.text && questionState?.question?.answers;
 
-  // ============= TIMER =============
+  // ✅ REMOVED: Local timer - now using server timeRemaining directly
+  // Server updates timeRemaining every second via RTDB
+  // All clients receive the same value = perfect sync
+  
+  // Reset state when question changes
   useEffect(() => {
-    setTimeLeft(questionState.timeRemaining);
-    
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 0) {
-          clearInterval(timer);
-          // Auto submit when time runs out
-          if (!player.hasAnswered && selectedAnswer) {
-            handleSubmit();
-          }
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [questionState.timeRemaining, questionState.questionIndex]);
+    setSelectedAnswer(null);
+    setShowResult(false);
+    setIsCorrect(null);
+    setPointsEarned(0);
+  }, [questionState?.questionIndex]);
 
   // ============= ANSWER HANDLING =============
-  const handleAnswerChange = useCallback((answer: any) => {
+  // ✅ MODERN UX: Auto-submit khi click đáp án (không cần nút xác nhận)
+  const handleAnswerSelect = useCallback(async (answer: any) => {
     if (player.hasAnswered || isSubmitting) return;
-    setSelectedAnswer(answer);
-  }, [player.hasAnswered, isSubmitting]);
-
-  const handleSubmit = async () => {
-    if (player.hasAnswered || isSubmitting || !selectedAnswer) return;
-
+    
     try {
       setIsSubmitting(true);
-      await gameEngine.submitAnswer(roomId, player.id, selectedAnswer, activePowerUps);
+      setSelectedAnswer(answer);
       
-      // Show feedback (will be updated by real-time listener)
-      setShowResult(true);
+      // Auto-submit ngay khi chọn
+      await gameEngine.submitAnswer(roomId, player.id, answer, activePowerUps);
+      
+      // ✅ FIX: Không set showResult ngay, chỉ đợi cho đến Revealing Phase
+      // Result sẽ được hiện khi gameStatus === 'reviewing'
     } catch (error) {
       console.error('Failed to submit answer:', error);
+      // Reset selected nếu submit fail
+      setSelectedAnswer(null);
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [roomId, player.id, player.hasAnswered, isSubmitting, activePowerUps]);
+  
+  // Auto-submit when time runs out (if player hasn't answered yet)
+  useEffect(() => {
+    // Không cần auto-submit với selectedAnswer nữa vì đã auto-submit khi click
+    // Server sẽ handle timeout cho người không trả lời
+  }, []);
 
-  // Listen to player updates to show result
+  // ✅ FIX: Chỉ hiện result khi vào Revealing Phase (gameStatus === 'reviewing')
+  // Live Mode 3 phases: Answering → Revealing → Leaderboard
+  const isRevealingPhase = gameStatus === 'reviewing';
+  
+  // Listen to player updates to prepare result (but only show during revealing)
   useEffect(() => {
     if (player.hasAnswered && player.currentAnswer) {
       const answer = questionState.answers[player.id];
       if (answer) {
         setIsCorrect(answer.isCorrect);
         setPointsEarned(answer.points + (answer.streakBonus || 0));
-        setShowResult(true);
+        // ✅ FIX: Chỉ show result khi đang ở Revealing Phase
+        if (isRevealingPhase) {
+          setShowResult(true);
+        }
       }
     }
-  }, [player.hasAnswered, player.currentAnswer, questionState.answers]);
+  }, [player.hasAnswered, player.currentAnswer, questionState.answers, player.id, isRevealingPhase]);
+
+  // ✅ NEW: Khi vào Revealing Phase, show result
+  useEffect(() => {
+    if (isRevealingPhase && player.hasAnswered && isCorrect !== null) {
+      setShowResult(true);
+    }
+  }, [isRevealingPhase, player.hasAnswered, isCorrect]);
+
+  // 🔊 SFX: Tick tắc khi còn 5s cuối (Live Mode tension)
+  const lastTickRef = useRef<number>(-1);
+  useEffect(() => {
+    // Chỉ play tick khi đang ở Answering phase và chưa trả lời
+    if (gameStatus === 'answering' && !player.hasAnswered && timeLeft <= 5 && timeLeft > 0) {
+      // Tránh play nhiều lần cho cùng 1 giây
+      if (lastTickRef.current !== timeLeft) {
+        lastTickRef.current = timeLeft;
+        soundService.play('tick');
+      }
+    }
+  }, [timeLeft, gameStatus, player.hasAnswered]);
+
+  // 🔊 SFX: Transition sound khi vào Revealing Phase
+  const hasPlayedRevealSound = useRef(false);
+  useEffect(() => {
+    if (isRevealingPhase && !hasPlayedRevealSound.current) {
+      hasPlayedRevealSound.current = true;
+      // Play correct/wrong sound based on result
+      if (isCorrect === true) {
+        soundService.play('correct');
+      } else if (isCorrect === false) {
+        soundService.play('wrong');
+      } else {
+        soundService.play('transition');
+      }
+    }
+    // Reset khi chuyển câu mới
+    if (!isRevealingPhase) {
+      hasPlayedRevealSound.current = false;
+    }
+  }, [isRevealingPhase, isCorrect]);
 
   // ============= POWER-UPS =============
   const handlePowerUpUse = useCallback(async (powerUpType: PowerUpType) => {
@@ -137,10 +192,6 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
     if (timePercentage > 25) return 'bg-yellow-500';
     return 'bg-red-500';
   }, [timePercentage]);
-
-  const canSubmit = useMemo(() => {
-    return !player.hasAnswered && !isSubmitting && selectedAnswer !== null;
-  }, [player.hasAnswered, isSubmitting, selectedAnswer]);
 
   // ============= STREAK BONUS DISPLAY =============
   const nextStreakBonus = useMemo(() => {
@@ -180,7 +231,7 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
                   <Trophy className="w-6 h-6 text-yellow-400" />
                 </div>
                 <div>
-                  <p className="text-xs text-yellow-300/70 font-medium">Điểm</p>
+                  <p className="text-xs text-yellow-300/70 font-medium">{t('game.score')}</p>
                   <p className="text-2xl font-bold text-yellow-400">{player.score.toLocaleString()}</p>
                 </div>
               </div>
@@ -202,7 +253,7 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
                   <Flame className={`w-6 h-6 ${player.streak >= 3 ? 'text-orange-400' : 'text-gray-400'}`} />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-300/70 font-medium">Streak</p>
+                  <p className="text-xs text-gray-300/70 font-medium">{t('game.streak')}</p>
                   <div className="flex items-center space-x-2">
                     <p className={`text-2xl font-bold ${player.streak >= 3 ? 'text-orange-400' : 'text-gray-400'}`}>
                       {player.streak}
@@ -239,7 +290,7 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
                   }`} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs text-gray-300/70 font-medium">Thời gian</p>
+                  <p className="text-xs text-gray-300/70 font-medium">{t('game.timeRemaining')}</p>
                   <p className={`text-2xl font-bold ${
                     timePercentage > 50 ? 'text-green-400' : timePercentage > 25 ? 'text-yellow-400' : 'text-red-400'
                   }`}>
@@ -323,45 +374,94 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
                       <QuestionRenderer
                         question={questionState.question}
                         value={selectedAnswer}
-                        onChange={handleAnswerChange}
+                        onChange={handleAnswerSelect}
                         disabled={player.hasAnswered || isSubmitting}
                         activePowerUps={activePowerUps}
                       />
                     </div>
 
-                    {/* Submit Button */}
-                    {!player.hasAnswered && (
-                      <motion.button
-                        onClick={handleSubmit}
-                        disabled={!canSubmit}
-                        whileHover={canSubmit ? { scale: 1.02 } : {}}
-                        whileTap={canSubmit ? { scale: 0.98 } : {}}
-                        className={`w-full mt-6 py-4 px-8 rounded-2xl font-bold text-lg transition-all duration-200 ${
-                          canSubmit
-                            ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-xl hover:shadow-2xl'
-                            : 'bg-gray-500/20 text-gray-500 cursor-not-allowed border border-gray-500/30'
-                        }`}
+                    {/* Submitting Indicator (replaces Submit Button) */}
+                    {isSubmitting && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-6 flex items-center justify-center space-x-3 text-blue-400"
                       >
-                        {isSubmitting ? (
-                          <span className="flex items-center justify-center space-x-2">
-                            <motion.div
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                              className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                            />
-                            <span>Đang gửi...</span>
-                          </span>
-                        ) : (
-                          <span className="flex items-center justify-center space-x-2">
-                            <CheckCircle className="w-5 h-5" />
-                            <span>Xác nhận đáp án</span>
-                          </span>
-                        )}
-                      </motion.button>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                          className="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full"
+                        />
+                        <span className="text-lg font-medium">{t('game.submitting')}</span>
+                      </motion.div>
                     )}
                   </motion.div>
+                ) : player.hasAnswered && !isRevealingPhase ? (
+                  // ============= WAITING STATE (LIVE MODE - PHASE 1) =============
+                  // ✅ Đã gửi đáp án, đang chờ người khác - CHƯA BIẾT ĐÚNG/SAI
+                  <motion.div
+                    key="waiting"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="bg-gradient-to-br from-blue-500/20 to-indigo-500/20 rounded-3xl p-8 border-2 border-blue-500/50"
+                  >
+                    <div className="text-center">
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1, rotate: [0, 10, -10, 0] }}
+                        transition={{ type: 'spring', stiffness: 200, rotate: { repeat: Infinity, duration: 2 } }}
+                        className="mx-auto w-24 h-24 rounded-full flex items-center justify-center mb-6 bg-blue-500"
+                      >
+                        <Clock className="w-16 h-16 text-white" />
+                      </motion.div>
+
+                      <h3 className="text-3xl font-bold mb-4 text-blue-400">
+                        {t('game.answerSubmitted')}
+                      </h3>
+                      
+                      <p className="text-xl text-blue-300/80 mb-6">
+                        {t('game.waitingForOpponents')}
+                      </p>
+
+                      {/* Timer countdown */}
+                      <div className="flex items-center justify-center space-x-3 mb-4">
+                        <Clock className="w-5 h-5 text-blue-400" />
+                        <span className="text-2xl font-mono text-blue-300">{timeLeft}s</span>
+                      </div>
+
+                      {/* Answer count indicator */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="mt-4 p-4 bg-white/10 rounded-xl"
+                      >
+                        <div className="flex items-center justify-center space-x-3">
+                          <Users className="w-5 h-5 text-blue-400" />
+                          <span className="text-blue-200">
+                            {questionState.answerCount > 0 
+                              ? t('game.playersAnswered', { count: questionState.answerCount })
+                              : t('game.youAreFirst')
+                            }
+                          </span>
+                          <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
+                        </div>
+                      </motion.div>
+
+                      {/* Suspense message */}
+                      <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: [0.5, 1, 0.5] }}
+                        transition={{ repeat: Infinity, duration: 2 }}
+                        className="mt-6 text-gray-400 text-sm"
+                      >
+                        {t('game.resultsWhenAllFinish')}
+                      </motion.p>
+                    </div>
+                  </motion.div>
                 ) : (
-                  // ============= ANSWER RESULT =============
+                  // ============= RESULT STATE (LIVE MODE - REVEALING PHASE) =============
+                  // ✅ Hiện kết quả đúng/sai + điểm
                   <motion.div
                     key="result"
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -391,7 +491,7 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
                       <h3 className={`text-4xl font-bold mb-4 ${
                         isCorrect ? 'text-green-400' : 'text-red-400'
                       }`}>
-                        {isCorrect ? 'Chính xác!' : 'Sai rồi!'}
+                        {isCorrect ? t('game.correct') : t('game.incorrect')}
                       </h3>
 
                       {isCorrect && (
@@ -401,14 +501,14 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
                             <span className="text-5xl font-bold text-yellow-400">
                               +{pointsEarned}
                             </span>
-                            <span className="text-2xl text-yellow-400/70">điểm</span>
+                            <span className="text-2xl text-yellow-400/70">{t('points')}</span>
                           </div>
 
-                          {questionState.answers[player.id]?.streakBonus && (
+                          {questionState.answers?.[player.id]?.streakBonus && (
                             <div className="flex items-center justify-center space-x-2 text-orange-400 mb-4">
                               <Flame className="w-6 h-6" />
                               <span className="text-lg font-semibold">
-                                Streak bonus: +{questionState.answers[player.id].streakBonus}
+                                {t('game.streakBonus')}: +{questionState.answers[player.id].streakBonus}
                               </span>
                             </div>
                           )}
@@ -418,10 +518,23 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
                       {/* Explanation */}
                       {questionState.question.explanation && (
                         <div className="mt-6 p-4 bg-white/10 rounded-xl">
-                          <p className="text-sm font-semibold text-white mb-2">Giải thích:</p>
+                          <p className="text-sm font-semibold text-white mb-2">{t('game.explanation')}:</p>
                           <p className="text-gray-300">{questionState.question.explanation}</p>
                         </div>
                       )}
+                      
+                      {/* Revealing Phase indicator */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                        className="mt-6 p-3 bg-white/10 rounded-xl border border-white/20"
+                      >
+                        <div className="flex items-center justify-center space-x-2 text-gray-300">
+                          <span>{t('game.movingToNext')}</span>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        </div>
+                      </motion.div>
                     </div>
                   </motion.div>
                 )}
@@ -441,10 +554,10 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
 
               {/* Player Stats */}
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
-                <h3 className="text-lg font-bold text-white mb-4">Thống kê của bạn</h3>
+                <h3 className="text-lg font-bold text-white mb-4">{t('game.yourStats')}</h3>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-300">Độ chính xác</span>
+                    <span className="text-gray-300">{t('accuracy')}</span>
                     <span className="text-white font-bold">
                       {player.totalAnswers > 0
                         ? Math.round((player.correctAnswers / player.totalAnswers) * 100)
@@ -452,20 +565,20 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-300">Câu đúng</span>
+                    <span className="text-gray-300">{t('game.correctAnswers')}</span>
                     <span className="text-green-400 font-bold">
                       {player.correctAnswers}/{player.totalAnswers}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-300">Streak tốt nhất</span>
+                    <span className="text-gray-300">{t('bestStreak')}</span>
                     <span className="text-orange-400 font-bold flex items-center space-x-1">
                       <Flame className="w-4 h-4" />
                       <span>{player.maxStreak}</span>
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-300">Thời gian TB</span>
+                    <span className="text-gray-300">{t('avgTime')}</span>
                     <span className="text-blue-400 font-bold">
                       {(player.avgResponseTime / 1000).toFixed(1)}s
                     </span>
@@ -478,20 +591,18 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
                 <div className="bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-2xl p-6 border border-orange-500/30">
                   <div className="flex items-center space-x-2 mb-3">
                     <TrendingUp className="w-5 h-5 text-orange-400" />
-                    <h3 className="text-lg font-bold text-orange-400">Streak tiếp theo</h3>
+                    <h3 className="text-lg font-bold text-orange-400">{t('game.nextStreak')}</h3>
                   </div>
                   <p className="text-gray-300 text-sm mb-2">
-                    Trả lời đúng <span className="text-orange-400 font-bold">
-                      {nextStreakBonus.streak - player.streak}
-                    </span> câu nữa để:
+                    {t('game.answerCorrectlyMore', { count: nextStreakBonus.streak - player.streak })}
                   </p>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-300">Hệ số nhân:</span>
+                      <span className="text-gray-300">{t('game.multiplier')}:</span>
                       <span className="text-orange-400 font-bold">x{nextStreakBonus.multiplier}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-300">Thưởng:</span>
+                      <span className="text-gray-300">{t('game.bonus')}:</span>
                       <span className="text-yellow-400 font-bold">+{nextStreakBonus.bonusPoints}</span>
                     </div>
                   </div>

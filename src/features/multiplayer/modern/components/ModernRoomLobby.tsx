@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { 
   Users, 
-  Play, 
   Crown, 
   Copy, 
   CheckCircle, 
@@ -15,11 +14,14 @@ import {
   Monitor,
   MessageSquare,
   Loader,
-  Trophy
+  Trophy,
+  Link,
+  Shuffle,
+  Zap
 } from 'lucide-react';
 import { getAuth } from 'firebase/auth';
-import { collection, onSnapshot, query, orderBy, deleteDoc, getDocs } from 'firebase/firestore';
-import { ref, onValue, getDatabase } from 'firebase/database';
+import { onSnapshot } from 'firebase/firestore';
+import { ref, onValue, getDatabase, remove } from 'firebase/database';
 import QRCodeLib from 'qrcode';
 import { modernMultiplayerService, ModernPlayer, ModernQuiz } from '../services/modernMultiplayerService';
 import MemoizedPlayerCard from './MemoizedPlayerCard';
@@ -49,9 +51,8 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
 }) => {
   const { t } = useTranslation('multiplayer');
   const [players, setPlayers] = useState<{ [key: string]: ModernPlayer }>({});
-  const [isStarting, setIsStarting] = useState(false);
+  const [_isStarting, setIsStarting] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string>('');
-  const [messages, setMessages] = useState<any[]>([]);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [copySuccess, setCopySuccess] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
@@ -67,7 +68,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
     player: null,
     isKicking: false
   });
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const [liveGameMode, setLiveGameMode] = useState<'synced' | 'free'>('synced'); // Live game mode from RTDB
   const initializingRef = useRef(false); // Track if currently initializing
 
   // Enhanced features hooks
@@ -202,19 +203,16 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
     }
   };
 
+  // ✅ FIX: Use RTDB for chat (consistent with ModernRealtimeChat component)
   const clearChatMessages = async () => {
     try {
       if (!roomId) return;
       
-      const messagesQuery = query(
-        collection(modernMultiplayerService.db, 'multiplayer_rooms', roomId, 'messages')
-      );
-      const snapshot = await getDocs(messagesQuery);
+      const database = getDatabase();
+      const chatRef = ref(database, `rooms/${roomId}/chat/messages`);
+      await remove(chatRef);
       
-      const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
-      await Promise.all(deletePromises);
-      
-      console.log('✅ Cleared chat messages');
+      console.log('✅ Cleared chat messages (RTDB)');
     } catch (error) {
       console.error('❌ Failed to clear chat messages:', error);
     }
@@ -246,6 +244,29 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
       
       console.log(`✅ Loaded ${questions.length} questions`);
       
+      // ✅ FIX: Get latest settings from RTDB (host may have changed them)
+      const database = getDatabase();
+      const settingsRef = ref(database, `rooms/${roomId}/settings`);
+      const { get: getRtdb } = await import('firebase/database');
+      const settingsSnap = await getRtdb(settingsRef);
+      const rtdbSettings = settingsSnap.val() || {};
+      
+      // Merge RTDB settings with defaults
+      const finalSettings = {
+        gameMode: rtdbSettings.gameMode || roomData?.settings?.gameMode || 'synced',
+        timePerQuestion: rtdbSettings.timePerQuestion || roomData?.settings?.timePerQuestion || 30,
+        totalQuizTime: rtdbSettings.totalQuizTime || roomData?.settings?.totalQuizTime || 300,
+        showAnswerReview: true,
+        reviewDuration: 5,
+        leaderboardDuration: 3,
+        powerUpsEnabled: true,
+        streakEnabled: true,
+        spectatorMode: true,
+        autoStart: rtdbSettings.autoStart ?? false,
+      };
+      
+      console.log('🎮 Using game settings:', finalSettings);
+      
       // Initialize game engine with RTDB
       console.log('🎯 Initializing game engine...');
       await gameEngine.initializeGame(
@@ -254,16 +275,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
         quiz?.title || roomData.quizTitle || 'Quiz Game',
         questions as any, // Type conversion for compatibility
         currentUserId,
-        {
-          timePerQuestion: 30,
-          showAnswerReview: true,
-          reviewDuration: 5,
-          leaderboardDuration: 3,
-          powerUpsEnabled: true,
-          streakEnabled: true,
-          spectatorMode: true,
-          autoStart: false,
-        }
+        finalSettings
       );
       
       console.log('✅ Game engine initialized');
@@ -313,12 +325,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
   }, [playersList]);
   
   const readyCount = useMemo(() => activePlayers.filter((p) => p.isReady).length, [activePlayers]);
-  const allReady = useMemo(() => {
-    // Game can start if: at least 1 player (role='player') is ready
-    // Host can be spectator or player - doesn't matter, just need 1 ready player
-    const readyPlayers = playersList.filter(p => p.role === 'player' && p.isReady);
-    return readyPlayers.length >= 1;
-  }, [playersList]);
+  
   const isHost = useMemo(() => {
     // Only check roomData.hostId - no fallback to first player
     const result = roomData?.hostId === currentUserId;
@@ -419,25 +426,11 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
         
         setIsLoadingRoom(false);
 
-        // Set up chat listener
-        let chatUnsubscribe: (() => void) | undefined;
+        // Set up room data listener (Firestore) for quiz info and settings
+        // ✅ REMOVED: Firestore chat listener - now using ModernRealtimeChat (RTDB)
         let roomUnsubscribe: (() => void) | undefined;
         
         if (roomId) {
-          // Chat messages listener
-          const messagesQuery = query(
-            collection(modernMultiplayerService.db, 'multiplayer_rooms', roomId, 'messages'),
-            orderBy('timestamp', 'asc')
-          );
-          
-          chatUnsubscribe = onSnapshot(messagesQuery, (snapshot) => {
-            const newMessages = snapshot.docs.map(doc => ({
-              id: doc.id,
-              ...doc.data()
-            }));
-            setMessages(newMessages);
-          });
-          
           // Room data listener for quiz info and settings
           const { doc: docFn } = await import('firebase/firestore');
           roomUnsubscribe = onSnapshot(
@@ -465,9 +458,6 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
         }
         
         return () => {
-          if (chatUnsubscribe) {
-            chatUnsubscribe();
-          }
           if (roomUnsubscribe) {
             roomUnsubscribe();
           }
@@ -500,11 +490,6 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
     };
   }, [roomId]);
 
-  // Auto-scroll chat to bottom
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
   // Listen to RTDB room data for real-time updates (including sharedScreen)
   useEffect(() => {
     if (!roomId) return;
@@ -536,6 +521,28 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
       }
     }, (error) => {
       console.error('❌ RTDB room listener error:', error);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [roomId]);
+
+  // 🎮 Listen to RTDB settings changes (gameMode) to display live mode
+  useEffect(() => {
+    if (!roomId) return;
+    
+    const database = getDatabase();
+    const settingsRef = ref(database, `rooms/${roomId}/settings`);
+    
+    const unsubscribe = onValue(settingsRef, (snapshot) => {
+      const settings = snapshot.val();
+      if (settings?.gameMode) {
+        setLiveGameMode(settings.gameMode);
+        console.log('🎮 Live game mode updated:', settings.gameMode);
+      }
+    }, (error) => {
+      console.error('❌ Settings listener error:', error);
     });
 
     return () => {
@@ -657,32 +664,6 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
               <p className="text-blue-200 text-xs sm:text-sm">{t('readyPlayers')}</p>
               <p className="text-lg sm:text-xl font-bold text-white">{readyCount}/{activePlayers.length}</p>
             </div>
-            {isHost && allReady && (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleStartGame}
-                disabled={isStarting}
-                className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold disabled:opacity-50 hover:shadow-lg transition-all text-sm sm:text-base"
-              >
-                {isStarting ? (
-                  <>
-                    <div className="relative">
-                      <Loader className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
-                      <div className="absolute inset-0 w-3 h-3 sm:w-4 sm:h-4 bg-blue-400/20 rounded-full animate-ping"></div>
-                    </div>
-                    <span className="hidden sm:inline">{t('startingGame')}</span>
-                    <span className="sm:hidden">Starting...</span>
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="hidden sm:inline">{t('startGame')}</span>
-                    <span className="sm:hidden">Start</span>
-                  </>
-                )}
-              </motion.button>
-            )}
           </div>
         </div>
       </motion.div>
@@ -759,6 +740,56 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
                 <div className="text-xs sm:text-sm text-blue-200">{t('players')}</div>
               </div>
             </div>
+
+            {/* 🎮 Game Mode Display */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              key={liveGameMode}
+              className={`mt-4 p-3 sm:p-4 rounded-xl border-2 flex items-center justify-between ${
+                liveGameMode === 'synced'
+                  ? 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border-blue-400/50'
+                  : 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-purple-400/50'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${
+                  liveGameMode === 'synced' ? 'bg-blue-500/30' : 'bg-purple-500/30'
+                }`}>
+                  {liveGameMode === 'synced' ? (
+                    <Link className="w-5 h-5 sm:w-6 sm:h-6 text-blue-300" />
+                  ) : (
+                    <Shuffle className="w-5 h-5 sm:w-6 sm:h-6 text-purple-300" />
+                  )}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Zap className={`w-4 h-4 ${
+                      liveGameMode === 'synced' ? 'text-blue-400' : 'text-purple-400'
+                    }`} />
+                    <span className="text-xs sm:text-sm text-gray-300 font-medium">
+                      {t('gameMode', 'Chế độ chơi')}
+                    </span>
+                  </div>
+                  <p className={`text-lg sm:text-xl font-bold ${
+                    liveGameMode === 'synced' ? 'text-blue-200' : 'text-purple-200'
+                  }`}>
+                    {liveGameMode === 'synced' 
+                      ? t('arenaMode', 'Đấu trường') 
+                      : t('raceMode', 'Đường đua')
+                    }
+                  </p>
+                </div>
+              </div>
+              <div className={`text-right text-xs sm:text-sm max-w-[200px] sm:max-w-[250px] ${
+                liveGameMode === 'synced' ? 'text-blue-300' : 'text-purple-300'
+              }`}>
+                {liveGameMode === 'synced' 
+                  ? t('arenaModeDesc')
+                  : t('raceModeDesc')
+                }
+              </div>
+            </motion.div>
           </motion.div>
 
           {/* Shared Screen - Central Display */}
@@ -943,6 +974,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
                   score: p.score || 0,
                   joinedAt: p.joinedAt || Date.now()
                 }))}
+                currentQuizId={roomData?.quizId}
                 onGameStart={handleStartGame}
                 onGamePause={() => console.log('Game paused')}
                 onGameResume={() => console.log('Game resumed')}
@@ -968,6 +1000,39 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
                     console.log('✅ Settings updated:', settings);
                   } catch (error) {
                     console.error('❌ Failed to update settings:', error);
+                  }
+                }}
+                onQuizChange={async (quizId: string, quizData: any) => {
+                  try {
+                    // Update quiz in state
+                    setQuiz(quizData);
+                    
+                    // Update room document with new quiz
+                    const { doc: docFn, updateDoc } = await import('firebase/firestore');
+                    const roomDocRef = docFn(modernMultiplayerService.db, 'multiplayer_rooms', roomId);
+                    await updateDoc(roomDocRef, {
+                      quizId: quizId,
+                      quiz: {
+                        id: quizId,
+                        title: quizData.title,
+                        description: quizData.description,
+                        questionCount: quizData.questionCount || quizData.questions?.length || 0,
+                        difficulty: quizData.difficulty,
+                        category: quizData.category
+                      }
+                    });
+                    
+                    console.log('✅ Quiz changed to:', quizData.title);
+                    
+                    // Show success toast
+                    import('react-toastify').then(({ toast }) => {
+                      toast.success(t('quizChanged', 'Đã đổi quiz thành công!'));
+                    });
+                  } catch (error) {
+                    console.error('❌ Failed to change quiz:', error);
+                    import('react-toastify').then(({ toast }) => {
+                      toast.error('Không thể đổi quiz');
+                    });
                   }
                 }}
               />

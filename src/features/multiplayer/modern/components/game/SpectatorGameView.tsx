@@ -4,7 +4,7 @@
  * Shows answer distribution bar chart + live leaderboard sidebar
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Eye, 
@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { QuestionState, ModernPlayer, LeaderboardEntry } from '../../types/game.types';
 import { gameEngine } from '../../services/gameEngine';
+import soundService from '../../../services/soundService';
 import { Answer } from '../../../../quiz/types';
 import { useTranslation } from 'react-i18next';
 import { ref, onValue, getDatabase } from 'firebase/database';
@@ -36,19 +37,10 @@ const SpectatorGameView: React.FC<SpectatorGameViewProps> = ({
 }) => {
   const { t } = useTranslation('multiplayer');
   const [spectatorData, setSpectatorData] = useState<any>(null);
-  const [timeLeft, setTimeLeft] = useState(questionState.timeRemaining);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
 
-  // Update timer
-  useEffect(() => {
-    setTimeLeft(questionState.timeRemaining);
-    
-    const timer = setInterval(() => {
-      setTimeLeft(prev => Math.max(0, prev - 1));
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [questionState.timeRemaining, questionState.questionIndex]);
+  // ✅ OPTIMIZED: Use server time directly - no local countdown
+  const timeLeft = questionState?.timeRemaining ?? 0;
 
   // Fetch spectator view data - use longer interval to avoid spam
   useEffect(() => {
@@ -96,6 +88,17 @@ const SpectatorGameView: React.FC<SpectatorGameViewProps> = ({
 
     return () => unsubscribe();
   }, [roomId]);
+
+  // 🔊 SFX: Tick tắc khi còn 5s cuối (Live Mode tension cho Spectator)
+  const lastTickRef = useRef<number>(-1);
+  useEffect(() => {
+    if (timeLeft <= 5 && timeLeft > 0) {
+      if (lastTickRef.current !== timeLeft) {
+        lastTickRef.current = timeLeft;
+        soundService.play('tick');
+      }
+    }
+  }, [timeLeft]);
 
   // Calculate live leaderboard from players if leaderboard is empty
   const liveLeaderboard = useMemo(() => {
@@ -303,12 +306,17 @@ const SpectatorGameView: React.FC<SpectatorGameViewProps> = ({
                           transition={{ delay: index * 0.05 }}
                           className={`relative overflow-hidden rounded-xl border ${color.border} bg-black/20`}
                         >
-                          {/* Background Bar */}
+                          {/* Background Bar - Smooth grow animation */}
                           <motion.div
                             className={`absolute inset-0 bg-gradient-to-r ${color.gradient} to-transparent`}
                             initial={{ width: 0 }}
                             animate={{ width: `${barWidth}%` }}
-                            transition={{ duration: 0.8, ease: 'easeOut' }}
+                            transition={{ 
+                              type: 'spring',
+                              stiffness: 50,
+                              damping: 15,
+                              mass: 1
+                            }}
                           />
 
                           {/* Content */}
@@ -400,6 +408,88 @@ const SpectatorGameView: React.FC<SpectatorGameViewProps> = ({
                       ? Math.round((questionState.correctCount / answeredCount) * 100)
                       : 0}%
                   </p>
+                </div>
+              </div>
+              
+              {/* 🆕 LIVE MODE: Player Status Grid - Lưới trạng thái người chơi */}
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
+                <div className="flex items-center space-x-2 mb-4">
+                  <Users className="w-5 h-5 text-blue-400" />
+                  <h3 className="text-lg font-bold text-white">{t('playerStatus', 'Trạng thái người chơi')}</h3>
+                </div>
+                
+                {/* Player Grid */}
+                <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
+                  {Object.values(players)
+                    .filter(p => p.role === 'player')
+                    .map((p) => {
+                      const hasAnswered = p.hasAnswered;
+                      return (
+                        <motion.div
+                          key={p.id}
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className={`relative flex flex-col items-center p-2 rounded-xl transition-all duration-300 ${
+                            hasAnswered
+                              ? 'bg-green-500/20 border-2 border-green-500/50'
+                              : 'bg-yellow-500/10 border-2 border-yellow-500/30 animate-pulse'
+                          }`}
+                        >
+                          {/* Avatar */}
+                          {p.photoURL ? (
+                            <img
+                              src={p.photoURL}
+                              alt={p.name}
+                              className="w-10 h-10 rounded-full object-cover border-2 border-white/20"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold border-2 border-white/20">
+                              {p.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          
+                          {/* Name */}
+                          <p className="text-xs text-white/80 font-medium mt-1 truncate max-w-full">
+                            {p.name.split(' ')[0]}
+                          </p>
+                          
+                          {/* Status Icon */}
+                          <div className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center ${
+                            hasAnswered ? 'bg-green-500' : 'bg-yellow-500'
+                          }`}>
+                            {hasAnswered ? (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: 'spring', stiffness: 500 }}
+                              >
+                                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </motion.div>
+                            ) : (
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                                className="w-3 h-3 border-2 border-white border-t-transparent rounded-full"
+                              />
+                            )}
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                </div>
+                
+                {/* Legend */}
+                <div className="flex items-center justify-center space-x-6 mt-4 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500" />
+                    <span className="text-green-300">{t('answered', 'Đã trả lời')}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 rounded-full bg-yellow-500 animate-pulse" />
+                    <span className="text-yellow-300">{t('thinking', 'Đang suy nghĩ')}</span>
+                  </div>
                 </div>
               </div>
             </div>

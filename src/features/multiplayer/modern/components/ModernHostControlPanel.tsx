@@ -16,10 +16,14 @@ import {
   CheckCircle,
   RotateCcw,
   MessageSquare,
-  Monitor
+  Monitor,
+  Shuffle,
+  Link
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getDatabase, ref, update, onValue, off } from 'firebase/database';
+import { GameMode } from '../types/game.types';
+import QuizSelectorModal from './QuizSelectorModal';
 
 interface Player {
   id: string;
@@ -34,6 +38,8 @@ interface Player {
 interface RoomSettings {
   maxPlayers: number;
   timePerQuestion: number;
+  totalQuizTime: number;      // 🆓 FREE MODE: Total time for quiz
+  gameMode: GameMode;         // 🎮 Game mode: 'synced' or 'free'
   difficulty: 'easy' | 'medium' | 'hard';
   isPrivate: boolean;
   autoStart: boolean;
@@ -48,6 +54,7 @@ interface ModernHostControlPanelProps {
   isHost: boolean;
   hostIsParticipating?: boolean;
   players: Player[];
+  currentQuizId?: string;
   onGameStart: () => void;
   onGamePause: () => void;
   onGameResume: () => void;
@@ -55,6 +62,7 @@ interface ModernHostControlPanelProps {
   onTransferHost: (playerId: string) => void;
   onToggleHostParticipation?: () => void;
   onSettingsUpdate: (settings: RoomSettings) => void;
+  onQuizChange?: (quizId: string, quizData: any) => void;
 }
 
 const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
@@ -63,17 +71,21 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
   isHost,
   hostIsParticipating = true,
   players,
+  currentQuizId,
   onGameStart,
   onGamePause,
   onGameResume,
   onKickPlayer,
   onTransferHost,
   onToggleHostParticipation,
-  onSettingsUpdate
+  onSettingsUpdate,
+  onQuizChange
 }) => {
   const [settings, setSettings] = useState<RoomSettings>({
     maxPlayers: 8,
     timePerQuestion: 30,
+    totalQuizTime: 300,       // 🆓 5 minutes default for free mode
+    gameMode: 'synced',       // 🎮 Default to synced mode
     difficulty: 'medium',
     isPrivate: false,
     autoStart: true,      // Auto start ON by default
@@ -83,6 +95,7 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
   });
   const [showSettings, setShowSettings] = useState(false);
   const [showPlayerManagement, setShowPlayerManagement] = useState(false);
+  const [showQuizSelector, setShowQuizSelector] = useState(false);
   const [gameStatus, setGameStatus] = useState<'waiting' | 'playing' | 'paused'>('waiting');
   const { t } = useTranslation('multiplayer');
 
@@ -153,9 +166,17 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
     }
   };
 
+  // ✅ NEW LOGIC: Host can start game if at least 1 player is ready (including host)
   const canStartGame = () => {
-    const readyPlayers = players.filter(p => p.isReady && p.isOnline).length;
-    return readyPlayers >= 2 && gameStatus === 'waiting';
+    // Count all ready and online players
+    const readyPlayers = players.filter(p => 
+      p.isReady && 
+      p.isOnline
+    ).length;
+    
+    // Can start if at least 1 player is ready and game is waiting
+    // Host can also be ready and count as a player
+    return readyPlayers >= 1 && gameStatus === 'waiting';
   };
 
   const getGameStatusColor = () => {
@@ -308,16 +329,82 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => {
-              // Navigate to quiz selection page
-              window.location.href = `/multiplayer/rooms/${roomId}/change-quiz`;
-            }}
+            onClick={() => setShowQuizSelector(true)}
             className="flex items-center justify-center space-x-2 p-3 bg-gradient-to-r from-amber-100 to-orange-100 hover:from-amber-200 hover:to-orange-200 rounded-xl transition-all duration-200"
             title={t('changeQuiz')}
           >
             <Trophy className="w-4 h-4 text-amber-600" />
             <span className="text-sm font-semibold text-amber-700">{t('changeQuiz')}</span>
           </motion.button>
+        </div>
+
+        {/* 🎮 GAME MODE SELECTOR - Visible outside Settings */}
+        <div className="mb-4 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200/50">
+          <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-3">
+            <Zap className="w-5 h-5 text-purple-500" />
+            <span className="font-bold">{t('gameMode', 'Chế độ chơi')}</span>
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            {/* Đấu trường (Synced Mode) */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => updateSetting('gameMode', 'synced')}
+              className={`relative p-3 rounded-xl border-2 transition-all duration-200 ${
+                settings.gameMode === 'synced'
+                  ? 'bg-gradient-to-br from-blue-100 to-indigo-100 border-blue-500 shadow-lg'
+                  : 'bg-white border-gray-200 hover:border-blue-300'
+              }`}
+              title={t('arenaModeDesc')}
+            >
+              <div className="flex items-center space-x-3">
+                <Link className={`w-6 h-6 flex-shrink-0 ${settings.gameMode === 'synced' ? 'text-blue-600' : 'text-gray-400'}`} />
+                <div className="text-left min-w-0">
+                  <span className={`font-bold text-sm block ${settings.gameMode === 'synced' ? 'text-blue-800' : 'text-gray-600'}`}>
+                    {t('arenaMode', 'Đấu trường')}
+                  </span>
+                  <span className={`text-xs block truncate ${settings.gameMode === 'synced' ? 'text-blue-600' : 'text-gray-400'}`}>
+                    {t('arenaModeShort', 'Đồng bộ')}
+                  </span>
+                </div>
+              </div>
+              {settings.gameMode === 'synced' && (
+                <div className="absolute top-2 right-2">
+                  <CheckCircle className="w-4 h-4 text-blue-600" />
+                </div>
+              )}
+            </motion.button>
+
+            {/* Đường đua (Free Mode) */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => updateSetting('gameMode', 'free')}
+              className={`relative p-3 rounded-xl border-2 transition-all duration-200 ${
+                settings.gameMode === 'free'
+                  ? 'bg-gradient-to-br from-purple-100 to-pink-100 border-purple-500 shadow-lg'
+                  : 'bg-white border-gray-200 hover:border-purple-300'
+              }`}
+              title={t('raceModeDesc')}
+            >
+              <div className="flex items-center space-x-3">
+                <Shuffle className={`w-6 h-6 flex-shrink-0 ${settings.gameMode === 'free' ? 'text-purple-600' : 'text-gray-400'}`} />
+                <div className="text-left min-w-0">
+                  <span className={`font-bold text-sm block ${settings.gameMode === 'free' ? 'text-purple-800' : 'text-gray-600'}`}>
+                    {t('raceMode', 'Đường đua')}
+                  </span>
+                  <span className={`text-xs block truncate ${settings.gameMode === 'free' ? 'text-purple-600' : 'text-gray-400'}`}>
+                    {t('raceModeShort', 'Tự do')}
+                  </span>
+                </div>
+              </div>
+              {settings.gameMode === 'free' && (
+                <div className="absolute top-2 right-2">
+                  <CheckCircle className="w-4 h-4 text-purple-600" />
+                </div>
+              )}
+            </motion.button>
+          </div>
         </div>
 
         {/* Settings Panel */}
@@ -327,29 +414,58 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="space-y-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200/50"
+              className="space-y-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200/50"
             >
               <h4 className="font-bold text-blue-900 mb-3">{t('roomSettingsTitle')}</h4>
               
+              {/* Time and Player Settings */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Time per question */}
-                <div>
-                  <label className="flex items-center justify-between text-sm font-medium text-gray-700 mb-2">
-                    <span className="flex items-center space-x-1">
-                      <Clock className="w-4 h-4" />
-                      <span>{t('timePerQuestion')}</span>
-                    </span>
-                    <span className="text-blue-600 font-bold">{settings.timePerQuestion}s</span>
-                  </label>
-                  <input
-                    type="range"
-                    min="10"
-                    max="60"
-                    value={settings.timePerQuestion || 30}
-                    onChange={(e) => updateSetting('timePerQuestion', parseInt(e.target.value))}
-                    className="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer"
-                  />
-                </div>
+                {/* Time per question - Only show in Synced mode */}
+                {settings.gameMode === 'synced' && (
+                  <div>
+                    <label className="flex items-center justify-between text-sm font-medium text-gray-700 mb-2">
+                      <span className="flex items-center space-x-1">
+                        <Clock className="w-4 h-4" />
+                        <span>{t('timePerQuestion')}</span>
+                      </span>
+                      <span className="text-blue-600 font-bold">{settings.timePerQuestion}{t('seconds', 's')}</span>
+                    </label>
+                    <input
+                      type="range"
+                      min="10"
+                      max="60"
+                      value={settings.timePerQuestion || 30}
+                      onChange={(e) => updateSetting('timePerQuestion', parseInt(e.target.value))}
+                      className="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer"
+                    />
+                  </div>
+                )}
+
+                {/* Total Quiz Time - Only show in Free mode */}
+                {settings.gameMode === 'free' && (
+                  <div>
+                    <label className="flex items-center justify-between text-sm font-medium text-gray-700 mb-2">
+                      <span className="flex items-center space-x-1">
+                        <Clock className="w-4 h-4" />
+                        <span>{t('totalQuizTime', 'Total Time')}</span>
+                      </span>
+                      <span className="text-purple-600 font-bold">{Math.floor((settings.totalQuizTime || 300) / 60)}{t('minutes', 'm')}</span>
+                    </label>
+                    <input
+                      type="range"
+                      min="60"
+                      max="1800"
+                      step="60"
+                      value={settings.totalQuizTime || 300}
+                      onChange={(e) => updateSetting('totalQuizTime', parseInt(e.target.value))}
+                      className="w-full h-2 bg-purple-200 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                      <span>1{t('minute', 'm')}</span>
+                      <span>30{t('minutes', 'm')}</span>
+                    </div>
+                  </div>
+                )}
 
                 {/* Max players */}
                 <div>
@@ -438,7 +554,7 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
                           {player.name}
                           {player.id === currentUserId && (
                             <span className="ml-2 px-2 py-0.5 bg-purple-500 text-white text-xs rounded-full">
-                              Host
+                              {t('host', 'Host')}
                             </span>
                           )}
                         </p>
@@ -507,6 +623,29 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Quiz Selector Modal */}
+      <QuizSelectorModal
+        isOpen={showQuizSelector}
+        onClose={() => setShowQuizSelector(false)}
+        currentQuizId={currentQuizId}
+        onSelectQuiz={(quiz) => {
+          // Update room with new quiz
+          if (onQuizChange) {
+            onQuizChange(quiz.id, quiz);
+          }
+          
+          // Also update in database
+          const roomRef = ref(db, `rooms/${roomId}`);
+          update(roomRef, {
+            quizId: quiz.id,
+            quizTitle: quiz.title,
+            questionCount: quiz.questionCount || quiz.questions?.length || 0
+          });
+          
+          setShowQuizSelector(false);
+        }}
+      />
     </div>
   );
 };

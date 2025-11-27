@@ -113,10 +113,15 @@ const ModernMultiplayerPage: React.FC = () => {
             sessionStorage.setItem(`room_${urlRoomId}`, joinResult.roomId);
           }
           
-          // Only show toast once (avoid duplicate in strict mode)
+          // 🔄 Show reconnection toast to reassure user
           if (!sessionStorage.getItem(`rejoined-${urlRoomId}`)) {
             sessionStorage.setItem(`rejoined-${urlRoomId}`, 'true');
-            // Don't show toast on quick rejoin to avoid distraction
+            showToast({
+              type: 'success',
+              title: 'Chào mừng quay lại!',
+              message: 'Đang đồng bộ dữ liệu... Bạn đã kết nối lại thành công.',
+              duration: 3000
+            });
           }
         } catch (error) {
           console.error('❌ Failed to rejoin room from URL:', error);

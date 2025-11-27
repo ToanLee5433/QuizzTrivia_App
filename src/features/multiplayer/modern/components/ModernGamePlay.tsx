@@ -4,8 +4,9 @@
  * Uses new GameCoordinator and GameEngine
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import GameCoordinator from './game/GameCoordinator';
+import { gameEngine } from '../services/gameEngine';
 
 interface ModernGamePlayProps {
   roomId: string;
@@ -29,6 +30,13 @@ const ModernGamePlay: React.FC<ModernGamePlayProps> = ({
   currentUserId,
   onGameEnd,
 }) => {
+  // ✅ Cleanup game engine resources when component unmounts
+  useEffect(() => {
+    return () => {
+      gameEngine.cleanup(roomId);
+    };
+  }, [roomId]);
+
   return (
     <GameCoordinator
       roomId={roomId}

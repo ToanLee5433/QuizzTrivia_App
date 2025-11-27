@@ -27,6 +27,9 @@ type EventCallback = (data: any) => void;
 class GameEngine {
   private db = getDatabase();
   private listeners: Map<string, Map<string, EventCallback>> = new Map();
+  
+  // ✅ Timer management - stored per room to allow proper cleanup
+  private activeTimers: Map<string, NodeJS.Timeout> = new Map();
 
   // ============= INITIALIZATION =============
   
@@ -189,22 +192,40 @@ class GameEngine {
   // ============= GAME FLOW =============
 
   /**
-   * Start game
+   * 🎮 START GAME - Supports both SYNCED and FREE modes
+   * 1. Fetch ALL questions from Firestore ONE TIME
+   * 2. Store questions in RTDB at games/{roomId}/questions
+   * 3. All clients only listen to RTDB - instant sync
+   * 4. Route to appropriate mode based on settings
    */
   async startGame(roomId: string, questions: Question[]): Promise<void> {
     try {
-      logger.info('🎬 Starting game', { roomId, questionCount: questions.length });
+      // Get game settings to check mode
+      const gameRef = ref(this.db, RTDB_PATHS.games(roomId));
+      const gameSnap = await get(gameRef);
+      const gameState = gameSnap.val() as GameState;
+      const gameMode = gameState?.settings?.gameMode || 'synced';
 
-      // ✅ CRITICAL: Copy players from rooms/{roomId}/players to games/{roomId}/players
+      logger.info('🎬 Starting game', { roomId, questionCount: questions.length, gameMode });
+
+      // 🆓 FREE MODE: Use separate flow
+      if (gameMode === 'free') {
+        await this.startFreeMode(roomId, questions);
+        return;
+      }
+
+      // 🔄 SYNCED MODE: Original flow
+      logger.info('🔄 Using SYNCED mode', { roomId });
+
+      // ✅ STEP 1: Copy players from rooms/{roomId}/players to games/{roomId}/players
       const roomPlayersRef = ref(this.db, `rooms/${roomId}/players`);
       const roomPlayersSnap = await get(roomPlayersRef);
       const roomPlayers = roomPlayersSnap.val() as Record<string, any> | null;
 
-      if (roomPlayers) {
-        // Transform room players to game players with proper structure
-        const gamePlayers: Record<string, ModernPlayer> = {};
-        const playerOrder: string[] = [];
+      const gamePlayers: Record<string, ModernPlayer> = {};
+      const playerOrder: string[] = [];
 
+      if (roomPlayers) {
         Object.entries(roomPlayers).forEach(([playerId, player]) => {
           gamePlayers[playerId] = {
             id: playerId,
@@ -231,39 +252,87 @@ class GameEngine {
           playerOrder.push(playerId);
         });
 
-        // Update game with players
-        const gameRef = ref(this.db, RTDB_PATHS.games(roomId));
-        await update(gameRef, {
-          players: gamePlayers,
-          playerOrder,
-        });
-
-        logger.info('✅ Players synced to game', { roomId, playerCount: playerOrder.length });
+        logger.info('✅ Players prepared', { roomId, playerCount: playerOrder.length });
       }
 
-      // Update game status
-      const gameRef = ref(this.db, RTDB_PATHS.games(roomId));
+      // ✅ STEP 2: Clean questions (remove undefined) and store in RTDB
+      const cleanedQuestions = questions.map(q => this.removeUndefined(q));
+      
+      // ✅ STEP 3: Update game state with players AND questions in ONE atomic write
       await update(gameRef, {
         status: 'starting',
         startedAt: Date.now(),
+        players: gamePlayers,
+        playerOrder,
+        // ✅ CRITICAL: Store ALL questions in RTDB for fast client sync
+        questions: cleanedQuestions,
+        totalQuestions: questions.length,
+        currentQuestionIndex: -1, // Will be set to 0 when first question starts
       });
+
+      logger.info('✅ Questions stored in RTDB', { roomId, questionCount: cleanedQuestions.length });
 
       // Emit event
       await this.emitEvent(roomId, {
         type: 'game_started',
+        data: { mode: 'synced' },
         priority: 'high',
         showToast: true,
         sound: 'game_start',
       });
 
-      // Start first question after 3 second countdown
+      // ✅ STEP 4: Start first question after 3 second countdown
+      // Now we can get question directly from RTDB
       setTimeout(() => {
-        this.startQuestion(roomId, 0, questions[0]);
+        this.goToNextQuestion(roomId);
       }, 3000);
 
-      logger.success('✅ Game started', { roomId });
+      logger.success('✅ SYNCED mode game started', { roomId });
     } catch (error) {
       logger.error('❌ Failed to start game', { error });
+      throw error;
+    }
+  }
+
+  /**
+   * 🎯 GO TO NEXT QUESTION - NEW ARCHITECTURE
+   * Host chỉ cần tăng currentQuestionIndex
+   * Tất cả clients tự động nhận question từ RTDB
+   */
+  async goToNextQuestion(roomId: string): Promise<void> {
+    try {
+      // Get current game state
+      const gameRef = ref(this.db, RTDB_PATHS.games(roomId));
+      const gameSnap = await get(gameRef);
+      const gameState = gameSnap.val() as GameState;
+
+      if (!gameState) {
+        throw new Error('Game not found');
+      }
+
+      const nextIndex = gameState.currentQuestionIndex + 1;
+
+      // Check if game should end
+      if (nextIndex >= gameState.totalQuestions) {
+        logger.info('🏁 No more questions, finishing game', { roomId });
+        await this.finishGame(roomId);
+        return;
+      }
+
+      // ✅ Get question directly from RTDB (already stored)
+      const question = gameState.questions[nextIndex];
+      
+      if (!question) {
+        throw new Error(`Question not found at index ${nextIndex}`);
+      }
+
+      logger.info('➡️ Moving to next question', { roomId, nextIndex, type: question.type });
+
+      // Start the question
+      await this.startQuestion(roomId, nextIndex, question);
+
+    } catch (error) {
+      logger.error('❌ Failed to go to next question', { error });
       throw error;
     }
   }
@@ -289,20 +358,31 @@ class GameEngine {
 
   /**
    * Start a question
+   * ✅ OPTIMIZED: Only store questionIndex and metadata
+   * Question data is already in questions[] array - clients read from there
    */
   async startQuestion(roomId: string, questionIndex: number, question: Question): Promise<void> {
     try {
       logger.info('❓ Starting question', { roomId, questionIndex, type: question.type });
 
-      const timeLimit = question.points || 30; // Default 30s
+      // ✅ FIX: Get timePerQuestion from game settings, not question.points
+      const gameRef = ref(this.db, RTDB_PATHS.games(roomId));
+      const gameSnap = await get(gameRef);
+      const gameState = gameSnap.val() as GameState;
+      
+      // Use settings timePerQuestion, fallback to 30s
+      const timeLimit = gameState?.settings?.timePerQuestion || 30;
+      const now = Date.now();
 
-      // Clean question object to remove undefined values (Firebase RTDB requirement)
-      const cleanQuestion = this.removeUndefined(question);
-
+      // ✅ OPTIMIZED: Minimal currentQuestion state
+      // Question data is already in games/{roomId}/questions[index]
+      // Clients will read question from there using currentQuestionIndex
       const questionState: QuestionState = {
         questionIndex,
-        question: cleanQuestion,
-        startedAt: Date.now(),
+        // ✅ Only store essential question metadata, not full question
+        // Full question is at: games/{roomId}/questions[questionIndex]
+        question: this.removeUndefined(question), // Keep for backwards compat, but clients should use questions[index]
+        startedAt: now,
         timeLimit,
         timeRemaining: timeLimit,
         isPaused: false,
@@ -312,27 +392,27 @@ class GameEngine {
         answerDistribution: {},
       };
 
-      // Update game state
-      const gameRef = ref(this.db, RTDB_PATHS.games(roomId));
-      await update(gameRef, {
-        status: 'answering',
-        currentQuestionIndex: questionIndex,
-        currentQuestion: questionState,
-      });
-
-      // Reset player states
+      // ✅ ATOMIC UPDATE: Update game state + reset player states in ONE call
       const playersRef = ref(this.db, RTDB_PATHS.players(roomId));
       const playersSnap = await get(playersRef);
       const players = playersSnap.val() || {};
       
-      const updates: any = {};
+      // Build player reset updates
+      const playerResets: Record<string, any> = {};
       Object.keys(players).forEach(playerId => {
         if (players[playerId].role === 'player') {
-          updates[`${playerId}/hasAnswered`] = false;
-          updates[`${playerId}/currentAnswer`] = null;
+          playerResets[`players/${playerId}/hasAnswered`] = false;
+          playerResets[`players/${playerId}/currentAnswer`] = null;
         }
       });
-      await update(playersRef, updates);
+
+      // ✅ SINGLE ATOMIC UPDATE for minimum latency
+      await update(gameRef, {
+        status: 'answering',
+        currentQuestionIndex: questionIndex,
+        currentQuestion: questionState,
+        ...playerResets, // Include player resets in same update
+      });
 
       // Emit event
       await this.emitEvent(roomId, {
@@ -342,7 +422,7 @@ class GameEngine {
         sound: 'question_start',
       });
 
-      // Start timer countdown
+      // Start timer countdown (with proper cleanup)
       this.startQuestionTimer(roomId, timeLimit);
 
       logger.success('✅ Question started', { roomId, questionIndex });
@@ -353,24 +433,395 @@ class GameEngine {
   }
 
   /**
-   * Timer countdown for question
+   * ⏱️ Timer countdown for question - SERVER AUTHORITATIVE
+   * - Uses server timestamp for sync
+   * - Stores timer ID for cleanup
+   * - Updates RTDB every second for client sync
    */
-  private async startQuestionTimer(roomId: string, duration: number): Promise<void> {
+  private startQuestionTimer(roomId: string, duration: number): void {
+    // ✅ Clear any existing timer for this room
+    this.clearTimer(roomId);
+    
     let remaining = duration;
     
     const timerId = setInterval(async () => {
       remaining--;
       
       if (remaining <= 0) {
-        clearInterval(timerId);
+        this.clearTimer(roomId);
         await this.endQuestion(roomId);
         return;
       }
 
-      // Update time remaining every second
-      const questionRef = ref(this.db, RTDB_PATHS.currentQuestion(roomId));
-      await update(questionRef, { timeRemaining: remaining });
+      // Update time remaining - clients will sync from this
+      try {
+        const questionRef = ref(this.db, RTDB_PATHS.currentQuestion(roomId));
+        await update(questionRef, { 
+          timeRemaining: remaining,
+          // ✅ Server timestamp for accurate sync
+          lastTickAt: Date.now()
+        });
+      } catch (error) {
+        logger.error('Failed to update timer', { roomId, error });
+      }
     }, 1000);
+    
+    // ✅ Store timer for cleanup
+    this.activeTimers.set(roomId, timerId);
+  }
+  
+  /**
+   * Clear timer for a room
+   */
+  private clearTimer(roomId: string): void {
+    const existingTimer = this.activeTimers.get(roomId);
+    if (existingTimer) {
+      clearInterval(existingTimer);
+      this.activeTimers.delete(roomId);
+      logger.debug('Timer cleared', { roomId });
+    }
+  }
+
+  // ============= SYNCED MODE HELPERS =============
+
+  /**
+   * ✅ SYNCED MODE: Check if all players have answered
+   * If yes, immediately end question (don't wait for timer)
+   */
+  private async checkAllPlayersAnswered(roomId: string): Promise<void> {
+    try {
+      // Get game settings to check mode
+      const gameRef = ref(this.db, RTDB_PATHS.games(roomId));
+      const gameSnap = await get(gameRef);
+      const gameState = gameSnap.val() as GameState;
+
+      // Only auto-advance in synced mode
+      if (gameState?.settings?.gameMode !== 'synced') {
+        return;
+      }
+
+      // Get all players
+      const playersRef = ref(this.db, RTDB_PATHS.players(roomId));
+      const playersSnap = await get(playersRef);
+      const players = playersSnap.val() as Record<string, ModernPlayer> | null;
+
+      if (!players) return;
+
+      // Count only active players (not spectators, not disconnected)
+      const activePlayers = Object.values(players).filter(
+        p => p.role === 'player' && p.status !== 'disconnected' && p.isOnline
+      );
+
+      const allAnswered = activePlayers.every(p => p.hasAnswered);
+      
+      if (allAnswered && activePlayers.length > 0) {
+        logger.info('✅ All players answered, ending question early', { 
+          roomId, 
+          playerCount: activePlayers.length 
+        });
+        
+        // Clear timer and end question immediately
+        this.clearTimer(roomId);
+        await this.endQuestion(roomId);
+      }
+    } catch (error) {
+      logger.error('❌ Failed to check all players answered', { error });
+    }
+  }
+
+  // ============= FREE MODE METHODS =============
+
+  /**
+   * 🆓 FREE MODE: Start game for all players
+   * Each player gets their own timer and progress tracking
+   */
+  async startFreeMode(roomId: string, questions: Question[]): Promise<void> {
+    try {
+      logger.info('🆓 Starting FREE MODE game', { roomId, questionCount: questions.length });
+
+      // Copy players from room to game
+      const roomPlayersRef = ref(this.db, `rooms/${roomId}/players`);
+      const roomPlayersSnap = await get(roomPlayersRef);
+      const roomPlayers = roomPlayersSnap.val() as Record<string, any> | null;
+
+      // Get settings
+      const gameRef = ref(this.db, RTDB_PATHS.games(roomId));
+      const gameSnap = await get(gameRef);
+      const gameState = gameSnap.val() as GameState;
+      const totalQuizTime = gameState?.settings?.totalQuizTime || 300; // Default 5 minutes
+
+      const gamePlayers: Record<string, ModernPlayer> = {};
+      const playerOrder: string[] = [];
+
+      if (roomPlayers) {
+        Object.entries(roomPlayers).forEach(([playerId, player]) => {
+          const isPlayer = player.role === 'player';
+          gamePlayers[playerId] = {
+            id: playerId,
+            userId: player.id || playerId,
+            name: player.name || 'Player',
+            photoURL: player.photoURL,
+            role: player.role || 'player',
+            status: 'playing',
+            score: 0,
+            correctAnswers: 0,
+            totalAnswers: 0,
+            streak: 0,
+            maxStreak: 0,
+            avgResponseTime: 0,
+            powerUps: [],
+            activePowerUps: [],
+            powerUpPoints: 100,
+            isReady: player.isReady ?? true,
+            isOnline: player.isOnline ?? true,
+            hasAnswered: false,
+            joinedAt: player.joinedAt || Date.now(),
+            lastActiveAt: Date.now(),
+            // 🆓 FREE MODE: Individual progress
+            freeMode: isPlayer ? {
+              currentQuestionIndex: 0,
+              timeRemaining: totalQuizTime,
+              startedAt: Date.now(),
+              answers: {},
+            } : undefined,
+          };
+          playerOrder.push(playerId);
+        });
+      }
+
+      // Clean questions
+      const cleanedQuestions = questions.map(q => this.removeUndefined(q));
+
+      // Update game state
+      await update(gameRef, {
+        status: 'answering', // Free mode goes straight to answering
+        startedAt: Date.now(),
+        players: gamePlayers,
+        playerOrder,
+        questions: cleanedQuestions,
+        totalQuestions: questions.length,
+        currentQuestionIndex: 0, // Not used in free mode, but set for consistency
+      });
+
+      // Emit event
+      await this.emitEvent(roomId, {
+        type: 'game_started',
+        data: { mode: 'free' },
+        priority: 'high',
+        showToast: true,
+        sound: 'game_start',
+      });
+
+      // Start individual timers for all players
+      await this.startFreeModeTimers(roomId);
+
+      logger.success('✅ FREE MODE game started', { roomId });
+    } catch (error) {
+      logger.error('❌ Failed to start free mode', { error });
+      throw error;
+    }
+  }
+
+  /**
+   * 🆓 FREE MODE: Start individual timers for all players
+   */
+  private async startFreeModeTimers(roomId: string): Promise<void> {
+    const timerId = setInterval(async () => {
+      try {
+        const playersRef = ref(this.db, RTDB_PATHS.players(roomId));
+        const playersSnap = await get(playersRef);
+        const players = playersSnap.val() as Record<string, ModernPlayer> | null;
+
+        if (!players) return;
+
+        const updates: Record<string, any> = {};
+        let allFinished = true;
+
+        Object.entries(players).forEach(([playerId, player]) => {
+          if (player.role !== 'player' || !player.freeMode) return;
+          
+          // Skip finished players
+          if (player.status === 'finished' || player.freeMode.finishedAt) {
+            return;
+          }
+
+          allFinished = false;
+          const newTime = player.freeMode.timeRemaining - 1;
+
+          if (newTime <= 0) {
+            // Player ran out of time - mark as finished
+            updates[`${playerId}/freeMode/timeRemaining`] = 0;
+            updates[`${playerId}/freeMode/finishedAt`] = Date.now();
+            updates[`${playerId}/status`] = 'finished';
+          } else {
+            updates[`${playerId}/freeMode/timeRemaining`] = newTime;
+          }
+        });
+
+        // Apply updates
+        if (Object.keys(updates).length > 0) {
+          await update(playersRef, updates);
+        }
+
+        // Check if all players finished
+        if (allFinished) {
+          this.clearTimer(roomId);
+          await this.finishGame(roomId);
+        }
+      } catch (error) {
+        logger.error('Free mode timer error', { roomId, error });
+      }
+    }, 1000);
+
+    this.activeTimers.set(roomId, timerId);
+  }
+
+  /**
+   * 🆓 FREE MODE: Submit answer for individual player
+   */
+  async submitFreeModeAnswer(
+    roomId: string,
+    playerId: string,
+    questionIndex: number,
+    answer: any,
+    activePowerUps: PowerUpType[] = []
+  ): Promise<void> {
+    try {
+      // Get game state for questions
+      const gameRef = ref(this.db, RTDB_PATHS.games(roomId));
+      const gameSnap = await get(gameRef);
+      const gameState = gameSnap.val() as GameState;
+
+      const question = gameState.questions[questionIndex];
+      if (!question) {
+        throw new Error(`Question ${questionIndex} not found`);
+      }
+
+      // Get player
+      const playerRef = ref(this.db, RTDB_PATHS.player(roomId, playerId));
+      const playerSnap = await get(playerRef);
+      const player = playerSnap.val() as ModernPlayer;
+
+      if (!player.freeMode) {
+        throw new Error('Player not in free mode');
+      }
+
+      // Check if already answered this question
+      if (player.freeMode.answers[questionIndex]) {
+        throw new Error('Already answered this question');
+      }
+
+      // Calculate response time from when they started this question
+      // In free mode, we track time per question from when player saw it
+      const responseTime = 5000; // Simplified - could track actual view time
+
+      const isCorrect = this.checkAnswer(question, answer);
+      const points = this.calculatePoints(
+        question,
+        isCorrect,
+        responseTime,
+        gameState.settings.timePerQuestion * 1000,
+        player.streak,
+        activePowerUps
+      );
+
+      // Create answer object
+      const playerAnswer: PlayerAnswer = {
+        playerId,
+        answer,
+        answeredAt: Date.now(),
+        responseTime,
+        isCorrect,
+        points,
+        powerUpsUsed: activePowerUps,
+      };
+
+      // Update player
+      const newStreak = isCorrect ? player.streak + 1 : 0;
+      const newMaxStreak = Math.max(player.maxStreak, newStreak);
+      const newScore = player.score + points;
+      const newCorrectAnswers = player.correctAnswers + (isCorrect ? 1 : 0);
+      const newTotalAnswers = player.totalAnswers + 1;
+      const nextQuestionIndex = questionIndex + 1;
+      const isLastQuestion = nextQuestionIndex >= gameState.totalQuestions;
+
+      const playerUpdates: Record<string, any> = {
+        score: newScore,
+        correctAnswers: newCorrectAnswers,
+        totalAnswers: newTotalAnswers,
+        streak: newStreak,
+        maxStreak: newMaxStreak,
+        'freeMode/currentQuestionIndex': nextQuestionIndex,
+        [`freeMode/answers/${questionIndex}`]: playerAnswer,
+      };
+
+      // If this was the last question, mark player as finished
+      if (isLastQuestion) {
+        playerUpdates['freeMode/finishedAt'] = Date.now();
+        playerUpdates['status'] = 'finished';
+      }
+
+      await update(playerRef, playerUpdates);
+
+      // Update leaderboard immediately (rolling update)
+      await this.updateLeaderboard(roomId);
+
+      // Emit events
+      if (isLastQuestion) {
+        await this.emitEvent(roomId, {
+          type: 'player_finished',
+          playerId,
+          playerName: player.name,
+          data: { score: newScore, correctAnswers: newCorrectAnswers },
+          priority: 'high',
+          showToast: true,
+        });
+
+        // Check if all players finished
+        await this.checkAllPlayersFinishedFreeMode(roomId);
+      }
+
+      logger.info('📝 Free mode answer submitted', { 
+        roomId, 
+        playerId, 
+        questionIndex,
+        isCorrect, 
+        points,
+        isLastQuestion 
+      });
+    } catch (error) {
+      logger.error('❌ Failed to submit free mode answer', { error });
+      throw error;
+    }
+  }
+
+  /**
+   * 🆓 FREE MODE: Check if all players have finished
+   */
+  private async checkAllPlayersFinishedFreeMode(roomId: string): Promise<void> {
+    try {
+      const playersRef = ref(this.db, RTDB_PATHS.players(roomId));
+      const playersSnap = await get(playersRef);
+      const players = playersSnap.val() as Record<string, ModernPlayer> | null;
+
+      if (!players) return;
+
+      const activePlayers = Object.values(players).filter(
+        p => p.role === 'player' && p.isOnline
+      );
+
+      const allFinished = activePlayers.every(
+        p => p.status === 'finished' || p.freeMode?.finishedAt
+      );
+
+      if (allFinished && activePlayers.length > 0) {
+        logger.info('✅ All players finished free mode', { roomId });
+        this.clearTimer(roomId);
+        await this.finishGame(roomId);
+      }
+    } catch (error) {
+      logger.error('❌ Failed to check free mode completion', { error });
+    }
   }
 
   /**
@@ -490,6 +941,9 @@ class GameEngine {
         });
       }
 
+      // ✅ SYNCED MODE: Check if all players have answered - auto advance
+      await this.checkAllPlayersAnswered(roomId);
+
       logger.info('📝 Answer submitted', { 
         roomId, 
         playerId, 
@@ -523,30 +977,20 @@ class GameEngine {
         priority: 'high',
       });
 
-      // Get game state to check if there are more questions
+      // Get game state to check settings
       const gameSnap = await get(gameRef);
       const gameState = gameSnap.val() as GameState;
 
-      // Wait for review duration, then move to next question or end game
+      // Wait for review duration, then show leaderboard, then move to next question
       setTimeout(async () => {
-        if (gameState.currentQuestionIndex + 1 < gameState.totalQuestions) {
-          // Show leaderboard between questions
-          await update(gameRef, { status: 'leaderboard' });
-          
-          setTimeout(async () => {
-            // Get next question from Firestore
-            // This needs to be implemented in modernMultiplayerService
-            // For now, we emit an event that the service will listen to
-            await this.emitEvent(roomId, {
-              type: 'next_question_requested',
-              data: { nextIndex: gameState.currentQuestionIndex + 1 },
-              priority: 'high',
-            });
-          }, gameState.settings.leaderboardDuration * 1000);
-        } else {
-          // Game finished
-          await this.finishGame(roomId);
-        }
+        // Show leaderboard between questions
+        await update(gameRef, { status: 'leaderboard' });
+        
+        setTimeout(async () => {
+          // ✅ NEW: Use goToNextQuestion instead of emitting event
+          // This automatically handles getting question from RTDB
+          await this.goToNextQuestion(roomId);
+        }, gameState.settings.leaderboardDuration * 1000);
       }, gameState.settings.reviewDuration * 1000);
 
       logger.success('✅ Question ended', { roomId });
@@ -562,6 +1006,9 @@ class GameEngine {
   async finishGame(roomId: string): Promise<void> {
     try {
       logger.info('🏁 Finishing game', { roomId });
+
+      // ✅ Clear timer when game finishes
+      this.clearTimer(roomId);
 
       const gameRef = ref(this.db, RTDB_PATHS.games(roomId));
       await update(gameRef, {
@@ -628,6 +1075,9 @@ class GameEngine {
    */
   async pauseGame(roomId: string): Promise<void> {
     try {
+      // ✅ Clear timer when paused
+      this.clearTimer(roomId);
+      
       const gameRef = ref(this.db, RTDB_PATHS.games(roomId));
       await update(gameRef, {
         status: 'paused',
@@ -970,11 +1420,34 @@ class GameEngine {
   }
 
   /**
-   * Cleanup all listeners
+   * Cleanup all listeners and timers for a room
    */
   cleanup(roomId: string): void {
+    // ✅ Clear listeners
     this.listeners.get(roomId)?.clear();
     this.listeners.delete(roomId);
+    
+    // ✅ Clear any active timer for this room
+    this.clearTimer(roomId);
+    
+    logger.info('🧹 Cleaned up game engine resources', { roomId });
+  }
+  
+  /**
+   * Cleanup ALL resources (for app shutdown)
+   */
+  cleanupAll(): void {
+    // Clear all timers
+    this.activeTimers.forEach((timer, roomId) => {
+      clearInterval(timer);
+      logger.debug('Cleared timer for room', { roomId });
+    });
+    this.activeTimers.clear();
+    
+    // Clear all listeners
+    this.listeners.clear();
+    
+    logger.info('🧹 Cleaned up all game engine resources');
   }
 }
 

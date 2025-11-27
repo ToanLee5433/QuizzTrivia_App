@@ -73,6 +73,7 @@ const HostGameView: React.FC<HostGameViewProps> = ({
             roomId={roomId}
             player={player}
             questionState={questionState}
+            gameStatus={gameStatus}
             onAnswerSubmit={onAnswerSubmit}
           />
         ) : (

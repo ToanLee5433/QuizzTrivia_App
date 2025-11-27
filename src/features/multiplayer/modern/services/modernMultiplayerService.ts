@@ -11,10 +11,10 @@ import {
   limit,
   serverTimestamp,
   Timestamp,
-  deleteDoc,
   addDoc,
   updateDoc,
-  onSnapshot
+  onSnapshot,
+  writeBatch
 } from 'firebase/firestore';
 import { 
   ref, 
@@ -883,51 +883,30 @@ export class ModernMultiplayerService {
         this.roomId = roomDoc.id;
         const actualRoomCode = roomData.code;
         
-        // ✅ Check if player already exists in Firestore
+        // ✅ OPTIMIZATION: Skip Firestore player writes during lobby
+        // Players will only be synced to Firestore when game ends (for history)
+        // This saves Firestore writes/costs during the lobby phase
         const auth = getAuth();
-        const firestorePlayerRef = doc(this.db, 'multiplayer_rooms', roomDoc.id, 'players', this.userId);
-        const existingPlayerSnap = await getDoc(firestorePlayerRef);
+        console.log('⚡ Skipping Firestore player write - using RTDB only during lobby');
         
-        if (existingPlayerSnap.exists()) {
-          console.log('♻️ Player already exists in Firestore, preserving data:', existingPlayerSnap.data());
-          // Update only timestamp and online status
-          await setDoc(firestorePlayerRef, {
-            ...existingPlayerSnap.data(),
-            updatedAt: serverTimestamp(),
-            isOnline: true
-          }, { merge: true });
-        } else {
-          console.log('➕ Adding new player to Firestore...');
-          await setDoc(firestorePlayerRef, {
-            name: auth.currentUser?.displayName || 'Player',
-            score: 0,
-            isReady: false,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-            isOnline: true
-          });
-        }
-        console.log('✅ Player Firestore data ready');
-        
-        // ✅ Setup RTDB and listeners AFTER player is in Firestore
+        // ✅ Setup RTDB and listeners
         await this.setupRealtimeRoom(roomDoc.id, actualRoomCode);
         
-        // ✅ Add player to RTDB for real-time presence (use Firestore data if exists)
-        const playerData = existingPlayerSnap.exists() ? existingPlayerSnap.data() : null;
+        // ✅ Add player to RTDB for real-time presence
         await this.addPlayerToRTDB({
           id: this.userId,
-          name: playerData?.name || auth.currentUser?.displayName || 'Player',
+          name: auth.currentUser?.displayName || 'Player',
           avatar: auth.currentUser?.photoURL || undefined,
           photoURL: auth.currentUser?.photoURL || undefined, // ✅ Add photoURL for avatar display
-          score: playerData?.score || 0,
-          isReady: playerData?.isReady || false,
+          score: 0,
+          isReady: false,
           isOnline: true,
-          role: playerData?.role || 'player' as PlayerRole, // Regular players start as player role
+          role: 'player' as PlayerRole, // Regular players start as player role
           joinedAt: Date.now(),
           lastActive: Date.now(),
           answers: []
         });
-        console.log('✅ Player added to RTDB with score:', playerData?.score || 0);
+        console.log('✅ Player added to RTDB');
         
         console.log('✅ Joined room:', { roomId: this.roomId, code: actualRoomCode });
         return { roomId: this.roomId, roomCode: actualRoomCode };
@@ -1735,6 +1714,37 @@ export class ModernMultiplayerService {
         const leaderboardRef = ref(this.rtdb, `rooms/${this.roomId}/leaderboard`);
         await set(leaderboardRef, leaderboard);
         
+        // ✅ OPTIMIZATION: Save final player data to Firestore NOW (for game history)
+        // This is the ONLY time we write players to Firestore - after game ends
+        console.log('💾 Saving final player data to Firestore for history...');
+        const batch = writeBatch(this.db);
+        for (const [playerId, playerData] of Object.entries(players)) {
+          const firestorePlayerRef = doc(this.db, 'multiplayer_rooms', this.roomId, 'players', playerId);
+          batch.set(firestorePlayerRef, {
+            name: (playerData as any).name || 'Unknown',
+            score: (playerData as any).score || 0,
+            correctAnswers: Object.values((playerData as any).answers || {}).filter((a: any) => a?.isCorrect).length,
+            totalAnswers: Object.keys((playerData as any).answers || {}).length,
+            photoURL: (playerData as any).photoURL || null,
+            role: (playerData as any).role || 'player',
+            finishedAt: serverTimestamp()
+          });
+        }
+        await batch.commit();
+        console.log('✅ Final player data saved to Firestore');
+        
+        // ✅ CLEANUP RTDB: Remove heavy game data (questions) to save storage
+        // Keep leaderboard and players for viewing results
+        console.log('🧹 Cleaning up RTDB game data...');
+        const gameRef = ref(this.rtdb, `games/${this.roomId}`);
+        const gameSnapshot = await get(gameRef);
+        if (gameSnapshot.exists()) {
+          // Only remove questions array (heavy data), keep everything else for results display
+          const questionsRef = ref(this.rtdb, `games/${this.roomId}/questions`);
+          await remove(questionsRef);
+          console.log('✅ RTDB questions cleaned up (archived to history)');
+        }
+        
         logger.success('Game ended', { 
           playerCount: leaderboard.length,
           winner: leaderboard[0]?.name
@@ -1836,10 +1846,9 @@ export class ModernMultiplayerService {
         await remove(presenceRef);
         console.log('✅ Removed presence from RTDB');
         
-        // Remove player from Firestore (so they can rejoin with fresh data)
-        const firestorePlayerRef = doc(this.db, 'multiplayer_rooms', this.roomId, 'players', this.userId);
-        await deleteDoc(firestorePlayerRef);
-        console.log('✅ Removed player from Firestore');
+        // ✅ OPTIMIZATION: Skip Firestore player delete - players are only in RTDB during lobby
+        // Final player data will be synced to Firestore when game ends
+        console.log('⚡ Skipping Firestore player delete - RTDB only');
         
         // Clean up listeners
         this.cleanupListeners();
@@ -1911,11 +1920,9 @@ export class ModernMultiplayerService {
         const presenceRef = ref(this.rtdb, `rooms/${this.roomId}/presence/${playerId}`);
         await remove(presenceRef).catch(() => {});
         
-        // ✅ Remove from Firestore in background (non-blocking)
-        const playerFirestoreRef = doc(this.db, 'multiplayer_rooms', this.roomId, 'players', playerId);
-        deleteDoc(playerFirestoreRef).catch(err => {
-          console.warn('⚠️ Failed to remove player from Firestore (non-critical):', err);
-        });
+        // ✅ OPTIMIZATION: Skip Firestore player delete - players are only in RTDB during lobby
+        // Final player data will be synced to Firestore when game ends
+        console.log('⚡ Skipping Firestore player delete - RTDB only');
         
         // Send system message about player kick (background)
         const messagesRef = collection(this.db, 'multiplayer_rooms', this.roomId, 'messages');
@@ -2376,24 +2383,9 @@ export class ModernMultiplayerService {
         
         const auth = getAuth();
         
-        // Check if player exists in Firestore
-        const firestorePlayerRef = doc(this.db, 'multiplayer_rooms', this.roomId, 'players', this.userId);
-        const firestorePlayerSnap = await getDoc(firestorePlayerRef);
-        
-        if (!firestorePlayerSnap.exists()) {
-          console.log('⚠️ Player not in Firestore, adding back...');
-          // Add player back to Firestore
-          await setDoc(firestorePlayerRef, {
-            name: auth.currentUser?.displayName || 'Player',
-            score: 0,
-            isReady: false,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-          });
-          console.log('✅ Player added back to Firestore');
-        }
-        
-        const firestorePlayerData = firestorePlayerSnap.exists() ? firestorePlayerSnap.data() : null;
+        // ✅ OPTIMIZATION: Skip Firestore player check - use RTDB only during lobby
+        // Final player data will be synced to Firestore when game ends
+        console.log('⚡ Skipping Firestore player check - using RTDB only');
         
         // Check if player exists in RTDB
         const rtdbPlayerRef = ref(this.rtdb, `rooms/${this.roomId}/players/${this.userId}`);
@@ -2411,16 +2403,16 @@ export class ModernMultiplayerService {
           console.log('✅ Cleared lastEmptyAt - room is now active');
         } else {
           // Player NOT in RTDB, add them back
-          console.log('⚠️ Player not found in RTDB, adding back from Firestore...');
+          console.log('⚠️ Player not found in RTDB, adding back...');
           await this.addPlayerToRTDB({
             id: this.userId,
-            name: firestorePlayerData?.name || auth.currentUser?.displayName || 'Player',
+            name: auth.currentUser?.displayName || 'Player',
             avatar: auth.currentUser?.photoURL || undefined,
             photoURL: auth.currentUser?.photoURL || undefined, // ✅ Add photoURL for avatar display
-            score: firestorePlayerData?.score || 0,
-            isReady: firestorePlayerData?.isReady || false,
+            score: 0,
+            isReady: false,
             isOnline: true,
-            role: firestorePlayerData?.role || 'player' as PlayerRole,
+            role: 'player' as PlayerRole,
             joinedAt: Date.now(),
             lastActive: Date.now(),
             answers: []
