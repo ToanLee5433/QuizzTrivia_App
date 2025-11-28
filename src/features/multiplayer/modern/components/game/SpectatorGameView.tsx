@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { QuestionState, ModernPlayer, LeaderboardEntry } from '../../types/game.types';
 import { gameEngine } from '../../services/gameEngine';
-import soundService from '../../../services/soundService';
+import soundService from '../../../../../services/soundService';
 import { Answer } from '../../../../quiz/types';
 import { useTranslation } from 'react-i18next';
 import { ref, onValue, getDatabase } from 'firebase/database';
@@ -42,8 +42,18 @@ const SpectatorGameView: React.FC<SpectatorGameViewProps> = ({
   const [spectatorData, setSpectatorData] = useState<any>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
 
-  // ✅ OPTIMIZED: Use server time directly - no local countdown
-  const timeLeft = questionState?.timeRemaining ?? 0;
+  // ✅ SIMPLIFIED: Use server time directly (authoritative)
+  const timeLeft = questionState?.timeRemaining ?? 30;
+  
+  // ✅ Track question changes to detect new questions
+  const lastQuestionIndexRef = useRef<number | undefined>(undefined);
+  
+  // ✅ Reset on question change
+  useEffect(() => {
+    if (questionState?.questionIndex !== lastQuestionIndexRef.current) {
+      lastQuestionIndexRef.current = questionState?.questionIndex;
+    }
+  }, [questionState?.questionIndex]);
 
   // Fetch spectator view data - use longer interval to avoid spam
   useEffect(() => {

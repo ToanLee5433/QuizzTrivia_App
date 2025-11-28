@@ -437,12 +437,21 @@ class GameEngine {
    * - Uses server timestamp for sync
    * - Stores timer ID for cleanup
    * - Updates RTDB every second for client sync
+   * - Only ONE client (host) should run this timer
    */
   private startQuestionTimer(roomId: string, duration: number): void {
     // ✅ Clear any existing timer for this room
     this.clearTimer(roomId);
     
+    // ✅ CRITICAL: Only start timer if we don't already have one running
+    // This prevents multiple timers from different clients
+    if (this.activeTimers.has(roomId)) {
+      logger.warn('⚠️ Timer already running for room, skipping', { roomId });
+      return;
+    }
+    
     let remaining = duration;
+    logger.info('⏱️ Starting question timer', { roomId, duration });
     
     const timerId = setInterval(async () => {
       remaining--;
@@ -520,12 +529,52 @@ class GameEngine {
           playerCount: activePlayers.length 
         });
         
-        // Clear timer and end question immediately
+        // Clear timer and end question with FAST transition
         this.clearTimer(roomId);
-        await this.endQuestion(roomId);
+        await this.endQuestionFast(roomId);
       }
     } catch (error) {
       logger.error('❌ Failed to check all players answered', { error });
+    }
+  }
+
+  /**
+   * ⚡ FAST End question - When all players answered, skip to next quickly
+   * Uses reduced review/leaderboard times (1s each instead of 5s/3s)
+   */
+  async endQuestionFast(roomId: string): Promise<void> {
+    try {
+      logger.info('⚡ Fast ending question (all answered)', { roomId });
+
+      // Clear timer first
+      this.clearTimer(roomId);
+
+      // Update status to reviewing
+      const gameRef = ref(this.db, RTDB_PATHS.games(roomId));
+      await update(gameRef, { status: 'reviewing' });
+
+      // Update leaderboard
+      await this.updateLeaderboard(roomId);
+
+      // Emit event
+      await this.emitEvent(roomId, {
+        type: 'question_ended',
+        priority: 'high',
+      });
+
+      // ⚡ FAST: Only 1s review + 1s leaderboard = 2s total (instead of 8s)
+      setTimeout(async () => {
+        await update(gameRef, { status: 'leaderboard' });
+        
+        setTimeout(async () => {
+          await this.goToNextQuestion(roomId);
+        }, 1000); // 1s leaderboard
+      }, 1000); // 1s review
+
+      logger.success('⚡ Fast question end triggered', { roomId });
+    } catch (error) {
+      logger.error('❌ Failed to fast end question', { error });
+      throw error;
     }
   }
 
@@ -739,7 +788,7 @@ class GameEngine {
       // Update player
       const newStreak = isCorrect ? player.streak + 1 : 0;
       const newMaxStreak = Math.max(player.maxStreak, newStreak);
-      const newScore = player.score + points;
+      const newScore = Math.max(0, player.score + points); // ✅ Never negative
       const newCorrectAnswers = player.correctAnswers + (isCorrect ? 1 : 0);
       const newTotalAnswers = player.totalAnswers + 1;
       const nextQuestionIndex = questionIndex + 1;
@@ -889,10 +938,33 @@ class GameEngine {
       const answerRef = ref(this.db, RTDB_PATHS.playerAnswer(roomId, playerId));
       await set(answerRef, playerAnswer);
 
+      // ✅ Save to answer history for review after game ends
+      // Note: Firebase doesn't accept undefined values, use null or empty string as fallback
+      const correctAnswerValue = questionState.question?.correctAnswer ?? 
+                                  questionState.question?.answers?.find((a: any) => a.isCorrect)?.text ?? 
+                                  null;
+      
+      // ✅ Extract answer text if answer is an object
+      const answerText = typeof answer === 'object' && answer !== null
+        ? (answer.text || answer.content || answer.label || JSON.stringify(answer))
+        : String(answer);
+      
+      const answerHistoryRef = ref(this.db, `games/${roomId}/answerHistory/${playerId}/${questionState.questionIndex}`);
+      await set(answerHistoryRef, {
+        questionIndex: questionState.questionIndex,
+        questionText: questionState.question?.text || `Câu hỏi ${questionState.questionIndex + 1}`,
+        answer: answerText, // ✅ Save as text string
+        correctAnswer: correctAnswerValue,
+        isCorrect,
+        responseTime,
+        points: Math.max(0, points + (playerAnswer.streakBonus || 0)), // ✅ Never negative
+        answeredAt: Date.now()
+      });
+
       // Update player stats
       const newStreak = isCorrect ? player.streak + 1 : 0;
       const newMaxStreak = Math.max(player.maxStreak, newStreak);
-      const newScore = player.score + points + (playerAnswer.streakBonus || 0);
+      const newScore = Math.max(0, player.score + points + (playerAnswer.streakBonus || 0)); // ✅ Never negative
       const newCorrectAnswers = player.correctAnswers + (isCorrect ? 1 : 0);
       const newTotalAnswers = player.totalAnswers + 1;
       const newAvgResponseTime = ((player.avgResponseTime * player.totalAnswers) + responseTime) / newTotalAnswers;
@@ -1156,6 +1228,10 @@ class GameEngine {
       
       // Get saved time remaining
       const timeRemaining = gameState?.pausedTimeRemaining || 0;
+      const pausedAt = gameState?.pausedAt || Date.now();
+      
+      // Calculate pause duration to adjust startedAt
+      const pauseDuration = Date.now() - pausedAt;
       
       // Update game state
       await update(gameRef, {
@@ -1164,11 +1240,19 @@ class GameEngine {
         pausedTimeRemaining: null, // Clear saved time
       });
       
-      // Update currentQuestion with remaining time and unpause
+      // ✅ FIX: Update currentQuestion - adjust startedAt to account for pause duration
+      // This ensures responseTime calculation doesn't include pause time
       const questionRef = ref(this.db, RTDB_PATHS.currentQuestion(roomId));
+      const questionSnap = await get(questionRef);
+      const currentQuestion = questionSnap.val();
+      
+      // Adjust startedAt by adding pause duration (so responseTime is correct)
+      const adjustedStartedAt = (currentQuestion?.startedAt || Date.now()) + pauseDuration;
+      
       await update(questionRef, {
         isPaused: false,
-        timeRemaining: timeRemaining, // ✅ Sync time remaining to clients
+        timeRemaining: timeRemaining,
+        startedAt: adjustedStartedAt, // ✅ Adjust for pause duration
       });
 
       await this.emitEvent(roomId, {
@@ -1180,7 +1264,7 @@ class GameEngine {
       // ✅ Restart timer with remaining time
       if (timeRemaining > 0) {
         this.startQuestionTimer(roomId, timeRemaining);
-        logger.info('▶️ Game resumed, timer restarted', { roomId, timeRemaining });
+        logger.info('▶️ Game resumed, timer restarted', { roomId, timeRemaining, pauseDuration });
       } else {
         logger.info('▶️ Game resumed (no time remaining)', { roomId });
       }

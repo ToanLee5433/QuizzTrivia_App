@@ -14,7 +14,9 @@ import ModernQuizSelector from './ModernQuizSelector';
 import ModernRoomLobby from './ModernRoomLobby';
 import ModernGamePlay from './ModernGamePlay';
 import ModernGameResults from './ModernGameResults';
+import ModernJoinRoomModal from './ModernJoinRoomModal';
 import { ToastProvider, useToast } from './ToastContext';
+import soundService from '../../../../services/soundService';
 
 // Main component with toast integration
 const ModernMultiplayerPageWithToast: React.FC = () => {
@@ -37,7 +39,12 @@ const ModernMultiplayerPage: React.FC = () => {
   const [isRejoiningRoom, setIsRejoiningRoom] = useState(!!urlRoomId); // Show loading state while rejoining
   const [selectedQuiz, setSelectedQuiz] = useState<any>(null);
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [joinLoading, setJoinLoading] = useState(false);
+  const [joinError, setJoinError] = useState<string | undefined>(undefined);
   const [currentUser, setCurrentUser] = useState(getAuth().currentUser);
+  
+  // ✅ FIX: Track if user is intentionally leaving to prevent auto-rejoin
+  const isLeavingRef = useRef(false);
 
   // Listen for auth changes
   useEffect(() => {
@@ -94,9 +101,31 @@ const ModernMultiplayerPage: React.FC = () => {
     }
   }, [currentView]);
 
+  // ✅ FIX: Reset state when URL changes to /multiplayer (no roomId)
+  // This handles the case when navigating from /multiplayer/:roomId to /multiplayer
+  useEffect(() => {
+    if (!urlRoomId && !isLeavingRef.current) {
+      // URL is /multiplayer without roomId - ensure we're in quiz-selection view
+      console.log('📍 URL is /multiplayer (no roomId) - ensuring quiz-selection view');
+      if (currentView !== 'quiz-selection') {
+        setCurrentView('quiz-selection');
+        setRoomId(null);
+        setSelectedQuiz(null);
+        setIsRejoiningRoom(false);
+      }
+    }
+  }, [urlRoomId, currentView]);
+
   // Handle URL roomId parameter (for page reload or direct link)
   useEffect(() => {
     const rejoinRoomFromUrl = async () => {
+      // ✅ FIX: Don't rejoin if user is intentionally leaving
+      if (isLeavingRef.current) {
+        console.log('⏭️ Skipping rejoin - user is leaving');
+        setIsRejoiningRoom(false);
+        return;
+      }
+      
       if (urlRoomId && !roomId) {
         console.log('🔄 Detected room identifier in URL, attempting quick rejoin:', urlRoomId);
         setIsRejoiningRoom(true);
@@ -119,7 +148,7 @@ const ModernMultiplayerPage: React.FC = () => {
             showToast({
               type: 'success',
               title: 'Chào mừng quay lại!',
-              message: 'Đang đồng bộ dữ liệu... Bạn đã kết nối lại thành công.',
+              message: t('reconnectSuccess', 'Đang đồng bộ dữ liệu... Bạn đã kết nối lại thành công.'),
               duration: 3000
             });
           }
@@ -132,7 +161,7 @@ const ModernMultiplayerPage: React.FC = () => {
             message: 'Could not reconnect to the room. Room may no longer exist.',
             duration: 4000
           });
-          navigate('/multiplayer');
+          navigate('/multiplayer', { replace: true });
         }
       } else {
         setIsRejoiningRoom(false);
@@ -157,6 +186,28 @@ const ModernMultiplayerPage: React.FC = () => {
 
     return () => {
       modernMultiplayerService.cleanup();
+    };
+  }, []);
+
+  // ✅ Unlock audio on first user interaction (browser autoplay policy)
+  useEffect(() => {
+    const unlockAudio = () => {
+      soundService.unlock();
+      // Remove listeners after first unlock
+      document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+      document.removeEventListener('keydown', unlockAudio);
+      console.log('🔊 Audio unlocked on user interaction');
+    };
+    
+    document.addEventListener('click', unlockAudio, { once: true });
+    document.addEventListener('touchstart', unlockAudio, { once: true });
+    document.addEventListener('keydown', unlockAudio, { once: true });
+    
+    return () => {
+      document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+      document.removeEventListener('keydown', unlockAudio);
     };
   }, []);
 
@@ -200,15 +251,52 @@ const ModernMultiplayerPage: React.FC = () => {
     });
   };
 
-  const handleBackToSelection = () => {
+  const handleBackToSelection = async () => {
+    // ✅ FIX: Set leaving flag FIRST to prevent any auto-rejoin
+    isLeavingRef.current = true;
+    
+    try {
+      // ✅ FIX: Call leaveRoom() to properly remove player from room
+      // This handles:
+      // 1. Transfer host to another player if current user is host
+      // 2. Remove player from RTDB
+      // 3. Remove presence
+      // 4. Clean up listeners
+      if (roomId) {
+        console.log('🚪 Leaving room before going back to selection...');
+        await modernMultiplayerService.leaveRoom();
+        console.log('✅ Left room successfully');
+      }
+    } catch (error) {
+      console.error('❌ Error leaving room:', error);
+      // Continue anyway - don't block navigation
+    }
+    
+    // ✅ FIX: Reset ALL state BEFORE navigation to prevent stale UI
+    // Order matters: set state first, then navigate
+    setRoomId(null); // Use null, not empty string
     setCurrentView('quiz-selection');
     setSelectedQuiz(null);
-    setRoomId('');
-    navigate('/multiplayer');
+    setIsRejoiningRoom(false); // Ensure not stuck in rejoining state
+    
+    // ✅ Clear any cached room data to prevent auto-rejoin
+    if (urlRoomId) {
+      sessionStorage.removeItem(`room_${urlRoomId}`);
+      sessionStorage.removeItem(`rejoined-${urlRoomId}`);
+    }
+    
+    // Navigate last (after state is reset)
+    navigate('/multiplayer', { replace: true }); // Use replace to prevent back button issues
+    
+    // Reset leaving flag after a short delay (allow navigation to complete)
+    setTimeout(() => {
+      isLeavingRef.current = false;
+    }, 500);
+    
     showToast({
-      type: 'info',
-      title: 'Back to Quiz Selection',
-      message: 'Choose another quiz to play or create a new room.',
+      type: 'success',
+      title: t('leftRoom', 'Đã rời phòng'),
+      message: t('backToQuizSelection', 'Quay lại chọn quiz để chơi.'),
       duration: 3000
     });
   };
@@ -220,6 +308,40 @@ const ModernMultiplayerPage: React.FC = () => {
       setCurrentView('room-lobby');
     } else if (currentView === 'game-results') {
       setCurrentView('room-lobby');
+    }
+  };
+
+  // ✅ Handle joining a room by code
+  const handleJoinRoom = async (roomCode: string, password?: string) => {
+    try {
+      setJoinLoading(true);
+      setJoinError(undefined);
+      
+      console.log('🚪 Joining room with code:', roomCode);
+      
+      const result = await modernMultiplayerService.joinRoom(roomCode, password);
+      
+      console.log('✅ Joined room successfully:', result);
+      
+      // Close modal and transition to lobby
+      setShowJoinModal(false);
+      setRoomId(result.roomId);
+      setCurrentView('room-lobby');
+      
+      // Update URL
+      navigate(`/multiplayer/${roomCode}`);
+      
+      showToast({
+        type: 'success',
+        title: t('joinedRoom', 'Đã vào phòng!'),
+        message: t('welcomeToRoom', 'Chào mừng bạn đến phòng chơi!'),
+        duration: 3000
+      });
+    } catch (error: any) {
+      console.error('❌ Failed to join room:', error);
+      setJoinError(error.message || t('joinRoomFailed', 'Không thể vào phòng'));
+    } finally {
+      setJoinLoading(false);
     }
   };
 
@@ -388,11 +510,23 @@ const ModernMultiplayerPage: React.FC = () => {
             <ModernGameResults
               key="game-results"
               roomId={roomId}
-              onPlayAgain={handleGameStart}
+              onBackToLobby={() => setCurrentView('room-lobby')}
             />
           )}
         </AnimatePresence>
       </main>
+
+      {/* Join Room Modal */}
+      <ModernJoinRoomModal
+        isOpen={showJoinModal}
+        onClose={() => {
+          setShowJoinModal(false);
+          setJoinError(undefined);
+        }}
+        onJoinRoom={handleJoinRoom}
+        loading={joinLoading}
+        error={joinError}
+      />
     </div>
   );
 };

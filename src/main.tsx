@@ -5,7 +5,7 @@ import { Provider } from 'react-redux'
 import { store } from './lib/store'
 import './lib/i18n' // Import i18n configuration
 import './index.css'
-import './features/multiplayer/styles/modern-animations.css' // Modern multiplayer animations
+import './features/multiplayer/modern/styles/modern-animations.css' // Modern multiplayer animations
 import { registerServiceWorker } from './lib/services/swManager'
 
 // Register Service Worker for offline support

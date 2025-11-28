@@ -1,4 +1,4 @@
-@import './features/multiplayer/styles/accessibility.css';
+@import './features/multiplayer/modern/styles/accessibility.css';
 
 @tailwind base;
 @tailwind components;

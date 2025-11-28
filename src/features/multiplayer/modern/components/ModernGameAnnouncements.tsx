@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Trophy, 
   CheckCircle,
@@ -329,6 +330,7 @@ const ModernGameAnnouncements: React.FC<ModernGameAnnouncementsProps> = ({
 // Hook for creating announcements
 export const useGameAnnouncements = (roomId: string) => {
   const db = getDatabase();
+  const { t } = useTranslation('multiplayer');
 
   const createAnnouncement = useCallback((
     type: AnnouncementType,
@@ -370,43 +372,43 @@ export const useGameAnnouncements = (roomId: string) => {
 
   // Predefined announcement creators
   const announcePlayerJoined = useCallback((username: string, photoURL?: string) => {
-    createAnnouncement('player_joined', 'Người chơi mới', `${username} đã tham gia phòng`, {
+    createAnnouncement('player_joined', t('announcements.newPlayer', 'Người chơi mới'), t('announcements.playerJoined', '{{username}} đã tham gia phòng', { username }), {
       username,
       photoURL,
       priority: 'low'
     });
-  }, [createAnnouncement]);
+  }, [createAnnouncement, t]);
 
   const announcePlayerLeft = useCallback((username: string, photoURL?: string) => {
-    createAnnouncement('player_left', 'Người chơi rời đi', `${username} đã rời phòng`, {
+    createAnnouncement('player_left', t('announcements.playerLeft', 'Người chơi rời đi'), t('announcements.playerLeftMessage', '{{username}} đã rời phòng', { username }), {
       username,
       photoURL,
       priority: 'medium'
     });
-  }, [createAnnouncement]);
+  }, [createAnnouncement, t]);
 
   const announceGameStarting = useCallback((delay: number) => {
-    createAnnouncement('game_starting', 'Game sắp bắt đầu!', `Bắt đầu sau ${delay} giây`, {
+    createAnnouncement('game_starting', t('announcements.gameStartingSoon', 'Game sắp bắt đầu!'), t('announcements.startingIn', 'Bắt đầu sau {{delay}} giây', { delay }), {
       priority: 'high',
       duration: delay * 1000
     });
-  }, [createAnnouncement]);
+  }, [createAnnouncement, t]);
 
   const announceCorrectAnswer = useCallback((username: string, points: number, streak?: number) => {
-    createAnnouncement('correct_answer', 'Đáp án đúng!', `${username} đã trả lời đúng!`, {
+    createAnnouncement('correct_answer', t('announcements.correctAnswer', 'Đáp án đúng!'), t('announcements.answeredCorrectly', '{{username}} đã trả lời đúng!', { username }), {
       username,
       data: { points, streak },
       priority: 'medium'
     });
-  }, [createAnnouncement]);
+  }, [createAnnouncement, t]);
 
   const announceStreakAchievement = useCallback((username: string, streak: number) => {
-    createAnnouncement('streak_achievement', 'Thành tựu chuỗi!', `${username} đạt ${streak} chuỗi đúng!`, {
+    createAnnouncement('streak_achievement', t('announcements.streakAchievement', 'Thành tựu chuỗi!'), t('announcements.streakReached', '{{username}} đạt {{streak}} chuỗi đúng!', { username, streak }), {
       username,
       data: { streak },
       priority: 'high'
     });
-  }, [createAnnouncement]);
+  }, [createAnnouncement, t]);
 
   const announcePowerUpUsed = useCallback((username: string, powerUp: string) => {
     createAnnouncement('powerup_used', 'Power-up đã sử dụng!', `${username} đã sử dụng ${powerUp}`, {

@@ -70,11 +70,11 @@ const MemoizedPlayerCard: React.FC<MemoizedPlayerCardProps> = memo(({
         </div>
 
         {/* Player Info */}
-        <div className="flex-1">
-          <div className="flex items-center space-x-2">
-            <span className="font-medium text-white">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center space-x-2 flex-wrap">
+            <span className="font-medium text-white truncate">
               {player.name}
-              {isCurrentPlayer && <span className="text-blue-400 ml-1">(You)</span>}
+              {isCurrentPlayer && <span className="text-blue-400 ml-1">({t('you')})</span>}
             </span>
             
             {/* Role Badge */}

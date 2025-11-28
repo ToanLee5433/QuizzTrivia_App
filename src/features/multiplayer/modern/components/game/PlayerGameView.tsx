@@ -24,7 +24,7 @@ import {
   STREAK_BONUSES 
 } from '../../types/game.types';
 import { gameEngine } from '../../services/gameEngine';
-import soundService from '../../../services/soundService';
+import soundService from '../../../../../services/soundService';
 import QuestionRenderer from './QuestionRenderer';
 import PowerUpPanel from './PowerUpPanel';
 import StreakIndicator from './StreakIndicator';
@@ -52,29 +52,35 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
   const [pointsEarned, setPointsEarned] = useState(0);
   const [activePowerUps, setActivePowerUps] = useState<PowerUpType[]>([]);
   
-  // ✅ OPTIMIZED: Use server time directly instead of local countdown
-  // This ensures all clients are perfectly synced with server
-  const timeLeft = questionState?.timeRemaining ?? 30;
+  // ✅ SIMPLE APPROACH: Just use server time directly
+  // Server updates timeRemaining every second via RTDB - clients just display it
+  // This avoids any sync issues between local and server timers
+  const timeLeft = questionState?.timeRemaining ?? 0;
+  
+  // Track question index to detect question changes
+  const lastQuestionIndexRef = useRef(questionState?.questionIndex);
 
   // Guard: Check if question data is ready (after hooks)
   const hasQuestionData = questionState?.question?.text && questionState?.question?.answers;
 
-  // ✅ REMOVED: Local timer - now using server timeRemaining directly
-  // Server updates timeRemaining every second via RTDB
-  // All clients receive the same value = perfect sync
-  
   // Reset state when question changes
   useEffect(() => {
-    setSelectedAnswer(null);
-    setShowResult(false);
-    setIsCorrect(null);
-    setPointsEarned(0);
+    // Only reset when question index actually changes
+    if (questionState?.questionIndex !== lastQuestionIndexRef.current) {
+      lastQuestionIndexRef.current = questionState?.questionIndex;
+      setSelectedAnswer(null);
+      setShowResult(false);
+      setIsCorrect(null);
+      setPointsEarned(0);
+    }
   }, [questionState?.questionIndex]);
 
   // ============= ANSWER HANDLING =============
   // ✅ MODERN UX: Auto-submit khi click đáp án (không cần nút xác nhận)
   const handleAnswerSelect = useCallback(async (answer: any) => {
-    if (player.hasAnswered || isSubmitting) return;
+    if (player.hasAnswered || isSubmitting) {
+      return;
+    }
     
     try {
       setIsSubmitting(true);

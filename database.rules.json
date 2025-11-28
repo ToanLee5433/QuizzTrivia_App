@@ -37,10 +37,23 @@
     "rooms": {
       "$roomId": {
         ".read": "auth != null",
-        ".write": "auth != null && (!data.exists() || data.child('hostId').val() == auth.uid || !newData.exists() && data.child('hostId').val() == auth.uid)",
+        // Allow write if:
+        // 1. Room doesn't exist (creating new room)
+        // 2. User is the owner (creator) of the room
+        // 3. User is the current host
+        // 4. User is a player in the room AND current host is offline (for host migration)
+        ".write": "auth != null && (!data.exists() || data.child('ownerId').val() == auth.uid || data.child('hostId').val() == auth.uid || (data.child('players').child(auth.uid).exists() && data.child('players').child(data.child('hostId').val()).child('isOnline').val() != true))",
+        
+        "ownerId": {
+          ".validate": "newData.isString()"
+        },
         
         "hostId": {
           ".validate": "newData.isString()"
+        },
+        
+        "ownerTransferredHost": {
+          ".validate": "newData.isBoolean()"
         },
         
         "lastEmptyAt": {
@@ -237,15 +250,24 @@
             ".indexOn": ["timestamp"],
             "$messageId": {
               ".write": "auth != null",
-              ".validate": "newData.child('userId').val() == auth.uid && newData.child('username').isString() && newData.child('message').isString() && newData.child('timestamp').isNumber()",
+              ".validate": "(newData.child('type').val() == 'system' || newData.child('senderId').val() == 'system') || (newData.child('userId').val() == auth.uid && newData.child('username').isString() && newData.child('message').isString() && newData.child('timestamp').isNumber())",
               "userId": {
-                ".validate": "newData.isString() && newData.val() == auth.uid"
+                ".validate": "!newData.exists() || newData.isString()"
+              },
+              "senderId": {
+                ".validate": "!newData.exists() || newData.isString()"
+              },
+              "senderName": {
+                ".validate": "!newData.exists() || newData.isString()"
               },
               "username": {
-                ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 50"
+                ".validate": "!newData.exists() || (newData.isString() && newData.val().length > 0 && newData.val().length <= 50)"
               },
               "message": {
-                ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 500"
+                ".validate": "!newData.exists() || (newData.isString() && newData.val().length > 0 && newData.val().length <= 500)"
+              },
+              "content": {
+                ".validate": "!newData.exists() || (newData.isString() && newData.val().length > 0 && newData.val().length <= 500)"
               },
               "timestamp": {
                 ".validate": "newData.isNumber()"
@@ -256,11 +278,18 @@
               "photoURL": {
                 ".validate": "!newData.exists() || newData.isString()"
               }
-            },
-            "typing": {
-              "$userId": {
-                ".read": "auth != null",
-                ".write": "auth != null && auth.uid == $userId"
+            }
+          },
+          "typing": {
+            ".read": "auth != null",
+            "$typingUserId": {
+              ".write": "auth != null && auth.uid == $typingUserId",
+              ".validate": "!newData.exists() || (newData.hasChild('username') || newData.hasChild('timestamp'))",
+              "username": {
+                ".validate": "!newData.exists() || newData.isString()"
+              },
+              "timestamp": {
+                ".validate": "!newData.exists() || newData.val() != null"
               }
             }
           }

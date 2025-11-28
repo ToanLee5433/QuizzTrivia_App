@@ -101,7 +101,7 @@ const HostGameView: React.FC<HostGameViewProps> = ({
               <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 px-4 py-1 bg-yellow-500 rounded-full border-2 border-white shadow-lg">
                 <div className="flex items-center space-x-2">
                   <Crown className="w-4 h-4 text-white" />
-                  <span className="text-xs font-bold text-white">HOST</span>
+                  <span className="text-xs font-bold text-white">{t('host', 'HOST')}</span>
                 </div>
               </div>
 

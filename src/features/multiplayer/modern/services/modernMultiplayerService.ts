@@ -1,7 +1,6 @@
 import { 
   doc, 
   collection, 
-  collectionGroup,
   setDoc, 
   getDoc, 
   getDocs,
@@ -13,8 +12,7 @@ import {
   Timestamp,
   addDoc,
   updateDoc,
-  onSnapshot,
-  writeBatch
+  onSnapshot
 } from 'firebase/firestore';
 import { 
   ref, 
@@ -23,6 +21,7 @@ import {
   update,
   remove,
   get,
+  push,
   onDisconnect,
   Database,
   getDatabase,
@@ -31,6 +30,7 @@ import {
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getAuth, Auth } from 'firebase/auth';
 import CryptoJS from 'crypto-js';
+import i18next from 'i18next';
 import { rateLimiter } from '../utils/rateLimiter';
 import { logger } from '../utils/logger';
 import { networkMonitor } from '../utils/networkMonitor';
@@ -79,6 +79,7 @@ export interface ModernRoom {
   quizId: string;
   quiz: ModernQuiz;
   hostId: string;
+  ownerId?: string; // ✅ NEW: Permanent room creator (never changes)
   maxPlayers: number;
   isPrivate: boolean;
   password?: string;
@@ -700,6 +701,7 @@ export class ModernMultiplayerService {
           quizId: quizId,
           quiz: quizForRoom, // ✅ Now populated with real data
           hostId: this.userId,
+          ownerId: this.userId, // ✅ NEW: Permanent owner - never changes
           maxPlayers: maxPlayers,
           isPrivate: isPrivate,
           password: hashedPassword,
@@ -749,22 +751,15 @@ export class ModernMultiplayerService {
           await set(rtdbRoomRef, {
             id: roomRef.id,
             code: roomCode,
-            hostId: user.uid, // ✅ CRITICAL: Set hostId in RTDB for host detection
+            ownerId: user.uid, // ✅ Owner = creator of the room (permanent)
+            hostId: user.uid, // ✅ Host = current controller (can change)
             status: 'waiting',
             createdAt: Date.now()
           });
           
-          // ✅ Add to Firestore players subcollection (required for permission check)
-          const firestorePlayerRef = doc(this.db, 'multiplayer_rooms', roomRef.id, 'players', user.uid);
-          await setDoc(firestorePlayerRef, {
-            name: playerData.name,
-            score: playerData.score,
-            isReady: playerData.isReady,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-          });
-          
-          // ✅ Add to RTDB for real-time sync
+          // ✅ OPTIMIZED: Players are ONLY in RTDB (no Firestore subcollection)
+          // This saves ~100 writes per game (1 per player join)
+          // Final results will be saved to match_histories when game ends
           const playerRef = ref(this.rtdb, `rooms/${roomRef.id}/players/${user.uid}`);
           await set(playerRef, playerData);
           
@@ -956,6 +951,8 @@ export class ModernMultiplayerService {
           // Cache for future use
           sessionStorage.setItem(`room_${roomCodeOrId}`, targetRoomId);
         }
+        // ✅ Also store reverse mapping for cleanup when leaving
+        sessionStorage.setItem(`roomCode_${targetRoomId}`, roomCode);
       } else {
         targetRoomId = roomCodeOrId;
         // Get room code from RTDB or Firestore
@@ -1126,6 +1123,223 @@ export class ModernMultiplayerService {
     );
     
     this.listeners[`players_${roomId}`] = unsubscribePlayers;
+    
+    // ✅ HOST MANAGEMENT LISTENER: Handle host migration and owner reclaim
+    // Logic:
+    // 1. Owner (creator) is PERMANENT - stored in ownerId
+    // 2. Host (current controller) can change - stored in hostId
+    // 3. When host goes offline → migrate to next online player
+    // 4. When owner comes back online:
+    //    - If ownerTransferredHost=true → owner DOES NOT reclaim (they gave it away voluntarily)
+    //    - If ownerTransferredHost=false → owner RECLAIMS host (they lost it due to disconnect)
+    let hostMigrationTimeout: NodeJS.Timeout | null = null;
+    let lastKnownHostId: string | null = null;
+    
+    const roomDataRef = ref(this.rtdb, `rooms/${roomId}`);
+    const unsubscribeHostMigration = onValue(
+      roomDataRef,
+      async (snapshot) => {
+        try {
+          const roomData = snapshot.val();
+          if (!roomData || !roomData.players) return;
+          
+          const currentHostId = roomData.hostId;
+          const ownerId = roomData.ownerId || currentHostId; // Fallback for old rooms
+          const players = roomData.players;
+          
+          // Track host changes
+          if (lastKnownHostId !== currentHostId) {
+            console.log('🔄 Host changed:', { from: lastKnownHostId, to: currentHostId, owner: ownerId });
+            lastKnownHostId = currentHostId;
+            // Clear any pending migration when host changes
+            if (hostMigrationTimeout) {
+              clearTimeout(hostMigrationTimeout);
+              hostMigrationTimeout = null;
+            }
+          }
+          
+          const hostPlayer = players[currentHostId];
+          const ownerPlayer = players[ownerId];
+          const hostIsOnline = hostPlayer && hostPlayer.isOnline === true;
+          const ownerIsOnline = ownerPlayer && ownerPlayer.isOnline === true;
+          const ownerVoluntarilyTransferred = roomData.ownerTransferredHost === true;
+          
+          // ✅ CASE 1: Owner is back online but not host
+          // Only reclaim if owner lost host due to disconnect (NOT voluntary transfer)
+          if (ownerIsOnline && currentHostId !== ownerId && this.userId === ownerId && !ownerVoluntarilyTransferred) {
+            console.log('👑 Owner is back online and lost host due to disconnect! Reclaiming...');
+            
+            // Cancel any pending migration
+            if (hostMigrationTimeout) {
+              clearTimeout(hostMigrationTimeout);
+              hostMigrationTimeout = null;
+            }
+            
+            // Owner reclaims host (no delay needed)
+            const rtdbRoomRef = ref(this.rtdb, `rooms/${roomId}`);
+            await update(rtdbRoomRef, { hostId: ownerId });
+            
+            // Update owner's role
+            const ownerPlayerRef = ref(this.rtdb, `rooms/${roomId}/players/${ownerId}`);
+            await update(ownerPlayerRef, {
+              role: 'host' as PlayerRole,
+              isParticipating: true
+            });
+            
+            // Update previous host's role to player
+            if (currentHostId !== ownerId) {
+              const prevHostRef = ref(this.rtdb, `rooms/${roomId}/players/${currentHostId}`);
+              await update(prevHostRef, { role: 'player' as PlayerRole }).catch(() => {});
+            }
+            
+            // Send system message
+            const chatMessagesRef = ref(this.rtdb, `rooms/${roomId}/chat/messages`);
+            push(chatMessagesRef, {
+              type: 'system',
+              content: `${ownerPlayer?.name || 'Owner'} đã quay lại và là host.`,
+              timestamp: Date.now(),
+              senderId: 'system',
+              senderName: 'System'
+            }).catch(err => console.warn('⚠️ Chat message failed:', err));
+            
+            // Sync to Firestore
+            const firestoreRoomRef = doc(this.db, 'multiplayer_rooms', roomId);
+            updateDoc(firestoreRoomRef, {
+              hostId: ownerId,
+              lastUpdated: new Date()
+            }).catch(err => console.warn('⚠️ Firestore sync failed:', err));
+            
+            console.log('✅ Owner reclaimed host successfully!');
+            this.emit('host:migrated', { newHostId: ownerId, reason: 'owner_reclaimed' });
+            return;
+          }
+          
+          // ✅ CASE 2: Host is online → nothing to do
+          if (hostIsOnline) {
+            if (hostMigrationTimeout) {
+              console.log('✅ Host is back online, cancelling migration');
+              clearTimeout(hostMigrationTimeout);
+              hostMigrationTimeout = null;
+            }
+            return;
+          }
+          
+          // ✅ CASE 3: Host is offline → migrate to another player (with delay)
+          if (!hostMigrationTimeout) {
+            console.log('⚠️ Host appears offline, waiting 3s before migration...');
+            
+            hostMigrationTimeout = setTimeout(async () => {
+              // Re-check status after delay
+              const freshSnapshot = await get(roomDataRef);
+              const freshRoomData = freshSnapshot.val();
+              if (!freshRoomData || !freshRoomData.players) {
+                hostMigrationTimeout = null;
+                return;
+              }
+              
+              const freshOwnerId = freshRoomData.ownerId || freshRoomData.hostId;
+              const freshOwnerPlayer = freshRoomData.players[freshOwnerId];
+              const freshHostPlayer = freshRoomData.players[freshRoomData.hostId];
+              
+              // If owner came back during grace period, let owner reclaim (handled above)
+              if (freshOwnerPlayer?.isOnline && freshRoomData.hostId !== freshOwnerId) {
+                console.log('✅ Owner reconnected during grace period');
+                hostMigrationTimeout = null;
+                return;
+              }
+              
+              // If host came back, no migration needed
+              if (freshHostPlayer?.isOnline) {
+                console.log('✅ Host reconnected during grace period');
+                hostMigrationTimeout = null;
+                return;
+              }
+              
+              // --- HOST IS TRULY GONE, NEED TO ELECT NEW HOST ---
+              console.log('🚨 Host confirmed offline, starting migration...');
+              
+              // Find all online players, sorted by joinedAt (oldest first)
+              const onlinePlayers = Object.entries(freshRoomData.players)
+                .filter(([_, playerData]: [string, any]) => playerData?.isOnline === true)
+                .map(([playerId, playerData]: [string, any]) => ({
+                  id: playerId,
+                  joinedAt: playerData?.joinedAt || Date.now(),
+                  name: playerData?.name
+                }))
+                .sort((a, b) => a.joinedAt - b.joinedAt);
+              
+              if (onlinePlayers.length === 0) {
+                console.log('⚠️ No online players left');
+                hostMigrationTimeout = null;
+                return;
+              }
+              
+              const newHostCandidate = onlinePlayers[0];
+              
+              // Only the elected player sends the update
+              if (newHostCandidate.id === this.userId) {
+                console.log('👑 I am the new host candidate! Taking over...');
+                
+                try {
+                  // Direct update instead of transaction (rules now allow this)
+                  const rtdbRoomRef = ref(this.rtdb, `rooms/${roomId}`);
+                  
+                  // ✅ If owner lost host due to disconnect, reset flag so they can reclaim when back
+                  const updateData: Record<string, any> = { hostId: this.userId };
+                  if (freshRoomData.hostId === freshOwnerId) {
+                    // Owner was host and went offline → reset flag so they can reclaim
+                    updateData.ownerTransferredHost = false;
+                    console.log('📌 Owner lost host due to disconnect - they can reclaim when back');
+                  }
+                  
+                  await update(rtdbRoomRef, updateData);
+                  
+                  // Update my role
+                  const myPlayerRef = ref(this.rtdb, `rooms/${roomId}/players/${this.userId}`);
+                  await update(myPlayerRef, {
+                    role: 'host' as PlayerRole,
+                    isParticipating: true
+                  });
+                  
+                  // Send system message
+                  const chatMessagesRef = ref(this.rtdb, `rooms/${roomId}/chat/messages`);
+                  push(chatMessagesRef, {
+                    type: 'system',
+                    content: i18next.t('multiplayer:isNowTheHost', { name: newHostCandidate.name || 'Player' }),
+                    timestamp: Date.now(),
+                    senderId: 'system',
+                    senderName: 'System'
+                  }).catch(err => console.warn('⚠️ Chat message failed:', err));
+                  
+                  // Sync to Firestore
+                  const firestoreRoomRef = doc(this.db, 'multiplayer_rooms', roomId);
+                  updateDoc(firestoreRoomRef, {
+                    hostId: this.userId,
+                    lastUpdated: new Date()
+                  }).catch(err => console.warn('⚠️ Firestore sync failed:', err));
+                  
+                  console.log('✅ Host migration complete!');
+                  this.emit('host:migrated', { newHostId: this.userId, reason: 'host_offline' });
+                } catch (err) {
+                  console.error('❌ Failed to migrate host:', err);
+                }
+              } else {
+                console.log(`👀 Waiting for ${newHostCandidate.name} to become host...`);
+              }
+              
+              hostMigrationTimeout = null;
+            }, 3000);
+          }
+        } catch (error) {
+          console.error('❌ Host management error:', error);
+        }
+      },
+      (error) => {
+        console.error('Host migration listener error:', error);
+      }
+    );
+    
+    this.listeners[`hostMigration_${roomId}`] = unsubscribeHostMigration;
     
     // Game state listener (RTDB for real-time game updates)
     const gameStateRef = ref(this.rtdb, `rooms/${roomId}/gameState`);
@@ -1714,35 +1928,80 @@ export class ModernMultiplayerService {
         const leaderboardRef = ref(this.rtdb, `rooms/${this.roomId}/leaderboard`);
         await set(leaderboardRef, leaderboard);
         
-        // ✅ OPTIMIZATION: Save final player data to Firestore NOW (for game history)
-        // This is the ONLY time we write players to Firestore - after game ends
-        console.log('💾 Saving final player data to Firestore for history...');
-        const batch = writeBatch(this.db);
-        for (const [playerId, playerData] of Object.entries(players)) {
-          const firestorePlayerRef = doc(this.db, 'multiplayer_rooms', this.roomId, 'players', playerId);
-          batch.set(firestorePlayerRef, {
-            name: (playerData as any).name || 'Unknown',
-            score: (playerData as any).score || 0,
-            correctAnswers: Object.values((playerData as any).answers || {}).filter((a: any) => a?.isCorrect).length,
-            totalAnswers: Object.keys((playerData as any).answers || {}).length,
-            photoURL: (playerData as any).photoURL || null,
-            role: (playerData as any).role || 'player',
-            finishedAt: serverTimestamp()
-          });
-        }
-        await batch.commit();
-        console.log('✅ Final player data saved to Firestore');
+        // ✅ OPTIMIZED: Save game history to match_histories collection (ONE document)
+        // Instead of writing N documents to players subcollection, we write 1 document
+        // This reduces Firestore writes by 90%+ for large games
+        console.log('💾 Saving match history to Firestore...');
+        
+        // Get room data for history
+        const rtdbRoomRef = ref(this.rtdb, `rooms/${this.roomId}`);
+        const roomSnapshot = await get(rtdbRoomRef);
+        const roomData = roomSnapshot.val() || {};
+        
+        // Get game data for history
+        const gameRef = ref(this.rtdb, `games/${this.roomId}`);
+        const gameSnapshot = await get(gameRef);
+        const gameData = gameSnapshot.val() || {};
+        
+        // Build match history document (ONE write instead of N writes)
+        const matchHistory = {
+          roomId: this.roomId,
+          roomCode: roomData.code || '',
+          roomName: roomData.name || 'Unknown Room',
+          hostId: roomData.hostId || this.userId,
+          
+          // Quiz info
+          quizId: gameData.quizId || '',
+          quizTitle: gameData.quizTitle || '',
+          totalQuestions: gameData.totalQuestions || 0,
+          
+          // Game settings
+          gameMode: gameData.settings?.gameMode || 'synced',
+          timePerQuestion: gameData.settings?.timePerQuestion || 30,
+          
+          // Results - all players in one array
+          leaderboard: leaderboard.map((entry, index) => ({
+            rank: index + 1,
+            oderId: entry.userId, // Use oderId for consistency with other parts of the app
+            playerId: entry.userId, // Also include playerId for compatibility
+            name: entry.name,
+            score: entry.score,
+            correctAnswers: entry.correctAnswers,
+            totalAnswers: entry.totalAnswers,
+            accuracy: entry.totalAnswers > 0 
+              ? Math.round((entry.correctAnswers / entry.totalAnswers) * 100) 
+              : 0,
+            photoURL: entry.photoURL || null,
+            role: entry.role || 'player'
+          })),
+          
+          // Timestamps
+          startedAt: gameData.startedAt || Date.now(),
+          finishedAt: serverTimestamp(),
+          duration: Date.now() - (gameData.startedAt || Date.now()),
+          
+          // Stats
+          playerCount: leaderboard.length,
+          winner: leaderboard[0] ? {
+            playerId: leaderboard[0].userId,
+            name: leaderboard[0].name,
+            score: leaderboard[0].score
+          } : null
+        };
+        
+        // Write to match_histories collection (ONE document per game)
+        const matchHistoryRef = doc(this.db, 'match_histories', this.roomId);
+        await setDoc(matchHistoryRef, matchHistory);
+        console.log('✅ Match history saved to Firestore (1 write)');
         
         // ✅ CLEANUP RTDB: Remove heavy game data (questions) to save storage
         // Keep leaderboard and players for viewing results
         console.log('🧹 Cleaning up RTDB game data...');
-        const gameRef = ref(this.rtdb, `games/${this.roomId}`);
-        const gameSnapshot = await get(gameRef);
         if (gameSnapshot.exists()) {
           // Only remove questions array (heavy data), keep everything else for results display
           const questionsRef = ref(this.rtdb, `games/${this.roomId}/questions`);
           await remove(questionsRef);
-          console.log('✅ RTDB questions cleaned up (archived to history)');
+          console.log('✅ RTDB questions cleaned up');
         }
         
         logger.success('Game ended', { 
@@ -1785,45 +2044,68 @@ export class ModernMultiplayerService {
           const playersSnapshot = await get(playersRef);
           const players = playersSnapshot.val() || {};
           
+          // ✅ OPTIMIZED: Sort by joinedAt to find the "oldest" player (most senior)
+          // This ensures fairness - whoever joined first becomes the new host
           const onlinePlayers = Object.entries(players)
             .filter(([playerId, playerData]: [string, any]) => 
               playerId !== this.userId && 
               playerData?.isOnline === true
             )
-            .map(([playerId]) => playerId);
+            .map(([playerId, playerData]: [string, any]) => ({
+              id: playerId,
+              joinedAt: playerData?.joinedAt || Date.now(),
+              name: playerData?.name
+            }))
+            .sort((a, b) => a.joinedAt - b.joinedAt); // Sort by joinedAt ascending (oldest first)
           
           if (onlinePlayers.length > 0) {
-            // Transfer to first available online player
-            const newHostId = onlinePlayers[0];
-            console.log('✅ Transferring host to:', newHostId);
+            // Transfer to the player who joined earliest
+            const newHost = onlinePlayers[0];
+            const newHostId = newHost.id;
+            const newHostData = players[newHostId];
+            console.log('✅ Transferring host to:', { newHostId, name: newHost.name, joinedAt: newHost.joinedAt });
             
-            // Update new host in Firestore
-            await updateDoc(roomRef, {
-              hostId: newHostId,
-              lastUpdated: new Date()
-            });
-            
-            // Update roles in RTDB
+            // ✅ FIX: Update new host role FIRST while current user is still host
+            // Current host has permission to update any player
             const newHostRef = ref(this.rtdb, `rooms/${this.roomId}/players/${newHostId}`);
             await update(newHostRef, {
               role: 'host' as PlayerRole,
               isParticipating: true
             });
+            console.log('✅ Updated new host role in RTDB');
             
-            // Send system message about host transfer
-            const messagesRef = collection(this.db, 'multiplayer_rooms', this.roomId, 'messages');
-            const newHostData = players[newHostId];
-            await addDoc(messagesRef, {
+            // NOW update hostId - current user loses permission after this
+            const rtdbRoomRef = ref(this.rtdb, `rooms/${this.roomId}`);
+            await update(rtdbRoomRef, {
+              hostId: newHostId
+            });
+            console.log('✅ Updated RTDB hostId');
+            
+            // Sync to Firestore (background, non-blocking)
+            updateDoc(roomRef, {
+              hostId: newHostId,
+              lastUpdated: new Date()
+            }).catch(err => console.warn('⚠️ Firestore sync failed:', err));
+            
+            // ✅ OPTIMIZED: Send system message via RTDB (not Firestore)
+            const chatMessagesRef = ref(this.rtdb, `rooms/${this.roomId}/chat/messages`);
+            push(chatMessagesRef, {
               type: 'system',
-              content: `Host left. ${newHostData?.name || 'Player'} is now the host.`,
-              timestamp: new Date(),
+              content: i18next.t('multiplayer:hostLeft', { name: newHostData?.name || 'Player' }),
+              timestamp: Date.now(),
               senderId: 'system',
               senderName: 'System'
-            });
+            }).catch(err => console.warn('⚠️ RTDB message send failed:', err));
           } else {
             console.log('⚠️ No other players online, room will be empty');
           }
         }
+        
+        // ✅ FIX: Clean up listeners FIRST to prevent race condition
+        // If we remove player while listeners are active, they will trigger
+        // "player removed" callback which causes unwanted navigation
+        console.log('🧹 Cleaning up listeners before removing player...');
+        this.cleanupListeners();
         
         // ✅ FIX: Cancel onDisconnect handlers before manually removing
         // This prevents race condition where onDisconnect triggers after manual removal
@@ -1836,13 +2118,34 @@ export class ModernMultiplayerService {
           console.log('✅ Cancelled player onDisconnect handler');
         }
         
+        // Save roomId before clearing (needed for remove operations)
+        const currentRoomId = this.roomId;
+        
+        // ✅ FIX: Clear sessionStorage cache to prevent auto-rejoin
+        // Get room code from current session and clear its cache
+        const roomCode = sessionStorage.getItem(`roomCode_${currentRoomId}`);
+        if (roomCode) {
+          sessionStorage.removeItem(`room_${roomCode}`);
+          console.log('✅ Cleared room code cache:', roomCode);
+        }
+        // Also clear by iterating through potential room codes
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          if (key?.startsWith('room_') && sessionStorage.getItem(key) === currentRoomId) {
+            sessionStorage.removeItem(key);
+            console.log('✅ Cleared room cache:', key);
+          }
+        }
+        
+        this.roomId = ''; // Clear early to prevent any callback from using it
+        
         // Remove player from RTDB
-        const rtdbPlayerRef = ref(this.rtdb, `rooms/${this.roomId}/players/${this.userId}`);
+        const rtdbPlayerRef = ref(this.rtdb, `rooms/${currentRoomId}/players/${this.userId}`);
         await remove(rtdbPlayerRef);
         console.log('✅ Removed player from RTDB');
         
         // Remove presence from RTDB
-        const presenceRef = ref(this.rtdb, `rooms/${this.roomId}/presence/${this.userId}`);
+        const presenceRef = ref(this.rtdb, `rooms/${currentRoomId}/presence/${this.userId}`);
         await remove(presenceRef);
         console.log('✅ Removed presence from RTDB');
         
@@ -1850,11 +2153,7 @@ export class ModernMultiplayerService {
         // Final player data will be synced to Firestore when game ends
         console.log('⚡ Skipping Firestore player delete - RTDB only');
         
-        // Clean up listeners
-        this.cleanupListeners();
-        
-        logger.info('Left room successfully', { roomId: this.roomId, wasHost: isHost });
-        this.roomId = '';
+        logger.info('Left room successfully', { roomId: currentRoomId, wasHost: isHost });
       } catch (error) {
         logger.error('Failed to leave room', error);
         this.emit('error', error);
@@ -1924,12 +2223,12 @@ export class ModernMultiplayerService {
         // Final player data will be synced to Firestore when game ends
         console.log('⚡ Skipping Firestore player delete - RTDB only');
         
-        // Send system message about player kick (background)
-        const messagesRef = collection(this.db, 'multiplayer_rooms', this.roomId, 'messages');
-        addDoc(messagesRef, {
+        // ✅ OPTIMIZED: Send system message via RTDB (not Firestore)
+        const chatMessagesRef = ref(this.rtdb, `rooms/${this.roomId}/chat/messages`);
+        push(chatMessagesRef, {
           type: 'system',
           content: `${playerName} was kicked from the room`,
-          timestamp: new Date(),
+          timestamp: Date.now(),
           senderId: 'system',
           senderName: 'System'
         }).catch(err => console.warn('⚠️ Failed to send kick message:', err));
@@ -2113,6 +2412,13 @@ export class ModernMultiplayerService {
         // Update room hostId in RTDB
         updates[`rooms/${this.roomId}/hostId`] = newHostId;
         
+        // ✅ If owner is transferring host voluntarily, set flag so owner won't auto-reclaim
+        const ownerId = rtdbRoomData.ownerId || currentHostId;
+        if (this.userId === ownerId) {
+          updates[`rooms/${this.roomId}/ownerTransferredHost`] = true;
+          console.log('👑 Owner voluntarily transferred host - will NOT auto-reclaim');
+        }
+        
         // ✅ Execute ALL updates atomically in RTDB - single source of truth
         try {
           await update(ref(this.rtdb), updates);
@@ -2136,12 +2442,12 @@ export class ModernMultiplayerService {
         const roomName = rtdbRoomData.name || 'Unknown Room';
         const newHostName = rtdbPlayerData.name || 'Unknown player';
 
-        // Send system message about host transfer (background, non-blocking)
-        const messagesRef = collection(this.db, 'multiplayer_rooms', this.roomId, 'messages');
-        addDoc(messagesRef, {
+        // ✅ OPTIMIZED: Send system message via RTDB (not Firestore)
+        const chatMessagesRef = ref(this.rtdb, `rooms/${this.roomId}/chat/messages`);
+        push(chatMessagesRef, {
           type: 'system',
-          content: `${newHostName} is now the host of the room`,
-          timestamp: new Date(),
+          content: i18next.t('multiplayer:isNowTheHost', { name: newHostName }),
+          timestamp: Date.now(),
           senderId: 'system',
           senderName: 'System'
         }).catch(err => console.warn('⚠️ Failed to send system message:', err));
@@ -2198,65 +2504,73 @@ export class ModernMultiplayerService {
         
         if (!this.roomId) throw new RoomNotFoundError('current');
         
-        // Create submission document
-        const submissionsRef = collection(this.db, 'multiplayer_rooms', this.roomId, 'submissions');
-        const submissionId = `${submissionData.playerId}_${Date.now()}`;
-        
-        await addDoc(submissionsRef, {
-          id: submissionId,
+        // ✅ OPTIMIZED: Skip individual Firestore writes during game
+        // All player submissions are already saved in match_histories by endGame()
+        // This function now only logs for debugging - no Firestore costs
+        logger.info('📊 Game submission recorded (in-memory)', { 
           playerId: submissionData.playerId,
           playerName: submissionData.playerName,
           finalScore: submissionData.finalScore,
           rank: submissionData.rank,
           correctAnswers: submissionData.correctAnswers,
           totalQuestions: submissionData.totalQuestions,
-          completionTime: submissionData.completionTime,
-          accuracy: submissionData.accuracy,
-          roomId: this.roomId,
-          timestamp: serverTimestamp(),
-          submittedAt: new Date().toISOString()
-        });
-        
-        logger.info('Game submission saved', { 
-          playerId: submissionData.playerId,
-          finalScore: submissionData.finalScore,
-          rank: submissionData.rank,
           roomId: this.roomId
         });
         
+        // Submissions are aggregated and saved to match_histories when game ends
+        // See endGame() for the actual Firestore write
+        
       } catch (error) {
-        logger.error('Failed to save game submission', error);
-        this.emit('error', error);
-        throw error;
+        logger.error('Failed to log game submission', error);
+        // Don't throw - this is non-critical
       }
     }, retryStrategies.standard);
   }
 
   // Get user's game history across all rooms
+  // ✅ OPTIMIZED: Read from match_histories (1 collection) instead of submissions (N subcollections)
   async getUserGameHistory(userId: string, limitCount: number = 50) {
     return this.executeOperation(async () => {
       try {
         this.ensureAuthenticated();
         
-        // Query all submissions for the user across all rooms
-        const submissionsQuery = query(
-          collectionGroup(this.db, 'submissions'),
-          where('playerId', '==', userId),
-          orderBy('timestamp', 'desc'),
-          limit(limitCount)
+        // Query match_histories where user participated
+        // We need to search in leaderboard array for user's playerId
+        const historyQuery = query(
+          collection(this.db, 'match_histories'),
+          orderBy('finishedAt', 'desc'),
+          limit(limitCount * 2) // Get more since we'll filter
         );
         
-        const querySnapshot = await getDocs(submissionsQuery);
-        const submissions: any[] = [];
+        const querySnapshot = await getDocs(historyQuery);
+        const userHistory: any[] = [];
         
         querySnapshot.forEach((doc) => {
-          submissions.push({
-            id: doc.id,
-            ...doc.data()
-          });
+          const data = doc.data();
+          // Find user in leaderboard
+          const userEntry = data.leaderboard?.find((p: any) => p.oderId === userId || p.playerId === userId);
+          if (userEntry) {
+            userHistory.push({
+              id: doc.id,
+              matchId: doc.id,
+              roomName: data.roomName,
+              quizTitle: data.quizTitle,
+              finishedAt: data.finishedAt,
+              duration: data.duration,
+              playerCount: data.playerCount,
+              // User-specific data
+              rank: userEntry.rank,
+              score: userEntry.score,
+              correctAnswers: userEntry.correctAnswers,
+              totalQuestions: data.totalQuestions,
+              accuracy: userEntry.accuracy,
+              isWinner: userEntry.rank === 1
+            });
+          }
         });
         
-        return submissions;
+        // Limit to requested count
+        return userHistory.slice(0, limitCount);
         
       } catch (error) {
         logger.error('Failed to get user game history', error);
@@ -2266,28 +2580,37 @@ export class ModernMultiplayerService {
   }
 
   // Get game history for a specific room
+  // ✅ OPTIMIZED: Read from match_histories (1 document) instead of submissions (N documents)
   async getRoomGameHistory(roomId: string) {
     return this.executeOperation(async () => {
       try {
         this.ensureAuthenticated();
         
-        // Query all submissions for the room
-        const submissionsQuery = query(
-          collection(this.db, 'multiplayer_rooms', roomId, 'submissions'),
-          orderBy('timestamp', 'desc')
-        );
+        // Get match history document for this room
+        const matchHistoryRef = doc(this.db, 'match_histories', roomId);
+        const historyDoc = await getDoc(matchHistoryRef);
         
-        const querySnapshot = await getDocs(submissionsQuery);
-        const submissions: any[] = [];
+        if (!historyDoc.exists()) {
+          logger.info('No match history found for room', { roomId });
+          return [];
+        }
         
-        querySnapshot.forEach((doc) => {
-          submissions.push({
-            id: doc.id,
-            ...doc.data()
-          });
-        });
+        const data = historyDoc.data();
         
-        return submissions;
+        // Return leaderboard as submissions-like array for backward compatibility
+        return (data.leaderboard || []).map((entry: any) => ({
+          id: `${entry.oderId || entry.playerId}_${data.finishedAt?.seconds || 0}`,
+          playerId: entry.oderId || entry.playerId,
+          playerName: entry.name,
+          finalScore: entry.score,
+          rank: entry.rank,
+          correctAnswers: entry.correctAnswers,
+          totalQuestions: data.totalQuestions,
+          accuracy: entry.accuracy,
+          roomId: roomId,
+          quizTitle: data.quizTitle,
+          finishedAt: data.finishedAt
+        }));
         
       } catch (error) {
         logger.error('Failed to get room game history', error);

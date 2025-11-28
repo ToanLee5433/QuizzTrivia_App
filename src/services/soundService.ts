@@ -127,46 +127,37 @@ class SoundService {
   unlock(): void {
     if (this.audioUnlocked) return;
     
-    const unlockAttempt = () => {
-      let unlockedCount = 0;
-      
-      this.sounds.forEach((sound) => {
-        try {
-          // Force load if unloaded
-          if (sound.state() === 'unloaded') {
-            sound.load();
-          }
-          
-          // Unlock only loaded sounds
-          if (sound.state() === 'loaded') {
-            const originalVolume = sound.volume();
-            sound.volume(0.0001); // Extremely quiet to avoid console warnings
-            const id = sound.play();
-            setTimeout(() => {
-              sound.stop(id);
-              sound.volume(originalVolume);
-            }, 1); // Very short duration
-            unlockedCount++;
-          }
-        } catch (error) {
-          // Silently ignore - browser will show warnings but we can't prevent them
-          // This is expected behavior for autoplay policy
-        }
-      });
-
-      if (unlockedCount > 0) {
-        this.audioUnlocked = true;
-      }
-      return unlockedCount > 0;
-    };
-
-    // Try silently - browser warnings are unavoidable on first load
-    try {
-      unlockAttempt();
-    } catch {
-      // Ignore - will unlock on first user interaction
+    // Only try to unlock ONE sound (click is smallest and fastest)
+    const clickSound = this.sounds.get('click');
+    if (!clickSound) {
+      console.log('🔇 No click sound found to unlock');
+      return;
     }
-  }  play(type: SoundType): void {
+    
+    try {
+      // Force load if unloaded
+      if (clickSound.state() === 'unloaded') {
+        clickSound.load();
+      }
+      
+      // Only unlock if loaded
+      if (clickSound.state() === 'loaded') {
+        const originalVolume = clickSound.volume();
+        clickSound.volume(0); // Silent
+        const id = clickSound.play();
+        setTimeout(() => {
+          clickSound.stop(id);
+          clickSound.volume(originalVolume);
+        }, 1);
+        this.audioUnlocked = true;
+        console.log('🔊 Audio context unlocked');
+      }
+    } catch (error) {
+      // Silently ignore - will be unlocked on next user interaction
+    }
+  }
+
+  play(type: SoundType): void {
     if (!this.enabled) return;
 
     // Auto-unlock on first play attempt

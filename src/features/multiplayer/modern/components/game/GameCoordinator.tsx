@@ -4,7 +4,7 @@
  * Supports both SYNCED and FREE game modes
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { getDatabase, ref, onValue } from 'firebase/database';
@@ -13,7 +13,6 @@ import FreeModePlayerView from './FreeModePlayerView';
 import FreeModeSpectatorView from './FreeModeSpectatorView';
 import SpectatorGameView from './SpectatorGameView';
 import HostGameView from './HostGameView';
-import GameResultsView from './GameResultsView';
 import { GameState, RTDB_PATHS } from '../../types/game.types';
 import { gameEngine } from '../../services/gameEngine';
 
@@ -31,8 +30,20 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasCalledGameEnd = useRef(false); // Prevent multiple calls
 
   const db = getDatabase();
+
+  // ✅ FIX: Handle game end in useEffect, not during render
+  useEffect(() => {
+    if (gameState?.status === 'finished' && !hasCalledGameEnd.current) {
+      hasCalledGameEnd.current = true;
+      // Use setTimeout to defer the state update to after render completes
+      setTimeout(() => {
+        onGameEnd();
+      }, 0);
+    }
+  }, [gameState?.status, onGameEnd]);
 
   // Listen to game state
   useEffect(() => {
@@ -175,13 +186,21 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
   }
 
   if (gameState.status === 'finished') {
+    // ✅ FIX: Don't call onGameEnd here - it's handled in useEffect above
+    // Just show loading while transitioning
     return (
-      <GameResultsView
-        roomId={roomId}
-        players={gameState.players}
-        currentUserId={currentUserId}
-        onBackToLobby={onGameEnd}
-      />
+      <div className="h-full flex items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-pink-900">
+        <div className="text-center">
+          <motion.div
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ duration: 1, repeat: Infinity }}
+          >
+            <Loader2 className="w-16 h-16 text-yellow-400 mx-auto mb-4 animate-spin" />
+          </motion.div>
+          <h2 className="text-3xl font-bold text-white mb-2">🏆 Kết thúc!</h2>
+          <p className="text-gray-300">Đang tải kết quả...</p>
+        </div>
+      </div>
     );
   }
 

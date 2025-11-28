@@ -21,12 +21,15 @@ import DOMPurify from 'dompurify';
 
 interface ChatMessage {
   id: string;
-  userId: string;
-  username: string;
+  userId?: string;      // May be undefined for system messages
+  username?: string;    // May be undefined for system messages
   photoURL?: string;
-  message: string;
+  message?: string;     // User messages
+  content?: string;     // System messages (legacy field name)
   timestamp: number;
-  type: 'user' | 'system' | 'announcement';
+  type?: 'user' | 'system' | 'announcement';  // May be undefined for old messages
+  senderId?: string;    // For system messages
+  senderName?: string;  // For system messages
 }
 
 interface ModernRealtimeChatProps {
@@ -78,6 +81,10 @@ const ModernRealtimeChat: React.FC<ModernRealtimeChatProps> = ({
     // Clear messages when room changes
     setMessages([]);
     setIsLoading(true);
+    
+    // Track which message IDs we've already loaded to avoid duplicates
+    const loadedMessageIds = new Set<string>();
+    let initialLoadComplete = false;
 
     const messagesRef = ref(db, `rooms/${roomId}/chat/messages`);
     const messagesQuery = query(messagesRef, orderByChild('timestamp'), limitToLast(MAX_MESSAGES_DISPLAY));
@@ -88,11 +95,14 @@ const ModernRealtimeChat: React.FC<ModernRealtimeChatProps> = ({
         const messagesData: ChatMessage[] = [];
         snapshot.forEach((childSnapshot: any) => {
           const message = childSnapshot.val() as ChatMessage;
-          messagesData.push({ ...message, id: childSnapshot.key! });
+          const messageId = childSnapshot.key!;
+          loadedMessageIds.add(messageId); // Track loaded IDs
+          messagesData.push({ ...message, id: messageId });
         });
         setMessages(messagesData);
       }
-      setIsLoading(false); // ✅ Always stop loading after initial fetch
+      setIsLoading(false);
+      initialLoadComplete = true; // Mark initial load as complete
       setTimeout(scrollToBottom, 100);
     });
 
@@ -100,8 +110,22 @@ const ModernRealtimeChat: React.FC<ModernRealtimeChatProps> = ({
       const message = snapshot.val() as ChatMessage;
       if (message) {
         const messageId = snapshot.key!;
+        
+        // ✅ Skip messages that were already loaded in initial fetch
+        // onChildAdded fires for existing children too, so we need to filter
+        if (loadedMessageIds.has(messageId)) {
+          return;
+        }
+        
+        // ✅ Only add truly new messages (after initial load)
+        if (!initialLoadComplete) {
+          loadedMessageIds.add(messageId);
+          return;
+        }
+        
+        loadedMessageIds.add(messageId);
         setMessages(prev => {
-          // Prevent duplicate messages
+          // Double-check for duplicates
           if (prev.some(m => m.id === messageId)) return prev;
           const newMessages = [...prev, { ...message, id: messageId }];
           return newMessages.slice(-MAX_MESSAGES_DISPLAY);
@@ -303,20 +327,33 @@ const ModernRealtimeChat: React.FC<ModernRealtimeChatProps> = ({
           </div>
         ) : (
           <>
-            {messages.map((message) => (
+            {messages.map((message) => {
+              // Determine if this is a system message
+              // System messages have: type='system' OR senderId='system' OR no userId
+              const isSystemMessage = message.type === 'system' || 
+                                       message.senderId === 'system' || 
+                                       !message.userId;
+              
+              // Get message text (support both 'message' and 'content' fields)
+              const messageText = message.message || message.content || '';
+              
+              // Skip empty messages
+              if (!messageText.trim()) return null;
+              
+              return (
               <motion.div
                 key={`msg-${message.id}`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.2 }}
-                className={`flex ${message.userId === currentUserId ? 'justify-end' : 'justify-start'}`}
+                className={`flex ${!isSystemMessage && message.userId === currentUserId ? 'justify-end' : 'justify-start'}`}
               >
-                <div className={`max-w-xs lg:max-w-md ${message.userId === currentUserId ? 'order-2' : 'order-1'}`}>
-                  {message.type === 'system' ? (
+                <div className={`max-w-xs lg:max-w-md ${!isSystemMessage && message.userId === currentUserId ? 'order-2' : 'order-1'}`}>
+                  {isSystemMessage ? (
                     <div className="text-center">
-                      <span className="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">
-                        {message.message}
+                      <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">
+                        ℹ️ {messageText}
                       </span>
                     </div>
                   ) : (
@@ -324,16 +361,16 @@ const ModernRealtimeChat: React.FC<ModernRealtimeChatProps> = ({
                       {message.photoURL ? (
                         <img
                           src={message.photoURL}
-                          alt={message.username}
+                          alt={message.username || 'User'}
                           className="w-8 h-8 rounded-full object-cover border-2 border-blue-200"
                         />
                       ) : (
                         <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                          {message.username.charAt(0).toUpperCase()}
+                          {(message.username || 'U').charAt(0).toUpperCase()}
                         </div>
                       )}
                       <div className={`flex-1 ${message.userId === currentUserId ? 'text-right' : 'text-left'}`}>
-                        <p className="text-xs text-gray-500 mb-1">{message.username}</p>
+                        <p className="text-xs text-gray-500 mb-1">{message.username || 'Unknown'}</p>
                         <div className={`inline-block px-4 py-2 rounded-2xl ${
                           message.userId === currentUserId 
                             ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white' 
@@ -342,7 +379,7 @@ const ModernRealtimeChat: React.FC<ModernRealtimeChatProps> = ({
                           <p 
                             className="text-sm break-words"
                             dangerouslySetInnerHTML={{ 
-                              __html: DOMPurify.sanitize(message.message) 
+                              __html: DOMPurify.sanitize(messageText) 
                             }}
                           />
                         </div>
@@ -352,7 +389,8 @@ const ModernRealtimeChat: React.FC<ModernRealtimeChatProps> = ({
                   )}
                 </div>
               </motion.div>
-            ))}
+            );
+            })}
           </>
         )}
         <div ref={messagesEndRef} />

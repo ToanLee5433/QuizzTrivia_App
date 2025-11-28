@@ -67,7 +67,8 @@ service cloud.firestore {
         get(/databases/$(database)/documents/multiplayer_rooms/$(roomId)).data.hostId == request.auth.uid;
     }
     
-    // Check if user is player in room
+    // ⚠️ DEPRECATED: Players are now stored in RTDB only
+    // Keep for backward compatibility with old data
     function isPlayer(roomId) {
       return signedIn() &&
         exists(/databases/$(database)/documents/multiplayer_rooms/$(roomId)/players/$(request.auth.uid));
@@ -161,31 +162,28 @@ service cloud.firestore {
       // Only host can delete room
       allow delete: if signedIn() && isHost(roomId);
       
-      // Players subcollection
+      /* ===== Players Subcollection (DEPRECATED) =====
+         ⚠️ DEPRECATED: Players are now stored in RTDB only
+         Keeping rules for backward compatibility with old data
+         NO NEW WRITES - only read existing data
+      */
       match /players/{playerId} {
-        // Any authenticated user in room can read player data (for join flow)
+        // Allow reading existing player data
         allow read: if signedIn();
-        // Any authenticated user can create their own player document
-        allow create: if signedIn() && 
-                       request.auth.uid == playerId && 
-                       validatePlayerData();
-        // Players can update their own data, host can update any
-        allow update: if signedIn() && (
-          playerId == request.auth.uid || 
-          isHost(roomId)
-        );
-        allow delete: if signedIn() && (isHost(roomId) || request.auth.uid == playerId);
+        // ❌ NO NEW WRITES - players are in RTDB now
+        allow create, update, delete: if false;
       }
       
-      // Messages subcollection
+      /* ===== Messages Subcollection (DEPRECATED) =====
+         ⚠️ DEPRECATED: Chat messages are now in RTDB only
+         Path: rooms/{roomId}/chat/messages
+         NO NEW WRITES - only read existing data for history
+      */
       match /messages/{messageId} {
-        // Any authenticated user in room can read messages (checked after player creation)
+        // Allow reading existing messages
         allow read: if signedIn();
-        // Only players who exist in subcollection can create messages
-        allow create: if signedIn() && 
-                       request.auth.uid == request.resource.data.userId &&
-                       validateMessageData();
-        allow update, delete: if false; // Messages are immutable
+        // ❌ NO NEW WRITES - messages are in RTDB now
+        allow create, update, delete: if false;
       }
       
       // Answers subcollection - READ ONLY for clients (Cloud Functions write)
@@ -201,19 +199,44 @@ service cloud.firestore {
       }
     }
 
-    /* ===== Multiplayer Submissions (TÁCH BIỆT - IMMUTABLE) =====
+    /* ===== Match Histories (GAME RESULTS) =====
+       Collection: match_histories/{matchId}
+       Lưu trữ kết quả trò chơi sau khi kết thúc
+       matchId = roomId (mỗi phòng có 1 document kết quả)
+       
+       ✅ OPTIMIZED: Thay vì N documents trong submissions, chỉ có 1 document
+       Giảm 90%+ Firestore writes cho multiplayer games
+    */
+    match /match_histories/{matchId} {
+      // Any authenticated user can read game history (for leaderboards, statistics)
+      allow read: if signedIn();
+      
+      // Only host can write match history (via endGame())
+      // Host is determined by checking they were the hostId of the room
+      allow create: if signedIn() &&
+        request.resource.data.hostId == request.auth.uid &&
+        request.resource.data.roomId == matchId &&
+        request.resource.data.leaderboard is list &&
+        request.resource.data.finishedAt != null;
+      
+      // Match history is immutable once created
+      allow update, delete: if false;
+    }
+
+    /* ===== Multiplayer Submissions (LEGACY - DEPRECATED) =====
        Subcollection: multiplayer_rooms/{roomId}/submissions/{submissionId}
-       Kết quả multiplayer KHÔNG lưu vào quizResults
-       Hoàn toàn độc lập với quiz results thường
+       ⚠️ DEPRECATED: Use match_histories collection instead
+       
+       Game answers are now stored in RTDB: games/{roomId}/answers
+       Final results are saved to: match_histories/{matchId}
+       
+       NO NEW WRITES - only read existing data for backward compatibility
     */
     match /multiplayer_rooms/{roomId}/submissions/{submissionId} {
-      allow read: if signedIn() &&
-        exists(/databases/$(database)/documents/multiplayer_rooms/$(roomId)/players/$(request.auth.uid));
-      allow create: if signedIn() &&
-        request.resource.data.playerId == request.auth.uid &&
-        exists(/databases/$(database)/documents/multiplayer_rooms/$(roomId)/players/$(request.auth.uid)) &&
-        !exists(/databases/$(database)/documents/multiplayer_rooms/$(roomId)/submissions/$(submissionId));
-      allow update, delete: if false;
+      // Allow reading existing submissions
+      allow read: if signedIn();
+      // ❌ NO NEW WRITES - use match_histories instead
+      allow create, update, delete: if false;
     }
     
     /* ===== QUIZZES - NEW ARCHITECTURE =====

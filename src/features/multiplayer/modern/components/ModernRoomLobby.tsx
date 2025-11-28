@@ -27,6 +27,7 @@ import { modernMultiplayerService, ModernPlayer, ModernQuiz } from '../services/
 import MemoizedPlayerCard from './MemoizedPlayerCard';
 import SharedScreen from './SharedScreen';
 import { gameEngine } from '../services/gameEngine';
+import soundService from '../../../../services/soundService';
 
 // Import enhanced components
 import ModernRealtimeChat from './ModernRealtimeChat';
@@ -60,6 +61,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
   const [isLoadingRoom, setIsLoadingRoom] = useState(true);
   const [liveGameMode, setLiveGameMode] = useState<'synced' | 'free'>('synced'); // Live game mode from RTDB
   const initializingRef = useRef(false); // Track if currently initializing
+  const isLeavingRef = useRef(false); // Track if player is intentionally leaving
 
   // Enhanced features hooks
   const announcements = useGameAnnouncements(roomId);
@@ -110,6 +112,13 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
       console.error('❌ Failed to transfer host:', error);
     }
   }, []);
+
+  // ✅ Handler for leaving room - sets flag to prevent "kicked" message
+  const handleLeaveRoom = useCallback(() => {
+    console.log('🚪 User clicked back button - leaving room intentionally');
+    isLeavingRef.current = true; // Set flag to prevent kick detection
+    onBack(); // Call parent handler which will call leaveRoom()
+  }, [onBack]);
 
   // Helper functions
   const generateQRCode = async () => {
@@ -255,7 +264,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
     } catch (error) {
       console.error('❌ Failed to start game:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      alert('Không thể bắt đầu trò chơi: ' + errorMessage);
+      alert(t('errors.cannotStartGame', 'Không thể bắt đầu trò chơi') + ': ' + errorMessage);
       setIsStarting(false);
     }
   };
@@ -299,16 +308,66 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
   }, [roomData?.hostId, currentUserId]);
 
   // ✅ CRITICAL: Define handlers BEFORE useEffect so they have correct dependencies
+  const prevPlayersRef = useRef<{ [key: string]: ModernPlayer } | null>(null); // null = not initialized yet
+  const isInitialLoadRef = useRef(true); // Track if this is initial load
+  
   const handlePlayersUpdate = useCallback((playersData: { [key: string]: ModernPlayer }) => {
+    // ✅ Ignore updates if player is intentionally leaving
+    if (isLeavingRef.current) {
+      console.log('👋 Ignoring player update - intentionally leaving room');
+      return;
+    }
+    
+    // ✅ Only detect new players AFTER initial load
+    // First update just sets the baseline, subsequent updates detect changes
+    if (prevPlayersRef.current !== null && !isInitialLoadRef.current) {
+      const prevPlayerIds = Object.keys(prevPlayersRef.current);
+      const newPlayerIds = Object.keys(playersData);
+      const joinedPlayerIds = newPlayerIds.filter(id => !prevPlayerIds.includes(id) && id !== currentUserId);
+      
+      if (joinedPlayerIds.length > 0) {
+        // Play join sound (only if audio unlocked)
+        try {
+          soundService.play('join');
+        } catch (e) {
+          console.log('🔇 Sound skipped - audio not unlocked yet');
+        }
+        
+        // Show toast for each new player
+        joinedPlayerIds.forEach(id => {
+          const player = playersData[id];
+          if (player) {
+            import('react-toastify').then(({ toast }) => {
+              toast.info(`👋 ${player.name} đã vào phòng`, {
+                position: 'top-right',
+                autoClose: 3000
+              });
+            });
+            console.log('👋 New player joined:', player.name);
+          }
+        });
+      }
+    } else {
+      // First load - just set baseline without notifications
+      console.log('📥 Initial players load, setting baseline:', Object.keys(playersData).length, 'players');
+      isInitialLoadRef.current = false;
+    }
+    
+    // Update ref for next comparison
+    prevPlayersRef.current = playersData;
+    
     // ✅ Force immediate update
     setPlayers(playersData);
     
-    // Check if current player was kicked
-    if (currentUserId && !playersData[currentUserId]) {
-      alert('You have been removed from this room by the host.');
+    // Check if current player was kicked (only if not leaving intentionally)
+    if (currentUserId && !playersData[currentUserId] && !isLeavingRef.current) {
+      console.log('⚠️ Current player not in room - may have been kicked');
+      import('react-toastify').then(({ toast }) => {
+        toast.warning(t('youWereKicked', 'Bạn đã bị đuổi khỏi phòng bởi host.'));
+      });
       setTimeout(() => {
         window.location.href = '/multiplayer';
-      }, 1000);
+      }, 1500);
     }
   }, [currentUserId]);
 
@@ -343,6 +402,18 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
         const auth = getAuth();
         const userId = auth.currentUser?.uid || '';
         setCurrentUserId(userId); // Set NOW before fetch
+        
+        // ✅ CRITICAL: Ensure service is connected to this room
+        // This sets service.roomId and sets up listeners for real-time updates
+        // Without this, service functions like toggleHostParticipation will fail
+        try {
+          console.log('🔗 Ensuring service is connected to room:', roomId);
+          await modernMultiplayerService.quickRejoin(roomId);
+          console.log('✅ Service connected to room');
+        } catch (err) {
+          console.warn('⚠️ quickRejoin failed, service may not be fully connected:', err);
+          // Continue anyway - we'll fetch data manually
+        }
         
         // ✅ Fetch players + room data in PARALLEL for faster loading
         const [playersData, roomData] = await Promise.all([
@@ -595,8 +666,9 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={onBack}
+              onClick={handleLeaveRoom}
               className="p-2 sm:p-3 bg-white/10 rounded-xl hover:bg-white/20 transition-colors"
+              title={t('leave', 'Rời phòng')}
             >
               <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </motion.button>
@@ -1074,7 +1146,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
                   } catch (error) {
                     console.error('❌ Failed to change quiz:', error);
                     import('react-toastify').then(({ toast }) => {
-                      toast.error('Không thể đổi quiz');
+                      toast.error(t('errors.cannotChangeQuiz', 'Không thể đổi quiz'));
                     });
                   }
                 }}
@@ -1136,7 +1208,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
             transition={{ delay: 0.5 }}
           >
             <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20">
-              <h3 className="text-lg font-bold text-white mb-4">Leaderboard</h3>
+              <h3 className="text-lg font-bold text-white mb-4">{t('leaderboard', 'Bảng xếp hạng')}</h3>
               <p className="text-gray-400 text-sm text-center">Available during game</p>
             </div>
           </motion.div> */}
