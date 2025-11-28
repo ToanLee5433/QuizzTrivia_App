@@ -214,8 +214,44 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
     );
   }
 
+  // Check if game is paused
+  const isPaused = gameStatus === 'paused';
+
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
+    <div className="h-full flex flex-col bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 relative">
+      {/* ============= PAUSE OVERLAY ============= */}
+      <AnimatePresence>
+        {isPaused && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="text-center"
+            >
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="w-24 h-24 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-yellow-500/50"
+              >
+                <Loader2 className="w-12 h-12 text-yellow-400" />
+              </motion.div>
+              <h2 className="text-4xl font-bold text-white mb-4">
+                {t('gamePausedTitle', 'Tạm dừng')}
+              </h2>
+              <p className="text-xl text-gray-300">
+                {t('gamePausedDesc', 'Đang chờ host tiếp tục trò chơi...')}
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ============= HEADER: Stats & Timer ============= */}
       <div className="bg-black/30 backdrop-blur-md border-b border-white/10 p-4">
         <div className="max-w-7xl mx-auto">

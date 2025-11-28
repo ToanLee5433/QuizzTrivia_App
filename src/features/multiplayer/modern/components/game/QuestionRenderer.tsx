@@ -235,16 +235,19 @@ interface CheckboxRendererProps {
 
 const CheckboxRenderer: React.FC<CheckboxRendererProps> = ({
   question,
-  value = [],
+  value,
   onChange,
   disabled,
 }) => {
+  // Ensure value is always an array
+  const safeValue = Array.isArray(value) ? value : [];
+  
   const handleToggle = (answerId: string) => {
     if (disabled) return;
     
-    const newValue = value.includes(answerId)
-      ? value.filter(id => id !== answerId)
-      : [...value, answerId];
+    const newValue = safeValue.includes(answerId)
+      ? safeValue.filter(id => id !== answerId)
+      : [...safeValue, answerId];
     onChange(newValue);
   };
 
@@ -256,7 +259,7 @@ const CheckboxRenderer: React.FC<CheckboxRendererProps> = ({
       </p>
       
       {question.answers.map((answer, index) => {
-        const isSelected = value.includes(answer.id);
+        const isSelected = safeValue.includes(answer.id);
         const letter = String.fromCharCode(65 + index);
 
         return (

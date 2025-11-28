@@ -6,6 +6,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { 
   Crown, 
   Play, 
@@ -40,6 +41,7 @@ const HostGameView: React.FC<HostGameViewProps> = ({
   gameStatus,
   onAnswerSubmit,
 }) => {
+  const { t } = useTranslation('multiplayer');
   const [hostMode, setHostMode] = useState<HostMode>('spectator');
   const [showControls, setShowControls] = useState(true);
 
@@ -52,15 +54,13 @@ const HostGameView: React.FC<HostGameViewProps> = ({
   };
 
   const handleSkipQuestion = async () => {
-    if (window.confirm('Bạn có chắc muốn bỏ qua câu hỏi này?')) {
-      await gameEngine.endQuestion(roomId);
-    }
+    // Direct skip without confirmation - instantly go to next question
+    await gameEngine.skipQuestion(roomId);
   };
 
   const handleEndGame = async () => {
-    if (window.confirm('Bạn có chắc muốn kết thúc trò chơi?')) {
-      await gameEngine.finishGame(roomId);
-    }
+    // Direct end without confirmation
+    await gameEngine.finishGame(roomId);
   };
 
   return (
@@ -82,6 +82,7 @@ const HostGameView: React.FC<HostGameViewProps> = ({
             roomId={roomId}
             questionState={questionState}
             players={players}
+            gameStatus={gameStatus}
           />
         )}
       </AnimatePresence>
@@ -118,7 +119,7 @@ const HostGameView: React.FC<HostGameViewProps> = ({
                     }`}
                   >
                     <Eye className="w-4 h-4" />
-                    <span className="text-sm">Xem</span>
+                    <span className="text-sm">{t('spectatorModeShort', 'Xem')}</span>
                   </motion.button>
 
                   <motion.button
@@ -132,7 +133,7 @@ const HostGameView: React.FC<HostGameViewProps> = ({
                     }`}
                   >
                     <Gamepad2 className="w-4 h-4" />
-                    <span className="text-sm">Chơi</span>
+                    <span className="text-sm">{t('playerModeShort', 'Chơi')}</span>
                   </motion.button>
                 </div>
 
@@ -147,7 +148,7 @@ const HostGameView: React.FC<HostGameViewProps> = ({
                     whileTap={{ scale: 0.9 }}
                     onClick={handlePauseResume}
                     className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all group"
-                    title={gameStatus === 'paused' ? 'Tiếp tục' : 'Tạm dừng'}
+                    title={gameStatus === 'paused' ? t('resumeButton') : t('pauseButton')}
                   >
                     {gameStatus === 'paused' ? (
                       <Play className="w-5 h-5 text-green-400 group-hover:text-green-300" />
@@ -162,7 +163,7 @@ const HostGameView: React.FC<HostGameViewProps> = ({
                     whileTap={{ scale: 0.9 }}
                     onClick={handleSkipQuestion}
                     className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all group"
-                    title="Bỏ qua câu hỏi"
+                    title={t('skipButton')}
                   >
                     <SkipForward className="w-5 h-5 text-blue-400 group-hover:text-blue-300" />
                   </motion.button>
@@ -173,7 +174,7 @@ const HostGameView: React.FC<HostGameViewProps> = ({
                     whileTap={{ scale: 0.9 }}
                     onClick={handleEndGame}
                     className="p-3 bg-white/10 hover:bg-red-500/30 rounded-xl transition-all group"
-                    title="Kết thúc trò chơi"
+                    title={t('endGame', 'Kết thúc trò chơi')}
                   >
                     <StopCircle className="w-5 h-5 text-red-400 group-hover:text-red-300" />
                   </motion.button>
@@ -188,7 +189,7 @@ const HostGameView: React.FC<HostGameViewProps> = ({
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setShowControls(!showControls)}
                   className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all"
-                  title="Ẩn/Hiện điều khiển"
+                  title={t('toggleControls', 'Ẩn/Hiện điều khiển')}
                 >
                   <Settings className="w-5 h-5 text-white" />
                 </motion.button>
@@ -197,7 +198,7 @@ const HostGameView: React.FC<HostGameViewProps> = ({
               {/* Status Indicator */}
               <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 px-3 py-1 bg-gray-900 rounded-full border border-white/20">
                 <p className="text-xs text-white font-medium">
-                  {gameStatus === 'paused' ? '⏸️ Đã tạm dừng' : '▶️ Đang chơi'}
+                  {gameStatus === 'paused' ? `⏸️ ${t('gamePaused')}` : `▶️ ${t('gamePlaying')}`}
                 </p>
               </div>
             </div>

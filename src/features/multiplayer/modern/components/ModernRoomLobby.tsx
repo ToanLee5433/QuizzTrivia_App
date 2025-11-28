@@ -25,7 +25,6 @@ import { ref, onValue, getDatabase, remove } from 'firebase/database';
 import QRCodeLib from 'qrcode';
 import { modernMultiplayerService, ModernPlayer, ModernQuiz } from '../services/modernMultiplayerService';
 import MemoizedPlayerCard from './MemoizedPlayerCard';
-import KickPlayerConfirmDialog from './KickPlayerConfirmDialog';
 import SharedScreen from './SharedScreen';
 import { gameEngine } from '../services/gameEngine';
 
@@ -51,7 +50,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
 }) => {
   const { t } = useTranslation('multiplayer');
   const [players, setPlayers] = useState<{ [key: string]: ModernPlayer }>({});
-  const [_isStarting, setIsStarting] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [copySuccess, setCopySuccess] = useState(false);
@@ -59,28 +58,20 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
   const [roomData, setRoomData] = useState<any>(null);
   const [quiz, setQuiz] = useState<ModernQuiz | null>(selectedQuiz);
   const [isLoadingRoom, setIsLoadingRoom] = useState(true);
-  const [kickDialog, setKickDialog] = useState<{
-    isOpen: boolean;
-    player: ModernPlayer | null;
-    isKicking: boolean;
-  }>({
-    isOpen: false,
-    player: null,
-    isKicking: false
-  });
   const [liveGameMode, setLiveGameMode] = useState<'synced' | 'free'>('synced'); // Live game mode from RTDB
   const initializingRef = useRef(false); // Track if currently initializing
 
   // Enhanced features hooks
   const announcements = useGameAnnouncements(roomId);
 
-  // Host control functions
-  const handleKickPlayerClick = useCallback((player: ModernPlayer) => {
-    setKickDialog({
-      isOpen: true,
-      player,
-      isKicking: false
-    });
+  // Host control functions - Direct kick without dialog
+  const handleKickPlayer = useCallback(async (player: ModernPlayer) => {
+    try {
+      await modernMultiplayerService.kickPlayer(player.id);
+      console.log('✅ Player kicked:', player.name);
+    } catch (error) {
+      console.error('❌ Failed to kick player:', error);
+    }
   }, []);
 
   const handleToggleReady = useCallback(async () => {
@@ -112,42 +103,12 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
 
   const handleTransferHost = useCallback(async (player: ModernPlayer) => {
     try {
-      const confirmed = window.confirm(`Chuyển quyền host cho ${player.name}?`);
-      if (confirmed) {
-        await modernMultiplayerService.transferHost(player.id);
-        console.log('✅ Host transferred to:', player.name);
-      }
+      // Direct transfer without confirmation
+      await modernMultiplayerService.transferHost(player.id);
+      console.log('✅ Host transferred to:', player.name);
     } catch (error) {
       console.error('❌ Failed to transfer host:', error);
     }
-  }, []);
-
-  const handleKickPlayer = useCallback(async () => {
-    if (!kickDialog.player) return;
-
-    try {
-      setKickDialog(prev => ({ ...prev, isKicking: true }));
-      await modernMultiplayerService.kickPlayer(kickDialog.player.id);
-      
-      // Close dialog on success
-      setKickDialog({
-        isOpen: false,
-        player: null,
-        isKicking: false
-      });
-    } catch (error) {
-      console.error('❌ Failed to kick player:', error);
-      // Reset loading state but keep dialog open for retry
-      setKickDialog(prev => ({ ...prev, isKicking: false }));
-    }
-  }, [kickDialog.player]);
-
-  const handleKickDialogCancel = useCallback(() => {
-    setKickDialog({
-      isOpen: false,
-      player: null,
-      isKicking: false
-    });
   }, []);
 
   // Helper functions
@@ -604,6 +565,25 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
       exit={{ opacity: 0, y: -20 }}
       className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-6"
     >
+      {/* Starting Game Overlay */}
+      {isStarting && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
+        >
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-2xl p-8 text-center"
+          >
+            <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-gray-800">{t('startingGame', 'Đang bắt đầu game...')}</h3>
+            <p className="text-gray-500 mt-2">{t('pleaseWait', 'Vui lòng chờ')}</p>
+          </motion.div>
+        </motion.div>
+      )}
+
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -859,7 +839,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
                     isHost={isHost}
                     currentUserId={currentUserId}
                     hostId={roomData?.hostId || ''}
-                    onKickPlayer={handleKickPlayerClick}
+                    onKickPlayer={handleKickPlayer}
                     onTransferHost={handleTransferHost}
                     onToggleReady={handleToggleReady}
                     onToggleHostParticipation={handleToggleHostParticipation}
@@ -927,7 +907,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
                     isHost={isHost}
                     currentUserId={currentUserId}
                     hostId={roomData?.hostId || ''}
-                    onKickPlayer={handleKickPlayerClick}
+                    onKickPlayer={handleKickPlayer}
                     onTransferHost={handleTransferHost}
                     onToggleReady={handleToggleReady}
                     onToggleHostParticipation={handleToggleHostParticipation}
@@ -978,9 +958,72 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
                 onGameStart={handleStartGame}
                 onGamePause={() => console.log('Game paused')}
                 onGameResume={() => console.log('Game resumed')}
+                onSkipQuestion={async () => {
+                  try {
+                    // Host can skip current question - move all players to next question
+                    console.log('⏭️ Host skipping question...');
+                    const database = getDatabase();
+                    const gameStateRef = ref(database, `rooms/${roomId}/gameState`);
+                    const { get, update: updateRtdb } = await import('firebase/database');
+                    
+                    const snapshot = await get(gameStateRef);
+                    if (snapshot.exists()) {
+                      const gameState = snapshot.val();
+                      const currentQuestion = gameState.currentQuestion || 0;
+                      const totalQuestions = gameState.totalQuestions || 0;
+                      
+                      if (currentQuestion < totalQuestions - 1) {
+                        await updateRtdb(gameStateRef, {
+                          currentQuestion: currentQuestion + 1
+                        });
+                        console.log('✅ Skipped to question', currentQuestion + 2);
+                      } else {
+                        console.log('⚠️ Already at last question');
+                      }
+                    }
+                  } catch (error) {
+                    console.error('❌ Failed to skip question:', error);
+                  }
+                }}
+                onResetGame={async () => {
+                  try {
+                    console.log('🔄 Host resetting game...');
+                    const database = getDatabase();
+                    const roomRef = ref(database, `rooms/${roomId}`);
+                    const { update: updateRtdb } = await import('firebase/database');
+                    
+                    // Reset game state to waiting
+                    await updateRtdb(roomRef, {
+                      status: 'waiting',
+                      gameState: null
+                    });
+                    
+                    // Reset all players ready status
+                    const playersRef = ref(database, `rooms/${roomId}/players`);
+                    const { get } = await import('firebase/database');
+                    const playersSnap = await get(playersRef);
+                    
+                    if (playersSnap.exists()) {
+                      const playerUpdates: Record<string, any> = {};
+                      Object.keys(playersSnap.val()).forEach(playerId => {
+                        playerUpdates[`${playerId}/isReady`] = false;
+                        playerUpdates[`${playerId}/score`] = 0;
+                      });
+                      await updateRtdb(playersRef, playerUpdates);
+                    }
+                    
+                    console.log('✅ Game reset successfully');
+                    
+                    import('react-toastify').then(({ toast }) => {
+                      toast.info(t('gameReset', 'Game đã được reset!'));
+                    });
+                  } catch (error) {
+                    console.error('❌ Failed to reset game:', error);
+                  }
+                }}
                 onKickPlayer={(playerId) => {
                   const player = playersList.find(p => p.id === playerId);
-                  if (player) handleKickPlayerClick(player);
+                  if (player) handleKickPlayer(player);
                 }}
                 onTransferHost={async (playerId) => {
                   try {
@@ -1215,15 +1258,6 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Kick Player Confirmation Dialog */}
-      <KickPlayerConfirmDialog
-        isOpen={kickDialog.isOpen}
-        player={kickDialog.player}
-        onConfirm={handleKickPlayer}
-        onCancel={handleKickDialogCancel}
-        isKicking={kickDialog.isKicking}
-      />
       </>
       )}
     </motion.div>

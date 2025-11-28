@@ -204,6 +204,7 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
             gameState={gameState}
             players={gameState.players}
             leaderboard={gameState.leaderboard}
+            gameStatus={gameState.status}
           />
         ) : role === 'player' ? (
           // Player in free mode gets individual view
@@ -212,6 +213,7 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
             roomId={roomId}
             player={currentPlayer}
             gameState={gameState}
+            gameStatus={gameState.status}
           />
         ) : (
           // Spectator sees Race Track with rolling leaderboard
@@ -221,6 +223,7 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
             gameState={gameState}
             players={gameState.players}
             leaderboard={gameState.leaderboard}
+            gameStatus={gameState.status}
           />
         )}
       </AnimatePresence>
@@ -271,6 +274,7 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
           roomId={roomId}
           questionState={gameState.currentQuestion}
           players={gameState.players}
+          gameStatus={gameState.status}
         />
       )}
     </AnimatePresence>

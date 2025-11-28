@@ -279,6 +279,7 @@ export type GameEventType =
   | 'question_started'
   | 'player_answered'
   | 'question_ended'
+  | 'question_skipped'     // ⏭️ Host skipped question
   | 'next_question_requested'
   | 'streak_achieved'
   | 'powerup_used'

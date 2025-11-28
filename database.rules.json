@@ -57,7 +57,7 @@
           ".read": "auth != null",
           ".indexOn": ["joinedAt", "isOnline"],
           "$playerId": {
-            ".write": "auth != null && (auth.uid == $playerId || !data.exists() || data.exists())",
+            ".write": "auth != null && (auth.uid == $playerId || root.child('rooms').child($roomId).child('hostId').val() == auth.uid)",
             ".validate": "!newData.exists() || newData.hasChildren(['id', 'name', 'score', 'isReady', 'isOnline'])",
             "id": {
               ".validate": "!newData.exists() || (newData.isString() && newData.val() == $playerId)"

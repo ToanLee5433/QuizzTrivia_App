@@ -21,7 +21,7 @@ import {
   Link
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getDatabase, ref, update, onValue, off } from 'firebase/database';
+import { getDatabase, ref, update, onValue } from 'firebase/database';
 import { GameMode } from '../types/game.types';
 import QuizSelectorModal from './QuizSelectorModal';
 
@@ -58,6 +58,8 @@ interface ModernHostControlPanelProps {
   onGameStart: () => void;
   onGamePause: () => void;
   onGameResume: () => void;
+  onSkipQuestion?: () => void;
+  onResetGame?: () => void;
   onKickPlayer: (playerId: string) => void;
   onTransferHost: (playerId: string) => void;
   onToggleHostParticipation?: () => void;
@@ -75,6 +77,8 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
   onGameStart,
   onGamePause,
   onGameResume,
+  onSkipQuestion,
+  onResetGame,
   onKickPlayer,
   onTransferHost,
   onToggleHostParticipation,
@@ -113,7 +117,7 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
       }
     });
 
-    return () => off(settingsRef, 'value', unsubscribe);
+    return () => unsubscribe();
   }, [roomId, db]);
 
   // Listen to game status
@@ -128,7 +132,7 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
       }
     });
 
-    return () => off(gameStatusRef, 'value', unsubscribe);
+    return () => unsubscribe();
   }, [roomId, db]);
 
   const updateSetting = (key: keyof RoomSettings, value: any) => {
@@ -142,28 +146,21 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
   };
 
   const handleKickPlayer = (playerId: string) => {
-    if (window.confirm(t('kickPlayerTooltip') + '?')) {
-      onKickPlayer(playerId);
-      
-      // Update database
-      const playerRef = ref(db, `rooms/${roomId}/players/${playerId}`);
-      update(playerRef, { isKicked: true, kickedAt: Date.now() });
-    }
+    // Direct kick without confirmation
+    onKickPlayer(playerId);
+    
+    // Update database
+    const playerRef = ref(db, `rooms/${roomId}/players/${playerId}`);
+    update(playerRef, { isKicked: true, kickedAt: Date.now() });
   };
 
   const handleTransferHost = (playerId: string) => {
-    const isSelf = playerId === currentUserId;
-    const confirmMessage = isSelf 
-      ? t('switchToPlayerMode') + '?'
-      : t('transferHostTooltip') + '?';
-      
-    if (window.confirm(confirmMessage)) {
-      onTransferHost(playerId);
-      
-      // Update database
-      const roomRef = ref(db, `rooms/${roomId}`);
-      update(roomRef, { hostId: playerId });
-    }
+    // Direct transfer without confirmation
+    onTransferHost(playerId);
+    
+    // Update database
+    const roomRef = ref(db, `rooms/${roomId}`);
+    update(roomRef, { hostId: playerId });
   };
 
   // ✅ NEW LOGIC: Host can start game if at least 1 player is ready (including host)
@@ -259,7 +256,13 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="flex flex-col items-center justify-center p-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+            onClick={() => onSkipQuestion?.()}
+            disabled={gameStatus !== 'playing'}
+            className={`flex flex-col items-center justify-center p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 ${
+              gameStatus === 'playing' 
+                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white cursor-pointer' 
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
           >
             <SkipForward className="w-6 h-6 mb-2" />
             <span className="text-sm font-bold">{t('skipButton')}</span>
@@ -268,7 +271,13 @@ const ModernHostControlPanel: React.FC<ModernHostControlPanelProps> = ({
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="flex flex-col items-center justify-center p-4 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+            onClick={() => onResetGame?.()}
+            disabled={gameStatus === 'waiting'}
+            className={`flex flex-col items-center justify-center p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 ${
+              gameStatus !== 'waiting' 
+                ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white cursor-pointer' 
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
           >
             <RotateCcw className="w-6 h-6 mb-2" />
             <span className="text-sm font-bold">{t('resetButton')}</span>

@@ -16,6 +16,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { modernMultiplayerService, ModernPlayer } from '../services/modernMultiplayerService';
+import { getAuth } from 'firebase/auth';
 
 interface ModernGameResultsProps {
   roomId: string;
@@ -35,7 +36,7 @@ const ModernGameResults: React.FC<ModernGameResultsProps> = ({
     const initializeResults = async () => {
       try {
         // Get current user ID
-        const auth = require('firebase/auth').getAuth();
+        const auth = getAuth();
         setCurrentUserId(auth.currentUser?.uid || '');
 
         // Set up real-time listeners
@@ -178,23 +179,23 @@ const ModernGameResults: React.FC<ModernGameResultsProps> = ({
           {isWinner ? (
             <>
               <Trophy className="w-6 h-6 text-yellow-400" />
-              <span className="text-white font-bold text-xl">{t('multiplayer.victory')}</span>
+              <span className="text-white font-bold text-xl">{t('victory')}</span>
             </>
           ) : (
             <>
               <Star className="w-6 h-6 text-blue-400" />
-              <span className="text-white font-bold text-xl">{t('multiplayer.gameOver')}</span>
+              <span className="text-white font-bold text-xl">{t('gameOver')}</span>
             </>
           )}
         </motion.div>
 
         <h1 className="text-5xl font-bold text-white mb-4">
-          {isWinner ? `🎉 ${t('multiplayer.congratulations')}! 🎉` : `🎮 ${t('multiplayer.gameOver')}! 🎮`}
+          {isWinner ? `🎉 ${t('congratulations')}! 🎉` : `🎮 ${t('gameOver')}! 🎮`}
         </h1>
         <p className="text-blue-100 text-xl max-w-2xl mx-auto">
           {isWinner 
-            ? t('multiplayer.dominatedQuiz')
-            : t('multiplayer.finishedPlace', { rank: playerRank, suffix: playerRank === 1 ? 'st' : playerRank === 2 ? 'nd' : playerRank === 3 ? 'rd' : 'th' })
+            ? t('dominatedQuiz')
+            : t('finishedPlace', { rank: playerRank, suffix: playerRank === 1 ? 'st' : playerRank === 2 ? 'nd' : playerRank === 3 ? 'rd' : 'th' })
           }
         </p>
       </motion.header>
@@ -244,11 +245,11 @@ const ModernGameResults: React.FC<ModernGameResultsProps> = ({
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-white flex items-center space-x-2">
                 <BarChart3 className="w-5 h-5 text-blue-400" />
-                <span>{t('game.finalLeaderboard')}</span>
+                <span>{t('fullLeaderboard')}</span>
               </h3>
               <div className="flex items-center space-x-2">
                 <Users className="w-4 h-4 text-blue-400" />
-                <span className="text-blue-100">{playersList.length} {t('common.players')}</span>
+                <span className="text-blue-100">{playersList.length} {t('players')}</span>
               </div>
             </div>
 
@@ -286,17 +287,17 @@ const ModernGameResults: React.FC<ModernGameResultsProps> = ({
                             <h4 className="font-bold text-white text-lg">{player.name}</h4>
                             {player.id === currentUserId && (
                               <span className="text-sm bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full">
-                                {t('common.you')}
+                                {t('you')}
                               </span>
                             )}
                           </div>
                           <div className="flex items-center space-x-3 text-sm text-blue-100">
-                            <span>{Object.values(player.answers || {}).length} {t('game.answers')}</span>
+                            <span>{Object.values(player.answers || {}).length} {t('game.correctAnswers')}</span>
                             <span>•</span>
                             <span>
                               {Object.values(player.answers || {}).length > 0
                                 ? Math.round((Object.values(player.answers || {}).filter(a => a.isCorrect).length / Object.values(player.answers || {}).length) * 100)
-                                : 0}% {t('game.accuracy')}
+                                : 0}% {t('accuracy')}
                             </span>
                           </div>
                         </div>
@@ -306,7 +307,7 @@ const ModernGameResults: React.FC<ModernGameResultsProps> = ({
                     {/* Score */}
                     <div className="text-right">
                       <p className="text-2xl font-bold text-white">{player.score}</p>
-                      <p className="text-blue-100 text-sm">{t('common.points')}</p>
+                      <p className="text-blue-100 text-sm">{t('points')}</p>
                     </div>
                   </motion.div>
                 ))}
@@ -328,7 +329,7 @@ const ModernGameResults: React.FC<ModernGameResultsProps> = ({
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-bold text-white flex items-center space-x-2">
                   <Target className="w-5 h-5 text-blue-400" />
-                  <span>{t('game.yourPerformance')}</span>
+                  <span>{t('yourResult')}</span>
                 </h3>
                 <span className="text-2xl">{getPerformanceEmoji(playerRank)}</span>
               </div>
@@ -338,12 +339,12 @@ const ModernGameResults: React.FC<ModernGameResultsProps> = ({
                   <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full ${getRankColor(playerRank)} border-2`}>
                     {getRankIcon(playerRank)}
                   </div>
-                  <p className="text-white font-bold text-lg mt-2">{t('game.rank')} #{playerRank}</p>
+                  <p className="text-white font-bold text-lg mt-2">{t('rank')} #{playerRank}</p>
                 </div>
 
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-blue-100">{t('game.finalScore')}</span>
+                    <span className="text-blue-100">{t('score')}</span>
                     <span className="text-white font-semibold">{currentPlayer.score}</span>
                   </div>
                   <div className="flex justify-between">
@@ -351,11 +352,11 @@ const ModernGameResults: React.FC<ModernGameResultsProps> = ({
                     <span className="text-white font-semibold">{stats.correct}/{stats.total}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-blue-100">{t('game.accuracy')}</span>
+                    <span className="text-blue-100">{t('accuracy')}</span>
                     <span className="text-white font-semibold">{stats.accuracy}%</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-blue-100">{t('game.avgTime')}</span>
+                    <span className="text-blue-100">{t('avgTime')}</span>
                     <span className="text-white font-semibold">{stats.avgTime}s</span>
                   </div>
                 </div>
@@ -377,7 +378,7 @@ const ModernGameResults: React.FC<ModernGameResultsProps> = ({
               className="w-full px-6 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-2xl font-semibold hover:shadow-lg transition-all flex items-center justify-center space-x-2"
             >
               <RefreshCw className="w-5 h-5" />
-              <span>{t('multiplayer.playAgain')}</span>
+              <span>{t('playAgain')}</span>
             </motion.button>
 
             <motion.button
@@ -386,7 +387,7 @@ const ModernGameResults: React.FC<ModernGameResultsProps> = ({
               className="w-full px-6 py-3 bg-white/10 border border-white/20 text-white rounded-2xl font-semibold hover:bg-white/20 transition-colors flex items-center justify-center space-x-2"
             >
               <Home className="w-5 h-5" />
-              <span>{t('common.backToHome')}</span>
+              <span>{t('backToHome')}</span>
             </motion.button>
 
             <motion.button
@@ -395,7 +396,7 @@ const ModernGameResults: React.FC<ModernGameResultsProps> = ({
               className="w-full px-6 py-3 bg-white/10 border border-white/20 text-white rounded-2xl font-semibold hover:bg-white/20 transition-colors flex items-center justify-center space-x-2"
             >
               <Share2 className="w-5 h-5" />
-              <span>{t('multiplayer.shareResults')}</span>
+              <span>{t('shareResults')}</span>
             </motion.button>
           </motion.div>
         </div>

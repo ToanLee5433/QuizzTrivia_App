@@ -32,12 +32,14 @@ interface FreeModePlayerViewProps {
   roomId: string;
   player: ModernPlayer;
   gameState: GameState;
+  gameStatus?: string;
 }
 
 const FreeModePlayerView: React.FC<FreeModePlayerViewProps> = ({
   roomId,
   player,
   gameState,
+  gameStatus = 'playing',
 }) => {
   const { t } = useTranslation('multiplayer');
   const [selectedAnswer, setSelectedAnswer] = useState<any>(null);
@@ -86,8 +88,12 @@ const FreeModePlayerView: React.FC<FreeModePlayerViewProps> = ({
     setQuestionTimeRemaining(timePerQuestion);
   }, [currentQuestionIndex, timePerQuestion]);
   
+  // Check if game is paused
+  const isPausedForTimer = gameStatus === 'paused';
+  
   useEffect(() => {
-    if (isFinished || showResult || !currentQuestion) return;
+    // Don't run timer if paused, finished, showing result, or no question
+    if (isPausedForTimer || isFinished || showResult || !currentQuestion) return;
     
     const timer = setInterval(() => {
       setQuestionTimeRemaining(prev => {
@@ -101,7 +107,7 @@ const FreeModePlayerView: React.FC<FreeModePlayerViewProps> = ({
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [currentQuestionIndex, isFinished, showResult, currentQuestion]);
+  }, [currentQuestionIndex, isFinished, showResult, currentQuestion, isPausedForTimer]);
   
   // Auto-submit/skip when per-question timer runs out
   useEffect(() => {
@@ -240,8 +246,44 @@ const FreeModePlayerView: React.FC<FreeModePlayerViewProps> = ({
     );
   }
 
+  // Check if game is paused
+  const isPaused = gameStatus === 'paused';
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 relative">
+      {/* ============= PAUSE OVERLAY ============= */}
+      <AnimatePresence>
+        {isPaused && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="text-center"
+            >
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="w-24 h-24 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-yellow-500/50"
+              >
+                <Loader2 className="w-12 h-12 text-yellow-400 animate-spin" />
+              </motion.div>
+              <h2 className="text-4xl font-bold text-white mb-4">
+                {t('gamePausedTitle', 'Tạm dừng')}
+              </h2>
+              <p className="text-xl text-gray-300">
+                {t('gamePausedDesc', 'Đang chờ host tiếp tục trò chơi...')}
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header with Time and Progress */}
       <div className="sticky top-0 z-10 bg-black/30 backdrop-blur-lg border-b border-white/10">
         <div className="max-w-4xl mx-auto p-4">

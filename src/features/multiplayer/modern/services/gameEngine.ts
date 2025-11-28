@@ -958,11 +958,14 @@ class GameEngine {
   }
 
   /**
-   * End current question and show results
+   * End current question and show results (with delays for review/leaderboard)
    */
   async endQuestion(roomId: string): Promise<void> {
     try {
       logger.info('⏱️ Ending question', { roomId });
+
+      // Clear timer first
+      this.clearTimer(roomId);
 
       // Update status to reviewing
       const gameRef = ref(this.db, RTDB_PATHS.games(roomId));
@@ -996,6 +999,37 @@ class GameEngine {
       logger.success('✅ Question ended', { roomId });
     } catch (error) {
       logger.error('❌ Failed to end question', { error });
+      throw error;
+    }
+  }
+
+  /**
+   * ⏭️ Skip to next question IMMEDIATELY (host control)
+   * No review/leaderboard delays - instant skip
+   */
+  async skipQuestion(roomId: string): Promise<void> {
+    try {
+      logger.info('⏭️ Host skipping question', { roomId });
+
+      // Clear timer immediately
+      this.clearTimer(roomId);
+
+      // Update leaderboard first
+      await this.updateLeaderboard(roomId);
+
+      // Emit skip event
+      await this.emitEvent(roomId, {
+        type: 'question_skipped',
+        priority: 'high',
+        showToast: true,
+      });
+
+      // Go to next question immediately
+      await this.goToNextQuestion(roomId);
+
+      logger.success('✅ Question skipped', { roomId });
+    } catch (error) {
+      logger.error('❌ Failed to skip question', { error });
       throw error;
     }
   }
@@ -1071,7 +1105,7 @@ class GameEngine {
   // ============= HOST CONTROLS =============
 
   /**
-   * Pause game
+   * Pause game - freezes everything including timer
    */
   async pauseGame(roomId: string): Promise<void> {
     try {
@@ -1079,9 +1113,23 @@ class GameEngine {
       this.clearTimer(roomId);
       
       const gameRef = ref(this.db, RTDB_PATHS.games(roomId));
+      
+      // Get current time remaining to save it
+      const questionRef = ref(this.db, RTDB_PATHS.currentQuestion(roomId));
+      const questionSnap = await get(questionRef);
+      const questionState = questionSnap.val();
+      const timeRemaining = questionState?.timeRemaining || 0;
+      
+      // Save pause state with remaining time
       await update(gameRef, {
         status: 'paused',
         pausedAt: Date.now(),
+        pausedTimeRemaining: timeRemaining, // Save time remaining when paused
+      });
+      
+      // Also mark question as paused
+      await update(questionRef, {
+        isPaused: true,
       });
 
       await this.emitEvent(roomId, {
@@ -1090,7 +1138,7 @@ class GameEngine {
         showToast: true,
       });
 
-      logger.info('⏸️ Game paused', { roomId });
+      logger.info('⏸️ Game paused', { roomId, timeRemaining });
     } catch (error) {
       logger.error('❌ Failed to pause game', { error });
       throw error;
@@ -1098,15 +1146,29 @@ class GameEngine {
   }
 
   /**
-   * Resume game
+   * Resume game - restarts timer from where it was paused
    */
   async resumeGame(roomId: string): Promise<void> {
     try {
       const gameRef = ref(this.db, RTDB_PATHS.games(roomId));
+      const gameSnap = await get(gameRef);
+      const gameState = gameSnap.val();
       
+      // Get saved time remaining
+      const timeRemaining = gameState?.pausedTimeRemaining || 0;
+      
+      // Update game state
       await update(gameRef, {
         status: 'answering',
         pausedAt: null,
+        pausedTimeRemaining: null, // Clear saved time
+      });
+      
+      // Update currentQuestion with remaining time and unpause
+      const questionRef = ref(this.db, RTDB_PATHS.currentQuestion(roomId));
+      await update(questionRef, {
+        isPaused: false,
+        timeRemaining: timeRemaining, // ✅ Sync time remaining to clients
       });
 
       await this.emitEvent(roomId, {
@@ -1114,8 +1176,14 @@ class GameEngine {
         priority: 'high',
         showToast: true,
       });
-
-      logger.info('▶️ Game resumed', { roomId });
+      
+      // ✅ Restart timer with remaining time
+      if (timeRemaining > 0) {
+        this.startQuestionTimer(roomId, timeRemaining);
+        logger.info('▶️ Game resumed, timer restarted', { roomId, timeRemaining });
+      } else {
+        logger.info('▶️ Game resumed (no time remaining)', { roomId });
+      }
     } catch (error) {
       logger.error('❌ Failed to resume game', { error });
       throw error;
