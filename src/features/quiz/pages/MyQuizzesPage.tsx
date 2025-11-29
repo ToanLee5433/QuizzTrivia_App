@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
@@ -79,9 +79,28 @@ const MyQuizzesPage: React.FC = () => {
   
   // 🔗 Share Link functionality
   const [copiedQuizId, setCopiedQuizId] = useState<string | null>(null);
+  
+  // Cache ref to avoid reloading when navigating back
+  const cacheRef = useRef<{
+    quizzes: CreatorQuiz[];
+    timestamp: number;
+    userId: string;
+  } | null>(null);
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
 
-  const loadMyQuizzes = useCallback(async () => {
+  const loadMyQuizzes = useCallback(async (forceRefresh = false) => {
     if (!user) return;
+    
+    // Check cache first (unless force refresh)
+    if (!forceRefresh && cacheRef.current) {
+      const { quizzes: cachedQuizzes, timestamp, userId } = cacheRef.current;
+      const isValid = Date.now() - timestamp < CACHE_DURATION && userId === user.uid;
+      if (isValid && cachedQuizzes.length > 0) {
+        setQuizzes(cachedQuizzes);
+        setLoading(false);
+        return;
+      }
+    }
     
     setLoading(true);
     try {
@@ -91,95 +110,71 @@ const MyQuizzesPage: React.FC = () => {
       );
       
       const snapshot = await getDocs(quizzesQuery);
-      const loadedQuizzes: CreatorQuiz[] = [];
       
-      for (const docSnap of snapshot.docs) {
-        const data = docSnap.data();
-        
-        // Debug: Log password field values
-        if (data.havePassword) {
-          console.log('🔍 Quiz password field:', {
+      // Process all quizzes in parallel for better performance
+      const loadedQuizzes = await Promise.all(
+        snapshot.docs.map(async (docSnap) => {
+          const data = docSnap.data();
+          
+          // Load edit requests and quiz results in parallel
+          const [editRequestsSnapshot, resultsCountSnapshot, sampleSnapshot] = await Promise.all([
+            getDocs(query(
+              collection(db, 'editRequests'),
+              where('quizId', '==', docSnap.id)
+            )),
+            getCountFromServer(query(
+              collection(db, 'quizResults'),
+              where('quizId', '==', docSnap.id)
+            )),
+            getDocs(query(
+              collection(db, 'quizResults'),
+              where('quizId', '==', docSnap.id),
+              orderBy('completedAt', 'desc'),
+              limit(100)
+            ))
+          ]);
+          
+          const editRequests = editRequestsSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            requestedAt: doc.data().requestedAt?.toDate() || new Date(),
+            approvedAt: doc.data().approvedAt?.toDate()
+          })) as EditRequest[];
+          
+          const completions = resultsCountSnapshot.data().count;
+          const results = sampleSnapshot.docs.map(doc => doc.data());
+          
+          // Calculate average score
+          const totalScore = results.reduce((sum, r) => {
+            let score = r.mode === 'multiplayer' ? Number(r.percentage || 0) : Number(r.score || 0);
+            if (!isFinite(score) || isNaN(score)) score = 0;
+            return sum + Math.min(100, Math.max(0, score));
+          }, 0);
+          const averageScore = results.length > 0 ? Math.round(totalScore / results.length) : 0;
+          
+          return {
             id: docSnap.id,
-            title: data.title,
-            havePassword: data.havePassword,
-            type: typeof data.havePassword
-          });
-        }
-        
-        // Load edit requests for this quiz
-        const editRequestsQuery = query(
-          collection(db, 'editRequests'),
-          where('quizId', '==', docSnap.id)
-        );
-        const editRequestsSnapshot = await getDocs(editRequestsQuery);
-        const editRequests = editRequestsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          requestedAt: doc.data().requestedAt?.toDate() || new Date(),
-          approvedAt: doc.data().approvedAt?.toDate()
-        })) as EditRequest[];
-        
-        // ✅ FIXED: Use getCountFromServer to only count, not load all documents
-        const resultsQuery = query(
-          collection(db, 'quizResults'),
-          where('quizId', '==', docSnap.id)
-        );
-        const resultsCountSnapshot = await getCountFromServer(resultsQuery);
-        const completions = resultsCountSnapshot.data().count;
-        
-        // For average score, we need to sample some results (not all)
-        const sampleQuery = query(
-          collection(db, 'quizResults'),
-          where('quizId', '==', docSnap.id),
-          orderBy('completedAt', 'desc'),
-          limit(100) // Sample 100 recent results for average
-        );
-        const sampleSnapshot = await getDocs(sampleQuery);
-        const results = sampleSnapshot.docs.map(doc => doc.data());
-        
-        // Calculate average score, normalizing to 0-100 percentage
-        // For multiplayer: use percentage field (0-100)
-        // For single-player: use score field (already 0-100)
-        const totalScore = results.reduce((sum, r) => {
-          let score = 0;
-          if (r.mode === 'multiplayer') {
-            // Multiplayer has separate percentage field
-            score = Number(r.percentage || 0);
-          } else {
-            // Single-player score is already percentage
-            score = Number(r.score || 0);
-          }
-          // Validate score is a valid number between 0-100
-          if (!isFinite(score) || isNaN(score)) score = 0;
-          return sum + Math.min(100, Math.max(0, score));
-        }, 0);
-        const averageScore = results.length > 0 ? Math.round(totalScore / results.length) : 0;
-        const attempts = results.length;
-        
-        loadedQuizzes.push({
-          id: docSnap.id,
-          ...data,
-          // Use calculated stats from quiz results
-          views: data.stats?.views || data.views || 0,
-          attempts: attempts,
-          completions: completions,
-          averageScore: averageScore,
-          createdAt: data.createdAt && typeof data.createdAt.toDate === 'function' 
-            ? data.createdAt.toDate() 
-            : data.createdAt instanceof Date 
-              ? data.createdAt 
-              : new Date(),
-          updatedAt: data.updatedAt && typeof data.updatedAt.toDate === 'function'
-            ? data.updatedAt.toDate()
-            : data.updatedAt instanceof Date
-              ? data.updatedAt
-              : new Date(),
-          editRequests
-  } as CreatorQuiz);
-      }
+            ...data,
+            views: data.stats?.views || data.views || 0,
+            attempts: results.length,
+            completions,
+            averageScore,
+            createdAt: data.createdAt?.toDate?.() || (data.createdAt instanceof Date ? data.createdAt : new Date()),
+            updatedAt: data.updatedAt?.toDate?.() || (data.updatedAt instanceof Date ? data.updatedAt : new Date()),
+            editRequests
+          } as CreatorQuiz;
+        })
+      );
       
-      // Sort in memory instead of using orderBy in query
+      // Sort by creation date
       loadedQuizzes.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      
+      // Update cache
+      cacheRef.current = {
+        quizzes: loadedQuizzes,
+        timestamp: Date.now(),
+        userId: user.uid
+      };
       
       setQuizzes(loadedQuizzes);
     } catch (error) {
@@ -418,7 +413,16 @@ const MyQuizzesPage: React.FC = () => {
   const totalPending = quizzes.filter(q => q.status === 'pending').length;
   const totalDraft = quizzes.filter(q => q.status === 'draft').length;
   const totalRejected = quizzes.filter(q => q.status === 'rejected').length;
-  const approvedWithPasswordCount = quizzes.filter(q => q.status === 'approved' && q.havePassword === 'password').length;
+  
+  // Helper function to check if quiz has password protection
+  const hasPasswordProtection = (q: CreatorQuiz) => q.havePassword === 'password' || (q as any).visibility === 'password';
+  
+  // Total quizzes with password protection (all statuses)
+  const totalWithPasswordCount = quizzes.filter(hasPasswordProtection).length;
+  // Approved quizzes breakdown
+  const approvedWithPasswordCount = quizzes.filter(q => q.status === 'approved' && hasPasswordProtection(q)).length;
+  const approvedWithMaterialsCount = quizzes.filter(q => q.status === 'approved' && (q.quizType === 'with-materials' || (q.quizType === undefined && q.resources && q.resources.length > 0))).length;
+  const approvedStandardCount = totalApproved - approvedWithMaterialsCount;
   const totalViews = quizzes.reduce((sum, q) => sum + (q.views || 0), 0);
   const totalAttempts = quizzes.reduce((sum, q) => sum + (q.attempts || 0), 0);
   const totalCompletions = quizzes.reduce((sum, q) => sum + (q.completions || 0), 0);
@@ -514,12 +518,7 @@ const MyQuizzesPage: React.FC = () => {
               <div className="ml-4">
                 <p className="text-sm text-gray-600">{t("quiz.stats.totalQuizzes")}</p>
                 <p className="text-2xl font-bold text-gray-900">{quizzes.length}</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {t('quiz.myQuizzes.stats.typeBreakdown', {
-                    with: totalWithMaterials,
-                    without: totalStandard
-                  })}
-                </p>
+                <p className="text-xs text-gray-500 mt-1">📖 {totalWithMaterials} • ✏️ {totalStandard} • 🔒 {totalWithPasswordCount}</p>
               </div>
             </div>
           </div>
@@ -534,9 +533,7 @@ const MyQuizzesPage: React.FC = () => {
                 <p className="text-2xl font-bold text-gray-900">
                   {formatNumber(totalApproved)}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {t('quiz.myQuizzes.stats.approvedWithPassword', { count: approvedWithPasswordCount })}
-                </p>
+                <p className="text-xs text-gray-500 mt-1">📖 {approvedWithMaterialsCount} • ✏️ {approvedStandardCount} • 🔒 {approvedWithPasswordCount}</p>
               </div>
             </div>
           </div>
@@ -551,6 +548,7 @@ const MyQuizzesPage: React.FC = () => {
                 <p className="text-2xl font-bold text-gray-900">
                   {formatNumber(totalPending)}
                 </p>
+                <p className="text-xs text-gray-500 mt-1">📖 {quizzes.filter(q => q.status === 'pending' && (q.quizType === 'with-materials' || (q.quizType === undefined && q.resources && q.resources.length > 0))).length} • ✏️ {quizzes.filter(q => q.status === 'pending' && q.quizType !== 'with-materials' && (!q.resources || q.resources.length === 0)).length} • 🔒 {quizzes.filter(q => q.status === 'pending' && hasPasswordProtection(q)).length}</p>
               </div>
             </div>
           </div>
@@ -561,10 +559,11 @@ const MyQuizzesPage: React.FC = () => {
                 <FileText className="w-6 h-6 text-gray-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm text-gray-600">📝 {t("quiz.statusFilter.draft")}</p>
+                <p className="text-sm text-gray-600">{t("quiz.statusFilter.draft")}</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {formatNumber(totalDraft)}
                 </p>
+                <p className="text-xs text-gray-500 mt-1">📖 {quizzes.filter(q => q.status === 'draft' && (q.quizType === 'with-materials' || (q.quizType === undefined && q.resources && q.resources.length > 0))).length} • ✏️ {quizzes.filter(q => q.status === 'draft' && q.quizType !== 'with-materials' && (!q.resources || q.resources.length === 0)).length} • 🔒 {quizzes.filter(q => q.status === 'draft' && hasPasswordProtection(q)).length}</p>
               </div>
             </div>
           </div>
@@ -579,6 +578,7 @@ const MyQuizzesPage: React.FC = () => {
                 <p className="text-2xl font-bold text-gray-900">
                   {formatNumber(totalRejected)}
                 </p>
+                <p className="text-xs text-gray-500 mt-1">📖 {quizzes.filter(q => q.status === 'rejected' && (q.quizType === 'with-materials' || (q.quizType === undefined && q.resources && q.resources.length > 0))).length} • ✏️ {quizzes.filter(q => q.status === 'rejected' && q.quizType !== 'with-materials' && (!q.resources || q.resources.length === 0)).length} • 🔒 {quizzes.filter(q => q.status === 'rejected' && hasPasswordProtection(q)).length}</p>
               </div>
             </div>
           </div>
@@ -709,8 +709,8 @@ const MyQuizzesPage: React.FC = () => {
                             </span>
                           )}
                           {/* 🔒 Password Badge */}
-                          {quiz.havePassword === 'password' && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 mr-2">
+                          {(quiz.havePassword === 'password' || (quiz as any).visibility === 'password') && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 mr-2">
                               <Lock className="w-3 h-3 mr-1" />
                               {t('quiz.myQuizzes.badge.password')}
                             </span>

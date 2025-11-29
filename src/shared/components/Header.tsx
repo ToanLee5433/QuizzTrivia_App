@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { RootState } from '../../lib/store';
@@ -19,6 +19,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
   const { t } = useTranslation();
@@ -86,7 +87,7 @@ const Header: React.FC<HeaderProps> = () => {
   };
 
   const navigationItems = [
-    { path: '/', label: t('nav.home'), icon: Home },
+    { path: '/dashboard', label: t('nav.home'), icon: Home },
     { path: '/quizzes', label: t('nav.quizzes'), icon: BookOpen },
     { path: '/favorites', label: t('nav.favorites'), icon: Heart },
     { path: '/downloaded', label: t('nav.downloaded'), icon: HardDrive },
@@ -149,7 +150,10 @@ const Header: React.FC<HeaderProps> = () => {
               <nav className="hidden lg:flex items-center space-x-1 flex-1 justify-center max-w-3xl mx-4">
                 {navigationItems.map((item) => {
                   const Icon = item.icon;
-                  const isActive = window.location.pathname === item.path;
+                  // For dashboard, exact match. For other routes, use startsWith to catch sub-routes
+                  const isActive = item.path === '/dashboard' 
+                    ? location.pathname === '/dashboard' || location.pathname === '/'
+                    : location.pathname.startsWith(item.path);
                   return (
                     <button
                       key={item.path}
@@ -160,7 +164,7 @@ const Header: React.FC<HeaderProps> = () => {
                             ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md'
                             : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
                           : isActive
-                            ? 'bg-white/30 text-white shadow-md ring-1 ring-white/30'
+                            ? 'bg-white text-purple-700 shadow-md'
                             : 'text-white/90 hover:text-white hover:bg-white/20'
                       }`}
                     >
@@ -351,7 +355,10 @@ const Header: React.FC<HeaderProps> = () => {
             <nav className="py-3 px-3 space-y-1">
               {navigationItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = window.location.pathname === item.path;
+                // For dashboard, exact match. For other routes, use startsWith to catch sub-routes
+                const isActive = item.path === '/dashboard' 
+                  ? location.pathname === '/dashboard' || location.pathname === '/'
+                  : location.pathname.startsWith(item.path);
                 return (
                   <button
                     key={item.path}

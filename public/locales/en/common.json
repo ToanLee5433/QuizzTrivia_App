@@ -257,6 +257,12 @@
         "delete": "Delete",
         "viewReviews": "View Reviews"
       },
+      "actions": {
+        "approve": "Approve Quiz",
+        "reject": "Reject",
+        "reopen": "Reopen"
+      },
+      "pendingActions": "Pending Actions",
       "empty": {
         "noQuizzesTitle": "No quizzes yet",
         "noQuizzesDesc": "Create your first quiz",
@@ -458,12 +464,16 @@
     "editRequests": {
       "quiz": "Quiz",
       "pending": "Pending",
+      "pendingCount": "pending requests",
       "emptyTitle": "No edit requests",
       "emptyDesc": "All requests have been processed",
       "approveTitle": "Approve and allow editing",
       "approve": "Approve",
       "rejectTitle": "Reject request",
       "reject": "Reject",
+      "actionsTitle": "Process Request",
+      "requestedAt": "Requested at",
+      "viewQuiz": "View Quiz",
       "errors": {
         "notFound": "Edit request not found",
         "approveFailed": "Cannot approve edit request",
@@ -519,6 +529,13 @@
       "required": "Required",
       "questionList": "Question List",
       "learningResourcesTitle": "Learning Resources ({{count}})",
+      "createdBy": "Created by",
+      "createdAt": "Created at",
+      "visibility": "Access mode",
+      "password": "Password",
+      "files": "files",
+      "rating": "Rating",
+      "updatedAt": "Updated",
       "resourceTypes": {
         "video": "Video",
         "pdf": "PDF Document",
@@ -1825,7 +1842,13 @@
     "errors": {
       "connectionLost": "Connection lost",
       "reconnecting": "Reconnecting...",
-      "connectionFailed": "Connection failed"
+      "connectionFailed": "Connection failed",
+      "createRoomFailed": "Failed to create room. Please try again.",
+      "joinRoomFailed": "Failed to join room. Please check the room code.",
+      "roomNotFound": "Room not found. It may have been closed.",
+      "passwordRequired": "Password is required to join this room.",
+      "wrongPassword": "Incorrect password. Please try again.",
+      "roomFull": "Room is full. Cannot join."
     },
     "success": {
       "connectionRestored": "Connection restored",
@@ -2351,7 +2374,10 @@
       },
       "stats": {
         "typeBreakdown": "📖 {{with}} • ✏️ {{without}}",
+        "totalWithPassword": "🔒 {{count}} password protected",
         "approvedWithPassword": "🔒 {{count}} protected",
+        "approvedWithMaterials": "📚 {{count}} with materials",
+        "approvedStandard": "✏️ {{count}} standard quizzes",
         "avgScoreLabel": "📊 Average score",
         "views": "👁️ {{count}} views",
         "attempts": "🎯 {{count}} attempts",
@@ -2421,10 +2447,29 @@
       "multiple": "Multiple Choice",
       "short_answer": "Short Answer",
       "image": "Image",
-      "checkbox": "Multiple Choice",
-      "matching": "Matching pairs",
-      "ordering": "Ordering"
+      "checkbox": "Multiple Selection",
+      "matching": "Matching Pairs",
+      "ordering": "Ordering",
+      "fill_blank": "Fill in the Blank",
+      "multimedia": "Multimedia",
+      "rich_content": "Rich Content",
+      "audio": "Audio",
+      "video": "Video"
     },
+    "boolean": {
+      "true": "True",
+      "false": "False"
+    },
+    "acceptedAnswers": "Accepted answers",
+    "alsoAccepts": "also accepts",
+    "template": "Template",
+    "mediaAttachments": "Media attachments",
+    "hasVideo": "Has video attachment",
+    "hasAudio": "Has audio attachment",
+    "multipleAnswersAllowed": "Multiple answers can be selected",
+    "correctOrder": "Correct Order",
+    "blanks": "Blanks",
+    "matchingPairs": "Matching Pairs",
     "questions": "Questions",
     "rating": "Rating",
     "result": {
@@ -3115,9 +3160,14 @@
     "actions": "Actions",
     "cancel": "Cancel",
     "points": "Points",
+    "totalPoints": "Total Points",
+    "copy": "Copy",
+    "difficulty": "Difficulty",
     "correct": "Correct",
     "loading": "Loading...",
     "you": "You",
+    "unknown": "Unknown",
+    "notAvailable": "Not available",
     "online": "Online",
     "offline": "Offline",
     "start": "Start",

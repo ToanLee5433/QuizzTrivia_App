@@ -391,107 +391,108 @@ const LeaderboardPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-8">
-      <div className="max-w-6xl mx-auto px-4">
-        <h1 className="text-4xl font-bold text-gray-900 mb-8 text-center flex items-center justify-center gap-3">
-          <FaTrophy className="text-yellow-500" />
-          {t('leaderboard.title')}
-          <FaTrophy className="text-yellow-500" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-4 sm:py-8">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 sm:mb-8 text-center flex items-center justify-center gap-2 sm:gap-3">
+          <FaTrophy className="text-yellow-500 text-xl sm:text-2xl md:text-3xl" />
+          <span className="truncate">{t('leaderboard.title')}</span>
+          <FaTrophy className="text-yellow-500 text-xl sm:text-2xl md:text-3xl" />
         </h1>
         
-        {/* Filters and Search */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
-          <div className="flex gap-4 items-center">
-            <label className="font-medium text-gray-700">{t('leaderboard.time')}:</label>
-            <select
-              className="border border-gray-300 rounded-lg px-3 py-2 bg-white"
-              value={timeFilter}
-              onChange={e => setTimeFilter(e.target.value as any)}
-            >
-              <option value="all">{t('leaderboard.filters.allTime')}</option>
-              <option value="week">{t('leaderboard.filters.thisWeek')}</option>
-              <option value="month">{t('leaderboard.filters.thisMonth')}</option>
-            </select>
+        {/* Filters and Search - Mobile Optimized */}
+        <div className="flex flex-col gap-3 sm:gap-4 mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center sm:justify-between">
+            <div className="flex gap-2 sm:gap-4 items-center">
+              <label className="font-medium text-gray-700 text-sm sm:text-base whitespace-nowrap">{t('leaderboard.time')}:</label>
+              <select
+                className="border border-gray-300 rounded-lg px-2 sm:px-3 py-2 bg-white text-sm sm:text-base flex-1 sm:flex-none"
+                value={timeFilter}
+                onChange={e => setTimeFilter(e.target.value as any)}
+              >
+                <option value="all">{t('leaderboard.filters.allTime')}</option>
+                <option value="week">{t('leaderboard.filters.thisWeek')}</option>
+                <option value="month">{t('leaderboard.filters.thisMonth')}</option>
+              </select>
+            </div>
+            <input
+              className="border border-gray-300 rounded-lg px-3 sm:px-4 py-2 w-full sm:w-80 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+              placeholder={t('leaderboard.searchPlayers')}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
           </div>
-          <input
-            className="border border-gray-300 rounded-lg px-4 py-2 w-full md:w-80 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder={t('leaderboard.searchPlayers')}
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
         </div>
 
-        {/* Overall Statistics */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-4 text-center shadow-lg">
-            <div className="text-2xl font-bold">{stats?.totalUsers || '--'}</div>
-            <div className="text-blue-100 text-sm">{t('leaderboard.players')}</div>
+        {/* Overall Statistics - Mobile Grid: 3 cols on mobile, 6 on desktop */}
+        <div className="grid grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4 mb-6 sm:mb-8">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-2 sm:p-4 text-center shadow-lg">
+            <div className="text-base sm:text-2xl font-bold">{stats?.totalUsers || '--'}</div>
+            <div className="text-blue-100 text-[9px] sm:text-sm truncate">{t('leaderboard.players')}</div>
           </div>
-          <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-4 text-center shadow-lg">
-            <div className="text-2xl font-bold">{stats?.totalQuizzes || '--'}</div>
-            <div className="text-green-100 text-sm">{t('nav.quizzes')}</div>
+          <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-2 sm:p-4 text-center shadow-lg">
+            <div className="text-base sm:text-2xl font-bold">{stats?.totalQuizzes || '--'}</div>
+            <div className="text-green-100 text-[9px] sm:text-sm truncate">{t('nav.quizzes')}</div>
           </div>
-          <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white rounded-xl p-4 text-center shadow-lg">
-            <div className="text-2xl font-bold">{stats?.totalAttempts || '--'}</div>
-            <div className="text-yellow-100 text-sm">{t('leaderboard.plays')}</div>
+          <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white rounded-xl p-2 sm:p-4 text-center shadow-lg">
+            <div className="text-base sm:text-2xl font-bold">{stats?.totalAttempts || '--'}</div>
+            <div className="text-yellow-100 text-[9px] sm:text-sm truncate">{t('leaderboard.plays')}</div>
           </div>
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl p-4 text-center shadow-lg">
-            <div className="text-2xl font-bold">{stats?.averageScore || '--'}%</div>
-            <div className="text-purple-100 text-sm">{t('leaderboard.avgScore')}</div>
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl p-2 sm:p-4 text-center shadow-lg">
+            <div className="text-base sm:text-2xl font-bold">{stats?.averageScore || '--'}%</div>
+            <div className="text-purple-100 text-[9px] sm:text-sm truncate">{t('leaderboard.avgScore')}</div>
           </div>
-          <div className="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-xl p-4 text-center shadow-lg">
-            <div className="text-2xl font-bold">{stats?.activeToday || '--'}</div>
-            <div className="text-red-100 text-sm">{t('leaderboard.activeToday')}</div>
+          <div className="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-xl p-2 sm:p-4 text-center shadow-lg">
+            <div className="text-base sm:text-2xl font-bold">{stats?.activeToday || '--'}</div>
+            <div className="text-red-100 text-[9px] sm:text-sm truncate">{t('leaderboard.activeToday')}</div>
           </div>
-          <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-xl p-4 text-center shadow-lg">
-            <div className="text-2xl font-bold">{stats?.perfectScoresCount || '--'}</div>
-            <div className="text-indigo-100 text-sm">{t('leaderboard.perfectScores')}</div>
+          <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-xl p-2 sm:p-4 text-center shadow-lg">
+            <div className="text-base sm:text-2xl font-bold">{stats?.perfectScoresCount || '--'}</div>
+            <div className="text-indigo-100 text-[9px] sm:text-sm truncate">{t('leaderboard.perfectScores')}</div>
           </div>
         </div>
 
         {/* Top Users Section */}
-        <div className="mb-10">
-            <h2 className="text-2xl font-bold mb-6 text-center flex items-center justify-center gap-2">
+        <div className="mb-6 sm:mb-10">
+            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-center flex items-center justify-center gap-2">
             <FaCrown className="text-yellow-500" />
             {t('leaderboard.topPlayers')}
           </h2>
           
-          <div className="bg-white rounded-2xl shadow-lg p-6">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-6">
             {loading ? (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {Array.from({length: 5}).map((_, i) => (
-                  <div key={i} className="animate-pulse flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
+                  <div key={i} className="animate-pulse flex items-center gap-3 sm:gap-4">
+                    <div className="w-10 sm:w-12 h-10 sm:h-12 bg-gray-300 rounded-full"></div>
                     <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-                      <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+                      <div className="h-3 sm:h-4 bg-gray-300 rounded w-3/4"></div>
+                      <div className="h-2 sm:h-3 bg-gray-300 rounded w-1/2"></div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : filteredUsers.length === 0 ? (
-              <div className="text-center py-12">
-                <FaUserCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">{t('leaderboard.noData')}</h3>
-                <p className="text-gray-500">{t('leaderboard.playToAppear')}</p>
+              <div className="text-center py-8 sm:py-12">
+                <FaUserCircle className="w-12 sm:w-16 h-12 sm:h-16 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                <h3 className="text-base sm:text-lg font-semibold text-gray-600 mb-2">{t('leaderboard.noData')}</h3>
+                <p className="text-gray-500 text-sm sm:text-base">{t('leaderboard.playToAppear')}</p>
               </div>
             ) : (
               <>
-                {/* Top 5 Winners - Enhanced Display */}
-                <div className="mb-8">
-                  {/* Top 3 Podium */}
-                  <div className="flex justify-center items-end gap-6 mb-6">
+                {/* Top 3 Podium - Mobile Optimized */}
+                <div className="mb-6 sm:mb-8">
+                  <div className="flex justify-center items-end gap-2 sm:gap-6 mb-4 sm:mb-6">
                     {filteredUsers.slice(0, 3).map((user, idx) => (
                       <div key={user.userId} className={`text-center ${idx === 0 ? 'order-2' : idx === 1 ? 'order-1' : 'order-3'}`}>
-                        <div className={`relative mb-4 ${idx === 0 ? 'transform scale-110' : ''}`}>
+                        <div className={`relative mb-2 sm:mb-4 ${idx === 0 ? 'transform scale-105 sm:scale-110' : ''}`}>
                           {user.photoURL ? (
                             <img 
                               src={user.photoURL} 
                               alt={user.displayName}
-                              className="w-16 h-16 rounded-full object-cover border-4 border-white shadow-lg mx-auto"
+                              className="w-12 sm:w-16 h-12 sm:h-16 rounded-full object-cover border-2 sm:border-4 border-white shadow-lg mx-auto"
                             />
                           ) : (
-                            <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white mx-auto ${
+                            <div className={`w-12 sm:w-16 h-12 sm:h-16 rounded-full flex items-center justify-center text-lg sm:text-2xl font-bold text-white mx-auto ${
                               idx === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' :
                               idx === 1 ? 'bg-gradient-to-br from-gray-400 to-gray-600' :
                               'bg-gradient-to-br from-orange-400 to-orange-600'
@@ -499,19 +500,19 @@ const LeaderboardPage: React.FC = () => {
                               {user.displayName.charAt(0).toUpperCase()}
                             </div>
                           )}
-                          <div className="absolute -top-3 -right-2">
+                          <div className="absolute -top-2 sm:-top-3 -right-1 sm:-right-2">
                             {getBadgeIcon(user.badge)}
                           </div>
-                          {idx === 0 && <FaCrown className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-2xl text-yellow-500" />}
+                          {idx === 0 && <FaCrown className="absolute -top-4 sm:-top-6 left-1/2 transform -translate-x-1/2 text-lg sm:text-2xl text-yellow-500" />}
                         </div>
-                        <div className="font-bold text-gray-900 truncate max-w-24">{user.displayName}</div>
-                        <div className={`text-sm font-semibold ${
+                        <div className="font-bold text-gray-900 truncate max-w-16 sm:max-w-24 text-xs sm:text-base mx-auto">{user.displayName}</div>
+                        <div className={`text-[10px] sm:text-sm font-semibold ${
                           idx === 0 ? 'text-yellow-600' : idx === 1 ? 'text-gray-600' : 'text-orange-600'
                         }`}>
-                          🎯 {user.totalAttempts} {t('nav.quizzes')}
+                          🎯 {user.totalAttempts}
                         </div>
-                        <div className="text-xs text-gray-500">{Math.round(user.averageScore)}% {t('leaderboard.avgShort')}</div>
-                        <div className={`mt-2 px-2 py-1 rounded-full text-xs font-bold ${
+                        <div className="text-[10px] sm:text-xs text-gray-500 hidden sm:block">{Math.round(user.averageScore)}% {t('leaderboard.avgShort')}</div>
+                        <div className={`mt-1 sm:mt-2 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold ${
                           idx === 0 ? 'bg-yellow-100 text-yellow-800' :
                           idx === 1 ? 'bg-gray-100 text-gray-800' :
                           'bg-orange-100 text-orange-800'
@@ -522,29 +523,30 @@ const LeaderboardPage: React.FC = () => {
                     ))}
                   </div>
 
-                  {/* Top 4-5 in cards */}
+                  {/* Top 4-5 in cards - Stack on Mobile */}
                   {filteredUsers.length >= 4 && (
-                    <div className="flex justify-center gap-4">
+                    <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4">
                       {filteredUsers.slice(3, 5).map((user, idx) => (
-                        <div key={user.userId} className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 flex items-center gap-3 min-w-64">
+                        <div key={user.userId} className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg sm:rounded-xl p-3 sm:p-4 flex items-center gap-2 sm:gap-3 sm:min-w-64">
                           {user.photoURL ? (
                             <img 
                               src={user.photoURL} 
                               alt={user.displayName}
-                              className="w-10 h-10 rounded-full object-cover border-2 border-blue-200"
+                              className="w-8 sm:w-10 h-8 sm:h-10 rounded-full object-cover border-2 border-blue-200 flex-shrink-0"
                             />
                           ) : (
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
+                            <div className="w-8 sm:w-10 h-8 sm:h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm sm:text-base flex-shrink-0">
                               {user.displayName.charAt(0).toUpperCase()}
                             </div>
                           )}
-                          <div className="flex-1">
-                            <div className="font-semibold text-gray-900 flex items-center gap-2">
-                              #{idx + 4} {user.displayName}
-                              {getBadgeIcon(user.badge)}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-gray-900 flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
+                              <span className="text-blue-600">#{idx + 4}</span>
+                              <span className="truncate">{user.displayName}</span>
+                              <span className="flex-shrink-0">{getBadgeIcon(user.badge)}</span>
                             </div>
-                              <div className="text-sm text-blue-600 font-medium">
-                              🎯 {user.totalAttempts} {t('nav.quizzes')} • {Math.round(user.averageScore)}% {t('leaderboard.avgShort')}
+                            <div className="text-xs sm:text-sm text-blue-600 font-medium truncate">
+                              🎯 {user.totalAttempts} • {Math.round(user.averageScore)}%
                             </div>
                           </div>
                         </div>
@@ -553,34 +555,34 @@ const LeaderboardPage: React.FC = () => {
                   )}
                 </div>
 
-                {/* Rest of leaderboard - Starting from 6th place */}
+                {/* Rest of leaderboard - Starting from 6th place - Mobile Optimized */}
                 <div className="space-y-2">
                   {(showAllUsers ? filteredUsers.slice(5) : filteredUsers.slice(5, 20)).map((user, idx) => (
-                    <div key={user.userId} className={`flex items-center gap-4 p-3 rounded-lg transition-colors ${
+                    <div key={user.userId} className={`flex items-center gap-2 sm:gap-4 p-2 sm:p-3 rounded-lg transition-colors ${
                       currentUserRank === idx + 6 ? 'bg-blue-50 border-2 border-blue-200' : 'hover:bg-gray-50'
                     }`}>
-                      <div className="flex items-center gap-3 flex-1">
-                        <span className="font-bold text-lg text-blue-600 w-8">#{idx + 6}</span>
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
+                      <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                        <span className="font-bold text-sm sm:text-lg text-blue-600 w-6 sm:w-8 flex-shrink-0">#{idx + 6}</span>
+                        <div className="w-8 sm:w-10 h-8 sm:h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm sm:text-base flex-shrink-0">
                           {user.displayName.charAt(0).toUpperCase()}
                         </div>
-                        <div className="flex-1">
-                          <div className="font-semibold text-gray-900 flex items-center gap-2">
-                            {user.displayName}
-                            <span className={`px-2 py-1 rounded-full text-xs border ${getBadgeColor(user.badge)}`}>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-gray-900 flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
+                            <span className="truncate">{user.displayName}</span>
+                            <span className={`hidden sm:inline-flex px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs border ${getBadgeColor(user.badge)}`}>
                               {t(`leaderboard.badges.${user.badge}`)}
                             </span>
                           </div>
-                            <div className="text-sm text-gray-500">
-                              🎯 {user.totalAttempts} {t('nav.quizzes')} • {user.perfectScores} {t('leaderboard.perfect100')}
+                          <div className="text-xs sm:text-sm text-gray-500 truncate">
+                            🎯 {user.totalAttempts} • {user.perfectScores} {t('leaderboard.perfect100')}
                           </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-bold text-lg text-blue-600">🎯 {user.totalAttempts}</div>
-                        <div className="text-sm text-gray-500">{Math.round(user.averageScore)}% {t('leaderboard.avgShort')}</div>
+                      <div className="text-right flex-shrink-0">
+                        <div className="font-bold text-sm sm:text-lg text-blue-600">🎯 {user.totalAttempts}</div>
+                        <div className="text-[10px] sm:text-sm text-gray-500">{Math.round(user.averageScore)}%</div>
                       </div>
-                      <div className="text-gray-400">
+                      <div className="text-gray-400 hidden sm:block">
                         {getBadgeIcon(user.badge)}
                       </div>
                     </div>
@@ -589,15 +591,15 @@ const LeaderboardPage: React.FC = () => {
 
                 {/* Show More Button */}
                 {filteredUsers.length > 20 && (
-                  <div className="text-center mt-6">
+                  <div className="text-center mt-4 sm:mt-6">
                     <button
                       onClick={() => setShowAllUsers(!showAllUsers)}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                      className="px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-sm sm:text-base"
                     >
                       {showAllUsers ? t('leaderboard.collapse') : t('leaderboard.viewAllCount')}
                     </button>
                     {user && (
-                      <div className="text-sm text-blue-700 mt-2">{user.displayName || user.email}</div>
+                      <div className="text-xs sm:text-sm text-blue-700 mt-2 truncate">{user.displayName || user.email}</div>
                     )}
                   </div>
                 )}
@@ -606,53 +608,55 @@ const LeaderboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Top Quizzes Section */}
+        {/* Top Quizzes Section - Mobile Grid */}
         <div>
-            <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-center flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-center flex items-center gap-2">
               <FaFire className="text-red-500" />
-                {t('leaderboard.topQuizzes')}
+              {t('leaderboard.topQuizzes')}
             </h2>
             {topQuizzes.length > 12 && (
               <button
                 onClick={() => setShowAllQuizzes(!showAllQuizzes)}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+                className="px-3 sm:px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold text-sm sm:text-base"
               >
                 {showAllQuizzes ? t('leaderboard.collapse') : t('leaderboard.viewAllCount')}
               </button>
             )}
+          </div>
+          
+          {topQuizzes.length === 0 ? (
+            <div className="text-center text-gray-500 py-8">
+              <p className="text-gray-500">{t('leaderboard.createFirstQuiz')}</p>
             </div>
-            {topQuizzes.length === 0 ? (
-              <div className="text-center text-gray-500">
-                <p className="text-gray-500">{t('leaderboard.createFirstQuiz')}</p>
-              </div>
-            ) : (
-              (showAllQuizzes ? topQuizzes : topQuizzes.slice(0, 12)).map((quiz, idx) => (
-                <div key={quiz.id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow border-l-4 border-blue-500">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2">{quiz.title}</h3>
-                      <SafeHTML content={quiz.description} className="text-gray-600 text-sm line-clamp-2 mb-3" plainText />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              {(showAllQuizzes ? topQuizzes : topQuizzes.slice(0, 12)).map((quiz, idx) => (
+                <div key={quiz.id} className="bg-white rounded-xl shadow-lg p-4 sm:p-6 hover:shadow-xl transition-shadow border-l-4 border-blue-500">
+                  <div className="flex items-start justify-between mb-3 sm:mb-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-base sm:text-lg text-gray-900 mb-1 sm:mb-2 line-clamp-2">{quiz.title}</h3>
+                      <SafeHTML content={quiz.description} className="text-gray-600 text-xs sm:text-sm line-clamp-2 mb-2 sm:mb-3" plainText />
                     </div>
-                    <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded-full">
+                    <span className="bg-blue-100 text-blue-800 text-[10px] sm:text-xs font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full flex-shrink-0 ml-2">
                       #{idx + 1}
                     </span>
                   </div>
                   
-                  <div className="flex items-center justify-between mb-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(quiz.difficulty)}`}>
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
+                    <span className={`px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium ${getDifficultyColor(quiz.difficulty)}`}>
                       {quiz.difficulty === 'easy' ? t('difficulty.easy') : quiz.difficulty === 'hard' ? t('difficulty.hard') : t('difficulty.medium')}
                     </span>
-                    <span className="text-gray-500 text-sm capitalize">{quiz.category}</span>
+                    <span className="text-gray-500 text-xs sm:text-sm capitalize truncate ml-2">{quiz.category}</span>
                   </div>
                   
-                  <div className="space-y-2 mb-4">
+                  <div className="space-y-1 sm:space-y-2 mb-3 sm:mb-4 text-xs sm:text-sm">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600 text-sm">{t('leaderboard.plays')}:</span>
+                      <span className="text-gray-600">{t('leaderboard.plays')}:</span>
                       <span className="font-semibold text-blue-600">{quiz.totalAttempts}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600 text-sm">{t('leaderboard.avgScore')}:</span>
+                      <span className="text-gray-600">{t('leaderboard.avgScore')}:</span>
                       <span className="font-semibold text-green-600">{Math.round(quiz.averageScore)}%</span>
                     </div>
                   </div>
@@ -660,17 +664,18 @@ const LeaderboardPage: React.FC = () => {
                   {/* Navigation Button */}
                   <button
                     onClick={() => navigate(`/quiz/${quiz.id}`)}
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2.5 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg text-sm sm:text-base"
                   >
-                    <FaFire className="w-4 h-4" />
+                    <FaFire className="w-3 sm:w-4 h-3 sm:h-4" />
                     {t('leaderboard.playNow')}
                   </button>
                 </div>
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
+    </div>
   );
 };
 

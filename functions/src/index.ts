@@ -389,7 +389,7 @@ export const sendOTP = functions.https.onCall(async (data, context) => {
 // ============================================================
 export const processFile = functions
   .region('us-central1')
-  .runWith({ timeoutSeconds: 120, memory: '512MB', secrets: ['GOOGLE_AI_API_KEY'] })
+  .runWith({ timeoutSeconds: 120, memory: '256MB', secrets: ['GOOGLE_AI_API_KEY'] })
   .https.onCall(async (data, context) => {
     // Validate auth
     if (!context.auth) {

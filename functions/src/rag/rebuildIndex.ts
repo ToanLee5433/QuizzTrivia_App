@@ -74,7 +74,7 @@ export const rebuildFullIndex = functions
   .runWith({
     secrets: ['GOOGLE_AI_API_KEY'],
     timeoutSeconds: 540, // 9 minutes (max)
-    memory: '1GB',
+    memory: '512MB',
   })
   .https.onCall(async (data, context) => {
     // Check authentication

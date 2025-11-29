@@ -205,10 +205,10 @@ export const ResultPage: React.FC = () => {
   const isExcellent = percentage >= 80;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-4 sm:py-6 lg:py-8">
       {isExcellent && <Confetti />}
       
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-6">
         {/* Kết quả tổng quan */}
         <ResultSummary 
           result={result!} 

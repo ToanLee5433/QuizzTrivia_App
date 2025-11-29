@@ -83,9 +83,9 @@ function validateQuestion(question) {
  * Main Cloud Function: Ask RAG
  */
 exports.askRAG = functions.region('us-central1').runWith({
-    memory: '512MB',
-    timeoutSeconds: 30,
-    maxInstances: 10,
+    memory: '256MB',
+    timeoutSeconds: 60,
+    maxInstances: 20,
     secrets: ['GOOGLE_AI_API_KEY'],
 }).https.onCall(async (data, context) => {
     var _a, _b, _c, _d, _e, _f, _g;

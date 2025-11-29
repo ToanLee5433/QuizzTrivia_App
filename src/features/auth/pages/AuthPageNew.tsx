@@ -307,10 +307,10 @@ const AuthPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-6 sm:space-y-8 bg-white p-6 sm:p-8 rounded-lg shadow">
         <div className="text-center">
-          <h2 className="mt-2 text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold text-gray-900">
             {isLogin ? t('auth.login') : t('auth.register')}
           </h2>
           <p className="mt-2 text-sm text-gray-600">

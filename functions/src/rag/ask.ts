@@ -94,9 +94,9 @@ function validateQuestion(question: unknown): string {
  * Main Cloud Function: Ask RAG
  */
 export const askRAG = functions.region('us-central1').runWith({
-  memory: '512MB',
-  timeoutSeconds: 30,
-  maxInstances: 10,
+  memory: '256MB',
+  timeoutSeconds: 60,
+  maxInstances: 20,
   secrets: ['GOOGLE_AI_API_KEY'],
 }).https.onCall(async (data, context) => {
     const startTime = Date.now();

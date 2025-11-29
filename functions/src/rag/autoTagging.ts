@@ -433,8 +433,8 @@ export const autoTagOnApproval = functions
   .region('us-central1')
   .runWith({
     secrets: ['GOOGLE_AI_API_KEY'],
-    timeoutSeconds: 120,
-    memory: '512MB',
+    timeoutSeconds: 90,
+    memory: '256MB',
   })
   .firestore.document('quizzes/{quizId}')
   .onWrite(async (change, context) => {
@@ -663,7 +663,7 @@ export const batchGenerateTags = functions
   .runWith({
     secrets: ['GOOGLE_AI_API_KEY'],
     timeoutSeconds: 540, // 9 minutes
-    memory: '1GB',
+    memory: '512MB',
   })
   .https.onCall(async (_data, context) => {
     // Check admin

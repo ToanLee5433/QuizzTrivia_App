@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { getQuizById, updateQuiz } from '../api';
 import { Quiz } from '../types';
 import { Question, QuizFormData } from './CreateQuizPage/types';
@@ -28,11 +28,16 @@ const EditQuizPageAdvanced: React.FC = () => {
 
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useSelector((state: RootState) => state.auth);
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'info' | 'questions' | 'resources' | 'settings'>('info');
+
+  // Determine if user is coming from admin page
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  const backPath = isAdminRoute ? '/admin/quiz-management' : '/creator/my';
 
   const [quizInfo, setQuizInfo] = useState<QuizFormData>({
     title: '',
@@ -80,7 +85,7 @@ const EditQuizPageAdvanced: React.FC = () => {
         });
       } else {
         toast.error(t('editQuiz.notFound'));
-        navigate('/creator/my');
+        navigate(backPath);
       }
     } catch (error) {
       console.error('Error loading quiz:', error);
@@ -158,7 +163,7 @@ const EditQuizPageAdvanced: React.FC = () => {
       }
 
       await updateQuiz(id, updatedQuiz);
-      navigate('/creator/my');
+      navigate(backPath);
     } catch (error) {
       console.error('Error updating quiz:', error);
       toast.error(t('editQuiz.updateFailed'));
@@ -238,7 +243,7 @@ const EditQuizPageAdvanced: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('editQuiz.notFoundTitle')}</h2>
           <p className="text-gray-600 mb-6">{t('editQuiz.notFoundDesc')}</p>
           <button
-            onClick={() => navigate('/creator/my')}
+            onClick={() => navigate(backPath)}
             className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
           >
             {t('editQuiz.backToAdmin')}
@@ -264,7 +269,7 @@ const EditQuizPageAdvanced: React.FC = () => {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => navigate('/creator/my')}
+              onClick={() => navigate(backPath)}
               className="p-3 text-gray-600 hover:text-gray-900 hover:bg-white rounded-2xl transition-all shadow-sm"
             >
               <ArrowLeft className="w-6 h-6" />

@@ -30,7 +30,7 @@ i18n
   .use(initReactI18next)
   .init({
     // Remove inline resources - will use external files only
-    lng: 'vi', // default language
+    // Don't set lng here - let LanguageDetector handle it from localStorage
     fallbackLng: 'vi',
     // Use common and multiplayer namespaces from external files
     ns: ['common', 'multiplayer'],

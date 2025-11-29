@@ -6,7 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { ROUTES } from '../../../config/routes';
 import { 
   collection, 
-  getDocs, 
+  getDocs,
+  getDoc,
   doc, 
   updateDoc, 
   query, 
@@ -34,13 +35,12 @@ import {
   Edit3,
   AlertCircle,
   FileText,
-  Video,
-  Image as ImageIcon,
-  Music,
-  Link as LinkIcon,
-  Presentation
+  MoreVertical,
+  Lock,
+  Shield
 } from 'lucide-react';
 import SafeHTML from '../../../shared/components/ui/SafeHTML';
+import QuizPreview from '../components/QuizPreview';
 
 
 interface Quiz {
@@ -49,7 +49,9 @@ interface Quiz {
   description: string;
   status: 'pending' | 'approved' | 'rejected';
   createdBy: string;
+  authorName?: string; // Tên người tạo
   createdAt: Date;
+  updatedAt?: Date;
   questions: any[];
   difficulty: 'easy' | 'medium' | 'hard';
   category: string;
@@ -57,6 +59,11 @@ interface Quiz {
   isPublished?: boolean;
   editRequests?: EditRequest[];
   learningResources?: any[]; // Tài liệu học tập
+  duration?: number;
+  tags?: string[];
+  password?: string;
+  havePassword?: string;
+  visibility?: string;
 }
 
 interface EditRequest {
@@ -157,11 +164,18 @@ const AdminQuizManagement: React.FC = () => {
             status: data.status || 'pending',
             createdBy: data.createdBy || 'unknown',
             createdAt: parseFirestoreDate(data.createdAt),
+            updatedAt: data.updatedAt ? parseFirestoreDate(data.updatedAt) : undefined,
             questions: data.questions || [],
             difficulty: data.difficulty || 'easy',
             category: data.category || 'general',
             isPublic: data.isPublic || false,
-            isPublished: data.isPublished || false
+            isPublished: data.isPublished || false,
+            learningResources: data.learningResources || data.resources || [],
+            duration: data.duration || data.timeLimit,
+            tags: data.tags || [],
+            password: data.password,
+            havePassword: data.havePassword,
+            visibility: data.visibility
           });
         } catch (error) {
           console.error('Error parsing quiz:', doc.id, error);
@@ -170,7 +184,33 @@ const AdminQuizManagement: React.FC = () => {
       });
       
       console.log('✅ Loaded quizzes:', loadedQuizzes.length);
-      setQuizzes(loadedQuizzes);
+      
+      // Fetch author names for all quizzes
+      const uniqueUserIds = [...new Set(loadedQuizzes.map(q => q.createdBy).filter(Boolean))];
+      const userNames: Record<string, string> = {};
+      
+      // Batch fetch user names
+      await Promise.all(
+        uniqueUserIds.map(async (userId) => {
+          try {
+            const userDoc = await getDoc(doc(db, 'users', userId));
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              userNames[userId] = userData.displayName || userData.email?.split('@')[0] || userId;
+            }
+          } catch (err) {
+            console.warn('Could not fetch user:', userId);
+          }
+        })
+      );
+      
+      // Update quizzes with author names
+      const quizzesWithAuthorNames = loadedQuizzes.map(q => ({
+        ...q,
+        authorName: userNames[q.createdBy] || q.createdBy
+      }));
+      
+      setQuizzes(quizzesWithAuthorNames);
       
       // Nếu không có quiz, hiển thị empty state
       if (loadedQuizzes.length === 0) {
@@ -522,32 +562,6 @@ const AdminQuizManagement: React.FC = () => {
     }
   };
 
-  // Helper để lấy icon theo loại tài liệu
-  const getResourceIcon = (type: string) => {
-    switch (type) {
-      case 'video': return <Video className="w-4 h-4" />;
-      case 'pdf': return <FileText className="w-4 h-4" />;
-      case 'image': return <ImageIcon className="w-4 h-4" />;
-      case 'audio': return <Music className="w-4 h-4" />;
-      case 'link': return <LinkIcon className="w-4 h-4" />;
-      case 'slides': return <Presentation className="w-4 h-4" />;
-      default: return <FileText className="w-4 h-4" />;
-    }
-  };
-
-  // Helper để lấy màu badge theo loại tài liệu
-  const getResourceBadgeColor = (type: string) => {
-    switch (type) {
-      case 'video': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'pdf': return 'bg-red-100 text-red-700 border-red-200';
-      case 'image': return 'bg-purple-100 text-purple-700 border-purple-200';
-      case 'audio': return 'bg-green-100 text-green-700 border-green-200';
-      case 'link': return 'bg-indigo-100 text-indigo-700 border-indigo-200';
-      case 'slides': return 'bg-orange-100 text-orange-700 border-orange-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
-  };
-
   if (!user || user.role !== 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -815,190 +829,394 @@ const AdminQuizManagement: React.FC = () => {
             )}
           </div>
         ) : (
-          <div className="grid gap-6">
-            {filteredQuizzes.map((quiz) => (
-              <div key={quiz.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <h3 className="text-xl font-bold text-gray-900">{quiz.title}</h3>
-                      {getStatusBadge(quiz.status)}
-                      {getDifficultyBadge(quiz.difficulty)}
-                    </div>
-                    
-                    <SafeHTML content={quiz.description} className="text-gray-600 mb-4 line-clamp-2" />
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-3">
-                      <div>
-                        <span className="font-medium">{t('admin.quizManagement.table.category')}:</span> {quiz.category}
-                      </div>
-                      <div>
-                        <span className="font-medium">{t('quiz.questions')}:</span> {quiz.questions.length}
-                      </div>
-                      <div>
-                        <span className="font-medium">{t('admin.quizManagement.table.createdAt')}:</span> {quiz.createdAt.toLocaleDateString()}
-                      </div>
-                    </div>
-
-                    {/* Hiển thị số lượng tài liệu học tập */}
-                    {quiz.learningResources && quiz.learningResources.length > 0 && (
-                      <div className="flex items-center gap-2 mt-2">
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg">
-                          <FileText className="w-4 h-4 text-emerald-600" />
-                          <span className="text-xs font-medium text-emerald-700">
-                            {t('admin.quizManagement.learningResourcesCount', { count: quiz.learningResources.length })}
-                          </span>
+          <div className="grid gap-4">
+            {filteredQuizzes.map((quiz) => {
+              const hasPassword = quiz.havePassword === 'password' || quiz.visibility === 'password';
+              
+              return (
+                <div key={quiz.id} className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-200 overflow-hidden">
+                  {/* Main Content - 2 Column Layout */}
+                  <div className="flex flex-col lg:flex-row">
+                    {/* Left Column (70%) - Quiz Information */}
+                    <div className="flex-1 lg:w-[70%] p-4 sm:p-5">
+                      {/* Header: Title + Badges */}
+                      <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3 mb-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg sm:text-xl font-bold text-gray-900 truncate mb-2">{quiz.title}</h3>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {getStatusBadge(quiz.status)}
+                            {getDifficultyBadge(quiz.difficulty)}
+                            {/* Password Protection Badge */}
+                            {hasPassword && (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
+                                <Lock className="w-3 h-3" />
+                                {t('quiz.myQuizzes.badge.password', 'Có mật khẩu')}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        {quiz.learningResources.some((r: any) => r.required) && (
-                          <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full font-medium">
-                            ⚠️ {t('admin.quizManagement.hasRequiredResources')}
-                          </span>
+                        
+                        {/* Dropdown Menu for secondary actions */}
+                        <div className="relative group">
+                          <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                            <MoreVertical className="w-5 h-5" />
+                          </button>
+                          <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20">
+                            <button
+                              onClick={() => handlePreview(quiz)}
+                              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                            >
+                              <Eye className="w-4 h-4" />
+                              {t('admin.quizManagement.tooltips.preview', 'Xem trước')}
+                            </button>
+                            <button
+                              onClick={() => handleEdit(quiz.id)}
+                              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                              {t('admin.quizManagement.tooltips.edit', 'Chỉnh sửa')}
+                            </button>
+                            {(quiz.status === 'approved' || quiz.status === 'rejected') && (
+                              <button
+                                onClick={() => handleReopen(quiz.id)}
+                                className="w-full px-4 py-2 text-left text-sm text-orange-600 hover:bg-orange-50 flex items-center gap-2"
+                              >
+                                <RotateCcw className="w-4 h-4" />
+                                {t('admin.quizManagement.tooltips.reopen', 'Mở lại duyệt')}
+                              </button>
+                            )}
+                            <hr className="my-1 border-gray-200" />
+                            <button
+                              onClick={() => handleDelete(quiz.id)}
+                              className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              {t('admin.quizManagement.tooltips.delete', 'Xóa quiz')}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      {quiz.description && (
+                        <SafeHTML content={quiz.description} className="text-gray-600 mb-4 line-clamp-2 text-sm" />
+                      )}
+
+                      {/* Info Grid - 2x2 on mobile, 4 cols on desktop */}
+                      <div className="grid grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-3 text-sm">
+                        {/* Creator */}
+                        <div className="flex items-center gap-2 bg-blue-50 rounded-lg px-3 py-2">
+                          <User className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <div className="text-[10px] sm:text-xs text-blue-600 font-medium">{t('admin.preview.createdBy', 'Người tạo')}</div>
+                            <div className="text-gray-900 font-semibold truncate text-xs sm:text-sm">{quiz.authorName || t('common.unknown')}</div>
+                          </div>
+                        </div>
+                        
+                        {/* Category */}
+                        <div className="flex items-center gap-2 bg-purple-50 rounded-lg px-3 py-2">
+                          <BookOpen className="w-4 h-4 text-purple-500 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <div className="text-[10px] sm:text-xs text-purple-600 font-medium">{t('admin.quizManagement.table.category', 'Chủ đề')}</div>
+                            <div className="text-gray-900 font-semibold truncate text-xs sm:text-sm">{quiz.category || t('common.unknown')}</div>
+                          </div>
+                        </div>
+                        
+                        {/* Questions Count */}
+                        <div className="flex items-center gap-2 bg-green-50 rounded-lg px-3 py-2">
+                          <FileText className="w-4 h-4 text-green-500 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <div className="text-[10px] sm:text-xs text-green-600 font-medium">{t('quiz.questions', 'Câu hỏi')}</div>
+                            <div className="text-gray-900 font-semibold text-xs sm:text-sm">{quiz.questions?.length || 0}</div>
+                          </div>
+                        </div>
+                        
+                        {/* Created Date */}
+                        <div className="flex items-center gap-2 bg-orange-50 rounded-lg px-3 py-2">
+                          <Clock className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <div className="text-[10px] sm:text-xs text-orange-600 font-medium">{t('admin.quizManagement.table.createdAt', 'Ngày tạo')}</div>
+                            <div className="text-gray-900 font-semibold text-xs sm:text-sm">{quiz.createdAt?.toLocaleDateString('vi-VN')}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Extra Badges Row */}
+                      <div className="flex items-center gap-2 flex-wrap mt-3">
+                        {/* Password info with actual password for admin */}
+                        {hasPassword && quiz.password && (
+                          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <Shield className="w-4 h-4 text-yellow-600" />
+                            <span className="text-xs text-yellow-700">
+                              {t('admin.preview.password', 'Mật khẩu')}: <code className="font-mono bg-yellow-100 px-1 rounded">{quiz.password}</code>
+                            </span>
+                          </div>
+                        )}
+                        
+                        {/* Learning Resources Badge */}
+                        {quiz.learningResources && quiz.learningResources.length > 0 && (
+                          <>
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg">
+                              <FileText className="w-4 h-4 text-emerald-600" />
+                              <span className="text-xs font-medium text-emerald-700">
+                                {t('admin.quizManagement.learningResourcesCount', { count: quiz.learningResources.length })}
+                              </span>
+                            </div>
+                            {quiz.learningResources.some((r: any) => r.required) && (
+                              <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full font-medium">
+                                ⚠️ {t('admin.quizManagement.hasRequiredResources')}
+                              </span>
+                            )}
+                          </>
                         )}
                       </div>
-                    )}
-                  </div>
-                  
-                  {/* Actions - 6 chức năng: View, Edit, Approve, Reject, Reopen, Delete */}
-                  <div className="flex items-center gap-2 ml-6">
-                    {/* 1. Xem trước (luôn hiển thị) */}
-                      <button
-                      onClick={() => handlePreview(quiz)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title={t('admin.quizManagement.tooltips.preview')}
-                    >
-                      <Eye className="w-5 h-5" />
-                    </button>
+                    </div>
 
-                    {/* 2. Chỉnh sửa (luôn hiển thị) */}
-                      <button
-                      onClick={() => handleEdit(quiz.id)}
-                      className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                        title={t('admin.quizManagement.tooltips.edit')}
-                    >
-                      <Edit3 className="w-5 h-5" />
-                    </button>
-                    
-                    {/* 3 & 4. Duyệt & Từ chối (chỉ hiển thị khi pending) */}
-                    {quiz.status === 'pending' && (
-                      <>
+                    {/* Right Column (30%) - Actions Panel */}
+                    <div className="lg:w-[30%] bg-gradient-to-br from-gray-50 to-gray-100 p-3 sm:p-5 border-t lg:border-t-0 lg:border-l border-gray-200 flex flex-col justify-center">
+                      {quiz.status === 'pending' ? (
+                        /* Pending: Show large Approve/Reject buttons + quick actions */
+                        <div className="space-y-2 sm:space-y-3">
+                          <div className="text-center mb-1 sm:mb-2">
+                            <span className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              {t('admin.quizManagement.pendingActions', 'Chờ xử lý')}
+                            </span>
+                          </div>
+                          
+                          {/* Main Actions: Approve & Reject */}
                           <button
-                          onClick={() => handleApprove(quiz.id)}
-                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                            title={t('admin.quizManagement.tooltips.approve')}
-                        >
-                          <Check className="w-5 h-5" />
-                        </button>
+                            onClick={() => handleApprove(quiz.id)}
+                            className="w-full py-2 sm:py-3 px-3 sm:px-4 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg sm:rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-sm sm:text-base"
+                          >
+                            <Check className="w-4 sm:w-5 h-4 sm:h-5" />
+                            <span className="hidden sm:inline">{t('admin.quizManagement.actions.approve', 'Duyệt Quiz')}</span>
+                            <span className="sm:hidden">{t('common.approve', 'Duyệt')}</span>
+                          </button>
                           <button
-                          onClick={() => handleReject(quiz.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title={t('admin.quizManagement.tooltips.reject')}
-                        >
-                          <X className="w-5 h-5" />
-                        </button>
-                      </>
-                    )}
-
-                    {/* 5. Mở lại (hiển thị khi đã duyệt hoặc từ chối) */}
-                      {(quiz.status === 'approved' || quiz.status === 'rejected') && (
-                      <button
-                        onClick={() => handleReopen(quiz.id)}
-                        className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                          title={t('admin.quizManagement.tooltips.reopen')}
-                      >
-                        <RotateCcw className="w-5 h-5" />
-                      </button>
-                    )}
-                    
-                    {/* 6. Xóa (luôn hiển thị) */}
-                      <button
-                      onClick={() => handleDelete(quiz.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title={t('admin.quizManagement.tooltips.delete')}
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
+                            onClick={() => handleReject(quiz.id)}
+                            className="w-full py-2 sm:py-3 px-3 sm:px-4 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg sm:rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-sm sm:text-base"
+                          >
+                            <X className="w-4 sm:w-5 h-4 sm:h-5" />
+                            <span className="hidden sm:inline">{t('admin.quizManagement.actions.reject', 'Từ chối')}</span>
+                            <span className="sm:hidden">{t('common.reject', 'Từ chối')}</span>
+                          </button>
+                          
+                          {/* Secondary Actions Row */}
+                          <div className="pt-2 border-t border-gray-200">
+                            <div className="grid grid-cols-3 gap-1 sm:gap-2">
+                              <button
+                                onClick={() => handlePreview(quiz)}
+                                className="py-1.5 sm:py-2 px-1 sm:px-2 bg-white hover:bg-blue-50 text-blue-600 rounded-lg transition-colors border border-gray-200 flex flex-col items-center justify-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs"
+                                title={t('admin.quizManagement.tooltips.preview')}
+                              >
+                                <Eye className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                                <span className="truncate">{t('common.view', 'Xem')}</span>
+                              </button>
+                              <button
+                                onClick={() => handleEdit(quiz.id)}
+                                className="py-1.5 sm:py-2 px-1 sm:px-2 bg-white hover:bg-purple-50 text-purple-600 rounded-lg transition-colors border border-gray-200 flex flex-col items-center justify-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs"
+                                title={t('admin.quizManagement.tooltips.edit')}
+                              >
+                                <Edit3 className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                                <span className="truncate">{t('common.edit', 'Sửa')}</span>
+                              </button>
+                              <button
+                                onClick={() => handleDelete(quiz.id)}
+                                className="py-1.5 sm:py-2 px-1 sm:px-2 bg-white hover:bg-red-50 text-red-600 rounded-lg transition-colors border border-gray-200 flex flex-col items-center justify-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs"
+                                title={t('admin.quizManagement.tooltips.delete')}
+                              >
+                                <Trash2 className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                                <span className="truncate">{t('common.delete', 'Xóa')}</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        /* Approved/Rejected: Show status info and quick actions */
+                        <div className="text-center space-y-2 sm:space-y-3">
+                          <div className={`inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-xl font-medium text-xs sm:text-sm ${
+                            quiz.status === 'approved' 
+                              ? 'bg-green-100 text-green-700' 
+                              : 'bg-red-100 text-red-700'
+                          }`}>
+                            {quiz.status === 'approved' ? (
+                              <><Check className="w-4 sm:w-5 h-4 sm:h-5" /> {t('status.approved', 'Đã duyệt')}</>
+                            ) : (
+                              <><X className="w-4 sm:w-5 h-4 sm:h-5" /> {t('status.rejected', 'Đã từ chối')}</>
+                            )}
+                          </div>
+                          
+                          {/* Action buttons */}
+                          <div className="grid grid-cols-2 gap-1 sm:gap-2">
+                            <button
+                              onClick={() => handlePreview(quiz)}
+                              className="py-1.5 sm:py-2 px-2 sm:px-3 bg-white hover:bg-blue-50 text-blue-600 font-medium rounded-lg transition-colors border border-blue-200 flex items-center justify-center gap-1 sm:gap-1.5 text-xs sm:text-sm"
+                            >
+                              <Eye className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                              <span className="hidden sm:inline">{t('common.view', 'Xem')}</span>
+                              <span className="sm:hidden">👁️</span>
+                            </button>
+                            <button
+                              onClick={() => handleEdit(quiz.id)}
+                              className="py-1.5 sm:py-2 px-2 sm:px-3 bg-white hover:bg-purple-50 text-purple-600 font-medium rounded-lg transition-colors border border-purple-200 flex items-center justify-center gap-1 sm:gap-1.5 text-xs sm:text-sm"
+                            >
+                              <Edit3 className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                              <span className="hidden sm:inline">{t('common.edit', 'Sửa')}</span>
+                              <span className="sm:hidden">✏️</span>
+                            </button>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-1 sm:gap-2">
+                            <button
+                              onClick={() => handleReopen(quiz.id)}
+                              className="py-1.5 sm:py-2 px-2 sm:px-3 bg-white hover:bg-orange-50 text-orange-600 font-medium rounded-lg transition-colors border border-orange-200 flex items-center justify-center gap-1 sm:gap-1.5 text-xs sm:text-sm"
+                            >
+                              <RotateCcw className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                              <span className="hidden sm:inline">{t('admin.quizManagement.actions.reopen', 'Mở lại')}</span>
+                              <span className="sm:hidden">🔄</span>
+                            </button>
+                            <button
+                              onClick={() => handleDelete(quiz.id)}
+                              className="py-1.5 sm:py-2 px-2 sm:px-3 bg-white hover:bg-red-50 text-red-600 font-medium rounded-lg transition-colors border border-red-200 flex items-center justify-center gap-1 sm:gap-1.5 text-xs sm:text-sm"
+                            >
+                              <Trash2 className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                              <span className="hidden sm:inline">{t('common.delete', 'Xóa')}</span>
+                              <span className="sm:hidden">🗑️</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
         </>
         )}
 
         {activeTab === 'editRequests' && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-orange-500" />
-                {t('admin.quizManagement.editRequestsTitle', { count: editRequests.length })}
-              </h3>
+          <div className="space-y-4">
+            {/* Header */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 text-orange-500" />
+                  {t('admin.quizManagement.editRequestsTitle', { count: editRequests.length })}
+                </h3>
+                <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium">
+                  {editRequests.length} {t('admin.editRequests.pendingCount', 'yêu cầu chờ xử lý')}
+                </span>
+              </div>
             </div>
             
             {editRequests.length === 0 ? (
-              <div className="text-center py-12">
-                <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 mb-4">{t("admin.editRequests.emptyTitle")}</p>
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AlertCircle className="w-8 h-8 text-gray-400" />
+                </div>
+                <p className="text-gray-700 font-medium mb-2">{t("admin.editRequests.emptyTitle")}</p>
                 <p className="text-sm text-gray-400">{t("admin.editRequests.emptyDesc")}</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="grid gap-4">
                 {editRequests.map((request) => (
-                  <div key={request.id} className="border border-gray-200 rounded-lg p-6 bg-white shadow-sm">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                            <User className="w-5 h-5 text-blue-600" />
+                  <div key={request.id} className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-200 overflow-hidden">
+                    {/* Main Content - 2 Column Layout like Quiz Cards */}
+                    <div className="flex flex-col lg:flex-row">
+                      {/* Left Column (70%) - Request Information */}
+                      <div className="flex-1 lg:w-[70%] p-4 sm:p-5">
+                        {/* Header: User Info + Status Badge */}
+                        <div className="flex items-start gap-3 mb-4">
+                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+                            <User className="w-6 h-6 text-white" />
                           </div>
-                          <div>
-                            <h4 className="font-semibold text-gray-900">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-gray-900 text-lg truncate">
                               {request.requestedByName || request.requestedByEmail || t('admin.quizManagement.unknownUser')}
                             </h4>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-gray-500 truncate">
                               {request.requestedByEmail || request.requestedBy || t('admin.quizManagement.unknownEmail')}
                             </p>
                           </div>
-                        </div>
-                        
-                        <div className="bg-gray-50 rounded-lg p-4 mb-3">
-                          <h5 className="font-medium text-gray-900 mb-2">
-                            📝 Quiz: {request.quizTitle || t('admin.quizManagement.unknownQuiz')}
-                          </h5>
-                          <p className="text-sm text-gray-700 mb-2">
-                            <strong>{t('admin.quizManagement.requestReason')}:</strong> {request.reason || t('admin.quizManagement.noReason')}
-                          </p>
-                          {request.description && (
-                            <p className="text-sm text-gray-600">
-                              <strong>{t('admin.quizManagement.requestDetails')}:</strong> {request.description}
-                            </p>
-                          )}
-                        </div>
-                        
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-4 h-4" />
-                            {request.requestedAt ? formatDate(request.requestedAt, 'long') : t('admin.quizManagement.unknownTime')}
+                          <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-semibold flex-shrink-0">
+                            ⏳ {t("admin.editRequests.pending", "Chờ duyệt")}
                           </span>
-                          <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">{t("admin.editRequests.pending")}
+                        </div>
+                        
+                        {/* Quiz Info Card */}
+                        <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-4 mb-4 border border-gray-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <BookOpen className="w-5 h-5 text-blue-500" />
+                            <h5 className="font-semibold text-gray-900">
+                              {request.quizTitle || t('admin.quizManagement.unknownQuiz')}
+                            </h5>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex items-start gap-2">
+                              <span className="text-sm font-medium text-gray-600 min-w-[80px]">{t('admin.quizManagement.requestReason')}:</span>
+                              <span className="text-sm text-gray-800">{request.reason || t('admin.quizManagement.noReason')}</span>
+                            </div>
+                            {request.description && (
+                              <div className="flex items-start gap-2">
+                                <span className="text-sm font-medium text-gray-600 min-w-[80px]">{t('admin.quizManagement.requestDetails')}:</span>
+                                <span className="text-sm text-gray-700">{request.description}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Time Info */}
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <Clock className="w-4 h-4" />
+                          <span>{t('admin.editRequests.requestedAt', 'Yêu cầu lúc')}:</span>
+                          <span className="font-medium text-gray-700">
+                            {request.requestedAt ? formatDate(request.requestedAt, 'long') : t('admin.quizManagement.unknownTime')}
                           </span>
                         </div>
                       </div>
-                      <div className="flex gap-2 ml-6">
-                        <button
-                          onClick={() => handleApproveEditRequest(request.id, request.quizId)}
-                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 shadow-sm"
-                          title={t("admin.editRequests.approveTitle")}
-                        >
-                          <Check className="w-4 h-4" />{t("admin.editRequests.approve")}
-                        </button>
-                        <button
-                          onClick={() => handleRejectEditRequest(request.id)}
-                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 shadow-sm"
-                          title={t("admin.editRequests.rejectTitle")}
-                        >
-                          <X className="w-4 h-4" />{t("admin.editRequests.reject")}
-                        </button>
+
+                      {/* Right Column (30%) - Actions Panel */}
+                      <div className="lg:w-[30%] bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-5 border-t lg:border-t-0 lg:border-l border-gray-200 flex flex-col justify-center">
+                        <div className="space-y-3">
+                          <div className="text-center mb-2">
+                            <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              {t('admin.editRequests.actionsTitle', 'Xử lý yêu cầu')}
+                            </span>
+                          </div>
+                          
+                          {/* Approve Button */}
+                          <button
+                            onClick={() => handleApproveEditRequest(request.id, request.quizId)}
+                            className="w-full py-3 px-4 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                            title={t("admin.editRequests.approveTitle")}
+                          >
+                            <Check className="w-5 h-5" />
+                            {t("admin.editRequests.approve", "Chấp nhận")}
+                          </button>
+                          
+                          {/* Reject Button */}
+                          <button
+                            onClick={() => handleRejectEditRequest(request.id)}
+                            className="w-full py-3 px-4 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                            title={t("admin.editRequests.rejectTitle")}
+                          >
+                            <X className="w-5 h-5" />
+                            {t("admin.editRequests.reject", "Từ chối")}
+                          </button>
+                          
+                          {/* View Quiz Button */}
+                          {request.quizId && (
+                            <button
+                              onClick={() => handleEdit(request.quizId)}
+                              className="w-full py-2 px-3 bg-white hover:bg-blue-50 text-blue-600 font-medium rounded-lg transition-colors border border-blue-200 flex items-center justify-center gap-2 text-sm"
+                            >
+                              <Eye className="w-4 h-4" />
+                              {t('admin.editRequests.viewQuiz', 'Xem Quiz')}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1008,134 +1226,12 @@ const AdminQuizManagement: React.FC = () => {
           </div>
         )}
 
-      {/* Preview Modal */}
-      {showPreview && previewQuiz && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">{t('admin.preview.title')}: {previewQuiz.title}</h2>
-                <button
-                  onClick={() => setShowPreview(false)}
-                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-            
-            <div className="p-6">
-              <div className="space-y-6">
-                <div>
-                  <h3 className="font-semibold mb-2">{t('admin.preview.description')}:</h3>
-                  <SafeHTML content={previewQuiz.description} className="text-gray-600" />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="font-semibold">{t('admin.preview.category')}:</span> {previewQuiz.category}
-                  </div>
-                  <div>
-                    <span className="font-semibold">{t('admin.preview.difficulty')}:</span> {previewQuiz.difficulty}
-                  </div>
-                  <div>
-                    <span className="font-semibold">{t('admin.preview.questions')}:</span> {previewQuiz.questions.length}
-                  </div>
-                  <div>
-                    <span className="font-semibold">{t('admin.preview.status')}:</span> {getStatusBadge(previewQuiz.status || 'pending')}
-                  </div>
-                </div>
-
-                {/* Tài liệu học tập trong Preview */}
-                {previewQuiz.learningResources && previewQuiz.learningResources.length > 0 && (
-                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-lg p-4">
-                    <h3 className="font-semibold mb-3 flex items-center gap-2 text-emerald-800">
-                      <FileText className="w-5 h-5" />
-                      📚 {t('admin.preview.learningResourcesTitle', { count: previewQuiz.learningResources.length })}
-                    </h3>
-                    <div className="space-y-2">
-                      {previewQuiz.learningResources.map((resource: any, idx: number) => (
-                        <div 
-                          key={resource.id || idx} 
-                          className="bg-white rounded-lg p-3 border border-emerald-100"
-                        >
-                          <div className="flex items-start gap-3">
-                            {/* Icon & Type Badge */}
-                            <div className={`flex items-center justify-center w-10 h-10 rounded-lg border ${getResourceBadgeColor(resource.type)}`}>
-                              {getResourceIcon(resource.type)}
-                            </div>
-                            
-                            {/* Content */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-start justify-between gap-2">
-                                <h4 className="font-semibold text-gray-900 text-sm">{resource.title}</h4>
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium border flex-shrink-0 ${getResourceBadgeColor(resource.type)}`}>
-                                  {resource.type.toUpperCase()}
-                                </span>
-                              </div>
-                              
-                              {resource.description && (
-                                <SafeHTML content={resource.description} className="text-xs text-gray-600 mt-1 line-clamp-2" />
-                              )}
-                              
-                              <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
-                                {resource.required && (
-                                  <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded-full font-medium">
-                                    ⚠️ {t('admin.quizManagement.requiredBadge')}
-                                  </span>
-                                )}
-                                {resource.estimatedTime && (
-                                  <span>⏱️ {t('admin.quizManagement.estimatedTime', { time: resource.estimatedTime })}</span>
-                                )}
-                                {resource.url && (
-                                  <a 
-                                    href={resource.url} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 hover:text-blue-800 hover:underline truncate max-w-xs"
-                                  >
-                                    🔗 {t('admin.quizManagement.viewResource')}
-                                  </a>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {previewQuiz.questions.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold mb-4">{t('admin.preview.questionList')}</h3>
-                    <div className="space-y-4">
-                      {previewQuiz.questions.map((question: any, index: number) => (
-                        <div key={index} className="border rounded-lg p-4">
-                          <h4 className="font-medium mb-2">{index + 1}. {question.text}</h4>
-                          {question.answers && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                              {question.answers.map((answer: any, answerIndex: number) => (
-                                <div 
-                                  key={answerIndex} 
-                                  className={`p-2 rounded ${answer.isCorrect ? 'bg-green-100 text-green-800' : 'bg-gray-100'}`}
-                                >
-                                  {String.fromCharCode(65 + answerIndex)}. {answer.text}
-                                  {answer.isCorrect && ' ✓'}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Preview Modal - Using enhanced QuizPreview component */}
+      <QuizPreview 
+        quiz={previewQuiz} 
+        isOpen={showPreview} 
+        onClose={() => setShowPreview(false)} 
+      />
     </div>
     </>
   );

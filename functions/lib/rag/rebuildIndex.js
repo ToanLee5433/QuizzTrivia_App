@@ -51,7 +51,7 @@ exports.rebuildFullIndex = functions
     .runWith({
     secrets: ['GOOGLE_AI_API_KEY'],
     timeoutSeconds: 540,
-    memory: '1GB',
+    memory: '512MB',
 })
     .https.onCall(async (data, context) => {
     var _a, _b, _c;
