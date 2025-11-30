@@ -415,7 +415,7 @@ const AdminDashboard: React.FC = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t("admin.preview.status")}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Thao tác
+                {t('admin.actions')}
               </th>
             </tr>
           </thead>
@@ -424,7 +424,7 @@ const AdminDashboard: React.FC = () => {
               <tr key={user.id}>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="font-medium text-gray-900">
-                    {user.displayName || 'Chưa có tên'}
+                    {user.displayName || t('common.noName')}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">

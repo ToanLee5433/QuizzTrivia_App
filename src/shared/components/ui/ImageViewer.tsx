@@ -4,6 +4,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, ZoomIn, ZoomOut, Download, RotateCw, Maximize2, Minimize2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface ImageViewerProps {
   imageUrl: string;
@@ -12,6 +13,7 @@ interface ImageViewerProps {
 }
 
 const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl, title, onClose }) => {
+  const { t } = useTranslation();
   const [zoom, setZoom] = useState(100);
   const [rotation, setRotation] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -92,7 +94,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl, title, onClose }) =
           <button
             onClick={handleZoomOut}
             className="p-2 text-white hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
-            title="Thu nhỏ"
+            title={t('common.thu_nho')}
             disabled={zoom <= 50}
           >
             <ZoomOut className="w-5 h-5" />
@@ -107,7 +109,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl, title, onClose }) =
           <button
             onClick={handleZoomIn}
             className="p-2 text-white hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
-            title="Phóng to"
+            title={t('common.phong_to')}
             disabled={zoom >= 300}
           >
             <ZoomIn className="w-5 h-5" />
@@ -117,7 +119,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl, title, onClose }) =
           <button
             onClick={handleRotate}
             className="p-2 text-white hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
-            title="Xoay ảnh"
+            title={t('common.xoay_anh')}
           >
             <RotateCw className="w-5 h-5" />
           </button>
@@ -126,7 +128,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl, title, onClose }) =
           <button
             onClick={handleDownload}
             className="p-2 text-white hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
-            title="Tải xuống"
+            title={t('common.tai_xuong')}
           >
             <Download className="w-5 h-5" />
           </button>
@@ -135,7 +137,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl, title, onClose }) =
           <button
             onClick={toggleFullscreen}
             className="p-2 text-white hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
-            title={isFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}
+            title={isFullscreen ? t('common.thoat_toan_man_hinh') : t('common.toan_man_hinh')}
           >
             {isFullscreen ? (
               <Minimize2 className="w-5 h-5" />
@@ -148,7 +150,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl, title, onClose }) =
           <button
             onClick={onClose}
             className="p-2 text-white hover:bg-red-600 rounded-lg transition-colors ml-2"
-            title="Đóng (ESC)"
+            title={t('common.dong_esc')}
           >
             <X className="w-6 h-6" />
           </button>

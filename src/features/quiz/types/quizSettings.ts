@@ -37,7 +37,10 @@ export interface QuizSettings {
 }
 
 // Current settings version - increment when making breaking changes
-export const SETTINGS_VERSION = 1;
+// v1: Initial versioning
+// v2: Fix default timePerQuestion for practice mode (30s instead of 0)
+// v3: Practice mode now uses per-question timer (not total time)
+export const SETTINGS_VERSION = 3;
 
 export const DEFAULT_QUIZ_SETTINGS: QuizSettings = {
   version: SETTINGS_VERSION,

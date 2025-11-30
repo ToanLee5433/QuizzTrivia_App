@@ -182,7 +182,7 @@ const LearningMaterialsPage: React.FC = () => {
 
   const handleViewerError = (error: string) => {
     setViewerError(error);
-    toast.error('Không thể tải tài liệu. Vui lòng thử tải xuống.');
+    toast.error(t('learningMaterials.cannotLoadResource', 'Không thể tải tài liệu. Vui lòng thử tải xuống.'));
   };
 
   const getThumbnailUrl = (resource: SimpleResource): string | undefined => {
@@ -525,10 +525,10 @@ const LearningMaterialsPage: React.FC = () => {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                             <Eye className="w-3 h-3" />
-                            {isCompleted ? 'Đã xem' : 'Chưa xem'}
+                            {isCompleted ? t('quiz.learningResources.badges.viewed') : t('learningMaterials.notViewed', 'Chưa xem')}
                           </div>
                           <button className="text-blue-600 dark:text-blue-400 text-sm font-bold hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
-                            {isSelected ? 'Đang xem' : 'Xem ngay'}
+                            {isSelected ? t('learningMaterials.viewing', 'Đang xem') : t('quiz.learningResources.actions.view')}
                           </button>
                         </div>
                       </div>
@@ -679,10 +679,10 @@ const LearningMaterialsPage: React.FC = () => {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                             <Eye className="w-3 h-3" />
-                            {isCompleted ? 'Đã xem' : 'Chưa xem'}
+                            {isCompleted ? t('quiz.learningResources.badges.viewed') : t('learningMaterials.notViewed', 'Chưa xem')}
                           </div>
                           <button className="text-blue-600 dark:text-blue-400 text-sm font-bold hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
-                            {isSelected ? 'Đang xem' : 'Xem ngay'}
+                            {isSelected ? t('learningMaterials.viewing', 'Đang xem') : t('quiz.learningResources.actions.view')}
                           </button>
                         </div>
                       </div>
@@ -826,7 +826,7 @@ const LearningMaterialsPage: React.FC = () => {
                           src={`https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(selectedResource.url)}`}
                           className="w-full h-96 lg:h-[600px] border-0 rounded-lg"
                           title={selectedResource.title}
-                          onError={() => handleViewerError('Không thể tải tài liệu từ Google Docs Viewer')}
+                          onError={() => handleViewerError(t('learningMaterials.googleDocsError', 'Không thể tải tài liệu từ Google Docs Viewer'))}
                           onLoad={() => setViewerError(null)}
                         />
                         {!viewerError && (
@@ -863,7 +863,7 @@ const LearningMaterialsPage: React.FC = () => {
                           />
                         </div>
                         <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                          Tiến độ: {Math.round(audioProgress)}%
+                          {t('learningMaterials.progress', 'Tiến độ')}: {Math.round(audioProgress)}%
                         </p>
                       </div>
                     )}
@@ -875,12 +875,12 @@ const LearningMaterialsPage: React.FC = () => {
                           src={selectedResource.url}
                           className="w-full h-96 lg:h-[600px] border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
                           title={selectedResource.title}
-                          onError={() => handleViewerError('Không thể tải file mã nguồn')}
+                          onError={() => handleViewerError(t('learningMaterials.codeFileError', 'Không thể tải file mã nguồn'))}
                           onLoad={() => setViewerError(null)}
                         />
                         {!viewerError && (
                           <div className="absolute top-2 right-2 px-2 py-1 bg-green-500 text-white text-xs rounded">
-                            Đang tải...
+                            {t('common.loading')}
                           </div>
                         )}
                       </div>

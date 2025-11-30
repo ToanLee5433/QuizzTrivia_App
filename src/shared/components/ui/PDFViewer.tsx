@@ -4,6 +4,7 @@
 
 import React, { useEffect } from 'react';
 import { X, Download, ExternalLink, Maximize2, Minimize2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface PDFViewerProps {
   pdfUrl: string;
@@ -12,6 +13,7 @@ interface PDFViewerProps {
 }
 
 const PDFViewer: React.FC<PDFViewerProps> = ({ pdfUrl, title, onClose }) => {
+  const { t } = useTranslation();
   const [isFullscreen, setIsFullscreen] = React.useState(false);
 
   useEffect(() => {
@@ -92,17 +94,17 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfUrl, title, onClose }) => {
           <button
             onClick={handleOpenNewTab}
             className="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-2"
-            title="Mở trong tab mới"
+            title={t('common.mo_trong_tab_moi')}
           >
             <ExternalLink className="w-4 h-4" />
-            <span className="text-sm">Mở tab mới</span>
+            <span className="text-sm">{t('common.mo_trong_tab_moi')}</span>
           </button>
 
           {/* Download */}
           <button
             onClick={handleDownload}
             className="p-2 text-white hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
-            title="Tải xuống"
+            title={t('common.tai_xuong')}
           >
             <Download className="w-5 h-5" />
           </button>
@@ -111,7 +113,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfUrl, title, onClose }) => {
           <button
             onClick={toggleFullscreen}
             className="p-2 text-white hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
-            title={isFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}
+            title={isFullscreen ? t('common.thoat_toan_man_hinh') : t('common.toan_man_hinh')}
           >
             {isFullscreen ? (
               <Minimize2 className="w-5 h-5" />
@@ -124,7 +126,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfUrl, title, onClose }) => {
           <button
             onClick={onClose}
             className="p-2 text-white hover:bg-red-600 rounded-lg transition-colors"
-            title="Đóng (ESC)"
+            title={t('common.dong_esc')}
           >
             <X className="w-6 h-6" />
           </button>

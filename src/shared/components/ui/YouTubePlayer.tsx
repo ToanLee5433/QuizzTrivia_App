@@ -5,6 +5,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { X, Maximize2, Minimize2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface YouTubePlayerProps {
   videoUrl: string;
@@ -20,6 +21,7 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
   onClose,
   isFullscreen: initialFullscreen = true
 }) => {
+  const { t } = useTranslation();
   const [isFullscreen, setIsFullscreen] = React.useState(initialFullscreen);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -99,13 +101,13 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
       <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center">
         <div className="bg-white rounded-xl p-8 max-w-md text-center">
           <div className="text-6xl mb-4">❌</div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Link YouTube không hợp lệ</h3>
-          <p className="text-gray-600 mb-4">Vui lòng kiểm tra lại URL video</p>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">{t('common.youtubePlayer.invalidLink')}</h3>
+          <p className="text-gray-600 mb-4">{t('common.youtubePlayer.checkUrl')}</p>
           <button
             onClick={onClose}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Đóng
+            {t('common.youtubePlayer.close')}
           </button>
         </div>
       </div>
@@ -141,7 +143,7 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
             <button
               onClick={toggleFullscreen}
               className="p-2 text-white hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
-              title={isFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}
+              title={isFullscreen ? t('common.thoat_toan_man_hinh') : t('common.toan_man_hinh')}
             >
               {isFullscreen ? (
                 <Minimize2 className="w-6 h-6" />
@@ -154,7 +156,7 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
             <button
               onClick={onClose}
               className="p-2 text-white hover:bg-red-600 rounded-lg transition-colors"
-              title="Đóng (ESC)"
+              title={t('common.youtubePlayer.closeEsc')}
             >
               <X className="w-6 h-6" />
             </button>

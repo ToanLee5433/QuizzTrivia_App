@@ -6,6 +6,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Flame, Star, TrendingUp } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { STREAK_BONUSES } from '../../types/game.types';
 
 interface StreakIndicatorProps {
@@ -14,6 +15,7 @@ interface StreakIndicatorProps {
 }
 
 const StreakIndicator: React.FC<StreakIndicatorProps> = ({ streak, className = '' }) => {
+  const { t } = useTranslation('multiplayer');
   const currentBonus = STREAK_BONUSES.find(b => b.streak === streak);
   const nextBonus = STREAK_BONUSES.find(b => b.streak > streak);
 
@@ -57,7 +59,7 @@ const StreakIndicator: React.FC<StreakIndicatorProps> = ({ streak, className = '
               )}
             </div>
             <p className="text-sm text-orange-300">
-              Bạn đang có chuỗi {streak} câu trả lời đúng liên tiếp!
+              {t('streak.currentStreak', { count: streak })}
             </p>
           </div>
         </div>
@@ -70,7 +72,7 @@ const StreakIndicator: React.FC<StreakIndicatorProps> = ({ streak, className = '
                 +{currentBonus.bonusPoints}
               </span>
             </div>
-            <p className="text-xs text-yellow-300">Điểm thưởng</p>
+            <p className="text-xs text-yellow-300">{t('streak.bonusPoints')}</p>
           </div>
         )}
       </div>
@@ -81,16 +83,16 @@ const StreakIndicator: React.FC<StreakIndicatorProps> = ({ streak, className = '
             <div className="flex items-center space-x-2">
               <TrendingUp className="w-4 h-4 text-orange-300" />
               <span className="text-sm text-orange-200">
-                Streak tiếp theo: <span className="font-bold">{nextBonus.streak}</span>
+                {t('streak.nextStreak')}: <span className="font-bold">{nextBonus.streak}</span>
               </span>
             </div>
             <div className="flex items-center space-x-3 text-xs">
               <div className="flex items-center space-x-1">
-                <span className="text-orange-300">Hệ số:</span>
+                <span className="text-orange-300">{t('streak.multiplier')}:</span>
                 <span className="font-bold text-yellow-400">x{nextBonus.multiplier}</span>
               </div>
               <div className="flex items-center space-x-1">
-                <span className="text-orange-300">Thưởng:</span>
+                <span className="text-orange-300">{t('streak.bonus')}:</span>
                 <span className="font-bold text-yellow-400">+{nextBonus.bonusPoints}</span>
               </div>
             </div>

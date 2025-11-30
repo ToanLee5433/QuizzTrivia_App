@@ -26,6 +26,19 @@ export const useQuizSession = ({ quiz }: UseQuizSessionProps) => {
     timeSpent: 0
   });
 
+  // Reset session when quiz changes (for retake functionality)
+  useEffect(() => {
+    console.log('🔄 Resetting quiz session for quiz:', quiz.id);
+    setSession({
+      quizId: quiz.id,
+      startTime: Date.now(),
+      currentQuestionIndex: 0,
+      answers: {},
+      isCompleted: false,
+      timeSpent: 0
+    });
+  }, [quiz.id]);
+
   // Track attempt when session starts
   useEffect(() => {
     if (user) {
@@ -260,7 +273,8 @@ export const useQuizSession = ({ quiz }: UseQuizSessionProps) => {
           quiz.id,
           userAnswers,
           score.percentage,
-          user.uid
+          user.uid,
+          Math.round(finalSession.timeSpent / 1000) // Pass timeSpent in seconds
         );
         console.log('✅ Quiz result enqueued for sync');
 

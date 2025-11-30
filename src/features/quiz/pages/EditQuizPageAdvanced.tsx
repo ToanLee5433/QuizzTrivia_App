@@ -8,14 +8,15 @@ import { toast } from 'react-toastify';
 import { 
   ArrowLeft, Save, Loader2, Plus, 
   BookOpen, Target, MessageSquare, AlertCircle,
-  FileText, Tag, Star, Clock, ImageIcon, Lock, Key
+  FileText, Tag, Star, Clock, ImageIcon, Lock, Key, Loader
 } from 'lucide-react';
 import { db } from '../../../firebase/config';
 import { addDoc, collection, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
 import { useTranslation } from 'react-i18next';
-import { categories, difficulties } from './CreateQuizPage/constants';
+import { difficulties } from './CreateQuizPage/constants';
+import { useCategories } from './CreateQuizPage/hooks/useCategories';
 import RichTextEditor from '../../../shared/components/ui/RichTextEditor';
 import RichTextViewer from '../../../shared/components/ui/RichTextViewer';
 import ImageUploader from '../../../components/ImageUploader';
@@ -25,6 +26,13 @@ import { LearningResource } from '../types/learning';
 
 const EditQuizPageAdvanced: React.FC = () => {
   const { t } = useTranslation();
+  const { categories, loading: categoriesLoading } = useCategories();
+
+  // Helper để lấy tên category đã được dịch
+  const getCategoryDisplayName = (categoryName: string) => {
+    const translated = t(`categories.${categoryName}`, { defaultValue: '' });
+    return translated || categoryName;
+  };
 
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -378,12 +386,21 @@ const EditQuizPageAdvanced: React.FC = () => {
                         className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                         value={quizInfo.category}
                         onChange={(e) => setQuizInfo({ ...quizInfo, category: e.target.value })}
+                        disabled={categoriesLoading}
                       >
-                        <option value="">{t("createQuiz.info.categoryPlaceholder")}</option>
+                        <option value="">
+                          {categoriesLoading ? t('common.loading') : t("createQuiz.info.categoryPlaceholder")}
+                        </option>
                         {categories.map(c => (
-                          <option key={c.value} value={c.value}>{t(c.labelKey)}</option>
+                          <option key={c.id} value={c.name}>{c.icon} {getCategoryDisplayName(c.name)}</option>
                         ))}
                       </select>
+                      {categoriesLoading && (
+                        <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
+                          <Loader className="w-3 h-3 animate-spin" />
+                          {t('common.loadingCategories', 'Đang tải danh mục...')}
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-2">

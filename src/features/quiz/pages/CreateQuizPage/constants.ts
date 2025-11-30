@@ -3,7 +3,7 @@ import { QuizFormData } from './types';
 export const defaultQuiz: QuizFormData = {
   title: '',
   description: '',
-  category: 'programming',
+  category: '', // Will be selected from Firestore categories
   difficulty: 'easy',
   duration: 15,
   imageUrl: '',
@@ -17,14 +17,8 @@ export const defaultQuiz: QuizFormData = {
   password: '', // 🔒 Password for password-protected quiz
 };
 
-export const categories = [
-  { value: 'programming', labelKey: 'createQuiz.info.categoryOptions.programming' },
-  { value: 'math', labelKey: 'createQuiz.info.categoryOptions.math' },
-  { value: 'science', labelKey: 'createQuiz.info.categoryOptions.science' },
-  { value: 'history', labelKey: 'createQuiz.info.categoryOptions.history' },
-  { value: 'language', labelKey: 'createQuiz.info.categoryOptions.language' },
-  { value: 'general', labelKey: 'createQuiz.info.categoryOptions.general' },
-] as const;
+// Categories are now loaded from Firestore via useCategories hook
+// No longer hardcoded here to ensure sync with CategoryManagement
 
 export const difficulties = [
   { value: 'easy', labelKey: 'difficulty.easy' },

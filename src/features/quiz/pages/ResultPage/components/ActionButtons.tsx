@@ -14,6 +14,14 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({ quiz, percentage }
   const navigate = useNavigate();
   const { t } = useTranslation();
 
+  const handleRetakeQuiz = () => {
+    // Force re-mount by adding timestamp to URL state
+    navigate(`/quiz/${quiz.id}`, { 
+      replace: true,
+      state: { retakeTimestamp: Date.now() }
+    });
+  };
+
   const handleShareResult = () => {
     navigator.clipboard.writeText(
       `I scored ${percentage}% on "${quiz.title}" quiz! 🎯`
@@ -24,7 +32,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({ quiz, percentage }
   return (
     <div className="flex flex-wrap gap-4 justify-center">
       <Button
-        onClick={() => navigate(`/quiz/${quiz.id}`)}
+        onClick={handleRetakeQuiz}
         className="bg-blue-600 hover:bg-blue-700"
       >
         🔄 {t('quiz.retake_quiz', 'Retake Quiz')}

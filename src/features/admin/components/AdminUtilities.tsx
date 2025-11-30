@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
-import { Database, Loader, CheckCircle, AlertCircle, RefreshCw, Calculator } from 'lucide-react';
+import { Database, Loader, CheckCircle, AlertCircle, RefreshCw, Calculator, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { collection, getDocs, doc, updateDoc, query, where } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, query, where, deleteDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 
 interface FixIssue {
@@ -21,6 +21,21 @@ const AdminUtilities: React.FC = () => {
   const [recalculating, setRecalculating] = useState(false);
   const [recalculated, setRecalculated] = useState(false);
   const [recalcResults, setRecalcResults] = useState<FixIssue[]>([]);
+  const [cleaningOrphans, setCleaningOrphans] = useState(false);
+  const [orphansCleaned, setOrphansCleaned] = useState(false);
+  const [orphanStats, setOrphanStats] = useState<{deleted: number, quizIds: string[]}>({deleted: 0, quizIds: []});
+  
+  // 🔄 Category deduplication states
+  const [deduplicating, setDeduplicating] = useState(false);
+  const [deduplicationDone, setDeduplicationDone] = useState(false);
+  const [categoryStats, setCategoryStats] = useState<{
+    total: number;
+    unique: number;
+    duplicatesDeleted: number;
+    quizzesUpdated: number;
+    details: {name: string; count: number; kept: string; deleted: string[]}[];
+  }>({total: 0, unique: 0, duplicatesDeleted: 0, quizzesUpdated: 0, details: []});
+  
   const { t } = useTranslation();
 
   const handleCreateTestQuizzes = async () => {
@@ -40,6 +55,217 @@ const AdminUtilities: React.FC = () => {
       toast.error(t('admin.utilities.createTestQuizzes.error'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 🗑️ Clean orphaned quiz results (results from deleted quizzes)
+  const handleCleanOrphanedResults = async () => {
+    try {
+      setCleaningOrphans(true);
+      setOrphanStats({deleted: 0, quizIds: []});
+      toast.info('🔍 Đang quét tìm kết quả quiz mồ côi...');
+
+      // Step 1: Get all approved quizzes
+      const quizzesQuery = query(
+        collection(db, 'quizzes'),
+        where('status', '==', 'approved')
+      );
+      const quizzesSnapshot = await getDocs(quizzesQuery);
+      
+      // Build set of valid quiz IDs
+      const validQuizIds = new Set<string>();
+      quizzesSnapshot.forEach(doc => validQuizIds.add(doc.id));
+      
+      console.log(`📊 Found ${validQuizIds.size} approved quizzes`);
+
+      // Step 2: Get all quiz results
+      const resultsSnapshot = await getDocs(collection(db, 'quizResults'));
+      console.log(`📊 Found ${resultsSnapshot.size} total quiz results`);
+
+      // Step 3: Find and delete orphaned results
+      const orphanedQuizIds = new Set<string>();
+      let deletedCount = 0;
+      const deletePromises: Promise<void>[] = [];
+
+      resultsSnapshot.forEach(resultDoc => {
+        const result = resultDoc.data();
+        const quizId = result.quizId;
+        
+        // If quiz doesn't exist in approved quizzes, it's orphaned
+        if (!validQuizIds.has(quizId)) {
+          orphanedQuizIds.add(quizId);
+          deletePromises.push(
+            deleteDoc(doc(db, 'quizResults', resultDoc.id))
+              .then(() => {
+                deletedCount++;
+                console.log(`🗑️ Deleted orphaned result: ${resultDoc.id} (quiz: ${quizId})`);
+              })
+              .catch(err => {
+                console.error(`❌ Failed to delete ${resultDoc.id}:`, err);
+              })
+          );
+        }
+      });
+
+      // Execute all deletes
+      if (deletePromises.length > 0) {
+        await Promise.all(deletePromises);
+        
+        setOrphanStats({
+          deleted: deletedCount,
+          quizIds: Array.from(orphanedQuizIds)
+        });
+        
+        toast.success(`✅ Đã xóa ${deletedCount} kết quả quiz mồ côi từ ${orphanedQuizIds.size} quiz đã xóa!`);
+        console.log(`✅ Cleaned ${deletedCount} orphaned results from ${orphanedQuizIds.size} deleted quizzes`);
+      } else {
+        toast.success('✅ Không có kết quả quiz mồ côi nào!');
+        console.log('✅ No orphaned results found');
+      }
+
+      setOrphansCleaned(true);
+
+    } catch (error) {
+      console.error('❌ Error cleaning orphaned results:', error);
+      toast.error('❌ Có lỗi khi xóa: ' + (error as Error).message);
+    } finally {
+      setCleaningOrphans(false);
+    }
+  };
+
+  // 🔄 Deduplicate Categories - Remove duplicate categories and update quizzes
+  const handleDeduplicateCategories = async () => {
+    try {
+      setDeduplicating(true);
+      setCategoryStats({total: 0, unique: 0, duplicatesDeleted: 0, quizzesUpdated: 0, details: []});
+      toast.info('🔍 Đang quét categories và tìm trùng lặp...');
+
+      // Step 1: Get all categories
+      const categoriesSnapshot = await getDocs(collection(db, 'categories'));
+      const categories: {id: string; name: string; createdAt?: Date; updatedAt?: Date}[] = [];
+      
+      categoriesSnapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        categories.push({
+          id: docSnap.id,
+          name: data.name,
+          createdAt: data.createdAt?.toDate?.() || new Date(0),
+          updatedAt: data.updatedAt?.toDate?.() || new Date(0)
+        });
+      });
+
+      console.log(`📊 Tìm thấy ${categories.length} categories tổng cộng`);
+
+      // Step 2: Group categories by name (case-insensitive trim)
+      const categoryGroups = new Map<string, typeof categories>();
+      
+      categories.forEach(cat => {
+        const normalizedName = cat.name.trim().toLowerCase();
+        if (!categoryGroups.has(normalizedName)) {
+          categoryGroups.set(normalizedName, []);
+        }
+        categoryGroups.get(normalizedName)!.push(cat);
+      });
+
+      console.log(`📊 Có ${categoryGroups.size} unique category names`);
+
+      // Step 3: Process duplicates - keep oldest (first created) or most recently updated
+      const keepIds = new Set<string>();
+      const deleteIds: string[] = [];
+      const idMapping = new Map<string, string>(); // old ID -> new ID (kept ID)
+      const details: {name: string; count: number; kept: string; deleted: string[]}[] = [];
+
+      categoryGroups.forEach((group, _normalizedName) => {
+        if (group.length > 1) {
+          // Sort by createdAt (oldest first) - keep the oldest one
+          group.sort((a, b) => (a.createdAt?.getTime() || 0) - (b.createdAt?.getTime() || 0));
+          
+          const kept = group[0]; // Keep oldest
+          keepIds.add(kept.id);
+          
+          const deletedIds: string[] = [];
+          for (let i = 1; i < group.length; i++) {
+            deleteIds.push(group[i].id);
+            deletedIds.push(group[i].id);
+            idMapping.set(group[i].id, kept.id);
+          }
+          
+          details.push({
+            name: kept.name,
+            count: group.length,
+            kept: kept.id,
+            deleted: deletedIds
+          });
+          
+          console.log(`🔄 "${kept.name}": ${group.length} bản, giữ ${kept.id}, xóa ${deletedIds.join(', ')}`);
+        } else {
+          keepIds.add(group[0].id);
+        }
+      });
+
+      // Step 4: Update quizzes that reference deleted categories
+      let quizzesUpdated = 0;
+      
+      if (deleteIds.length > 0) {
+        const quizzesSnapshot = await getDocs(collection(db, 'quizzes'));
+        const updatePromises: Promise<void>[] = [];
+
+        quizzesSnapshot.forEach(quizDoc => {
+          const quizData = quizDoc.data();
+          const categoryId = quizData.category || quizData.categoryId;
+          
+          if (categoryId && idMapping.has(categoryId)) {
+            const newCategoryId = idMapping.get(categoryId)!;
+            updatePromises.push(
+              updateDoc(doc(db, 'quizzes', quizDoc.id), {
+                category: newCategoryId,
+                categoryId: newCategoryId
+              }).then(() => {
+                quizzesUpdated++;
+                console.log(`✅ Quiz "${quizData.title}" updated: ${categoryId} → ${newCategoryId}`);
+              })
+            );
+          }
+        });
+
+        if (updatePromises.length > 0) {
+          await Promise.all(updatePromises);
+          console.log(`✅ Đã cập nhật ${quizzesUpdated} quizzes`);
+        }
+
+        // Step 5: Delete duplicate categories
+        const deletePromises = deleteIds.map(id =>
+          deleteDoc(doc(db, 'categories', id)).then(() => {
+            console.log(`🗑️ Đã xóa category trùng: ${id}`);
+          })
+        );
+
+        await Promise.all(deletePromises);
+        console.log(`✅ Đã xóa ${deleteIds.length} categories trùng lặp`);
+      }
+
+      // Update stats
+      setCategoryStats({
+        total: categories.length,
+        unique: categoryGroups.size,
+        duplicatesDeleted: deleteIds.length,
+        quizzesUpdated: quizzesUpdated,
+        details: details
+      });
+
+      if (deleteIds.length > 0) {
+        toast.success(`✅ Đã gộp ${details.length} nhóm categories trùng, xóa ${deleteIds.length} bản sao, cập nhật ${quizzesUpdated} quizzes!`);
+      } else {
+        toast.success('✅ Không có categories trùng lặp!');
+      }
+
+      setDeduplicationDone(true);
+
+    } catch (error) {
+      console.error('❌ Error deduplicating categories:', error);
+      toast.error('❌ Có lỗi khi xử lý: ' + (error as Error).message);
+    } finally {
+      setDeduplicating(false);
     }
   };
 
@@ -417,6 +643,143 @@ const AdminUtilities: React.FC = () => {
               </>
             )}
           </button>
+        </div>
+
+        {/* Clean Orphaned Quiz Results */}
+        <div className="border border-red-200 rounded-lg p-4 bg-red-50">
+          <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+            <Trash2 className="w-5 h-5 text-red-600" />
+            Dọn dẹp kết quả quiz mồ côi
+          </h3>
+          <p className="text-gray-600 mb-4">
+            Xóa các kết quả quiz thuộc về những quiz đã bị xóa khỏi hệ thống. 
+            Giúp tiết kiệm dung lượng database và giữ dữ liệu sạch sẽ.
+          </p>
+          
+          <button
+            onClick={handleCleanOrphanedResults}
+            disabled={cleaningOrphans}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+              cleaningOrphans
+                ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                : 'bg-red-600 text-white hover:bg-red-700'
+            }`}
+          >
+            {cleaningOrphans ? (
+              <>
+                <Loader className="w-4 h-4 animate-spin" />
+                Đang quét và xóa...
+              </>
+            ) : (
+              <>
+                <Trash2 className="w-4 h-4" />
+                Quét & Xóa kết quả mồ côi
+              </>
+            )}
+          </button>
+
+          {orphansCleaned && orphanStats.deleted > 0 && (
+            <div className="mt-4 p-3 bg-green-100 border border-green-300 rounded-lg">
+              <p className="text-green-800 font-medium">
+                ✅ Đã xóa {orphanStats.deleted} kết quả từ {orphanStats.quizIds.length} quiz đã xóa
+              </p>
+              <p className="text-green-700 text-sm mt-1">
+                Quiz IDs: {orphanStats.quizIds.slice(0, 5).join(', ')}
+                {orphanStats.quizIds.length > 5 && ` và ${orphanStats.quizIds.length - 5} quiz khác`}
+              </p>
+            </div>
+          )}
+
+          {orphansCleaned && orphanStats.deleted === 0 && (
+            <div className="mt-4 p-3 bg-blue-100 border border-blue-300 rounded-lg">
+              <p className="text-blue-800 font-medium">
+                ✅ Không có kết quả mồ côi nào cần xóa!
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Deduplicate Categories */}
+        <div className="border border-orange-200 rounded-lg p-4 bg-orange-50">
+          <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+            <RefreshCw className="w-5 h-5 text-orange-600" />
+            🔄 Gộp Categories trùng lặp
+          </h3>
+          <p className="text-gray-600 mb-4">
+            Quét tất cả categories, tìm và gộp các bản trùng lặp (cùng tên). 
+            Giữ lại bản cũ nhất, cập nhật tất cả quizzes về đúng category, 
+            rồi xóa các bản sao.
+          </p>
+          
+          <button
+            onClick={handleDeduplicateCategories}
+            disabled={deduplicating}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+              deduplicating
+                ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                : 'bg-orange-600 text-white hover:bg-orange-700'
+            }`}
+          >
+            {deduplicating ? (
+              <>
+                <Loader className="w-4 h-4 animate-spin" />
+                Đang quét và gộp...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-4 h-4" />
+                Quét & Gộp Categories
+              </>
+            )}
+          </button>
+
+          {deduplicationDone && (
+            <div className="mt-4 space-y-3">
+              {/* Summary Stats */}
+              <div className={`p-3 rounded-lg border ${
+                categoryStats.duplicatesDeleted > 0 
+                  ? 'bg-green-100 border-green-300' 
+                  : 'bg-blue-100 border-blue-300'
+              }`}>
+                <p className={`font-medium ${
+                  categoryStats.duplicatesDeleted > 0 
+                    ? 'text-green-800' 
+                    : 'text-blue-800'
+                }`}>
+                  {categoryStats.duplicatesDeleted > 0 ? (
+                    <>
+                      ✅ Kết quả: {categoryStats.total} categories → {categoryStats.unique} unique
+                      <br />
+                      📦 Đã xóa {categoryStats.duplicatesDeleted} bản sao
+                      <br />
+                      📝 Đã cập nhật {categoryStats.quizzesUpdated} quizzes
+                    </>
+                  ) : (
+                    '✅ Không có categories trùng lặp!'
+                  )}
+                </p>
+              </div>
+
+              {/* Detail per duplicate group */}
+              {categoryStats.details.length > 0 && (
+                <div className="bg-white border border-orange-200 rounded-lg p-3">
+                  <p className="font-medium text-gray-800 mb-2">📋 Chi tiết các nhóm trùng lặp:</p>
+                  <div className="space-y-2 text-sm">
+                    {categoryStats.details.map((detail, idx) => (
+                      <div key={idx} className="bg-orange-50 p-2 rounded">
+                        <span className="font-medium text-orange-800">"{detail.name}"</span>
+                        <span className="text-gray-600"> - {detail.count} bản</span>
+                        <br />
+                        <span className="text-green-700">✓ Giữ: {detail.kept.substring(0, 8)}...</span>
+                        <br />
+                        <span className="text-red-600">✗ Xóa: {detail.deleted.map(d => d.substring(0, 8) + '...').join(', ')}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -186,12 +186,12 @@ export const ResultPage: React.FC = () => {
           setQuizId(resultData.quizId || null);
         } else {
           console.error('❌ No result found for attemptId:', attemptId);
-          toast.error('Không tìm thấy kết quả quiz!');
+          toast.error(t('result.notFound', 'Không tìm thấy kết quả quiz!'));
           navigate('/quiz-list');
         }
       }).catch(error => {
         console.error('❌ Error fetching result:', error);
-        toast.error('Không thể tải kết quả quiz!');
+        toast.error(t('result.cannotLoad', 'Không thể tải kết quả quiz!'));
         navigate('/quiz-list');
       });
     } else {
@@ -218,12 +218,12 @@ export const ResultPage: React.FC = () => {
           setQuiz(qz);
         } else {
           console.error('❌ Quiz not found:', quizId);
-          toast.error('Không tìm thấy quiz!');
+          toast.error(t('result.quizNotFound', 'Không tìm thấy quiz!'));
           navigate('/quiz-list');
         }
       }).catch(error => {
         console.error('❌ Error fetching quiz:', error);
-        toast.error('Không thể tải quiz!');
+        toast.error(t('result.cannotLoadQuiz', 'Không thể tải quiz!'));
         navigate('/quiz-list');
       });
     }
@@ -310,7 +310,7 @@ export const ResultPage: React.FC = () => {
         console.log('📊 Leaderboard loaded:', sortedLeaderboard.length, 'entries');
       } catch (error) {
         console.error('❌ Failed to fetch leaderboard:', error);
-        toast.error('Không thể tải bảng xếp hạng!');
+        toast.error(t('result.cannotLoadLeaderboard', 'Không thể tải bảng xếp hạng!'));
       } finally {
         setLoadingStats(false);
         isFetchingRef.current = false;

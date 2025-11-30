@@ -65,20 +65,20 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
   const totalAttempts = leaderboard.length;
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">
-          🏆 {t('result.leaderboard', 'Leaderboard')}
+    <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+          🏆 {t('result.leaderboard', 'Bảng xếp hạng')}
         </h2>
         
         {/* Search input */}
-        <div className="relative">
+        <div className="relative w-full sm:w-64">
           <input
             type="text"
-            placeholder={t('result.search_username', 'Search username...')}
+            placeholder={t('result.search_username', 'Tìm kiếm tên người chơi...')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-64 px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
           />
           <svg 
             className="absolute left-3 top-2.5 w-5 h-5 text-gray-400"
@@ -122,21 +122,21 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
             return (
             <div 
               key={entry.id}
-              className={`flex items-center justify-between p-4 rounded-lg border ${
+              className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 rounded-lg border gap-3 ${
                 entry.isCurrentAttempt
-                  ? 'bg-gradient-to-r from-green-50 via-emerald-50 to-green-50 border-green-400 shadow-xl ring-4 ring-green-200 ring-opacity-50' 
+                  ? 'bg-gradient-to-r from-green-50 via-emerald-50 to-green-50 border-green-400 shadow-xl ring-2 sm:ring-4 ring-green-200 ring-opacity-50' 
                   : entry.userId === user?.uid 
                     ? 'bg-blue-50 border-blue-200 shadow-md' 
                     : 'bg-gray-50 border-gray-200'
               }`}
             >
-              <div className="flex items-center space-x-4">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold ${
+              <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                <div className={`w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold flex-shrink-0 ${
                   entry.isCurrentAttempt 
-                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg transform scale-110 text-2xl' 
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg transform scale-110 text-lg sm:text-2xl' 
                     : medal 
-                      ? 'bg-gradient-to-br from-yellow-100 to-yellow-200 text-3xl'
-                      : `${getRankBackgroundColor(originalIndex)} text-sm`
+                      ? 'bg-gradient-to-br from-yellow-100 to-yellow-200 text-xl sm:text-3xl'
+                      : `${getRankBackgroundColor(originalIndex)} text-xs sm:text-sm`
                 }`}>
                   {entry.isCurrentAttempt ? '★' : medal || getRankDisplay(originalIndex)}
                 </div>
@@ -144,42 +144,42 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                   <img 
                     src={entry.userPhotoURL} 
                     alt={entry.userName}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+                    className="w-8 h-8 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-gray-200 flex-shrink-0"
                   />
                 ) : (
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                    <span className="text-white font-semibold text-lg">
+                  <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-semibold text-sm sm:text-lg">
                       {entry.userName ? entry.userName.charAt(0).toUpperCase() : 'A'}
                     </span>
                   </div>
                 )}
-                <div>
-                  <div className="font-medium text-gray-900">
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium text-gray-900 text-sm sm:text-base truncate">
                     {entry.userName}
-                    {entry.isCurrentAttempt && (
-                      <div className="flex items-center mt-1">
-                        <span className="text-white ml-2 font-bold bg-gradient-to-r from-green-500 to-emerald-600 px-3 py-1 rounded-full text-sm shadow-lg animate-pulse">
-                          🎯 {t('result.latest_attempt_rank', 'LƯỢT MỚI NHẤT - XẾP HẠNG #{{rank}}', { rank: originalIndex + 1 })}
-                        </span>
-                      </div>
-                    )}
                     {entry.userId === user?.uid && !entry.isCurrentAttempt && (
-                      <span className="text-gray-500 ml-2 text-sm">({t('result.previous_attempt', 'Lượt trước đó')})</span>
+                      <span className="text-gray-500 ml-1 sm:ml-2 text-xs sm:text-sm">({t('result.previous_attempt', 'Lượt trước đó')})</span>
                     )}
                   </div>
-                  <div className="text-sm text-gray-500">
-                    {entry.correctAnswers}/{entry.totalQuestions} {t('result.correct', 'correct')}
+                  {entry.isCurrentAttempt && (
+                    <div className="mt-1">
+                      <span className="text-white font-bold bg-gradient-to-r from-green-500 to-emerald-600 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm shadow-lg animate-pulse inline-block">
+                        ⭐ {t('result.latest_attempt_rank', 'LƯỢT MỚI NHẤT - XẾP HẠNG #{{rank}}', { rank: originalIndex + 1 })}
+                      </span>
+                    </div>
+                  )}
+                  <div className="text-xs sm:text-sm text-gray-500">
+                    {entry.correctAnswers}/{entry.totalQuestions} {t('result.correct', 'đúng')}
                   </div>
-                  <div className="text-xs text-gray-400 mt-1">
+                  <div className="text-xs text-gray-400 mt-0.5 sm:mt-1 hidden sm:block">
                     📅 {formatDateTime(entry.completedAt instanceof Date ? entry.completedAt.getTime() : new Date(entry.completedAt).getTime())}
                   </div>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="font-bold text-xl text-gray-900">
+              <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 sm:text-right pl-10 sm:pl-0 border-t sm:border-t-0 pt-2 sm:pt-0">
+                <div className="font-bold text-lg sm:text-xl text-gray-900">
                   {Math.round((entry.correctAnswers / entry.totalQuestions) * 100)}%
                 </div>
-                <div className="text-sm text-gray-500">
+                <div className="text-xs sm:text-sm text-gray-500">
                   ⏱️ {formatDetailedTime(safeNumber(entry.timeSpent))}
                 </div>
               </div>

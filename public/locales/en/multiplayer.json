@@ -35,6 +35,7 @@
   "readyPlayers": "Ready Players",
   "privateRoom": "Private Room",
   "passwordRequired": "Password required for private rooms",
+  "quizPasswordRequired": "Quiz requires password",
   "roomName": "Room Name",
   "enterRoomName": "Enter room name",
   "maxPlayers": "Max Players",
@@ -340,5 +341,54 @@
   },
   
   "isNowTheHost": "{{name}} is now the host",
-  "hostLeft": "Host left. {{name}} is now the host."
+  "hostLeft": "Host left. {{name}} is now the host.",
+  
+  "coordinator": {
+    "loadingGame": "Loading game...",
+    "error": "Error",
+    "cannotLoadGame": "Cannot load game",
+    "reload": "Reload",
+    "loadingPlayerData": "Loading player data...",
+    "playerNotFound": "Player not found",
+    "starting": "Starting...",
+    "waiting": "Waiting...",
+    "gameStartingSoon": "Game is starting soon!",
+    "waitingForHost": "Waiting for host to start the game",
+    "finished": "Finished!",
+    "loadingResults": "Loading results...",
+    "loadingQuestion": "Loading question..."
+  },
+  
+  "question": {
+    "multipleAnswersHint": "You can select multiple answers",
+    "enterAnswerBelow": "Enter your answer in the box below",
+    "answerPlaceholder": "Enter your answer...",
+    "fillBlanks": "Fill in the blanks",
+    "blankLabel": "Blank #{{index}}:"
+  },
+  
+  "streak": {
+    "currentStreak": "You have a {{count}} correct answer streak!",
+    "bonusPoints": "Bonus points",
+    "nextStreak": "Next streak",
+    "multiplier": "Multiplier",
+    "bonus": "Bonus"
+  },
+  
+  "sharedScreen": {
+    "title": "Shared Screen",
+    "placeholder": "Host can share screen here",
+    "controls": "Controls",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "inputPlaceholder": "Enter YouTube URL or website...",
+    "shareButton": "Share Screen",
+    "supportedFormats": "Supported: YouTube, Vimeo, and other websites",
+    "loading": "Loading...",
+    "error": "Cannot load content",
+    "clearError": "Clear error",
+    "loadFailed": "Cannot load content",
+    "invalidUrl": "Invalid URL",
+    "updateFailed": "Update failed"
+  }
 }

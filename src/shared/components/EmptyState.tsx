@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '../../config/routes';
+import { useTranslation } from 'react-i18next';
 
 interface EmptyStateProps {
   type: 'quizzes' | 'reviews' | 'favorites';
@@ -18,37 +19,39 @@ const EmptyState: React.FC<EmptyStateProps> = ({
   actionLabel,
   actionUrl
 }) => {
+  const { t } = useTranslation();
+  
   const getDefaultContent = () => {
     switch (type) {
       case 'quizzes':
         return {
           icon: <BookOpen className="w-16 h-16 text-gray-400" />,
-          title: 'Chưa có quiz nào',
-          description: 'Hãy tạo quiz đầu tiên của bạn để bắt đầu!',
-          actionLabel: 'Tạo Quiz Mới',
+          title: t('emptyState.quizzes.title'),
+          description: t('emptyState.quizzes.description'),
+          actionLabel: t('emptyState.quizzes.actionLabel'),
           actionUrl: ROUTES.CREATOR_NEW_QUIZ
         };
       case 'reviews':
         return {
           icon: <BookOpen className="w-16 h-16 text-gray-400" />,
-          title: 'Chưa có đánh giá nào',
-          description: 'Hãy là người đầu tiên đánh giá quiz này!',
-          actionLabel: 'Viết đánh giá',
+          title: t('reviews.noReviews'),
+          description: t('reviews.beFirst'),
+          actionLabel: t('reviews.writeReview'),
           actionUrl: null
         };
       case 'favorites':
         return {
           icon: <BookOpen className="w-16 h-16 text-gray-400" />,
-          title: 'Chưa có quiz yêu thích',
-          description: 'Hãy thêm quiz vào danh sách yêu thích để dễ dàng truy cập!',
-          actionLabel: 'Khám phá Quiz',
+          title: t('emptyState.favorites.title'),
+          description: t('emptyState.favorites.description'),
+          actionLabel: t('emptyState.favorites.actionLabel'),
           actionUrl: '/quiz'
         };
       default:
         return {
           icon: <BookOpen className="w-16 h-16 text-gray-400" />,
-          title: 'Không có dữ liệu',
-          description: 'Hiện tại chưa có nội dung nào.',
+          title: t('emptyState.default.title'),
+          description: t('emptyState.default.description'),
           actionLabel: null,
           actionUrl: null
         };

@@ -8,6 +8,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { getDatabase, ref, onValue } from 'firebase/database';
+import { useTranslation } from 'react-i18next';
 import PlayerGameView from './PlayerGameView';
 import FreeModePlayerView from './FreeModePlayerView';
 import FreeModeSpectatorView from './FreeModeSpectatorView';
@@ -27,6 +28,7 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
   currentUserId,
   onGameEnd,
 }) => {
+  const { t } = useTranslation('multiplayer');
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -106,7 +108,7 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
             transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
             className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"
           />
-          <p className="text-white text-lg">Đang tải trò chơi...</p>
+          <p className="text-white text-lg">{t('coordinator.loadingGame')}</p>
         </div>
       </div>
     );
@@ -120,13 +122,13 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
           <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-4xl">⚠️</span>
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Lỗi</h2>
-          <p className="text-gray-300">{error || 'Không thể tải trò chơi'}</p>
+          <h2 className="text-2xl font-bold text-white mb-2">{t('coordinator.error')}</h2>
+          <p className="text-gray-300">{error || t('coordinator.cannotLoadGame')}</p>
           <button
             onClick={() => window.location.reload()}
             className="mt-4 px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all"
           >
-            Tải lại
+            {t('coordinator.reload')}
           </button>
         </div>
       </div>
@@ -143,7 +145,7 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
             transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
             className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"
           />
-          <p className="text-white text-lg">Đang tải dữ liệu người chơi...</p>
+          <p className="text-white text-lg">{t('coordinator.loadingPlayerData')}</p>
         </div>
       </div>
     );
@@ -155,7 +157,7 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
     return (
       <div className="h-full flex items-center justify-center bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
         <div className="text-center">
-          <p className="text-white text-lg">Không tìm thấy người chơi</p>
+          <p className="text-white text-lg">{t('coordinator.playerNotFound')}</p>
         </div>
       </div>
     );
@@ -173,12 +175,12 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
             <Loader2 className="w-16 h-16 text-blue-400 mx-auto mb-4 animate-spin" />
           </motion.div>
           <h2 className="text-3xl font-bold text-white mb-2">
-            {gameState.status === 'starting' ? 'Đang bắt đầu...' : 'Đang chờ...'}
+            {gameState.status === 'starting' ? t('coordinator.starting') : t('coordinator.waiting')}
           </h2>
           <p className="text-gray-300">
             {gameState.status === 'starting' 
-              ? 'Trò chơi sắp bắt đầu!' 
-              : 'Đang chờ host bắt đầu trò chơi'}
+              ? t('coordinator.gameStartingSoon') 
+              : t('coordinator.waitingForHost')}
           </p>
         </div>
       </div>
@@ -197,8 +199,8 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
           >
             <Loader2 className="w-16 h-16 text-yellow-400 mx-auto mb-4 animate-spin" />
           </motion.div>
-          <h2 className="text-3xl font-bold text-white mb-2">🏆 Kết thúc!</h2>
-          <p className="text-gray-300">Đang tải kết quả...</p>
+          <h2 className="text-3xl font-bold text-white mb-2">🏆 {t('coordinator.finished')}</h2>
+          <p className="text-gray-300">{t('coordinator.loadingResults')}</p>
         </div>
       </div>
     );
@@ -256,7 +258,7 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
       <div className="h-full flex items-center justify-center bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
         <div className="text-center">
           <Loader2 className="w-16 h-16 text-blue-400 mx-auto mb-4 animate-spin" />
-          <p className="text-white text-lg">Đang tải câu hỏi...</p>
+          <p className="text-white text-lg">{t('coordinator.loadingQuestion')}</p>
         </div>
       </div>
     );
@@ -301,3 +303,4 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
 };
 
 export default GameCoordinator;
+

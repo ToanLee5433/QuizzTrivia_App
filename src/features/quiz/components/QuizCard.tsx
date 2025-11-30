@@ -296,7 +296,7 @@ interface QuizCardProps {
     if (!user || isDownloading || isDownloaded) return;
 
     setIsDownloading(true);
-    toast.info('Đang tải quiz...', { autoClose: 2000 });
+    toast.info(t('downloadedQuizzes.downloading', 'Đang tải quiz...'), { autoClose: 2000 });
 
     try {
       const result = await downloadManager.downloadQuizForOffline(quiz.id, user.uid, (progress) => {
@@ -308,11 +308,11 @@ interface QuizCardProps {
         setIsDownloaded(true);
         toast.success(downloadSuccessMsg);
       } else {
-        toast.error(`❌ ${result.error || 'Không thể tải quiz. Vui lòng thử lại.'}`);
+        toast.error(`❌ ${result.error || t('downloadedQuizzes.downloadFailed', 'Không thể tải quiz. Vui lòng thử lại.')}`);
       }
     } catch (error) {
       console.error('Download error:', error);
-      toast.error('❌ Lỗi khi tải quiz');
+      toast.error(t('downloadedQuizzes.downloadError', '❌ Lỗi khi tải quiz'));
     } finally {
       setIsDownloading(false);
     }

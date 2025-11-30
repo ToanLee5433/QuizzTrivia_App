@@ -3,6 +3,7 @@ import { collection, getDocs, query, where, orderBy, limit } from 'firebase/fire
 import { db } from '../../lib/firebase/config';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../lib/store';
+import { useTranslation } from 'react-i18next';
 
 interface Notification {
   id: string;
@@ -14,6 +15,7 @@ interface Notification {
 }
 
 const NotificationBanner: React.FC = () => {
+  const { t } = useTranslation();
   const [notification, setNotification] = useState<Notification | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -110,7 +112,7 @@ const NotificationBanner: React.FC = () => {
         <button 
           onClick={() => setNotification(null)}
           className={`ml-4 font-bold text-xl ${getButtonColor()} hover:scale-110 transition-transform`}
-          aria-label="Đóng thông báo"
+          aria-label={t('common.dong_thong_bao')}
         >
           &times;
         </button>

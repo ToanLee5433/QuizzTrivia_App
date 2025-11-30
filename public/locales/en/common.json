@@ -133,6 +133,11 @@
     "loading_leaderboard": "Loading leaderboard...",
     "previous_attempt": "Previous attempt",
     "correct": "correct",
+    "notFound": "Quiz result not found!",
+    "cannotLoad": "Cannot load quiz result!",
+    "quizNotFound": "Quiz not found!",
+    "cannotLoadQuiz": "Cannot load quiz!",
+    "cannotLoadLeaderboard": "Cannot load leaderboard!",
     "ai_analysis": "AI Analysis",
     "strengths": "Strengths",
     "areas_to_improve": "Areas to Improve",
@@ -209,6 +214,27 @@
     "more_attempts": "more attempts"
   },
   "admin": {
+    "actions": "Actions",
+    "buildIndex": {
+      "ready": "Ready to rebuild vector index",
+      "instructions": "Instructions",
+      "step1": "Ensure there is at least one approved quiz",
+      "step2": "Click \"Rebuild Full Index\" to create/update index",
+      "step3": "Wait for Cloud Function to process (may take 1-5 minutes)",
+      "step4": "After completion, AI Learning Assistant will be able to answer questions about quizzes",
+      "notes": "Notes",
+      "note1": "Index will auto-update when quiz is approved (via triggers)",
+      "note2": "Only need to rebuild manually if index is broken or first initialization",
+      "note3": "Only quizzes with status = \"approved\" will be included in the index"
+    },
+    "bulkActions": {
+      "confirmDelete": "Are you sure you want to delete {{count}} {{type}}?",
+      "deleteSuccess": "Deleted {{count}} {{type}}!",
+      "deleteError": "Error while bulk deleting!",
+      "updateSuccess": "Updated {{count}} {{type}}!",
+      "updateError": "Error while bulk updating!",
+      "selected": "Selected {{count}} {{type}}"
+    },
     "activated": "activated",
     "categoryManagement": "Category Management",
     "dashboard": {
@@ -837,19 +863,27 @@
     "economics": "Economics",
     "english": "English",
     "entertainment": "Entertainment",
+    "Entertainment": "Entertainment",
     "generalKnowledge": "General Knowledge",
+    "General Knowledge": "General Knowledge",
     "geography": "Geography",
     "history": "History",
+    "History": "History",
     "literature": "Literature",
     "mathematics": "Mathematics",
+    "Mathematics": "Mathematics",
     "movies": "Movies",
     "music": "Music",
     "physics": "Physics",
     "politics": "Politics",
     "programming": "Programming",
+    "Programming": "Programming",
     "science": "Science",
+    "Science": "Science",
     "sports": "Sports",
+    "Sports": "Sports",
     "webDevelopment": "Web Development",
+    "Web Development": "Web Development",
     "colors": {
       "blue": "Blue",
       "green": "Green",
@@ -1050,11 +1084,19 @@
       "durationValue": "{{count}} minutes",
       "categoryOptions": {
         "programming": "Programming",
+        "Programming": "Programming",
         "math": "Mathematics",
+        "Mathematics": "Mathematics",
         "science": "Science",
+        "Science": "Science",
         "history": "History",
+        "History": "History",
         "language": "Languages",
-        "general": "General"
+        "general": "General",
+        "General Knowledge": "General Knowledge",
+        "Entertainment": "Entertainment",
+        "Sports": "Sports",
+        "Web Development": "Web Development"
       },
       "previewLabels": {
         "title": "Title",
@@ -1445,6 +1487,22 @@
   "emailNayDaDuocSuDung": "Email này đã được sử dụng",
   "emailNayDuocGuiTuDongVuiLongKhongTraLoi": "Email này được Submit tự động, vui lòng No trả lời.",
   "emailOtpDangDuocGuiDi": "Email OTP đang được Submit đi...",
+  "emptyState": {
+    "quizzes": {
+      "title": "No quizzes yet",
+      "description": "Create your first quiz to get started!",
+      "actionLabel": "Create New Quiz"
+    },
+    "favorites": {
+      "title": "No favorite quizzes",
+      "description": "Add quizzes to your favorites for easy access!",
+      "actionLabel": "Explore Quizzes"
+    },
+    "default": {
+      "title": "No data",
+      "description": "There is no content available at the moment."
+    }
+  },
   "error": "Error",
   "favorites": {
     "add": "Add to favorites",
@@ -1952,6 +2010,26 @@
       "explanation": "Explanation",
       "rankUp": "Rank up {{count}}! ⬆️",
       "rankDown": "Rank down {{count}} ⬇️"
+    },
+    "coordinator": {
+      "loadingGame": "Loading game...",
+      "error": "Error",
+      "cannotLoadGame": "Cannot load game",
+      "reload": "Reload",
+      "loadingPlayerData": "Loading player data...",
+      "playerNotFound": "Player not found",
+      "starting": "Starting...",
+      "waiting": "Waiting...",
+      "gameStartingSoon": "Game is starting soon!",
+      "waitingForHost": "Waiting for host to start the game",
+      "finished": "Finished!",
+      "loadingResults": "Loading results...",
+      "loadingQuestion": "Loading question..."
+    },
+    "question": {
+      "multipleAnswersHint": "You can select multiple answers",
+      "enterAnswerBelow": "Enter your answer in the box below",
+      "answerPlaceholder": "Enter your answer..."
     }
   },
   "moTaNganGonVeNoiDungQuiz": "Description ngắn gọn về nội dung Quiz...",
@@ -2014,6 +2092,44 @@
   "nopBai": "Nộp bài",
   "nopBaiLuon": "Nộp bài luôn",
   "nopBaiThanhCong": "Nộp bài Success!",
+  "offlineQueue": {
+    "title": "Offline Queue",
+    "description": "Manage your pending offline actions and uploads",
+    "refresh": "Refresh",
+    "confirmDelete": "Are you sure you want to delete this action?",
+    "actions": {
+      "createQuiz": "Create Quiz",
+      "updateQuiz": "Update Quiz",
+      "deleteQuiz": "Delete Quiz",
+      "createCard": "Create Flashcard",
+      "updateCard": "Update Flashcard",
+      "deleteCard": "Delete Flashcard",
+      "updateProgress": "Update Progress",
+      "uploadMedia": "Upload Media",
+      "retry": "Retry",
+      "delete": "Delete"
+    },
+    "time": {
+      "justNow": "Just now",
+      "minutesAgo": "{{count}} minutes ago",
+      "hoursAgo": "{{count}} hours ago",
+      "daysAgo": "{{count}} days ago"
+    },
+    "status": {
+      "online": "You are online",
+      "offline": "You are offline"
+    },
+    "stats": {
+      "pending": "Pending",
+      "media": "Media",
+      "total": "Total"
+    },
+    "empty": {
+      "title": "All Clear!",
+      "description": "No pending actions in the queue"
+    },
+    "retries": "Retries"
+  },
   "notifications": {
     "clear": "Clear all",
     "empty": "No notifications",
@@ -2030,6 +2146,143 @@
       "social": "Social",
       "system": "System"
     }
+  },
+  "downloadedQuizzes": {
+    "title": "Downloaded Quizzes",
+    "subtitle": "Play quizzes offline without internet connection",
+    "loading": "Loading...",
+    "downloading": "Downloading quiz...",
+    "downloadFailed": "Cannot download quiz. Please try again.",
+    "downloadError": "❌ Error downloading quiz",
+    "storageTitle": "Storage Capacity",
+    "clearAll": "Clear All",
+    "usedStorage": "Used",
+    "quizzesDownloaded": "Downloaded Quizzes",
+    "availableStorage": "Available",
+    "noQuizzes": "No Quizzes Yet",
+    "noQuizzesHint": "Download quizzes to play offline",
+    "exploreQuizzes": "Explore Quizzes",
+    "offlineBadge": "Offline",
+    "questions": "questions",
+    "downloadedAt": "Downloaded",
+    "updateAvailable": "Update available",
+    "updateNow": "Update now",
+    "playNow": "Play Now",
+    "deleteConfirmTitle": "Confirm Delete",
+    "deleteConfirmMessage": "Are you sure you want to delete this quiz? This action cannot be undone.",
+    "clearAllConfirmTitle": "Clear All Quizzes",
+    "clearAllConfirmMessage": "Are you sure you want to delete all {{count}} downloaded quizzes? This will free up {{size}} of storage.",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "deleteAll": "Delete All",
+    "deleteSuccess": "Quiz deleted successfully",
+    "deleteError": "Cannot delete quiz",
+    "deleteFailed": "Failed to delete quiz",
+    "loadError": "Cannot load downloaded quizzes",
+    "clearedCount": "Deleted {{count}} quizzes",
+    "clearError": "Cannot clear all quizzes",
+    "updatesAvailable": "{{count}} quizzes have updates available",
+    "updating": "Updating...",
+    "updateSuccess": "Updated successfully",
+    "updateFailed": "Update failed",
+    "loginRequired": "Please login"
+  },
+  "quizStats": {
+    "loading": "Loading statistics...",
+    "notFound": "Quiz not found",
+    "backButton": "Go back",
+    "backToMyQuizzes": "Back to My Quizzes",
+    "viewQuiz": "View Quiz",
+    "exportReport": "Export Report",
+    "exportDeveloping": "Export feature is under development",
+    "timeRange": {
+      "7days": "Last 7 days",
+      "30days": "Last 30 days",
+      "all": "All time"
+    },
+    "questions": "questions",
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
+    },
+    "views": "Views",
+    "attempts": "Attempts",
+    "completionRate": "Completion Rate",
+    "averageScore": "Average Score",
+    "passRate": "Pass Rate (≥60%)",
+    "highestScore": "Highest Score",
+    "averageTime": "Avg. Time",
+    "completions": "Completions",
+    "dailyTrend": "Daily Attempts Trend",
+    "scoreDistribution": "Score Distribution",
+    "questionDifficulty": "Question Difficulty (Top 10 Hardest)",
+    "topPerformers": "Top 10 Performers",
+    "noQuestionData": "No question analysis data yet",
+    "noData": "No data yet",
+    "recentResults": "20 Recent Results",
+    "table": {
+      "student": "Student",
+      "score": "Score",
+      "correctTotal": "Correct/Total",
+      "time": "Time",
+      "date": "Date",
+      "result": "Result",
+      "passed": "Passed",
+      "failed": "Failed",
+      "noResults": "No results yet",
+      "question": "Question {{number}}"
+    },
+    "students": "students"
+  },
+  "confirmDialog": {
+    "exitQuiz": {
+      "title": "Exit Quiz?",
+      "message": "Your progress will be lost if you exit now. Are you sure you want to continue?",
+      "confirm": "Exit",
+      "cancel": "Continue quiz"
+    },
+    "submitQuiz": {
+      "title": "Submit Quiz?",
+      "message": "Are you sure you want to submit? You cannot change your answers after submission.",
+      "confirm": "Submit"
+    },
+    "unanswered": {
+      "title": "Unanswered Questions",
+      "message": "You have {{count}} unanswered questions:",
+      "question": "Question {{number}}",
+      "continue": "Continue quiz",
+      "submitAnyway": "Submit anyway"
+    }
+  },
+  "storageManagement": {
+    "loginRequired": "Please login to clean up data",
+    "cleanupSuccess": "Cleaned up {{count}} unused media files",
+    "noCleanupNeeded": "No media needs cleanup",
+    "cleanupError": "Error cleaning up data. Please try again.",
+    "clearAllConfirm": "DELETE ALL OFFLINE DATA?",
+    "clearAllWarning": "This will delete all downloaded quizzes and media. This cannot be undone!",
+    "clearedSuccess": "Deleted {{count}} offline quizzes",
+    "clearError": "Error deleting data",
+    "exportSuccess": "Settings exported successfully!",
+    "notCleaned": "Not cleaned yet",
+    "cleanupOrphanedFiles": "Clean up unused files",
+    "deleteAllOfflineData": "Delete all offline data",
+    "deleteAllDescription": "Delete all downloaded quizzes and media"
+  },
+  "quizPage": {
+    "loading": "Loading quiz...",
+    "cannotLoad": "Cannot load quiz",
+    "quizNotExist": "Quiz does not exist",
+    "loginRequired": "Please login to access this quiz",
+    "unlockSuccess": "Quiz unlocked successfully!",
+    "unlockError": "Error unlocking quiz",
+    "notReady": "Quiz not ready",
+    "notReadyMessage": "This quiz is pending approval or has no questions. Please come back later!",
+    "backToList": "Back to list",
+    "processingResult": "Processing result...",
+    "exit": "Exit",
+    "exitQuiz": "Exit quiz"
   },
   "offline": {
     "connected": "Connected",
@@ -2466,12 +2719,38 @@
       "submitError": "Error occurred while submitting review",
       "submitReview": "Submit Review",
       "submitSuccess": "Thank you for reviewing the quiz!",
+      "updateSuccess": "Review updated successfully!",
       "submitting": "Submitting...",
       "title": "Quiz Reviews",
       "yourRating": "Your Rating",
       "reviewQuiz": "Review Quiz",
+      "editReview": "Edit Review",
+      "writeReview": "Write a Review",
       "commentOptional": "Comment (optional)",
-      "characterCount": "{{count}}/{{max}} characters"
+      "characterCount": "{{count}}/{{max}} characters",
+      "update": "Update",
+      "ratingTexts": {
+        "1": "Very Bad",
+        "2": "Bad",
+        "3": "Average",
+        "4": "Good",
+        "5": "Excellent"
+      },
+      "ratingDescriptions": {
+        "1": "Very Dissatisfied",
+        "2": "Dissatisfied",
+        "3": "Neutral",
+        "4": "Satisfied",
+        "5": "Very Satisfied"
+      },
+      "stars": "{{rating}}/5 stars",
+      "anonymous": "Anonymous User",
+      "expand": "Read more",
+      "collapse": "Show less",
+      "helpful": "Helpful",
+      "helpfulCount": "Helpful ({{count}})",
+      "report": "Report",
+      "edited": "Edited {{date}}"
     },
     "reviewsTitle": "Reviews",
     "score": "Score",
@@ -2536,6 +2815,14 @@
         "completeRequired": "View required materials to continue"
       },
       "remainingRequired": "{{count}} required resource(s) remaining"
+    },
+    "learningMaterials": {
+      "cannotLoadResource": "Cannot load resource. Please try downloading.",
+      "googleDocsError": "Cannot load resource from Google Docs Viewer",
+      "codeFileError": "Cannot load source code file",
+      "progress": "Progress",
+      "notViewed": "Not viewed",
+      "viewing": "Viewing"
     },
     "filters": {
       "allCategories": "All Categories",
@@ -2614,7 +2901,7 @@
       "true": "True"
     },
     "questionRenderer": {
-      "shortAnswerHint": "💡 Enter your answer in the field below.",
+      "shortAnswerHint": "💡 Enter your answer. Press Enter to check.",
       "imageLoadError": "Image failed to load",
       "noImage": "No image provided",
       "checkboxHint": "💡 You can choose multiple answers for this question.",
@@ -2626,7 +2913,17 @@
       "matchingProgress": "Progress:",
       "leftColumn": "Left column",
       "rightColumn": "Right column",
-      "orderingHint": "💡 Drag and drop to arrange items in the correct order."
+      "orderingHint": "💡 Drag and drop to arrange items in the correct order.",
+      "fillBlanksHint": "Fill in the blanks. Press Enter to check."
+    },
+    "feedback": {
+      "correct": "Correct!",
+      "correctDesc": "You selected the right answer.",
+      "incorrect": "Incorrect!",
+      "incorrectDesc": "The correct answer is highlighted in green.",
+      "explanation": "Explanation",
+      "retry": "Retry",
+      "continue": "Continue"
     },
     "quickNavigation": {
       "heading": "Quick navigation"
@@ -3133,11 +3430,17 @@
     "actions": "Actions",
     "cancel": "Cancel",
     "points": "Points",
+    "approve": "Approve",
+    "reject": "Reject",
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete",
     "totalPoints": "Total Points",
     "copy": "Copy",
     "difficulty": "Difficulty",
     "correct": "Correct",
     "loading": "Loading...",
+    "loadingCategories": "Loading categories...",
     "you": "You",
     "unknown": "Unknown",
     "notAvailable": "Not available",
@@ -3156,6 +3459,7 @@
     "recommended": "Recommended",
     "connecting": "Connecting...",
     "all": "All",
+    "noName": "No name",
     "warning_finddomnode_is_deprecated": "Warning: findDOMNode is deprecated",
     "user_account_is_deleted_inactive_logging_out": "🚫 User account is deleted/inactive, logging out",
     "user_document_not_found_for": "🆕 User document not found for:",
@@ -3212,11 +3516,96 @@
     "chuoi_5": "🔥 Chuỗi 5",
     "toc_do_anh_sang": "⚡ Tốc độ ánh sáng",
     "toi_vua_mo_khoa_thanh_tich": "🎉 Tôi vừa mở khóa thành tích ",
-    "thoat_toan_man_hinh": "Thoát toàn màn hình",
-    "toan_man_hinh": "Toàn màn hình",
-    "dong_esc": "Đóng (ESC)",
-    "nhap_noi_dung": "Nhập nội dung...",
-    "mo_trong_tab_moi": "Mở trong tab mới",
+    "thoat_toan_man_hinh": "Exit fullscreen",
+    "toan_man_hinh": "Fullscreen",
+    "dong_esc": "Close (ESC)",
+    "nhap_noi_dung": "Enter content...",
+    "mo_trong_tab_moi": "Open in new tab",
+    "youtubePlayer": {
+      "invalidLink": "Invalid YouTube link",
+      "checkUrl": "Please check the video URL",
+      "close": "Close",
+      "closeEsc": "Close (ESC)"
+    },
+    "linkViewer": {
+      "readTime": "Read time: ~{{time}} min",
+      "timeSpent": "Time spent: {{time}}",
+      "cannotViewDirectly": "Cannot view directly",
+      "notSupportedEmbed": "This website does not support embedded viewing. Please click the button below to open in a new tab.",
+      "openNewTab": "Open in new tab",
+      "openTab": "Open new tab",
+      "finishedReading": "Finished reading this document?",
+      "confirmToContinue": "Confirm to continue (or open in new tab to read)",
+      "doneReading": "Done reading",
+      "confirmedComplete": "Confirmed complete"
+    },
+    "musicPlayer": {
+      "loginRequired": "Please login to upload files",
+      "uploadError": "Error uploading file",
+      "uploadErrorWithMessage": "Error uploading file: {{message}}",
+      "uploadSuccess": "Upload successful!",
+      "addedToQueue": "Added to queue!",
+      "deletedFromStorage": "File deleted from Storage",
+      "deleteError": "Error deleting file",
+      "albumSaved": "Album saved!",
+      "albumSaveError": "Error saving album",
+      "albumDeleted": "Album deleted",
+      "albumDeleteError": "Error deleting album",
+      "cannotLoadAudio": "Cannot load audio. Please check the URL or try a direct audio link (.mp3, .wav, .ogg)",
+      "cannotPlayAudio": "Cannot play audio. May be due to CORS or file does not exist.",
+      "audioLoadError": "Error loading audio. Please check the URL and try again.",
+      "fileTooLarge": "File too large. Limit is 50MB",
+      "confirmDeleteFromStorage": "Delete this file from Storage?",
+      "support": "Support:",
+      "youtubeUrls": "YouTube: youtube.com/watch, youtu.be",
+      "audioWeb": "Audio web: .mp3, .wav, .ogg (direct link)",
+      "urlFromWeb": "URLs from other websites containing audio",
+      "shortcutSpace": "Shortcut: Space (play/pause)",
+      "addMusic": "Add music",
+      "customSongName": "Song name (optional)",
+      "customSongPlaceholder": "Custom name for song...",
+      "uploading": "Uploading...",
+      "addFromUrl": "Or add from URL",
+      "urlPlaceholder": "https://... (YouTube, direct audio)",
+      "addUrlToQueue": "Add URL to Queue",
+      "supportFile": "File: MP3, WAV, OGG, M4A (max 50MB)",
+      "supportUrl": "URL: YouTube, direct audio (.mp3, .ogg)",
+      "searchPlaceholder": "Search songs...",
+      "pasteUrls": "Paste multiple URLs (one per line)...",
+      "albumName": "Album name",
+      "albumDescription": "Description (optional)",
+      "saveAlbum": "Save Album ({{count}} tracks)",
+      "urlPlaceholderInput": "Enter URL: YouTube, audio web, or direct link...",
+      "queueEmpty": "Queue is empty. Add some tracks!",
+      "noMatchingTracks": "No matching tracks",
+      "clear": "Clear",
+      "playPause": "Play/Pause",
+      "showPlayer": "Show player",
+      "close": "Close",
+      "uploadAudio": "Upload audio",
+      "hidePlayer": "Hide player (keep playing)",
+      "toggleQueue": "Toggle queue",
+      "showAlbums": "Show albums",
+      "showHistory": "Show history",
+      "minimize": "Minimize",
+      "playbackSpeed": "Playback speed",
+      "shuffle": "Shuffle",
+      "clearQueue": "Clear queue",
+      "rename": "Rename",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "deleteFromStorage": "Delete from Storage",
+      "removeFromQueue": "Remove from queue",
+      "loadAlbum": "Load album",
+      "deleteAlbum": "Delete album",
+      "tracksCount": "{{count}} tracks",
+      "loadingYoutube": "Loading YouTube: {{videoId}}",
+      "youtubeApiError": "Cannot load YouTube API. Please check your network connection and try again.",
+      "loading": "Loading...",
+      "speed": "Speed: {{speed}}x",
+      "confirmDeleteAlbum": "Delete this album?",
+      "noAlbums": "No albums yet. Create a queue and save as album!"
+    },
     "tai_xuong": "Tải xuống",
     "dong_modal": "Đóng modal",
     "thu_nho": "Thu nhỏ",
@@ -3226,6 +3615,15 @@
     "dung_space": "Dừng (Space)",
     "phat_space": "Phát (Space)",
     "tien_10s": "Tiến 10s",
+    "audioPlayer": {
+      "spacePlayPause": "to play/pause",
+      "escClose": "to close"
+    },
+    "rag": {
+      "totalAttempts": "Total attempts",
+      "averageScore": "Average score",
+      "averageRating": "Rating"
+    },
     "error_signing_out": "Error signing out:",
     "error_tracking_view": "Error tracking view:",
     "error_tracking_attempt": "Error tracking attempt:",
@@ -3917,6 +4315,8 @@
   "editQuiz": {
     "notFound": "Quiz not found",
     "loadFailed": "Failed to load quiz",
+    "loadError": "Error loading quiz",
+    "updateError": "Error updating quiz",
     "titleRequired": "Quiz title is required",
     "questionRequired": "Quiz must have at least one question",
     "updateSuccess": "✅ Quiz updated successfully!",
@@ -3954,6 +4354,12 @@
       "saving": "Saving...",
       "addQuestion": "Add Question"
     },
+    "quizInfo": "Quiz Info",
+    "questionCount": "Question count",
+    "creator": "Creator",
+    "createdDate": "Created date",
+    "lastModified": "Last modified",
+    "notModified": "Not modified",
     "editQuizInfo": "Edit your quiz information",
     "questions": "Questions",
     "noQuestions": "No questions yet",
@@ -4998,5 +5404,160 @@
       "questions": "questions",
       "startQuiz": "Start quiz now"
     }
+  },
+  "quizStats": {
+    "exportDeveloping": "Export report feature is under development",
+    "loading": "Loading statistics...",
+    "notFound": "Quiz not found",
+    "backButton": "Back",
+    "backToMyQuizzes": "Back to My Quizzes",
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
+    },
+    "questions": "questions",
+    "viewQuiz": "View Quiz",
+    "exportReport": "Export Report",
+    "timeRange": {
+      "7days": "Last 7 days",
+      "30days": "Last 30 days",
+      "all": "All time"
+    },
+    "views": "Views",
+    "attempts": "Attempts",
+    "completionRate": "Completion Rate",
+    "averageScore": "Average Score",
+    "passRate": "Pass Rate (≥60%)",
+    "highestScore": "Highest Score",
+    "averageTime": "Avg Time",
+    "completions": "Completions",
+    "dailyTrend": "Daily Attempt Trend",
+    "scoreDistribution": "Score Distribution",
+    "students": "students",
+    "questionDifficulty": "Question Difficulty (Top 10 Hardest)",
+    "topPerformers": "Top 10 Performers",
+    "noData": "No data yet",
+    "noQuestionData": "No question analysis data",
+    "recentResults": "20 Recent Results",
+    "table": {
+      "student": "Student",
+      "score": "Score",
+      "correctTotal": "Correct/Total",
+      "time": "Time",
+      "date": "Date",
+      "result": "Result",
+      "passed": "Passed",
+      "failed": "Failed",
+      "noResults": "No results yet",
+      "question": "Question {{number}}"
+    }
+  },
+  "confirmDialog": {
+    "exitQuiz": {
+      "title": "Exit Quiz?",
+      "message": "Your progress will be lost if you exit now. Are you sure you want to continue?",
+      "confirm": "Exit",
+      "cancel": "Continue Quiz"
+    },
+    "submitQuiz": {
+      "title": "Submit Quiz?",
+      "message": "Are you sure you want to submit? You won't be able to change answers after submission.",
+      "confirm": "Submit"
+    },
+    "unanswered": {
+      "title": "Unanswered Questions",
+      "message": "You have {{count}} unanswered questions:",
+      "question": "Question {{number}}",
+      "continue": "Continue Quiz",
+      "submitAnyway": "Submit Anyway"
+    }
+  },
+  "quizPage": {
+    "loginRequired": "Please login to access this quiz",
+    "unlockSuccess": "Quiz unlocked successfully!",
+    "unlockError": "Error unlocking quiz",
+    "loading": "Loading quiz...",
+    "cannotLoad": "Cannot load quiz",
+    "quizNotExist": "Quiz does not exist",
+    "notReady": "Quiz not ready",
+    "notReadyMessage": "This quiz is pending approval or has no questions. Please try again later!",
+    "backToList": "Back to list",
+    "processingResult": "Processing result...",
+    "exitQuiz": "Exit quiz",
+    "exit": "Exit"
+  },
+  "downloadedQuizzes": {
+    "title": "Downloaded Quizzes",
+    "subtitle": "Play quizzes offline without internet connection",
+    "loading": "Loading...",
+    "loadError": "Cannot load downloaded quizzes",
+    "storageTitle": "Storage Usage",
+    "clearAll": "Clear All",
+    "usedStorage": "Used",
+    "quizzesDownloaded": "Quizzes Downloaded",
+    "availableStorage": "Available",
+    "noQuizzes": "No Quizzes Yet",
+    "noQuizzesHint": "Download quizzes to play offline",
+    "exploreQuizzes": "Explore Quizzes",
+    "offlineBadge": "Offline",
+    "questions": "questions",
+    "downloadedAt": "Downloaded",
+    "updateAvailable": "Update available",
+    "loginRequired": "Please login",
+    "updating": "Updating...",
+    "updateSuccess": "Updated successfully",
+    "updateFailed": "Update failed",
+    "updateNow": "Update now",
+    "playNow": "Play Now",
+    "deleteConfirmTitle": "Confirm Delete",
+    "deleteConfirmMessage": "Are you sure you want to delete this quiz? This action cannot be undone.",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "deleteSuccess": "Quiz deleted successfully",
+    "deleteError": "Cannot delete quiz",
+    "deleteFailed": "Error deleting quiz",
+    "clearAllConfirmTitle": "Clear All Quizzes",
+    "clearAllConfirmMessage": "Are you sure you want to delete all {{count}} downloaded quizzes? This will free up {{size}} of storage.",
+    "deleteAll": "Delete All",
+    "clearedCount": "Deleted {{count}} quizzes",
+    "clearError": "Cannot delete all quizzes",
+    "updatesAvailable": "{{count}} quizzes have updates available"
+  },
+  "storageManagement": {
+    "notCleaned": "Not cleaned yet",
+    "loginRequired": "Please login to clean up data",
+    "cleanupSuccess": "Cleaned up {{count}} unused media files",
+    "noCleanupNeeded": "No media needs cleanup",
+    "cleanupError": "Error cleaning up data. Please try again.",
+    "clearAllConfirm": "DELETE ALL OFFLINE DATA?",
+    "clearAllWarning": "This will delete all downloaded quizzes and media. This cannot be undone!",
+    "clearedSuccess": "Deleted {{count}} offline quizzes",
+    "clearError": "Error deleting data",
+    "exportSuccess": "Settings exported successfully!",
+    "cleanupOrphanedFiles": "Delete media from deleted quizzes",
+    "deleteAllOfflineData": "Delete all offline data",
+    "deleteAllDescription": "Delete all downloaded quizzes and media"
+  },
+  "emptyState": {
+    "quizzes": {
+      "title": "No quizzes yet",
+      "description": "Create your first quiz to get started!",
+      "actionLabel": "Create New Quiz"
+    },
+    "favorites": {
+      "title": "No favorite quizzes",
+      "description": "Add quizzes to favorites for easy access!",
+      "actionLabel": "Explore Quizzes"
+    },
+    "default": {
+      "title": "No data",
+      "description": "There is no content available yet."
+    }
+  },
+  "reviews": {
+    "noReviews": "No reviews yet",
+    "beFirst": "Be the first to review this quiz!",
+    "writeReview": "Write a review"
   }
 }

@@ -40,12 +40,12 @@ const EditQuizPage: React.FC = () => {
           status: quizData.status || 'pending'
         });
       } else {
-        toast.error('Không tìm thấy quiz này');
+        toast.error(t('editQuiz.notFound', 'Không tìm thấy quiz này'));
         navigate('/admin');
       }
     } catch (error) {
       console.error('Error loading quiz:', error);
-      toast.error('Lỗi khi tải quiz');
+      toast.error(t('editQuiz.loadError', 'Lỗi khi tải quiz'));
       navigate('/admin');
     } finally {
       setLoading(false);
@@ -71,11 +71,11 @@ const EditQuizPage: React.FC = () => {
       };
 
       await updateQuiz(id, updatedQuiz);
-      toast.success('Cập nhật quiz thành công!');
+      toast.success(t('editQuiz.updateSuccess', 'Cập nhật quiz thành công!'));
       navigate('/admin');
     } catch (error) {
       console.error('Error updating quiz:', error);
-      toast.error('Lỗi khi cập nhật quiz');
+      toast.error(t('editQuiz.updateError', 'Lỗi khi cập nhật quiz'));
     } finally {
       setSaving(false);
     }
@@ -94,7 +94,7 @@ const EditQuizPage: React.FC = () => {
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-blue-600 mr-3" />
-            <span className="text-lg text-gray-600">Đang tải quiz...</span>
+            <span className="text-lg text-gray-600">{t('common.loading')}</span>
           </div>
         </div>
       </div>
@@ -228,7 +228,7 @@ const EditQuizPage: React.FC = () => {
                 ) : (
                   <Save className="w-4 h-4 mr-2" />
                 )}
-                {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+                {saving ? t('editQuiz.buttons.saving') : t('editQuiz.buttons.save')}
               </button>
             </div>
           </form>
@@ -236,30 +236,30 @@ const EditQuizPage: React.FC = () => {
 
         {/* Quiz Info */}
         <div className="mt-8 bg-white rounded-lg p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Thông tin Quiz</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 {t('editQuiz.quizInfo')}</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="font-medium text-gray-700">Số câu hỏi:</span>
+              <span className="font-medium text-gray-700">{t('editQuiz.questionCount')}:</span>
               <span className="ml-2 text-gray-600">{quiz.questions?.length || 0}</span>
             </div>
             
             <div>
-              <span className="font-medium text-gray-700">Người tạo:</span>
+              <span className="font-medium text-gray-700">{t('editQuiz.creator')}:</span>
               <span className="ml-2 text-gray-600">{quiz.createdBy || 'N/A'}</span>
             </div>
             
             <div>
-              <span className="font-medium text-gray-700">Ngày tạo:</span>
+              <span className="font-medium text-gray-700">{t('editQuiz.createdDate')}:</span>
               <span className="ml-2 text-gray-600">
                 {quiz.createdAt ? formatDate(quiz.createdAt, 'long') : 'N/A'}
               </span>
             </div>
             
             <div>
-              <span className="font-medium text-gray-700">Lần sửa cuối:</span>
+              <span className="font-medium text-gray-700">{t('editQuiz.lastModified')}:</span>
               <span className="ml-2 text-gray-600">
-                {quiz.updatedAt ? formatDate(quiz.updatedAt, 'long') : 'Chưa sửa'}
+                {quiz.updatedAt ? formatDate(quiz.updatedAt, 'long') : t('editQuiz.notModified')}
               </span>
             </div>
           </div>

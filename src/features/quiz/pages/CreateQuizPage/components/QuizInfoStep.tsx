@@ -1,11 +1,12 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { QuizFormData } from '../types';
-import { categories, difficulties } from '../constants';
+import { difficulties } from '../constants';
+import { useCategories } from '../hooks/useCategories';
 import RichTextEditor from '../../../../../shared/components/ui/RichTextEditor';
 import RichTextViewer from '../../../../../shared/components/ui/RichTextViewer';
 import ImageUploader from '../../../../../components/ImageUploader';
-import { BookOpen, Clock, Tag, Star, FileText, ImageIcon, Lock, Key } from 'lucide-react';
+import { BookOpen, Clock, Tag, Star, FileText, ImageIcon, Lock, Key, Loader } from 'lucide-react';
 
 interface QuizInfoStepProps {
   quiz: QuizFormData;
@@ -14,6 +15,14 @@ interface QuizInfoStepProps {
 
 const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
   const { t } = useTranslation();
+  const { categories, loading: categoriesLoading } = useCategories();
+  
+  // Helper để lấy tên category đã được dịch
+  const getCategoryDisplayName = (categoryName: string) => {
+    // Thử dịch theo key trong categories
+    const translated = t(`categories.${categoryName}`, { defaultValue: '' });
+    return translated || categoryName;
+  };
   
   return (
     <div className="space-y-8">
@@ -67,12 +76,21 @@ const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
               className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               value={quiz.category}
               onChange={e => setQuiz(q => ({ ...q, category: e.target.value }))}
+              disabled={categoriesLoading}
             >
-              <option value="">{t('createQuiz.info.categoryPlaceholder')}</option>
+              <option value="">
+                {categoriesLoading ? t('common.loading') : t('createQuiz.info.categoryPlaceholder')}
+              </option>
               {categories.map(c => (
-                <option key={c.value} value={c.value}>{t(c.labelKey)}</option>
+                <option key={c.id} value={c.name}>{c.icon} {getCategoryDisplayName(c.name)}</option>
               ))}
             </select>
+            {categoriesLoading && (
+              <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
+                <Loader className="w-3 h-3 animate-spin" />
+                {t('common.loadingCategories', 'Đang tải danh mục...')}
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">

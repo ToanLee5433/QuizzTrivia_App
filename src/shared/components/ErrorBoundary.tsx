@@ -51,23 +51,23 @@ class ErrorBoundary extends Component<Props, State> {
               </svg>
             </div>
             {/* eslint-disable-next-line i18next/no-literal-string */}
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Đã xảy ra lỗi</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">An error occurred / Đã xảy ra lỗi</h2>
             <p className="text-gray-600 mb-6">
-              {this.state.error?.message || 'Ứng dụng gặp sự cố không mong muốn.'}
+              {this.state.error?.message || 'An unexpected error occurred / Ứng dụng gặp sự cố không mong muốn.'}
             </p>
             {/* eslint-disable i18next/no-literal-string */}
             <button
               onClick={() => window.location.reload()}
               className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200"
             >
-              Tải lại trang
+              Reload / Tải lại trang
             </button>
             {/* eslint-enable i18next/no-literal-string */}
             
             {import.meta.env.DEV && this.state.error && (
               <details className="mt-4 text-left text-xs text-gray-500">
                 {/* eslint-disable-next-line i18next/no-literal-string */}
-                <summary className="cursor-pointer font-medium">Chi tiết lỗi (Development only)</summary>
+                <summary className="cursor-pointer font-medium">Error details / Chi tiết lỗi (Development only)</summary>
                 <pre className="mt-2 whitespace-pre-wrap">
                   {this.state.error.toString()}
                   {this.state.errorInfo?.componentStack}

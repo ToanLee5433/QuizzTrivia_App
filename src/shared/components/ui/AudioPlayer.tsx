@@ -4,6 +4,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Play, Pause, Volume2, VolumeX, Download, SkipBack, SkipForward } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface AudioPlayerProps {
   audioUrl: string;
@@ -12,6 +13,7 @@ interface AudioPlayerProps {
 }
 
 const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, title, onClose }) => {
+  const { t } = useTranslation();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -155,7 +157,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, title, onClose }) =
           <button
             onClick={onClose}
             className="p-2 text-white hover:bg-red-600 rounded-lg transition-colors"
-            title="Đóng (ESC)"
+            title={t('common.dong_esc')}
           >
             <X className="w-6 h-6" />
           </button>
@@ -211,7 +213,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, title, onClose }) =
           <button
             onClick={() => skip(-10)}
             className="p-3 text-white hover:bg-white hover:bg-opacity-10 rounded-full transition-all"
-            title="Lùi 10s"
+            title={t('common.lui_10s')}
           >
             <SkipBack className="w-5 h-5" />
           </button>
@@ -233,7 +235,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, title, onClose }) =
           <button
             onClick={() => skip(10)}
             className="p-3 text-white hover:bg-white hover:bg-opacity-10 rounded-full transition-all"
-            title="Tiến 10s"
+            title={t('common.tien_10s')}
           >
             <SkipForward className="w-5 h-5" />
           </button>
@@ -268,7 +270,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, title, onClose }) =
           <button
             onClick={handleDownload}
             className="p-2 text-white hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors"
-            title="Tải xuống"
+            title={t('common.tai_xuong')}
           >
             <Download className="w-5 h-5" />
           </button>
@@ -277,8 +279,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, title, onClose }) =
         {/* Footer */}
         <div className="mt-6 text-center">
           <p className="text-white text-sm opacity-75">
-            💡 <kbd className="px-2 py-1 bg-white bg-opacity-10 rounded">Space</kbd> để phát/dừng
-            • <kbd className="px-2 py-1 bg-white bg-opacity-10 rounded">ESC</kbd> để đóng
+            💡 <kbd className="px-2 py-1 bg-white bg-opacity-10 rounded">Space</kbd> {t('audioPlayer.spacePlayPause')}
+            • <kbd className="px-2 py-1 bg-white bg-opacity-10 rounded">ESC</kbd> {t('audioPlayer.escClose')}
           </p>
         </div>
       </div>

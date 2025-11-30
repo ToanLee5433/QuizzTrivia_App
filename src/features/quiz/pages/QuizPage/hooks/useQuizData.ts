@@ -171,24 +171,39 @@ export const useQuizData = () => {
 
           try {
             const questionsRef = collection(db, 'quizzes', id, 'questions');
-            await getDocs(questionsRef);
+            const questionsSnap = await getDocs(questionsRef);
+            
+            // Load questions from Firestore
+            const questions = questionsSnap.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            })) as Question[];
 
-            console.log('✅ User has access to password-protected quiz');
+            console.log('✅ User has access to password-protected quiz, loaded', questions.length, 'questions');
+            
+            if (questions.length === 0) {
+              setError('Quiz này chưa có câu hỏi. Vui lòng quay lại sau!');
+              setLoading(false);
+              return;
+            }
+            
             setNeedsPassword(false);
-            const quizWithResources: Quiz = enrichedMetadata.resources
-              ? { ...foundQuiz, resources: enrichedMetadata.resources }
-              : foundQuiz;
+            const quizWithQuestionsAndResources: Quiz = {
+              ...foundQuiz,
+              questions,
+              ...(enrichedMetadata.resources ? { resources: enrichedMetadata.resources } : {})
+            };
             
             // Convert Timestamps/Dates to ISO strings for Redux serialization
             const serializableQuiz = {
-              ...quizWithResources,
-              createdAt: quizWithResources.createdAt instanceof Date ? quizWithResources.createdAt.toISOString() : 
-                (quizWithResources.createdAt as any)?.toDate?.()?.toISOString() || new Date().toISOString(),
-              updatedAt: quizWithResources.updatedAt instanceof Date ? quizWithResources.updatedAt.toISOString() : 
-                (quizWithResources.updatedAt as any)?.toDate?.()?.toISOString() || new Date().toISOString(),
-              approvedAt: quizWithResources.approvedAt ? 
-                (quizWithResources.approvedAt instanceof Date ? quizWithResources.approvedAt.toISOString() : 
-                  (quizWithResources.approvedAt as any)?.toDate?.()?.toISOString() || new Date().toISOString()) : undefined
+              ...quizWithQuestionsAndResources,
+              createdAt: quizWithQuestionsAndResources.createdAt instanceof Date ? quizWithQuestionsAndResources.createdAt.toISOString() : 
+                (quizWithQuestionsAndResources.createdAt as any)?.toDate?.()?.toISOString() || new Date().toISOString(),
+              updatedAt: quizWithQuestionsAndResources.updatedAt instanceof Date ? quizWithQuestionsAndResources.updatedAt.toISOString() : 
+                (quizWithQuestionsAndResources.updatedAt as any)?.toDate?.()?.toISOString() || new Date().toISOString(),
+              approvedAt: quizWithQuestionsAndResources.approvedAt ? 
+                (quizWithQuestionsAndResources.approvedAt instanceof Date ? quizWithQuestionsAndResources.approvedAt.toISOString() : 
+                  (quizWithQuestionsAndResources.approvedAt as any)?.toDate?.()?.toISOString() || new Date().toISOString()) : undefined
             };
             
             setQuiz(serializableQuiz);
@@ -417,9 +432,10 @@ export const useQuizData = () => {
   }, [loadQuizData]);
   
   // Handle currentQuiz from Redux (when fetched individually)
+  // Only use currentQuiz if it has questions (to avoid overriding loaded quiz)
   useEffect(() => {
-    if (currentQuiz && currentQuiz.id === id) {
-      console.log('🔍 Using currentQuiz from Redux:', currentQuiz.title);
+    if (currentQuiz && currentQuiz.id === id && currentQuiz.questions && currentQuiz.questions.length > 0) {
+      console.log('🔍 Using currentQuiz from Redux (has', currentQuiz.questions.length, 'questions):', currentQuiz.title);
       setQuiz(currentQuiz);
     }
   }, [currentQuiz, id]);

@@ -100,17 +100,19 @@ export async function enqueueDeckCreate(
  * @param answers - ALL question answers (including unanswered as isCorrect: false)
  * @param score - Score percentage (0-100)
  * @param userId - User ID
+ * @param timeSpent - Time spent in seconds
  */
 export async function enqueueQuizResult(
   quizId: string,
   answers: any[], // Must include ALL questions
   score: number,
-  userId: string
+  userId: string,
+  timeSpent: number = 0
 ): Promise<string> {
   const resultId = uuidv4();
   
   // Validate: answers must include all questions
-  console.log(`[enqueueQuizResult] Queueing result: ${answers.length} answers, score: ${score}%`);
+  console.log(`[enqueueQuizResult] Queueing result: ${answers.length} answers, score: ${score}%, timeSpent: ${timeSpent}s`);
   
   return enqueueAction({
     type: 'submit_result',
@@ -119,6 +121,7 @@ export async function enqueueQuizResult(
       quizId,
       answers,
       score,
+      timeSpent,
       completedAt: Date.now()
     },
     priority: CONFIG.HIGH_PRIORITY, // High priority for results

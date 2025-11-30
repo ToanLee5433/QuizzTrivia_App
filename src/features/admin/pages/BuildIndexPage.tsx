@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Database, PlayCircle, CheckCircle, XCircle, Loader, AlertTriangle, RefreshCw, BarChart3 } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import type { RootState } from '../../../lib/store';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import app from '../../../lib/firebase/config';
@@ -44,10 +45,11 @@ interface BuildStatus {
 }
 
 export function BuildIndexPage() {
+  const { t } = useTranslation();
   const { user } = useSelector((state: RootState) => state.auth);
   const [buildStatus, setBuildStatus] = useState<BuildStatus>({
     status: 'idle',
-    message: 'Sẵn sàng rebuild vector index',
+    message: t('admin.buildIndex.ready'),
   });
   const [indexStats, setIndexStats] = useState<IndexStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
@@ -329,22 +331,22 @@ export function BuildIndexPage() {
         {/* Instructions */}
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
           <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
-            📝 Hướng dẫn sử dụng
+            📝 {t('admin.buildIndex.instructions')}
           </h3>
           <ol className="text-sm text-blue-800 dark:text-blue-200 space-y-2 list-decimal list-inside">
-            <li>Đảm bảo có ít nhất một quiz đã được <strong>approve</strong></li>
-            <li>Click "Rebuild Full Index" để tạo/cập nhật index</li>
-            <li>Chờ Cloud Function xử lý (có thể mất 1-5 phút)</li>
-            <li>Sau khi hoàn thành, AI Learning Assistant sẽ có thể trả lời câu hỏi về quiz</li>
+            <li>{t('admin.buildIndex.step1')}</li>
+            <li>{t('admin.buildIndex.step2')}</li>
+            <li>{t('admin.buildIndex.step3')}</li>
+            <li>{t('admin.buildIndex.step4')}</li>
           </ol>
           <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800">
             <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-1">
-              💡 Lưu ý
+              💡 {t('admin.buildIndex.notes')}
             </h4>
             <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1 list-disc list-inside">
-              <li>Index sẽ tự động cập nhật khi quiz được approve (via triggers)</li>
-              <li>Chỉ cần rebuild thủ công nếu index bị lỗi hoặc khởi tạo lần đầu</li>
-              <li>Chỉ quiz có status = "approved" mới được đưa vào index</li>
+              <li>{t('admin.buildIndex.note1')}</li>
+              <li>{t('admin.buildIndex.note2')}</li>
+              <li>{t('admin.buildIndex.note3')}</li>
             </ul>
           </div>
         </div>

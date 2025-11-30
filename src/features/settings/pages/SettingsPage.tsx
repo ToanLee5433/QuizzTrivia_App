@@ -91,7 +91,7 @@ const SettingsPage: React.FC = () => {
         totalSize: formatBytes(totalSize),
         lastCleanup: lastCleanup 
           ? new Date(lastCleanup).toLocaleDateString('vi-VN')
-          : 'Chưa dọn dẹp'
+          : t('storageManagement.notCleaned')
       });
     } catch (error) {
       console.error('Failed to load storage stats:', error);
@@ -108,7 +108,7 @@ const SettingsPage: React.FC = () => {
 
   const handleManualCleanup = async () => {
     if (!user?.uid) {
-      toast.error('Vui lòng đăng nhập để dọn dẹp dữ liệu');
+      toast.error(t('storageManagement.loginRequired'));
       return;
     }
 
@@ -119,13 +119,13 @@ const SettingsPage: React.FC = () => {
       await loadStorageStats();
       
       if (deleted > 0) {
-        toast.success(`✅ Đã dọn dẹp ${deleted} file media không sử dụng`);
+        toast.success(`✅ ${t('storageManagement.cleanupSuccess', { count: deleted })}`);
       } else {
-        toast.info('✅ Không có media nào cần dọn dẹp');
+        toast.info(`✅ ${t('storageManagement.noCleanupNeeded')}`);
       }
     } catch (error) {
       console.error('Cleanup failed:', error);
-      toast.error('❌ Lỗi khi dọn dẹp dữ liệu. Vui lòng thử lại.');
+      toast.error(`❌ ${t('storageManagement.cleanupError')}`);
     } finally {
       setIsCleaningUp(false);
     }
@@ -135,8 +135,8 @@ const SettingsPage: React.FC = () => {
     if (!user?.uid) return;
 
     const confirmed = window.confirm(
-      '⚠️ XÓA TẤT CẢ DỮ LIỆU OFFLINE?\n\n' +
-      'Thao tác này sẽ xóa tất cả bài quiz đã tải xuống và media. Không thể hoàn tác!'
+      `⚠️ ${t('storageManagement.clearAllConfirm')}\n\n` +
+      t('storageManagement.clearAllWarning')
     );
 
     if (!confirmed) return;
@@ -147,10 +147,10 @@ const SettingsPage: React.FC = () => {
       localStorage.removeItem('last_media_cleanup');
       await loadStorageStats();
       
-      toast.success(`✅ Đã xóa ${count} quiz offline`);
+      toast.success(`✅ ${t('storageManagement.clearedSuccess', { count })}`);
     } catch (error) {
       console.error('Failed to clear data:', error);
-      toast.error('❌ Lỗi khi xóa dữ liệu');
+      toast.error(`❌ ${t('storageManagement.clearError')}`);
     } finally {
       setIsCleaningUp(false);
     }
@@ -177,7 +177,7 @@ const SettingsPage: React.FC = () => {
     link.download = `quiz-settings-${Date.now()}.json`;
     link.click();
     URL.revokeObjectURL(url);
-    toast.success('Đã xuất cài đặt thành công!');
+    toast.success(t('storageManagement.exportSuccess'));
   };
 
   return (
@@ -517,9 +517,9 @@ const SettingsPage: React.FC = () => {
                   <RefreshCw className={`w-5 h-5 text-green-600 dark:text-green-400 transition-transform ${isCleaningUp ? 'animate-spin' : 'group-hover:rotate-180'}`} />
                   <div className="text-left">
                     <p className="font-semibold text-green-700 dark:text-green-400">
-                      {isCleaningUp ? 'Đang dọn dẹp...' : 'Dọn dẹp file không dùng'}
+                      {isCleaningUp ? t('common.loading') : t('storageManagement.cleanupOrphanedFiles')}
                     </p>
-                    <p className="text-sm text-green-600 dark:text-green-500">Xóa media của quiz đã bị xóa</p>
+                    <p className="text-sm text-green-600 dark:text-green-500">{t('storageManagement.cleanupOrphanedFiles')}</p>
                   </div>
                 </div>
               </button>
@@ -532,8 +532,8 @@ const SettingsPage: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <Trash2 className="w-5 h-5 text-red-600 dark:text-red-400 group-hover:scale-110 transition-transform" />
                   <div className="text-left">
-                    <p className="font-semibold text-red-700 dark:text-red-400">Xóa toàn bộ dữ liệu offline</p>
-                    <p className="text-sm text-red-600 dark:text-red-500">Xóa tất cả quiz và media đã tải</p>
+                    <p className="font-semibold text-red-700 dark:text-red-400">{t('storageManagement.deleteAllOfflineData')}</p>
+                    <p className="text-sm text-red-600 dark:text-red-500">{t('storageManagement.deleteAllDescription')}</p>
                   </div>
                 </div>
               </button>

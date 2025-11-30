@@ -34,12 +34,12 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     e.preventDefault();
     
     if (!user) {
-      toast.error('Bạn cần đăng nhập để đánh giá');
+      toast.error(t('reviews.loginRequired'));
       return;
     }
 
     if (rating === 0) {
-      toast.error('Vui lòng chọn số sao');
+      toast.error(t('reviews.ratingRequired'));
       return;
     }
 
@@ -51,7 +51,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
           rating,
           comment
         });
-        toast.success('Cập nhật đánh giá thành công!');
+        toast.success(t('reviews.updateSuccess'));
       } else {
         // Fetch fresh user data from Firestore to get latest photoURL
         let userPhotoURL = user.photoURL || '';
@@ -76,13 +76,13 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
           rating,
           comment
         }, user.uid, user.displayName || user.email || '', userPhotoURL);
-        toast.success('Gửi đánh giá thành công!');
+        toast.success(t('reviews.submitSuccess'));
       }
       
       onReviewSubmitted();
     } catch (error) {
       console.error('Error submitting review:', error);
-      toast.error('Có lỗi khi gửi đánh giá');
+      toast.error(t('reviews.submitError'));
     } finally {
       setSubmitting(false);
     }
@@ -94,7 +94,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900">
-              {existingReview ? 'Chỉnh sửa đánh giá' : 'Viết đánh giá'}
+              {existingReview ? t('reviews.editReview') : t('reviews.writeReview')}
             </h3>
             <button
               onClick={onClose}
@@ -132,11 +132,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
               </div>
               {rating > 0 && (
                 <p className="text-sm text-gray-600 mt-1">
-                  {rating === 1 && 'Rất không hài lòng'}
-                  {rating === 2 && 'Không hài lòng'}
-                  {rating === 3 && 'Bình thường'}
-                  {rating === 4 && 'Hài lòng'}
-                  {rating === 5 && 'Rất hài lòng'}
+                  {t(`reviews.ratingDescriptions.${rating}`)}
                 </p>
               )}
             </div>
@@ -180,7 +176,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
                 ) : (
                   <>
                     <Send className="w-4 h-4" />
-                    <span>{existingReview ? 'Cập nhật' : 'Gửi đánh giá'}</span>
+                    <span>{existingReview ? t('reviews.update') : t('reviews.submitReview')}</span>
                   </>
                 )}
               </button>

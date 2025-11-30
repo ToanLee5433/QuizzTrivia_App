@@ -224,7 +224,7 @@ const SharedScreen: React.FC<SharedScreenProps> = ({ isHost }) => {
             <button
               onClick={() => setShowControls(!showControls)}
               className="p-2 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors"
-              title="Điều khiển"
+              title={t('sharedScreen.controls')}
             >
               {showControls ? <X className="w-4 h-4" /> : <Globe className="w-4 h-4" />}
             </button>
@@ -233,7 +233,7 @@ const SharedScreen: React.FC<SharedScreenProps> = ({ isHost }) => {
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="p-2 text-gray-400 hover:bg-gray-500/20 rounded-lg transition-colors"
-            title={isExpanded ? "Thu nhỏ" : "Phóng to"}
+            title={isExpanded ? t('sharedScreen.collapse') : t('sharedScreen.expand')}
           >
             {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>

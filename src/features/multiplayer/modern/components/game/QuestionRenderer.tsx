@@ -7,6 +7,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Check, GripVertical } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Question, OrderingItem, Answer } from '../../../../quiz/types';
 import { PowerUpType } from '../../types/game.types';
 import {
@@ -239,6 +240,7 @@ const CheckboxRenderer: React.FC<CheckboxRendererProps> = ({
   onChange,
   disabled,
 }) => {
+  const { t } = useTranslation('multiplayer');
   // Ensure value is always an array
   const safeValue = Array.isArray(value) ? value : [];
   
@@ -255,7 +257,7 @@ const CheckboxRenderer: React.FC<CheckboxRendererProps> = ({
     <div className="space-y-3">
       <p className="text-sm text-blue-300 mb-4 flex items-center space-x-2">
         <span className="px-2 py-1 bg-blue-500/20 rounded-lg">💡</span>
-        <span>Bạn có thể chọn nhiều đáp án</span>
+        <span>{t('question.multipleAnswersHint')}</span>
       </p>
       
       {question.answers.map((answer, index) => {
@@ -321,12 +323,13 @@ const ShortAnswerRenderer: React.FC<ShortAnswerRendererProps> = ({
   onChange,
   disabled,
 }) => {
+  const { t } = useTranslation('multiplayer');
   return (
     <div className="space-y-4">
       <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-4">
         <p className="text-sm text-blue-300 flex items-center space-x-2">
           <span className="px-2 py-1 bg-blue-500/20 rounded-lg">✏️</span>
-          <span>Nhập câu trả lời của bạn vào ô bên dưới</span>
+          <span>{t('question.enterAnswerBelow')}</span>
         </p>
       </div>
       
@@ -335,7 +338,7 @@ const ShortAnswerRenderer: React.FC<ShortAnswerRendererProps> = ({
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        placeholder="Nhập câu trả lời..."
+        placeholder={t('question.answerPlaceholder')}
         className="w-full px-6 py-4 bg-white/10 border-2 border-white/20 rounded-2xl text-white placeholder-white/30 focus:outline-none focus:border-blue-500 focus:bg-white/15 transition-all text-lg disabled:opacity-60 disabled:cursor-not-allowed"
       />
     </div>
@@ -626,6 +629,7 @@ const FillBlanksRenderer: React.FC<FillBlanksRendererProps> = ({
   onChange,
   disabled,
 }) => {
+  const { t } = useTranslation('multiplayer');
   const handleBlankChange = (blankId: string, text: string) => {
     onChange({
       ...value,
@@ -638,21 +642,21 @@ const FillBlanksRenderer: React.FC<FillBlanksRendererProps> = ({
       <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-4">
         <p className="text-sm text-yellow-300 flex items-center space-x-2">
           <span className="px-2 py-1 bg-yellow-500/20 rounded-lg">📝</span>
-          <span>Điền vào các chỗ trống</span>
+          <span>{t('question.fillBlanks')}</span>
         </p>
       </div>
 
       {question.blanks?.map((blank, index) => (
         <div key={blank.id} className="space-y-2">
           <label className="block text-white/70 text-sm">
-            Chỗ trống #{index + 1}:
+            {t('question.blankLabel', { index: index + 1 })}
           </label>
           <input
             type="text"
             value={value[blank.id] || ''}
             onChange={(e) => handleBlankChange(blank.id, e.target.value)}
             disabled={disabled}
-            placeholder="Nhập đáp án..."
+            placeholder={t('question.answerPlaceholder')}
             className="w-full px-4 py-3 bg-white/10 border-2 border-white/20 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-yellow-500 focus:bg-white/15 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           />
         </div>

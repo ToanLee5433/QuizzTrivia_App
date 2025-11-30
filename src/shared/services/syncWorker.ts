@@ -347,7 +347,7 @@ async function processProgressUpdate(item: PendingAction): Promise<void> {
 // ============================================================================
 
 async function processQuizResult(item: PendingAction, userId: string): Promise<void> {
-  const { id, quizId, answers, score, completedAt } = item.payload;
+  const { id, quizId, answers, score, completedAt, timeSpent } = item.payload;
   
   // 🔥 Validate answers array includes ALL questions
   const correctAnswers = answers.filter((a: any) => a.isCorrect).length;
@@ -361,6 +361,7 @@ async function processQuizResult(item: PendingAction, userId: string): Promise<v
     totalQuestions,
     providedScore: score,
     calculatedScore,
+    timeSpent,
     completedAt 
   });
   
@@ -392,7 +393,7 @@ async function processQuizResult(item: PendingAction, userId: string): Promise<v
     score: finalScore, // Use recalculated score
     correctAnswers,
     totalQuestions,
-    timeSpent: 0, // Not available from queue payload
+    timeSpent: timeSpent || 0, // Use timeSpent from payload
     answers,
     completedAt: new Date(completedAt)
   };

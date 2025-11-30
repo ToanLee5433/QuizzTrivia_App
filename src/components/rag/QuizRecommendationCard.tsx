@@ -140,19 +140,19 @@ export function QuizRecommendationCard({ quiz, index, onNavigate }: QuizRecommen
             </span>
 
             {/* Total Attempts - Lượt làm */}
-            <span className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400" title="Lượt làm">
+            <span className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400" title={t('rag.totalAttempts')}>
               <Users className="w-3 h-3" />
               <span>{quiz.totalAttempts || 0}</span>
             </span>
 
             {/* Average Score - Điểm TB */}
-            <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400" title="Điểm trung bình">
+            <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400" title={t('rag.averageScore')}>
               <Trophy className="w-3 h-3" />
               <span>{quiz.averageScore ? `${Math.round(quiz.averageScore)}%` : '-'}</span>
             </span>
 
             {/* Average Rating - Đánh giá */}
-            <span className="flex items-center gap-1 text-xs text-yellow-600 dark:text-yellow-400" title="Đánh giá">
+            <span className="flex items-center gap-1 text-xs text-yellow-600 dark:text-yellow-400" title={t('rag.averageRating')}>
               <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
               <span>{quiz.averageRating && quiz.averageRating > 0 ? quiz.averageRating.toFixed(1) : '-'}</span>
             </span>

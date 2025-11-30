@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { RootState } from '../../../../lib/store';
 import { setQuizTimer } from '../../store';
 import { useQuizData, useQuizSession, useQuizTimer, useQuizNavigation, useQuizSettings } from './hooks';
 import Timer from './components/Timer';
 import QuestionRenderer from './components/QuestionRenderer';
-import QuickNavigation from './components/QuickNavigation';
 import ConfirmationModals from './components/ConfirmationModals';
 import LearningResourcesView from './components/LearningResourcesView';
 import { PauseMenu } from './components/PauseMenu';
@@ -14,20 +14,25 @@ import QuizPasswordModal from '../../../../shared/components/ui/QuizPasswordModa
 import QuizSettingsModal from '../../components/QuizSettingsModal';
 import { unlockQuiz } from '../../../../lib/services/quizAccessService';
 import { toast } from 'react-toastify';
-import { Quiz, AnswerValue } from '../../types';
+import { Quiz, AnswerValue, Question } from '../../types';
 import soundService from '../../../../services/soundService';
 import { quizPresenceService } from '../../../../services/quizPresenceService';
 
 const QuizPage: React.FC = () => {
+  const { t } = useTranslation();
   const { quiz, loading, error, needsPassword, quizMetadata, retryLoad } = useQuizData();
   const user = useSelector((state: RootState) => state.auth.user);
+  const location = useLocation();
   const [showResources, setShowResources] = useState(true);
   const [hasViewedResources, setHasViewedResources] = useState(false);
+  
+  // Get retake timestamp from navigation state to force re-mount
+  const retakeKey = (location.state as { retakeTimestamp?: number } | null)?.retakeTimestamp || quiz?.id || 'default';
 
   // Handle password submission
   const handlePasswordSubmit = async (password: string): Promise<boolean> => {
     if (!quizMetadata || !user) {
-      toast.error('Vui lòng đăng nhập để truy cập quiz');
+      toast.error(t('quizPage.loginRequired'));
       return false;
     }
 
@@ -40,7 +45,7 @@ const QuizPage: React.FC = () => {
       );
 
       if (success) {
-        toast.success('🎉 Đã mở khóa quiz thành công!');
+        toast.success(`🎉 ${t('quizPage.unlockSuccess')}`);
         // Retry loading questions
         retryLoad();
         return true;
@@ -49,7 +54,7 @@ const QuizPage: React.FC = () => {
       return false;
     } catch (err) {
       console.error('Error unlocking quiz:', err);
-      toast.error('Có lỗi xảy ra khi mở khóa quiz');
+      toast.error(t('quizPage.unlockError'));
       return false;
     }
   };
@@ -59,7 +64,7 @@ const QuizPage: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Đang tải quiz...</p>
+          <p className="mt-4 text-gray-600">{t('quizPage.loading')}</p>
         </div>
       </div>
     );
@@ -84,8 +89,8 @@ const QuizPage: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Không thể tải quiz</h2>
-          <p className="text-gray-600">{error || 'Quiz không tồn tại'}</p>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('quizPage.cannotLoad')}</h2>
+          <p className="text-gray-600">{error || t('quizPage.quizNotExist')}</p>
         </div>
       </div>
     );
@@ -110,7 +115,8 @@ const QuizPage: React.FC = () => {
     );
   }
 
-  return <QuizPageContent quiz={quiz} />;
+  // Use key to force re-mount when retaking quiz
+  return <QuizPageContent key={retakeKey} quiz={quiz} />;
 };
 
 interface QuizPageContentProps {
@@ -120,26 +126,80 @@ interface QuizPageContentProps {
 const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const user = useSelector((state: RootState) => state.auth.user);
   
-  // Load quiz settings
-  const { settings, shuffleQuestionsArray, shuffleQuestionAnswers, calculateTotalTime } = useQuizSettings();
+  // Load quiz settings with helper functions
+  const { 
+    settings, 
+    shuffleQuestionsArray, 
+    shuffleQuestionAnswers, 
+    calculateTotalTime,
+    shouldShowInstantFeedback,
+    shouldAutoAdvance,
+    shouldShowExplanation
+  } = useQuizSettings();
   
   // State for pause and settings modal
   const [isPaused, setIsPaused] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   
-  // Apply user settings for timer (override quiz.duration from Firestore)
+  // State for Practice Mode feedback
+  const [feedbackState, setFeedbackState] = useState<{
+    [questionId: string]: {
+      isAnswered: boolean;
+      isCorrect: boolean | null;
+      correctAnswer: string | string[] | Record<string, string> | null;
+    }
+  }>({});
+  
+  // State for Practice Mode per-question timer
+  const [practiceTimeLeft, setPracticeTimeLeft] = useState<number>(0);
+  const [isPracticeTimerPaused, setIsPracticeTimerPaused] = useState(false);
+  
+  // Reset all states when quiz changes (for retake functionality)
   useEffect(() => {
-    const userTotalTime = calculateTotalTime(quiz.questions.length);
-    console.log('⏱️ Applying user time settings:', {
-      mode: settings.mode,
-      userTotalTime,
-      quizDuration: quiz.duration,
-      questionCount: quiz.questions.length
-    });
-    dispatch(setQuizTimer(userTotalTime));
-  }, [dispatch, calculateTotalTime, quiz.questions.length, quiz.duration, settings.mode]);
+    console.log('🔄 Resetting QuizPage states for quiz:', quiz.id);
+    setFeedbackState({});
+    setIsPaused(false);
+    setShowSettingsModal(false);
+    setIsPracticeTimerPaused(false);
+  }, [quiz.id]);
+  
+  // Get per-question time for practice mode
+  const practiceTimePerQuestion = useMemo(() => {
+    const timePerQ = settings.practiceConfig.timePerQuestion || settings.timePerQuestion || 30;
+    return timePerQ;
+  }, [settings.practiceConfig.timePerQuestion, settings.timePerQuestion]);
+  
+  // Apply user settings for timer (with fallback to quiz defaults)
+  useEffect(() => {
+    // For Practice mode, we use per-question timer (not total timer)
+    if (settings.mode === 'practice') {
+      // Set total time to 0 to disable the global timer
+      dispatch(setQuizTimer(0));
+      // Initialize per-question timer
+      const timePerQ = practiceTimePerQuestion > 0 ? practiceTimePerQuestion : 30;
+      setPracticeTimeLeft(timePerQ);
+      console.log('⏱️ Practice mode: using per-question timer:', timePerQ, 'seconds');
+      return;
+    }
+    
+    // Exam mode: use total time
+    let totalTimeInSeconds = calculateTotalTime(quiz.questions.length);
+    
+    // Fallback to quiz defaults if user hasn't set time (time = 0)
+    if (totalTimeInSeconds === 0) {
+      if (quiz.duration > 0) {
+        // Exam mode: use quiz.duration (minutes) -> convert to seconds
+        totalTimeInSeconds = quiz.duration * 60;
+        console.log('⏱️ Using Firestore quiz.duration as fallback:', quiz.duration, 'minutes');
+      }
+    }
+    
+    console.log('⏱️ Exam mode: total time:', totalTimeInSeconds, 'seconds');
+    dispatch(setQuizTimer(totalTimeInSeconds));
+  }, [dispatch, calculateTotalTime, quiz.questions.length, quiz.duration, settings.mode, practiceTimePerQuestion]);
   
   // Apply shuffling to questions (memoized to prevent re-shuffling)
   const shuffledQuiz = useMemo(() => {
@@ -169,6 +229,33 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
     onTimeUp: completeQuiz,
     isActive: !session.isCompleted && !isPaused
   });
+  
+  // Practice mode: per-question timer countdown (moved after session is defined)
+  useEffect(() => {
+    if (settings.mode !== 'practice' || practiceTimePerQuestion === 0) return;
+    if (isPaused || isPracticeTimerPaused || session.isCompleted) return;
+    
+    const interval = setInterval(() => {
+      setPracticeTimeLeft(prev => {
+        if (prev <= 1) {
+          // Time's up for this question - auto advance or complete
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [settings.mode, practiceTimePerQuestion, isPaused, isPracticeTimerPaused, session.isCompleted]);
+  
+  // Reset practice timer when question changes
+  useEffect(() => {
+    if (settings.mode === 'practice' && practiceTimePerQuestion > 0) {
+      setPracticeTimeLeft(practiceTimePerQuestion);
+      setIsPracticeTimerPaused(false);
+      console.log('⏱️ Practice timer reset for question:', session.currentQuestionIndex + 1);
+    }
+  }, [session.currentQuestionIndex, settings.mode, practiceTimePerQuestion]);
   
   // Initialize sound service on mount
   useEffect(() => {
@@ -275,12 +362,230 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
     handleExitQuiz();
   };
   
-  // Play sound on answer selection
+  // Get correct answer for a question
+  const getCorrectAnswer = (question: Question): string | string[] | Record<string, string> | null => {
+    if (!question) return null;
+    
+    // For multiple choice / boolean
+    if (question.type === 'multiple' || question.type === 'boolean') {
+      const correctAnswer = question.answers?.find(a => a.isCorrect);
+      return correctAnswer?.id || null;
+    }
+    
+    // For checkbox (multiple correct)
+    if (question.type === 'checkbox') {
+      return question.answers?.filter(a => a.isCorrect).map(a => a.id) || [];
+    }
+    
+    // For short_answer
+    if (question.type === 'short_answer') {
+      return question.correctAnswer || null;
+    }
+    
+    // For fill_blanks - return object with blankId -> correctAnswer
+    if (question.type === 'fill_blanks' && question.blanks) {
+      const blanksAnswer: Record<string, string> = {};
+      question.blanks.forEach(blank => {
+        blanksAnswer[blank.id] = blank.correctAnswer;
+      });
+      return blanksAnswer;
+    }
+    
+    // For matching - return object with left -> right
+    if (question.type === 'matching' && question.matchingPairs) {
+      const matchingAnswer: Record<string, string> = {};
+      question.matchingPairs.forEach(pair => {
+        matchingAnswer[pair.left] = pair.right;
+      });
+      return matchingAnswer;
+    }
+    
+    // For ordering - return array of IDs in correct order
+    if (question.type === 'ordering' && question.orderingItems) {
+      return [...question.orderingItems]
+        .sort((a, b) => a.correctOrder - b.correctOrder)
+        .map(item => item.id);
+    }
+    
+    // For other types, return null (no instant feedback support yet)
+    return null;
+  };
+  
+  // Check if answer is correct
+  const checkAnswer = (question: Question, answer: AnswerValue): boolean => {
+    const correctAnswer = getCorrectAnswer(question);
+    if (correctAnswer === null || answer === null || answer === undefined) return false;
+    
+    // For ordering type - compare array order
+    if (question.type === 'ordering' && Array.isArray(correctAnswer)) {
+      if (!Array.isArray(answer)) return false;
+      return correctAnswer.length === answer.length && 
+        correctAnswer.every((id, index) => id === answer[index]);
+    }
+    
+    // For checkbox type - unordered array comparison
+    if (question.type === 'checkbox' && Array.isArray(correctAnswer)) {
+      if (!Array.isArray(answer)) return false;
+      return correctAnswer.length === answer.length && 
+        correctAnswer.every(id => answer.includes(id));
+    }
+    
+    // For short_answer - case insensitive comparison with trim
+    if (question.type === 'short_answer' && typeof correctAnswer === 'string') {
+      if (typeof answer !== 'string') return false;
+      const userAnswer = answer.trim().toLowerCase();
+      const correct = correctAnswer.trim().toLowerCase();
+      
+      // Also check acceptedAnswers if available
+      if (userAnswer === correct) return true;
+      if (question.acceptedAnswers) {
+        return question.acceptedAnswers.some(
+          acc => acc.trim().toLowerCase() === userAnswer
+        );
+      }
+      return false;
+    }
+    
+    // For fill_blanks - check each blank
+    if (question.type === 'fill_blanks' && typeof correctAnswer === 'object' && !Array.isArray(correctAnswer)) {
+      if (typeof answer !== 'object' || Array.isArray(answer) || answer === null) return false;
+      const userAnswers = answer as Record<string, string>;
+      const correctAnswers = correctAnswer as Record<string, string>;
+      
+      // Check each blank
+      for (const [blankId, correctValue] of Object.entries(correctAnswers)) {
+        const userValue = userAnswers[blankId]?.trim().toLowerCase() || '';
+        const correctLower = correctValue.trim().toLowerCase();
+        
+        // Find the blank to check acceptedAnswers
+        const blank = question.blanks?.find(b => b.id === blankId);
+        
+        if (userValue !== correctLower) {
+          // Check accepted answers for this blank
+          if (blank?.acceptedAnswers) {
+            const isAccepted = blank.acceptedAnswers.some(
+              acc => acc.trim().toLowerCase() === userValue
+            );
+            if (!isAccepted) return false;
+          } else {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+    
+    // For matching - check each pair
+    if (question.type === 'matching' && typeof correctAnswer === 'object' && !Array.isArray(correctAnswer)) {
+      if (typeof answer !== 'object' || Array.isArray(answer) || answer === null) return false;
+      const userMatches = answer as Record<string, string>;
+      const correctMatches = correctAnswer as Record<string, string>;
+      
+      // Check all pairs are matched and correct
+      const correctEntries = Object.entries(correctMatches);
+      if (Object.keys(userMatches).length !== correctEntries.length) return false;
+      
+      for (const [left, right] of correctEntries) {
+        if (userMatches[left] !== right) return false;
+      }
+      return true;
+    }
+    
+    // Default: simple equality check (multiple, boolean)
+    return answer === correctAnswer;
+  };
+  
+  // Handle answer selection with Practice Mode logic
   const handleAnswerChange = (questionId: string, answer: AnswerValue) => {
+    const question = shuffledQuiz.questions.find(q => q.id === questionId);
+    if (!question) return;
+    
+    // If already answered in instant feedback mode, don't allow change
+    if (shouldShowInstantFeedback() && feedbackState[questionId]?.isAnswered) {
+      return;
+    }
+    
     updateAnswer(questionId, answer);
+    
     if (settings.soundEffects) {
       soundService.play('click');
     }
+    
+    // Practice Mode: Instant Feedback
+    // Only auto-trigger for simple question types (multiple choice, boolean)
+    // Complex types (checkbox, short_answer, fill_blanks, matching, ordering) need manual "Check" button
+    const simpleQuestionTypes = ['multiple', 'boolean'];
+    const isSimpleQuestion = simpleQuestionTypes.includes(question.type);
+    
+    if (shouldShowInstantFeedback() && isSimpleQuestion) {
+      const isCorrect = checkAnswer(question, answer);
+      const correctAnswer = getCorrectAnswer(question);
+      
+      // Pause practice timer when answer is checked
+      setIsPracticeTimerPaused(true);
+      
+      setFeedbackState(prev => ({
+        ...prev,
+        [questionId]: {
+          isAnswered: true,
+          isCorrect,
+          correctAnswer
+        }
+      }));
+      
+      // Play sound based on result
+      if (settings.soundEffects) {
+        soundService.play(isCorrect ? 'correct' : 'wrong');
+      }
+      
+      // Auto advance after delay (if enabled and not in instant feedback mode)
+      // Note: In instant feedback mode, user should see feedback before advancing
+      if (shouldAutoAdvance() && !shouldShowInstantFeedback()) {
+        setTimeout(() => {
+          if (!isLastQuestion) {
+            goToNextQuestion();
+          }
+        }, 300);
+      }
+    } else if (shouldAutoAdvance()) {
+      // Exam mode with auto advance - go to next question immediately
+      setTimeout(() => {
+        if (!isLastQuestion) {
+          goToNextQuestion();
+        }
+      }, 300);
+    }
+  };
+  
+  // Manual check answer for complex question types
+  const handleCheckAnswer = () => {
+    if (!currentQuestion) return;
+    const answer = session.answers[currentQuestion.id];
+    if (!answer) return;
+    
+    const isCorrect = checkAnswer(currentQuestion, answer);
+    const correctAnswer = getCorrectAnswer(currentQuestion);
+    
+    // Pause practice timer when answer is checked
+    setIsPracticeTimerPaused(true);
+    
+    setFeedbackState(prev => ({
+      ...prev,
+      [currentQuestion.id]: {
+        isAnswered: true,
+        isCorrect,
+        correctAnswer
+      }
+    }));
+    
+    if (settings.soundEffects) {
+      soundService.play(isCorrect ? 'correct' : 'wrong');
+    }
+  };
+  
+  // Check if current question is complex type (needs manual check button)
+  const isComplexQuestionType = (type: string) => {
+    return ['checkbox', 'short_answer', 'fill_blanks', 'matching', 'ordering'].includes(type);
   };
 
   const currentQuestion = shuffledQuiz.questions?.[session.currentQuestionIndex];
@@ -295,15 +600,15 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Quiz chưa sẵn sàng</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('quizPage.notReady')}</h2>
           <p className="text-gray-600 mb-6">
-            Quiz này đang chờ phê duyệt hoặc chưa có câu hỏi. Vui lòng quay lại sau!
+            {t('quizPage.notReadyMessage')}
           </p>
           <button
             onClick={() => navigate('/creator/my-quizzes')}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Quay lại danh sách
+            {t('quizPage.backToList')}
           </button>
         </div>
       </div>
@@ -323,7 +628,7 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Đang xử lý kết quả...</p>
+          <p className="mt-4 text-gray-600">{t('quizPage.processingResult')}</p>
         </div>
       </div>
     );
@@ -339,54 +644,73 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
 
       {/* Header - Sticky & Glassmorphism */}
       <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-3">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
             
             {/* Left: Exit & Title */}
-            <div className="flex items-center gap-4 min-w-0 flex-1">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
               <button
                 onClick={handleExitQuiz}
-                className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-full transition-all group"
-                title="Thoát bài thi"
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-full transition-all group"
+                title={t('quizPage.exitQuiz')}
               >
-                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-red-100 transition-colors">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-red-100 transition-colors">
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
                   </svg>
                 </div>
-                <span className="font-semibold hidden sm:inline">Thoát</span>
+                <span className="font-semibold hidden md:inline text-sm">{t('quizPage.exit')}</span>
               </button>
               
-              <div className="h-8 w-px bg-slate-200 hidden sm:block"></div>
+              <div className="h-6 sm:h-8 w-px bg-slate-200 hidden sm:block"></div>
               
-              <h1 className="text-lg font-bold text-slate-800 truncate" title={shuffledQuiz.title}>
+              <h1 className="text-sm sm:text-lg font-bold text-slate-800 truncate max-w-[100px] sm:max-w-[200px] md:max-w-none" title={shuffledQuiz.title}>
                 {shuffledQuiz.title}
               </h1>
             </div>
             
             {/* Right: Stats & Controls */}
-            <div className="flex items-center gap-3 sm:gap-6">
-              {/* Timer Widget */}
-              <div className={`flex items-center gap-3 px-4 py-2 rounded-full border ${
-                isTimeRunningOut 
-                  ? 'bg-red-50 border-red-200 text-red-600 animate-pulse' 
-                  : 'bg-blue-50 border-blue-100 text-blue-700'
-              }`}>
-                <Timer
-                  timeLeft={formattedTime}
-                  isWarning={isTimeRunningOut}
-                  isCritical={isTimeCritical}
-                  percentage={percentage}
-                />
-              </div>
+            <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
+              {/* Timer Widget - Show practice timer or exam timer */}
+              {settings.mode === 'practice' && practiceTimePerQuestion > 0 ? (
+                <div className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border ${
+                  practiceTimeLeft <= 5 
+                    ? 'bg-red-50 border-red-200 text-red-600 animate-pulse' 
+                    : practiceTimeLeft <= 10
+                      ? 'bg-yellow-50 border-yellow-200 text-yellow-600'
+                      : isPracticeTimerPaused
+                        ? 'bg-green-50 border-green-200 text-green-600'
+                        : 'bg-blue-50 border-blue-100 text-blue-700'
+                }`}>
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="font-bold text-sm sm:text-base tabular-nums">
+                    {isPracticeTimerPaused ? '✓' : `${Math.floor(practiceTimeLeft / 60).toString().padStart(2, '0')}:${(practiceTimeLeft % 60).toString().padStart(2, '0')}`}
+                  </span>
+                </div>
+              ) : (
+                <div className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border ${
+                  isTimeRunningOut 
+                    ? 'bg-red-50 border-red-200 text-red-600 animate-pulse' 
+                    : 'bg-blue-50 border-blue-100 text-blue-700'
+                }`}>
+                  <Timer
+                    timeLeft={formattedTime}
+                    isWarning={isTimeRunningOut}
+                    isCritical={isTimeCritical}
+                    percentage={percentage}
+                  />
+                </div>
+              )}
 
               {/* Pause Button */}
               <button
                 onClick={handlePause}
-                className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                className="p-1.5 sm:p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
                 title="Tạm dừng (P)"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </button>
@@ -403,99 +727,141 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="max-w-3xl mx-auto px-3 sm:px-4 py-3 sm:py-4 relative z-10">
+        {/* Mobile Quick Nav - Compact horizontal scroll */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-2 sm:p-3 mb-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-slate-600">Câu hỏi</span>
+            <span className="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
+              {session.currentQuestionIndex + 1}/{shuffledQuiz.questions.length}
+            </span>
+          </div>
+          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-slate-300">
+            {shuffledQuiz.questions.map((q, index) => (
+              <button
+                key={q.id}
+                onClick={() => goToQuestion(index)}
+                className={`flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full text-xs font-bold transition-all ${index === session.currentQuestionIndex
+                    ? 'bg-blue-600 text-white shadow-md scale-110'
+                    : session.answers[q.id]
+                      ? 'bg-green-100 text-green-700 border border-green-300'
+                      : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                }`}
+              >
+                {index + 1}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Main Quiz Content - Compact */}
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-md border-0 p-3 sm:p-5 relative overflow-hidden">
+          {/* Decorative top accent */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
           
-          {/* Left Sidebar: Quick Nav (Sticky) */}
-          <div className="lg:col-span-3 lg:sticky lg:top-24 order-2 lg:order-1">
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-slate-700">Câu hỏi</h3>
-                <span className="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-1 rounded-full">
-                  {session.currentQuestionIndex + 1}/{shuffledQuiz.questions.length}
-                </span>
-              </div>
-              <QuickNavigation
-                questions={shuffledQuiz.questions}
-                currentQuestionIndex={session.currentQuestionIndex}
-                answers={session.answers}
-                onQuestionSelect={goToQuestion}
-              />
-              
-              {/* Legend */}
-              <div className="mt-6 pt-4 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs text-slate-500">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-blue-600"></div>
-                  <span>Hiện tại</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                  <span>Đã làm</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-slate-200"></div>
-                  <span>Chưa làm</span>
-                </div>
-              </div>
-            </div>
+          <div className="relative z-10">
+            <QuestionRenderer
+              question={currentQuestion}
+              questionNumber={session.currentQuestionIndex + 1}
+              value={session.answers[currentQuestion.id]}
+              onChange={(answer: AnswerValue) => handleAnswerChange(currentQuestion.id, answer)}
+              onCheckAnswer={shouldShowInstantFeedback() && isComplexQuestionType(currentQuestion.type) ? handleCheckAnswer : undefined}
+              feedback={shouldShowInstantFeedback() ? {
+                isAnswered: feedbackState[currentQuestion.id]?.isAnswered || false,
+                isCorrect: feedbackState[currentQuestion.id]?.isCorrect ?? null,
+                correctAnswer: feedbackState[currentQuestion.id]?.correctAnswer ?? null,
+                showExplanation: shouldShowExplanation() && (feedbackState[currentQuestion.id]?.isAnswered || false)
+              } : undefined}
+              disabled={shouldShowInstantFeedback() && feedbackState[currentQuestion.id]?.isAnswered}
+            />
           </div>
 
-          {/* Main Quiz Content */}
-          <div className="lg:col-span-9 order-1 lg:order-2">
-            <div className="bg-white rounded-3xl shadow-xl border-0 p-8 md:p-10 relative overflow-hidden">
-              {/* Decorative top accent */}
-              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
-              
-              <div className="relative z-10">
-                <QuestionRenderer
-                  question={currentQuestion}
-                  questionNumber={session.currentQuestionIndex + 1}
-                  value={session.answers[currentQuestion.id]}
-                  onChange={(answer: AnswerValue) => handleAnswerChange(currentQuestion.id, answer)}
-                />
-              </div>
-
-              {/* Navigation Buttons */}
-              <div className="flex items-center justify-between mt-10 pt-8 border-t border-gray-100">
+          {/* Navigation Buttons - Centered */}
+          <div className="flex flex-col items-center mt-4 sm:mt-6 pt-4 border-t border-gray-100 gap-3">
+            {/* Action Buttons Row */}
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
+              {/* Check Answer Button - For complex question types in Practice Mode */}
+              {shouldShowInstantFeedback() && 
+               isComplexQuestionType(currentQuestion.type) &&
+               !feedbackState[currentQuestion.id]?.isAnswered &&
+               session.answers[currentQuestion.id] && (
                 <button
-                  onClick={goToPreviousQuestion}
-                  disabled={isFirstQuestion}
-                  className={`flex items-center space-x-2 px-6 py-3 rounded-full font-semibold transition-all duration-200 ${
-                    isFirstQuestion
-                      ? 'bg-gray-50 text-gray-300 cursor-not-allowed'
-                      : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-400 hover:text-blue-600 hover:shadow-md'
+                  onClick={handleCheckAnswer}
+                  className="flex items-center justify-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 bg-indigo-500 text-white rounded-full text-sm font-semibold hover:bg-indigo-600 shadow-md transition-all"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Kiểm tra</span>
+                </button>
+              )}
+              
+              {/* Retry Button */}
+              {shouldShowInstantFeedback() && 
+               feedbackState[currentQuestion.id]?.isAnswered && 
+               !feedbackState[currentQuestion.id]?.isCorrect && 
+               settings.practiceConfig.retryOnWrong && (
+                <button
+                  onClick={() => {
+                    setFeedbackState(prev => {
+                      const newState = { ...prev };
+                      delete newState[currentQuestion.id];
+                      return newState;
+                    });
+                    updateAnswer(currentQuestion.id, '');
+                    setIsPracticeTimerPaused(false);
+                    setPracticeTimeLeft(practiceTimePerQuestion);
+                  }}
+                  className="flex items-center justify-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 bg-amber-500 text-white rounded-full text-sm font-semibold hover:bg-amber-600 shadow-md transition-all"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span>Thử lại</span>
+                </button>
+              )}
+            </div>
+
+            {/* Navigation Row - Centered */}
+            <div className="flex items-center justify-center gap-3 w-full">
+              <button
+                onClick={goToPreviousQuestion}
+                disabled={isFirstQuestion}
+                className={`flex items-center justify-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-sm font-semibold transition-all ${isFirstQuestion
+                    ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                    : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-400 hover:text-blue-600 shadow-sm hover:shadow-md'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span className="hidden sm:inline">Trước</span>
+              </button>
+
+              {isLastQuestion ? (
+                <button
+                  onClick={handleSubmitQuiz}
+                  className="flex items-center justify-center gap-1.5 px-5 sm:px-6 py-2 sm:py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full text-sm font-bold hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Nộp bài</span>
+                </button>
+              ) : (
+                <button
+                  onClick={goToNextQuestion}
+                  className={`flex items-center justify-center gap-1.5 px-5 sm:px-6 py-2 sm:py-2.5 rounded-full text-sm font-semibold shadow-md hover:shadow-lg transition-all ${shouldShowInstantFeedback() && feedbackState[currentQuestion.id]?.isAnswered
+                      ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
                   }`}
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                  <span>{shouldShowInstantFeedback() && feedbackState[currentQuestion.id]?.isAnswered ? 'Tiếp tục' : 'Tiếp'}</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                   </svg>
-                  <span>Câu trước</span>
                 </button>
-
-                <div className="flex space-x-3">
-                  {isLastQuestion ? (
-                    <button
-                      onClick={handleSubmitQuiz}
-                      className="flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full font-bold hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>Nộp bài</span>
-                    </button>
-                  ) : (
-                    <button
-                      onClick={goToNextQuestion}
-                      className="flex items-center space-x-2 px-8 py-3 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
-                    >
-                      <span>Câu tiếp</span>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -510,19 +876,30 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
         onGoToQuestion={goToQuestion}
       />
 
-      {/* Time Warning Alert */}
-      {isTimeRunningOut && !isPaused && (
-        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 animate-bounce">
-          <div className={`flex items-center gap-3 px-6 py-3 rounded-full shadow-lg border ${
+      {/* Time Warning Alert - Different logic for Practice vs Exam mode */}
+      {/* Practice mode: only show when <= 5 seconds */}
+      {settings.mode === 'practice' && practiceTimeLeft <= 5 && practiceTimeLeft > 0 && !isPracticeTimerPaused && !isPaused && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 animate-bounce">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full shadow-lg bg-red-600 text-white border border-red-700 text-sm">
+            <span>⏰</span>
+            <span className="font-bold">Còn {practiceTimeLeft}s!</span>
+          </div>
+        </div>
+      )}
+      
+      {/* Exam mode: show when time is running out */}
+      {settings.mode === 'exam' && isTimeRunningOut && !isPaused && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 animate-bounce">
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-full shadow-lg border text-sm ${
             isTimeCritical 
               ? 'bg-red-600 text-white border-red-700' 
               : 'bg-yellow-500 text-white border-yellow-600'
           }`}>
-            <span className="text-2xl">⏰</span>
+            <span>⏰</span>
             <span className="font-bold">
               {isTimeCritical 
                 ? "Sắp hết giờ! Nộp bài ngay!" 
-                : "Chú ý: Thời gian sắp hết"}
+                : "Thời gian sắp hết"}
             </span>
           </div>
         </div>

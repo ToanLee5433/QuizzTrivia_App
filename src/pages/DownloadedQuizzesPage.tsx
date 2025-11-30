@@ -11,7 +11,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-// import { useTranslation } from 'react-i18next'; // TODO: Add translations
+import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../lib/store';
 import {
@@ -49,7 +49,7 @@ function formatDate(timestamp: number): string {
 // ============================================================================
 
 export const DownloadedQuizzesPage: React.FC = () => {
-  // const { t } = useTranslation(); // Unused for now
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   // 🔐 SECURITY: Get current user ID from Redux
@@ -87,7 +87,7 @@ export const DownloadedQuizzesPage: React.FC = () => {
       setUpdatesAvailable(updates);
 
       if (updates.size > 0) {
-        toast.info(`Có ${updates.size} quiz có bản cập nhật mới`, { autoClose: 5000 });
+        toast.info(t('downloadedQuizzes.updatesAvailable', { count: updates.size }), { autoClose: 5000 });
       }
     };
 
@@ -111,7 +111,7 @@ export const DownloadedQuizzesPage: React.FC = () => {
       setStorageInfo(storage);
     } catch (error) {
       console.error('Failed to load downloaded quizzes:', error);
-      toast.error('Không thể tải danh sách quiz đã tải');
+      toast.error(t('downloadedQuizzes.loadError'));
     } finally {
       setIsLoading(false);
     }
@@ -125,14 +125,14 @@ export const DownloadedQuizzesPage: React.FC = () => {
       const success = await downloadManager.deleteDownloadedQuiz(selectedQuiz, userId);
 
       if (success) {
-        toast.success('Đã xóa quiz thành công');
+        toast.success(t('downloadedQuizzes.deleteSuccess'));
         await loadData();
       } else {
-        toast.error('Không thể xóa quiz');
+        toast.error(t('downloadedQuizzes.deleteError'));
       }
     } catch (error) {
       console.error('Delete failed:', error);
-      toast.error('Lỗi khi xóa quiz');
+      toast.error(t('downloadedQuizzes.deleteFailed'));
     } finally {
       setShowDeleteConfirm(false);
       setSelectedQuiz(null);
@@ -145,11 +145,11 @@ export const DownloadedQuizzesPage: React.FC = () => {
     
     try {
       const count = await downloadManager.clearAllDownloads(userId);
-      toast.success(`Đã xóa ${count} quiz`);
+      toast.success(t('downloadedQuizzes.clearedCount', { count }));
       await loadData();
     } catch (error) {
       console.error('Clear all failed:', error);
-      toast.error('Không thể xóa tất cả quiz');
+      toast.error(t('downloadedQuizzes.clearError'));
     } finally {
       setShowClearAllConfirm(false);
     }
@@ -169,7 +169,7 @@ export const DownloadedQuizzesPage: React.FC = () => {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Đang tải...</p>
+          <p className="text-gray-600 dark:text-gray-400">{t('downloadedQuizzes.loading')}</p>
         </div>
       </div>
     );
@@ -181,10 +181,10 @@ export const DownloadedQuizzesPage: React.FC = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            📥 Quiz Đã Tải
+            📥 {t('downloadedQuizzes.title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Chơi quiz offline mà không cần kết nối mạng
+            {t('downloadedQuizzes.subtitle')}
           </p>
         </div>
 
@@ -197,14 +197,14 @@ export const DownloadedQuizzesPage: React.FC = () => {
           >
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Dung Lượng Lưu Trữ
+                {t('downloadedQuizzes.storageTitle')}
               </h2>
               {quizzes.length > 0 && (
                 <button
                   onClick={() => setShowClearAllConfirm(true)}
                   className="text-red-600 hover:text-red-700 text-sm font-medium"
                 >
-                  Xóa Tất Cả
+                  {t('downloadedQuizzes.clearAll')}
                 </button>
               )}
             </div>
@@ -227,20 +227,20 @@ export const DownloadedQuizzesPage: React.FC = () => {
 
             <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
               <span>
-                Đã dùng: {formatBytes(storageInfo.used)} / {formatBytes(storageInfo.quota)}
+                {t('downloadedQuizzes.usedStorage')}: {formatBytes(storageInfo.used)} / {formatBytes(storageInfo.quota)}
               </span>
               <span>{storageInfo.percentUsed.toFixed(1)}%</span>
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
               <div className="bg-gray-50 dark:bg-gray-700 rounded p-3">
-                <p className="text-gray-500 dark:text-gray-400 mb-1">Quiz Đã Tải</p>
+                <p className="text-gray-500 dark:text-gray-400 mb-1">{t('downloadedQuizzes.quizzesDownloaded')}</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {storageInfo.downloadedQuizzes}
                 </p>
               </div>
               <div className="bg-gray-50 dark:bg-gray-700 rounded p-3">
-                <p className="text-gray-500 dark:text-gray-400 mb-1">Còn Trống</p>
+                <p className="text-gray-500 dark:text-gray-400 mb-1">{t('downloadedQuizzes.availableStorage')}</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {formatBytes(storageInfo.available)}
                 </p>
@@ -266,16 +266,16 @@ export const DownloadedQuizzesPage: React.FC = () => {
               />
             </svg>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              Chưa Có Quiz Nào
+              {t('downloadedQuizzes.noQuizzes')}
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Tải quiz về để chơi khi không có mạng
+              {t('downloadedQuizzes.noQuizzesHint')}
             </p>
             <button
               onClick={() => navigate('/quizzes')}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium"
             >
-              Khám Phá Quiz
+              {t('downloadedQuizzes.exploreQuizzes')}
             </button>
           </div>
         ) : (
@@ -317,7 +317,7 @@ export const DownloadedQuizzesPage: React.FC = () => {
 
                     {/* Offline Badge */}
                     <div className="absolute top-3 right-3 bg-green-500 text-white text-xs px-3 py-1 rounded-full font-medium shadow-lg">
-                      ✓ Offline
+                      ✓ {t('downloadedQuizzes.offlineBadge')}
                     </div>
                   </div>
 
@@ -345,7 +345,7 @@ export const DownloadedQuizzesPage: React.FC = () => {
                             clipRule="evenodd"
                           />
                         </svg>
-                        {quiz.questions?.length || 0} câu
+                        {quiz.questions?.length || 0} {t('downloadedQuizzes.questions')}
                       </span>
 
                       <span className="flex items-center gap-1">
@@ -361,7 +361,7 @@ export const DownloadedQuizzesPage: React.FC = () => {
                     </div>
 
                     <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
-                      Đã tải: {formatDate(quiz.downloadedAt)}
+                      {t('downloadedQuizzes.downloadedAt')}: {formatDate(quiz.downloadedAt)}
                     </p>
 
                     {/* 🔥 Update Available Badge */}
@@ -371,17 +371,17 @@ export const DownloadedQuizzesPage: React.FC = () => {
                           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                         </svg>
                         <div className="flex-1 text-sm">
-                          <p className="font-medium text-yellow-800 dark:text-yellow-300 mb-1">Có bản cập nhật mới</p>
+                          <p className="font-medium text-yellow-800 dark:text-yellow-300 mb-1">{t('downloadedQuizzes.updateAvailable')}</p>
                           <button
                             onClick={async () => {
                               if (!userId) {
-                                toast.error('Vui lòng đăng nhập');
+                                toast.error(t('downloadedQuizzes.loginRequired'));
                                 return;
                               }
-                              toast.info('Đang cập nhật...');
+                              toast.info(t('downloadedQuizzes.updating'));
                               const result = await downloadManager.updateDownloadedQuiz(quiz.id, userId);
                               if (result.success) {
-                                toast.success('Cập nhật thành công');
+                                toast.success(t('downloadedQuizzes.updateSuccess'));
                                 await loadData();
                                 setUpdatesAvailable((prev) => {
                                   const newSet = new Set(prev);
@@ -389,12 +389,12 @@ export const DownloadedQuizzesPage: React.FC = () => {
                                   return newSet;
                                 });
                               } else {
-                                toast.error(result.error || 'Cập nhật thất bại');
+                                toast.error(result.error || t('downloadedQuizzes.updateFailed'));
                               }
                             }}
                             className="text-yellow-700 dark:text-yellow-400 underline hover:no-underline"
                           >
-                            Cập nhật ngay
+                            {t('downloadedQuizzes.updateNow')}
                           </button>
                         </div>
                       </div>
@@ -406,7 +406,7 @@ export const DownloadedQuizzesPage: React.FC = () => {
                         onClick={() => handlePlay(quiz.id)}
                         className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors"
                       >
-                        Chơi Ngay
+                        {t('downloadedQuizzes.playNow')}
                       </button>
 
                       <button
@@ -450,23 +450,23 @@ export const DownloadedQuizzesPage: React.FC = () => {
                 onClick={(e) => e.stopPropagation()}
               >
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                  Xác Nhận Xóa
+                  {t('downloadedQuizzes.deleteConfirmTitle')}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  Bạn có chắc chắn muốn xóa quiz này? Hành động này không thể hoàn tác.
+                  {t('downloadedQuizzes.deleteConfirmMessage')}
                 </p>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setShowDeleteConfirm(false)}
                     className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white py-2 px-4 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600"
                   >
-                    Hủy
+                    {t('downloadedQuizzes.cancel')}
                   </button>
                   <button
                     onClick={handleDelete}
                     className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg font-medium"
                   >
-                    Xóa
+                    {t('downloadedQuizzes.delete')}
                   </button>
                 </div>
               </motion.div>
@@ -492,24 +492,26 @@ export const DownloadedQuizzesPage: React.FC = () => {
                 onClick={(e) => e.stopPropagation()}
               >
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                  Xóa Tất Cả Quiz
+                  {t('downloadedQuizzes.clearAllConfirmTitle')}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  Bạn có chắc chắn muốn xóa tất cả {quizzes.length} quiz đã tải? Điều này sẽ giải
-                  phóng {formatBytes(storageInfo?.used || 0)} dung lượng.
+                  {t('downloadedQuizzes.clearAllConfirmMessage', { 
+                    count: quizzes.length, 
+                    size: formatBytes(storageInfo?.used || 0) 
+                  })}
                 </p>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setShowClearAllConfirm(false)}
                     className="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white py-2 px-4 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600"
                   >
-                    Hủy
+                    {t('downloadedQuizzes.cancel')}
                   </button>
                   <button
                     onClick={handleClearAll}
                     className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg font-medium"
                   >
-                    Xóa Tất Cả
+                    {t('downloadedQuizzes.deleteAll')}
                   </button>
                 </div>
               </motion.div>

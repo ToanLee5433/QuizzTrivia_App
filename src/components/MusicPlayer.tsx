@@ -5,6 +5,7 @@ import { storage, db, auth } from '../lib/firebase/config';
 import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy, Timestamp } from 'firebase/firestore';
 import { useSettings } from '../contexts/SettingsContext';
+import { useTranslation } from 'react-i18next';
 
 declare global {
   interface Window {
@@ -130,7 +131,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
   // Firebase Storage functions
   const uploadAudioFile = async (file: File, customTitle?: string) => {
     if (!auth.currentUser) {
-      alert('Vui lòng đăng nhập để tải lên file');
+      alert(t('musicPlayer.loginRequired'));
       return;
     }
 
@@ -153,7 +154,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
         },
         (error) => {
           console.error('Upload error:', error);
-          alert('Lỗi khi tải lên file: ' + error.message);
+          alert(t('musicPlayer.uploadErrorWithMessage', { message: error.message }));
           setIsUploading(false);
         },
         async () => {
@@ -179,12 +180,12 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
           // Save to Firestore
           await saveTrackToFirestore(newTrack);
           
-          alert('Tải lên thành công!');
+          alert(t('musicPlayer.uploadSuccess'));
         }
       );
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Lỗi khi tải lên file');
+      alert(t('musicPlayer.uploadError'));
       setIsUploading(false);
     }
   };
@@ -211,7 +212,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
     
     setUploadUrl('');
     setUploadFileName('');
-    alert('Đã thêm vào queue!');
+    alert(t('musicPlayer.addedToQueue'));
   };
 
   const deleteUploadedTrack = async (track: Track) => {
@@ -228,10 +229,10 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
       // Delete from Firestore
       await deleteTrackFromFirestore(track.id);
       
-      alert('Đã xóa file khỏi Storage');
+      alert(t('musicPlayer.deletedFromStorage'));
     } catch (error) {
       console.error('Delete error:', error);
-      alert('Lỗi khi xóa file');
+      alert(t('musicPlayer.deleteError'));
     }
   };
 
@@ -328,10 +329,10 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
       setAlbums(prev => [...prev, { ...newAlbum, id: docRef.id }]);
       setAlbumName('');
       setAlbumDescription('');
-      alert('Album đã được lưu!');
+      alert(t('musicPlayer.albumSaved'));
     } catch (error) {
       console.error('Error saving album:', error);
-      alert('Lỗi khi lưu album');
+      alert(t('musicPlayer.albumSaveError'));
     }
   };
 
@@ -369,10 +370,10 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
     try {
       await deleteDoc(doc(db, 'userAlbums', albumId));
       setAlbums(prev => prev.filter(a => a.id !== albumId));
-      alert('Đã xóa album');
+      alert(t('musicPlayer.albumDeleted'));
     } catch (error) {
       console.error('Error deleting album:', error);
-      alert('Lỗi khi xóa album');
+      alert(t('musicPlayer.albumDeleteError'));
     }
   };
 
@@ -917,7 +918,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
       if (videoId) {
         console.log('Detected YouTube video ID:', videoId);
         setIsYouTube(true);
-        setTrackTitle(`Đang tải YouTube: ${videoId}`);
+        setTrackTitle(t('musicPlayer.loadingYoutube', { videoId }));
         
         try {
           console.log('Loading YouTube API...');
@@ -934,7 +935,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
           console.error('YouTube API loading failed:', error);
           setIsLoading(false);
           setIsYouTube(false);
-          alert('Không thể tải YouTube API. Vui lòng kiểm tra kết nối mạng và thử lại.');
+          alert(t('musicPlayer.youtubeApiError'));
           return;
         }
       } else {
@@ -955,7 +956,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
         onloaderror: (_id, error) => {
           console.error('Audio loading error:', error);
           setIsLoading(false);
-          alert('Không thể tải audio. Vui lòng kiểm tra URL hoặc thử link audio trực tiếp (.mp3, .wav, .ogg)');
+          alert(t('musicPlayer.cannotLoadAudio'));
         },
         onplay: () => {
           console.log('Audio started playing');
@@ -981,7 +982,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
         onplayerror: (_id, error) => {
           console.error('Audio play error:', error);
           setIsPlaying(false);
-          alert('Không thể phát audio. Có thể do CORS hoặc file không tồn tại.');
+          alert(t('musicPlayer.cannotPlayAudio'));
         }
       });
 
@@ -990,7 +991,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
     } catch (error) {
       console.error('Error in loadAudio:', error);
       setIsLoading(false);
-      alert('Lỗi khi tải audio. Vui lòng kiểm tra URL và thử lại.');
+      alert(t('musicPlayer.audioLoadError'));
     }
   }, [inputUrl, volume, isMuted, repeatMode, playNext, togglePlayPause]);
 
@@ -1188,6 +1189,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
 
   // Settings context
   const { isMusicPlayerEnabled } = useSettings();
+  const { t } = useTranslation();
   
   // If music player is disabled in settings, don't render
   if (!isMusicPlayerEnabled) {
@@ -1449,7 +1451,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
                   type="text"
                   value={inputUrl}
                   onChange={(e) => setInputUrl(e.target.value)}
-                  placeholder="Nhập URL: YouTube, audio web, hoặc link trực tiếp..."
+                  placeholder={t('musicPlayer.urlPlaceholderInput')}
                   className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:border-white/40 focus:bg-white/15 transition-all text-sm"
                   onMouseDown={(e) => e.stopPropagation()}
                   onKeyDown={(e) => {
@@ -1468,39 +1470,39 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
                   {isLoading ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Đang tải...
+                      {t('musicPlayer.loading')}
                     </>
                   ) : (
                     <>
                       <Plus className="w-4 h-4" />
-                      Thêm URL vào Queue
+                      {t('musicPlayer.addUrlToQueue')}
                     </>
                   )}
                 </button>
               </div>
               
               <div className="text-xs text-purple-200 p-2 bg-white/5 rounded-lg mt-2">
-                <div className="font-semibold mb-1">Hỗ trợ:</div>
-                <div>• YouTube: youtube.com/watch, youtu.be</div>
-                <div>• Audio web: .mp3, .wav, .ogg (link trực tiếp)</div>
-                <div>• URL từ web khác có chứa audio</div>
-                <div className="mt-1 font-semibold">• Phím tắt: Space (phát/dừng)</div>
+                <div className="font-semibold mb-1">{t('musicPlayer.support')}</div>
+                <div>• {t('musicPlayer.youtubeUrls')}</div>
+                <div>• {t('musicPlayer.audioWeb')}</div>
+                <div>• {t('musicPlayer.urlFromWeb')}</div>
+                <div className="mt-1 font-semibold">• {t('musicPlayer.shortcutSpace')}</div>
               </div>
             </div>
 
             {/* Upload Section */}
             {showUploadSection && (
               <div className="mb-4 p-3 bg-white/5 rounded-xl">
-                <h4 className="text-sm font-semibold text-white mb-3">Thêm nhạc</h4>
+                <h4 className="text-sm font-semibold text-white mb-3">{t('musicPlayer.addMusic')}</h4>
                 
                 {/* File Upload */}
                 <div className="mb-3">
-                  <label className="text-xs text-purple-200 mb-1 block">Tên bài hát (tùy chọn)</label>
+                  <label className="text-xs text-purple-200 mb-1 block">{t('musicPlayer.customSongName')}</label>
                   <input
                     type="text"
                     value={uploadFileName}
                     onChange={(e) => setUploadFileName(e.target.value)}
-                    placeholder="Tên tùy chỉnh cho bài hát..."
+                    placeholder={t('musicPlayer.customSongPlaceholder')}
                     className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-white/40 text-sm mb-2"
                     onMouseDown={(e) => e.stopPropagation()}
                   />
@@ -1512,7 +1514,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
                       const file = e.target.files?.[0];
                       if (file) {
                         if (file.size > 50 * 1024 * 1024) { // 50MB limit
-                          alert('File quá lớn. Giới hạn 50MB');
+                          alert(t('musicPlayer.fileTooLarge'));
                           return;
                         }
                         uploadAudioFile(file, uploadFileName);
@@ -1527,7 +1529,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
                 {isUploading && (
                   <div className="mb-3">
                     <div className="flex justify-between text-xs text-purple-200 mb-1">
-                      <span>Đang tải lên...</span>
+                      <span>{t('musicPlayer.uploading')}</span>
                       <span>{Math.round(uploadProgress)}%</span>
                     </div>
                     <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
@@ -1541,12 +1543,12 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
                 
                 {/* URL Input */}
                 <div className="mb-3 pt-3 border-t border-white/10">
-                  <label className="text-xs text-purple-200 mb-1 block">Hoặc thêm từ URL</label>
+                  <label className="text-xs text-purple-200 mb-1 block">{t('musicPlayer.addFromUrl')}</label>
                   <input
                     type="text"
                     value={uploadUrl}
                     onChange={(e) => setUploadUrl(e.target.value)}
-                    placeholder="https://... (YouTube, audio trực tiếp)"
+                    placeholder={t('musicPlayer.urlPlaceholder')}
                     className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-white/40 text-sm mb-2"
                     onMouseDown={(e) => e.stopPropagation()}
                   />
@@ -1557,15 +1559,15 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
                     onMouseDown={(e) => e.stopPropagation()}
                   >
                     <Plus className="w-4 h-4" />
-                    Thêm URL vào Queue
+                    {t('musicPlayer.addUrlToQueue')}
                   </button>
                 </div>
                 
                 <div className="text-xs text-purple-200 bg-white/5 rounded p-2">
-                  <div className="font-semibold mb-1">Hỗ trợ:</div>
-                  • File: MP3, WAV, OGG, M4A (max 50MB)
+                  <div className="font-semibold mb-1">{t('musicPlayer.support')}</div>
+                  • {t('musicPlayer.supportFile')}
                   <br />
-                  • URL: YouTube, audio trực tiếp (.mp3, .ogg)
+                  • {t('musicPlayer.supportUrl')}
                 </div>
               </div>
             )}
@@ -1638,7 +1640,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
                     
                     {showSpeedControl && (
                       <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 rounded-lg p-2 shadow-xl border border-white/20 whitespace-nowrap z-50">
-                        <div className="text-xs text-purple-200 mb-2 text-center">Tốc độ: {playbackSpeed}x</div>
+                        <div className="text-xs text-purple-200 mb-2 text-center">{t('musicPlayer.speed', { speed: playbackSpeed })}</div>
                         <div className="flex gap-1">
                           {[0.5, 0.75, 1, 1.25, 1.5, 2].map(speed => (
                             <button
@@ -1748,7 +1750,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Tìm kiếm bài hát..."
+                      placeholder={t('musicPlayer.searchPlaceholder')}
                       className="w-full pl-9 pr-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-white/40 text-xs"
                       onMouseDown={(e) => e.stopPropagation()}
                     />
@@ -1759,7 +1761,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
                   <textarea
                     value={queueInput}
                     onChange={(e) => setQueueInput(e.target.value)}
-                    placeholder="Paste multiple URLs (one per line)..."
+                    placeholder={t('musicPlayer.pasteUrls')}
                     className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-white/40 focus:bg-white/15 transition-all text-xs resize-none"
                     rows={3}
                     onMouseDown={(e) => e.stopPropagation()}
@@ -1861,12 +1863,12 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                if (confirm('Xóa file này khỏi Storage?')) {
+                                if (confirm(t('musicPlayer.confirmDeleteFromStorage'))) {
                                   deleteUploadedTrack(track);
                                 }
                               }}
                               className="p-1 rounded bg-red-600/50 hover:bg-red-600/70 transition-colors"
-                              title="Xóa khỏi Storage"
+                              title={t('musicPlayer.deleteFromStorage')}
                             >
                               <Trash2 className="w-3 h-3" />
                             </button>
@@ -1952,7 +1954,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
                       type="text"
                       value={albumName}
                       onChange={(e) => setAlbumName(e.target.value)}
-                      placeholder="Tên album"
+                      placeholder={t('musicPlayer.albumName')}
                       className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-white placeholder-white/50 text-xs"
                       onMouseDown={(e) => e.stopPropagation()}
                     />
@@ -1960,7 +1962,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
                       type="text"
                       value={albumDescription}
                       onChange={(e) => setAlbumDescription(e.target.value)}
-                      placeholder="Mô tả (tùy chọn)"
+                      placeholder={t('musicPlayer.albumDescription')}
                       className="w-full px-2 py-1 bg-white/10 border border-white/20 rounded text-white placeholder-white/50 text-xs"
                       onMouseDown={(e) => e.stopPropagation()}
                     />
@@ -1971,7 +1973,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
                       onMouseDown={(e) => e.stopPropagation()}
                     >
                       <Save className="w-3 h-3" />
-                      Lưu Album ({queue.length} bài)
+                      {t('musicPlayer.saveAlbum', { count: queue.length })}
                     </button>
                   </div>
                 )}
@@ -1989,7 +1991,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-white truncate">{album.name}</div>
                         <div className="text-purple-200 text-xs">
-                          {album.tracks.length} bài
+                          {t('musicPlayer.tracksCount', { count: album.tracks.length })}
                           {album.description && ` • ${album.description.slice(0, 20)}${album.description.length > 20 ? '...' : ''}`}
                         </div>
                       </div>
@@ -2003,7 +2005,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
                         </button>
                         <button
                           onClick={() => {
-                            if (confirm('Xóa album này?')) {
+                            if (confirm(t('musicPlayer.confirmDeleteAlbum'))) {
                               deleteAlbum(album.id);
                             }
                           }}
@@ -2017,7 +2019,7 @@ const MusicPlayer: React.FC<MusicPlayerProps> = ({ onClose }) => {
                   ))}
                   {albums.length === 0 && (
                     <div className="text-center text-purple-200 py-4">
-                      Chưa có album nào. Tạo queue và lưu thành album!
+                      {t('musicPlayer.noAlbums')}
                     </div>
                   )}
                 </div>

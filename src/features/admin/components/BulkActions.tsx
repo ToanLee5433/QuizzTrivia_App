@@ -24,7 +24,7 @@ const BulkActions: React.FC<BulkActionsProps> = ({
   if (selectedItems.length === 0) return null;
 
   const bulkDelete = async () => {
-    if (!confirm(`Bạn có chắc muốn xóa ${selectedItems.length} ${itemType}?`)) return;
+    if (!confirm(t('admin.bulkActions.confirmDelete', { count: selectedItems.length, type: itemType }))) return;
     
     setLoading(true);
     try {
@@ -33,11 +33,11 @@ const BulkActions: React.FC<BulkActionsProps> = ({
       );
       await Promise.all(promises);
       
-      toast.success(`Đã xóa ${selectedItems.length} ${itemType}!`);
+      toast.success(t('admin.bulkActions.deleteSuccess', { count: selectedItems.length, type: itemType }));
       onClearSelection();
       onRefresh();
     } catch (error) {
-      toast.error('Lỗi khi xóa hàng loạt!');
+      toast.error(t('admin.bulkActions.deleteError'));
     } finally {
       setLoading(false);
     }
@@ -52,11 +52,11 @@ const BulkActions: React.FC<BulkActionsProps> = ({
       );
       await Promise.all(promises);
       
-      toast.success(`Đã cập nhật ${selectedItems.length} ${itemType}!`);
+      toast.success(t('admin.bulkActions.updateSuccess', { count: selectedItems.length, type: itemType }));
       onClearSelection();
       onRefresh();
     } catch (error) {
-      toast.error('Lỗi khi cập nhật hàng loạt!');
+      toast.error(t('admin.bulkActions.updateError'));
     } finally {
       setLoading(false);
     }
@@ -66,7 +66,7 @@ const BulkActions: React.FC<BulkActionsProps> = ({
     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
       <div className="flex items-center justify-between">
         <span className="text-blue-800 font-medium">
-          Đã chọn {selectedItems.length} {itemType}
+          {t('admin.bulkActions.selected', { count: selectedItems.length, type: itemType })}
         </span>
         
         <div className="flex gap-2">

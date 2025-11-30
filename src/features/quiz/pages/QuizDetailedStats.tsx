@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { RootState } from '../../../lib/store';
 import SafeHTML from '../../../shared/components/ui/SafeHTML';
 import { ROUTES } from '../../../config/routes';
@@ -113,6 +114,7 @@ interface Stats {
 const QuizDetailedStats: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user } = useSelector((state: RootState) => state.auth);
   
   const [quiz, setQuiz] = useState<Quiz | null>(null);
@@ -384,7 +386,7 @@ const QuizDetailedStats: React.FC = () => {
 
   const handleExport = () => {
     // TODO: Implement export to CSV/Excel
-    alert('Tính năng xuất báo cáo đang được phát triển');
+    alert(t('quizStats.exportDeveloping'));
   };
 
   if (loading) {
@@ -392,7 +394,7 @@ const QuizDetailedStats: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Đang tải thống kê...</p>
+          <p className="text-gray-600 font-medium">{t('quizStats.loading')}</p>
         </div>
       </div>
     );
@@ -402,12 +404,12 @@ const QuizDetailedStats: React.FC = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">Không tìm thấy quiz</p>
+          <p className="text-gray-600 mb-4">{t('quizStats.notFound')}</p>
           <button
             onClick={() => navigate(ROUTES.CREATOR_MY_QUIZZES)}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
-            Quay lại
+            {t('quizStats.backButton')}
           </button>
         </div>
       </div>
@@ -479,7 +481,7 @@ const QuizDetailedStats: React.FC = () => {
             className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors group"
           >
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-            <span className="font-medium">Quay lại My Quizzes</span>
+            <span className="font-medium">{t('quizStats.backToMyQuizzes')}</span>
           </button>
 
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
@@ -510,11 +512,11 @@ const QuizDetailedStats: React.FC = () => {
                     quiz.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
                     'bg-red-100 text-red-700'
                   }`}>
-                    {quiz.difficulty === 'easy' ? '⭐ Dễ' : quiz.difficulty === 'medium' ? '⭐⭐ Trung bình' : '⭐⭐⭐ Khó'}
+                    {quiz.difficulty === 'easy' ? `⭐ ${t('quizStats.difficulty.easy')}` : quiz.difficulty === 'medium' ? `⭐⭐ ${t('quizStats.difficulty.medium')}` : `⭐⭐⭐ ${t('quizStats.difficulty.hard')}`}
                   </span>
                   <span className="text-gray-600">
                     <Brain className="w-4 h-4 inline mr-1" />
-                    {quiz.questionCount || quiz.questions?.length || 0} câu hỏi
+                    {quiz.questionCount || quiz.questions?.length || 0} {t('quizStats.questions')}
                   </span>
                 </div>
               </div>
@@ -534,23 +536,23 @@ const QuizDetailedStats: React.FC = () => {
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 font-medium"
               >
                 <Eye className="w-4 h-4" />
-                Xem Quiz
+                {t('quizStats.viewQuiz')}
               </button>
               <button
                 onClick={handleExport}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 font-medium"
               >
                 <Download className="w-4 h-4" />
-                Xuất báo cáo
+                {t('quizStats.exportReport')}
               </button>
               <select
                 value={timeRange}
                 onChange={(e) => setTimeRange(e.target.value as any)}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               >
-                <option value="7days">7 ngày qua</option>
-                <option value="30days">30 ngày qua</option>
-                <option value="all">Tất cả thời gian</option>
+                <option value="7days">{t('quizStats.timeRange.7days')}</option>
+                <option value="30days">{t('quizStats.timeRange.30days')}</option>
+                <option value="all">{t('quizStats.timeRange.all')}</option>
               </select>
             </div>
           </div>
@@ -565,7 +567,7 @@ const QuizDetailedStats: React.FC = () => {
               <Activity className="w-6 h-6 opacity-60" />
             </div>
             <h3 className="text-3xl font-bold mb-1">{stats.totalViews.toLocaleString()}</h3>
-            <p className="text-blue-100 text-sm font-medium">Lượt xem</p>
+            <p className="text-blue-100 text-sm font-medium">{t('quizStats.views')}</p>
           </div>
 
           {/* Total Attempts */}
@@ -575,7 +577,7 @@ const QuizDetailedStats: React.FC = () => {
               <TrendingUp className="w-6 h-6 opacity-60" />
             </div>
             <h3 className="text-3xl font-bold mb-1">{stats.totalAttempts.toLocaleString()}</h3>
-            <p className="text-purple-100 text-sm font-medium">Lượt làm bài</p>
+            <p className="text-purple-100 text-sm font-medium">{t('quizStats.attempts')}</p>
           </div>
 
           {/* Completion Rate */}
@@ -585,7 +587,7 @@ const QuizDetailedStats: React.FC = () => {
               <Target className="w-6 h-6 opacity-60" />
             </div>
             <h3 className="text-3xl font-bold mb-1">{stats.completionRate.toFixed(1)}%</h3>
-            <p className="text-green-100 text-sm font-medium">Tỷ lệ hoàn thành</p>
+            <p className="text-green-100 text-sm font-medium">{t('quizStats.completionRate')}</p>
           </div>
 
           {/* Average Score */}
@@ -595,7 +597,7 @@ const QuizDetailedStats: React.FC = () => {
               <Star className="w-6 h-6 opacity-60" />
             </div>
             <h3 className="text-3xl font-bold mb-1">{stats.averageScore}%</h3>
-            <p className="text-orange-100 text-sm font-medium">Điểm trung bình</p>
+            <p className="text-orange-100 text-sm font-medium">{t('quizStats.averageScore')}</p>
           </div>
 
           {/* Pass Rate */}
@@ -605,7 +607,7 @@ const QuizDetailedStats: React.FC = () => {
               <CheckCircle className="w-6 h-6 opacity-60" />
             </div>
             <h3 className="text-3xl font-bold mb-1">{stats.passRate}%</h3>
-            <p className="text-teal-100 text-sm font-medium">Tỷ lệ đạt (≥60%)</p>
+            <p className="text-teal-100 text-sm font-medium">{t('quizStats.passRate')}</p>
           </div>
 
           {/* Highest Score */}
@@ -615,7 +617,7 @@ const QuizDetailedStats: React.FC = () => {
               <Star className="w-6 h-6 opacity-60" />
             </div>
             <h3 className="text-3xl font-bold mb-1">{stats.highestScore}%</h3>
-            <p className="text-pink-100 text-sm font-medium">Điểm cao nhất</p>
+            <p className="text-pink-100 text-sm font-medium">{t('quizStats.highestScore')}</p>
           </div>
 
           {/* Average Time */}
@@ -625,7 +627,7 @@ const QuizDetailedStats: React.FC = () => {
               <Activity className="w-6 h-6 opacity-60" />
             </div>
             <h3 className="text-3xl font-bold mb-1">{formatTime(stats.averageTimeSpent)}</h3>
-            <p className="text-indigo-100 text-sm font-medium">Thời gian TB</p>
+            <p className="text-indigo-100 text-sm font-medium">{t('quizStats.averageTime')}</p>
           </div>
 
           {/* Completions */}
@@ -635,7 +637,7 @@ const QuizDetailedStats: React.FC = () => {
               <CheckCircle className="w-6 h-6 opacity-60" />
             </div>
             <h3 className="text-3xl font-bold mb-1">{stats.totalCompletions.toLocaleString()}</h3>
-            <p className="text-cyan-100 text-sm font-medium">Hoàn thành</p>
+            <p className="text-cyan-100 text-sm font-medium">{t('quizStats.completions')}</p>
           </div>
         </div>
 
@@ -645,7 +647,7 @@ const QuizDetailedStats: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
             <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
               <TrendingUp className="w-6 h-6 text-blue-600" />
-              Xu hướng làm bài theo ngày
+              {t('quizStats.dailyTrend')}
             </h3>
             <div className="space-y-3">
               {stats.dailyAttempts.map((day, index) => {
@@ -673,7 +675,7 @@ const QuizDetailedStats: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
             <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
               <PieChart className="w-6 h-6 text-purple-600" />
-              Phân bố điểm số
+              {t('quizStats.scoreDistribution')}
             </h3>
             <div className="space-y-4">
               {stats.scoreDistribution.map((range, index) => {
@@ -699,7 +701,7 @@ const QuizDetailedStats: React.FC = () => {
                         className={`${color.bg} h-full flex items-center justify-between px-4 text-white text-sm font-semibold transition-all duration-500`}
                         style={{ width: `${widthPercent}%` }}
                       >
-                        <span>{range.count} HV</span>
+                        <span>{range.count} {t('quizStats.students')}</span>
                         <span>{percentage}%</span>
                       </div>
                     </div>
@@ -716,7 +718,7 @@ const QuizDetailedStats: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
             <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
               <BarChart3 className="w-6 h-6 text-green-600" />
-              Độ khó câu hỏi (Top 10 khó nhất)
+              {t('quizStats.questionDifficulty')}
             </h3>
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {stats.questionStats.length > 0 ? (
@@ -724,7 +726,7 @@ const QuizDetailedStats: React.FC = () => {
                   <div key={q.questionId} className="border-b border-gray-100 pb-3 last:border-0">
                     <div className="flex items-start justify-between mb-2">
                       <p className="text-sm text-gray-700 font-medium flex-1 pr-4">
-                        <span className="text-blue-600 font-bold">Câu {index + 1}:</span> {q.question}
+                        <span className="text-blue-600 font-bold">{t('quizStats.table.question', { number: index + 1 })}:</span> {q.question}
                       </p>
                       <span className={`text-sm font-bold px-3 py-1 rounded-lg ${
                         q.correctRate >= 80 ? 'bg-green-100 text-green-700' :
@@ -751,7 +753,7 @@ const QuizDetailedStats: React.FC = () => {
               ) : (
                 <div className="text-center py-8 text-gray-500">
                   <BarChart3 className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                  <p>Chưa có dữ liệu phân tích câu hỏi</p>
+                  <p>{t('quizStats.noQuestionData')}</p>
                 </div>
               )}
             </div>
@@ -761,7 +763,7 @@ const QuizDetailedStats: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
             <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
               <Trophy className="w-6 h-6 text-yellow-600" />
-              Top 10 học viên xuất sắc
+              {t('quizStats.topPerformers')}
             </h3>
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {stats.topPerformers.length > 0 ? (
@@ -803,7 +805,7 @@ const QuizDetailedStats: React.FC = () => {
                   </div>
                 ))
               ) : (
-                <p className="text-center text-gray-500 py-8">Chưa có dữ liệu</p>
+                <p className="text-center text-gray-500 py-8">{t('quizStats.noData')}</p>
               )}
             </div>
           </div>
@@ -813,18 +815,18 @@ const QuizDetailedStats: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
           <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
             <Calendar className="w-6 h-6 text-blue-600" />
-            20 kết quả gần nhất
+            {t('quizStats.recentResults')}
           </h3>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b-2 border-gray-200">
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Học viên</th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Điểm</th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Đúng/Tổng</th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Thời gian</th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Ngày làm</th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Kết quả</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">{t('quizStats.table.student')}</th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">{t('quizStats.table.score')}</th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">{t('quizStats.table.correctTotal')}</th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">{t('quizStats.table.time')}</th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">{t('quizStats.table.date')}</th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">{t('quizStats.table.result')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -861,12 +863,12 @@ const QuizDetailedStats: React.FC = () => {
                           {passed ? (
                             <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
                               <CheckCircle className="w-3.5 h-3.5" />
-                              Đạt
+                              {t('quizStats.table.passed')}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
                               <XCircle className="w-3.5 h-3.5" />
-                              Chưa đạt
+                              {t('quizStats.table.failed')}
                             </span>
                           )}
                         </td>
@@ -876,7 +878,7 @@ const QuizDetailedStats: React.FC = () => {
                 ) : (
                   <tr>
                     <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
-                      Chưa có kết quả nào
+                      {t('quizStats.table.noResults')}
                     </td>
                   </tr>
                 )}

@@ -35,6 +35,7 @@
   "readyPlayers": "Người chơi sẵn sàng",
   "privateRoom": "Phòng riêng tư",
   "passwordRequired": "Mật khẩu bắt buộc cho phòng riêng tư",
+  "quizPasswordRequired": "Quiz yêu cầu mật khẩu",
   "roomName": "Tên phòng",
   "enterRoomName": "Nhập tên phòng",
   "maxPlayers": "Số người chơi tối đa",
@@ -344,5 +345,54 @@
   },
   
   "isNowTheHost": "{{name}} hiện là chủ phòng",
-  "hostLeft": "Host đã rời đi. {{name}} hiện là chủ phòng."
+  "hostLeft": "Host đã rời đi. {{name}} hiện là chủ phòng.",
+  
+  "coordinator": {
+    "loadingGame": "Đang tải trò chơi...",
+    "error": "Lỗi",
+    "cannotLoadGame": "Không thể tải trò chơi",
+    "reload": "Tải lại",
+    "loadingPlayerData": "Đang tải dữ liệu người chơi...",
+    "playerNotFound": "Không tìm thấy người chơi",
+    "starting": "Đang bắt đầu...",
+    "waiting": "Đang chờ...",
+    "gameStartingSoon": "Trò chơi sắp bắt đầu!",
+    "waitingForHost": "Đang chờ host bắt đầu trò chơi",
+    "finished": "Kết thúc!",
+    "loadingResults": "Đang tải kết quả...",
+    "loadingQuestion": "Đang tải câu hỏi..."
+  },
+  
+  "question": {
+    "multipleAnswersHint": "Bạn có thể chọn nhiều đáp án",
+    "enterAnswerBelow": "Nhập câu trả lời của bạn vào ô bên dưới",
+    "answerPlaceholder": "Nhập câu trả lời...",
+    "fillBlanks": "Điền vào các chỗ trống",
+    "blankLabel": "Chỗ trống #{{index}}:"
+  },
+  
+  "streak": {
+    "currentStreak": "Bạn đang có chuỗi {{count}} câu trả lời đúng liên tiếp!",
+    "bonusPoints": "Điểm thưởng",
+    "nextStreak": "Streak tiếp theo",
+    "multiplier": "Hệ số",
+    "bonus": "Thưởng"
+  },
+  
+  "sharedScreen": {
+    "title": "Màn hình chung",
+    "placeholder": "Host có thể chia sẻ màn hình ở đây",
+    "controls": "Điều khiển",
+    "collapse": "Thu nhỏ",
+    "expand": "Phóng to",
+    "inputPlaceholder": "Nhập URL YouTube hoặc website...",
+    "shareButton": "Chia sẻ màn hình",
+    "supportedFormats": "Hỗ trợ: YouTube, Vimeo, và các website khác",
+    "loading": "Đang tải...",
+    "error": "Không thể tải nội dung",
+    "clearError": "Xóa lỗi",
+    "loadFailed": "Không thể tải nội dung",
+    "invalidUrl": "URL không hợp lệ",
+    "updateFailed": "Cập nhật thất bại"
+  }
 }

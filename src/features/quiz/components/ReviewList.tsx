@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Star, ThumbsUp, Flag, Calendar, MoreVertical } from 'lucide-react';
 import { QuizReview } from '../types/review';
+import { useTranslation } from 'react-i18next';
 
 interface ReviewListProps {
   reviews: QuizReview[];
@@ -15,6 +16,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
   onHelpfulClick,
   onReportClick
 }) => {
+  const { t } = useTranslation();
   const [expandedReviews, setExpandedReviews] = useState<Set<string>>(new Set());
 
   const toggleExpanded = (reviewId: string) => {
@@ -55,14 +57,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
   };
 
   const getRatingText = (rating: number) => {
-    switch (rating) {
-      case 1: return 'Rất tệ';
-      case 2: return 'Tệ';
-      case 3: return 'Bình thường';
-      case 4: return 'Tốt';
-      case 5: return 'Rất tốt';
-      default: return '';
-    }
+    return t(`reviews.ratingTexts.${rating}`, '');
   };
 
   if (loading) {
@@ -93,8 +88,8 @@ const ReviewList: React.FC<ReviewListProps> = ({
     return (
       <div className="text-center py-12">
         <Star className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có đánh giá nào</h3>
-        <p className="text-gray-600">Hãy là người đầu tiên đánh giá quiz này!</p>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">{t('reviews.noReviews')}</h3>
+        <p className="text-gray-600">{t('reviews.beFirst')}</p>
       </div>
     );
   }
@@ -127,7 +122,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
                   </div>
                 )}
                 <div>
-                  <h4 className="font-semibold text-gray-900">{review.userName || 'Người dùng ẩn danh'}</h4>
+                  <h4 className="font-semibold text-gray-900">{review.userName || t('reviews.anonymous')}</h4>
                   <div className="flex items-center space-x-2 text-sm text-gray-500">
                     <Calendar className="w-3 h-3" />
                     <span>{formatDate(review.createdAt)}</span>
@@ -149,7 +144,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
                 {getRatingText(review.rating)}
               </span>
               <span className="text-sm text-gray-500">
-                ({review.rating}/5 sao)
+                {t('reviews.stars', { rating: review.rating })}
               </span>
             </div>
 
@@ -164,7 +159,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
                     onClick={() => toggleExpanded(review.id)}
                     className="mt-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
                   >
-                    {isExpanded ? 'Thu gọn' : 'Xem thêm'}
+                    {isExpanded ? t('reviews.collapse') : t('reviews.expand')}
                   </button>
                 )}
               </div>
@@ -178,7 +173,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
                   className="flex items-center space-x-2 text-sm text-gray-600 hover:text-green-600 transition-colors"
                 >
                   <ThumbsUp className="w-4 h-4" />
-                  <span>Hữu ích ({review.helpful?.length || 0})</span>
+                  <span>{t('reviews.helpfulCount', { count: review.helpful?.length || 0 })}</span>
                 </button>
                 
                 <button
@@ -186,13 +181,13 @@ const ReviewList: React.FC<ReviewListProps> = ({
                   className="flex items-center space-x-2 text-sm text-gray-600 hover:text-red-600 transition-colors"
                 >
                   <Flag className="w-4 h-4" />
-                  <span>Báo cáo</span>
+                  <span>{t('reviews.report')}</span>
                 </button>
               </div>
 
               {review.updatedAt && review.updatedAt !== review.createdAt && (
                 <span className="text-xs text-gray-500">
-                  Đã chỉnh sửa {formatDate(review.updatedAt)}
+                  {t('reviews.edited', { date: formatDate(review.updatedAt) })}
                 </span>
               )}
             </div>

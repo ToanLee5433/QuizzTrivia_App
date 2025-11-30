@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface ModalProps {
   isOpen: boolean;
@@ -19,6 +20,8 @@ const Modal: React.FC<ModalProps> = ({
   closeOnBackdrop = true,
   showCloseButton = true,
 }) => {
+  const { t } = useTranslation();
+  
   // Handle ESC key - with focus check to not interrupt text editing
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
@@ -98,7 +101,7 @@ const Modal: React.FC<ModalProps> = ({
                 <button
                   onClick={onClose}
                   className="text-gray-400 hover:text-gray-600 transition-colors p-1"
-                  aria-label="Đóng modal"
+                  aria-label={t('common.dong_modal')}
                 >
                   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

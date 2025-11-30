@@ -6,6 +6,7 @@ import SafeHTML from '../../../../../shared/components/ui/SafeHTML';
 import { QuizFormData, Question } from '../types';
 import { LearningResource } from '../../../types/learning';
 import { VideoPlayer } from '../../../../../shared/components/ui/VideoPlayer';
+import { useCategories } from '../hooks/useCategories';
 
 interface ReviewStepProps {
   quiz: QuizFormData;
@@ -13,6 +14,7 @@ interface ReviewStepProps {
 
 const ReviewStep: React.FC<ReviewStepProps> = ({ quiz }) => {
   const { t } = useTranslation();
+  const { categories } = useCategories();
 
   const totalPoints = useMemo(
     () => quiz.questions.reduce((sum, q) => sum + q.points, 0),
@@ -26,9 +28,17 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ quiz }) => {
 
   const stripHtml = (value?: string) => (value || '').replace(/<\/?p>/gi, '').replace(/<[^>]*>/g, '').trim();
 
-  const categoryLabel = quiz.category
-    ? t(`createQuiz.info.categoryOptions.${quiz.category}`)
-    : t('createQuiz.info.noCategory');
+  // Helper để lấy tên category đã được dịch
+  const getCategoryDisplayName = (categoryName: string) => {
+    const translated = t(`categories.${categoryName}`, { defaultValue: '' });
+    return translated || categoryName;
+  };
+
+  // Find category from Firestore data
+  const categoryData = categories.find(c => c.name === quiz.category);
+  const categoryLabel = categoryData 
+    ? `${categoryData.icon} ${getCategoryDisplayName(categoryData.name)}`
+    : quiz.category ? getCategoryDisplayName(quiz.category) : t('createQuiz.info.noCategory');
 
   const difficultyLabel = quiz.difficulty
     ? t(`difficulty.${quiz.difficulty as 'easy' | 'medium' | 'hard'}`)
