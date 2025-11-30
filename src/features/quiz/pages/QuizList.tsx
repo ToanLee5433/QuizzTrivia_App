@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import QuizPasswordModal from '../../../shared/components/ui/QuizPasswordModal';
 import { unlockQuiz } from '../../../lib/services/quizAccessService';
+import { useCategories } from './CreateQuizPage/hooks/useCategories';
 
 const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: propQuizzes, title }) => {
   // Always call hooks at the top - Fix React Hooks rules
@@ -47,6 +48,9 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
   const loading = useSelector((state: RootState) => state.quiz.loading || state.quiz.isLoading);
   const error = useSelector((state: RootState) => state.quiz.error);
   const user = useSelector((state: RootState) => state.auth.user);
+
+  // Load categories from Firestore for consistent category list
+  const { categories: firestoreCategories, loading: categoriesLoading } = useCategories();
 
   // Use propQuizzes if provided, otherwise use store quizzes
   const quizzes = propQuizzes || storeQuizzes;
@@ -198,7 +202,6 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
     setSelectedQuiz(null);
   };
   
-  const categories = Array.from(new Set(quizzes.map(q => q.category)));
   const difficulties = Array.from(new Set(quizzes.map(q => q.difficulty)));
   const difficultyOrder: Record<Quiz['difficulty'], number> = {
     easy: 1,
@@ -414,9 +417,14 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
               className="border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
               value={category} 
               onChange={e => setCategory(e.target.value)}
+              disabled={categoriesLoading}
             >
               <option value="all">{translate('quiz.filters.allCategoriesOption', '🏷️ Tất cả danh mục')}</option>
-              {categories.map(c => <option key={c} value={c}>{c}</option>)}
+              {firestoreCategories.map(cat => (
+                <option key={cat.id} value={cat.name}>
+                  {cat.icon} {t(`categories.${cat.name}`, cat.name)}
+                </option>
+              ))}
             </select>
             
             {/* Difficulty Filter */}
