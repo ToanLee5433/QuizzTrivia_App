@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
 import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, updateDoc, getCountFromServer, limit, orderBy } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
+import { useCategories } from './CreateQuizPage/hooks/useCategories';
 import { toast } from 'react-toastify';
 import { 
   Edit, 
@@ -66,6 +67,7 @@ const MyQuizzesPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
+  const { categories: firestoreCategories } = useCategories();
   
   const [quizzes, setQuizzes] = useState<CreatorQuiz[]>([]);
   const [loading, setLoading] = useState(true);
@@ -323,21 +325,22 @@ const MyQuizzesPage: React.FC = () => {
     );
   };
 
-  const getCategoryLabel = (category: string) => {
-    const categoryMap: { [key: string]: string } = {
-      'general': t('category.general'),
-      'science': t('category.science'),
-      'history': t('category.history'),
-      'sports': t('category.sports'),
-      'technology': t('category.technology'),
-      'entertainment': t('category.entertainment'),
-      'politics': t('category.politics'),
-      'art': t('category.art'),
-      'music': t('category.music'),
-      'literature': t('category.literature')
-    };
+  const getCategoryLabel = (categoryName: string) => {
+    // Tìm category từ Firestore để lấy icon
+    const categoryData = firestoreCategories.find(
+      c => c.name.toLowerCase() === categoryName?.toLowerCase()
+    );
     
-    return categoryMap[category] || category;
+    if (categoryData) {
+      // Thử dịch theo key trong categories
+      const translated = t(`categories.${categoryData.name}`, { defaultValue: '' });
+      const displayName = translated || categoryData.name;
+      return `${categoryData.icon} ${displayName}`;
+    }
+    
+    // Fallback: thử dịch theo key cũ hoặc hiển thị tên gốc
+    const translated = t(`categories.${categoryName}`, { defaultValue: '' });
+    return translated || categoryName || t('createQuiz.info.noCategory');
   };
 
   const getDifficultyBadge = (difficulty: string) => {

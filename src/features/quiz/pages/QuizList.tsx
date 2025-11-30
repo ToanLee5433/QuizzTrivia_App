@@ -211,15 +211,15 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
   const difficultyOptionFallback = useCallback((level: Quiz['difficulty']) => {
     switch (level) {
       case 'easy':
-        return '😊 Dễ';
+        return `😊 ${t('quiz.difficulty.easy', 'Easy')}`;
       case 'medium':
-        return '😐 Trung bình';
+        return `😐 ${t('quiz.difficulty.medium', 'Medium')}`;
       case 'hard':
-        return '😤 Khó';
+        return `😤 ${t('quiz.difficulty.hard', 'Hard')}`;
       default:
         return level;
     }
-  }, []);
+  }, [t]);
   
   // Chỉ hiển thị quiz đã được duyệt - CẢ PUBLIC VÀ PASSWORD ĐỀU HIỂN THỊ 🔒
   let filtered = approvedQuizzes.filter(q => {
@@ -531,12 +531,12 @@ const QuizList: React.FC<{ quizzes?: Quiz[]; title?: string }> = ({ quizzes: pro
               <div className="text-red-600 text-xl font-semibold mb-3">🚫 {t('quiz.errors.connection')}</div>
               <div className="text-red-700 mb-6">{error}</div>
               <div className="text-sm text-gray-600 mb-6 max-w-md mx-auto">
-                <div className="mb-3"><strong>{t('quiz.errors.troubleshoot')}:</strong></div>
+                <div className="mb-3"><strong>{t('quiz.errors.troubleshoot', 'Troubleshooting')}:</strong></div>
                 <div className="space-y-1">
-                  <div>{t('1TatAdBlockerChoLocalhost5174')}</div>
-                  <div>{t('2ThemGoogleapiscomVaoWhitelist')}</div>
-                  <div>{t('3ThuCheDoIncognitoprivate')}</div>
-                  <div>{t('4KiemTraFirewallantivirus')}</div>
+                  <div>{t('quiz.errors.troubleshoot1', '1. Disable Ad Blocker for localhost:5174')}</div>
+                  <div>{t('quiz.errors.troubleshoot2', '2. Add googleapis.com to whitelist')}</div>
+                  <div>{t('quiz.errors.troubleshoot3', '3. Try Incognito/Private mode')}</div>
+                  <div>{t('quiz.errors.troubleshoot4', '4. Check Firewall/Antivirus')}</div>
                 </div>
               </div>
               <button 

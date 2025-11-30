@@ -690,13 +690,13 @@ const CreateQuizPage: React.FC = () => {
         </button>
 
         {/* Header - Sticky Navigation */}
-        <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-md rounded-2xl shadow-md border border-gray-200 p-4 sm:p-6 mb-6">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-gray-900 mb-3 sm:mb-4">
+        <div className="sticky top-16 sm:top-[72px] z-40 bg-white/95 backdrop-blur-md rounded-2xl shadow-md border border-gray-200 p-3 sm:p-4 md:p-6 mb-6">
+          <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold tracking-tight text-gray-900 mb-2 sm:mb-3 md:mb-4">
             ✨ {t('createQuiz.title')}
           </h1>
           
-          {/* Progress Steps */}
-          <div className="flex items-center justify-between overflow-x-auto pb-2">
+          {/* Progress Steps - Better responsive */}
+          <div className="flex items-center justify-start sm:justify-between gap-1 sm:gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {(() => {
               const displayStepKeys = (() => {
                 if (quiz.quizType === 'standard') {
@@ -716,24 +716,24 @@ const CreateQuizPage: React.FC = () => {
               return displayStepKeys.map((stepKey, idx) => (
                 <div key={stepKey} className="flex items-center flex-shrink-0">
                   <div className={`
-                    w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-xs sm:text-sm font-bold
+                    w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-lg sm:rounded-xl flex items-center justify-center text-xs sm:text-sm font-bold
                     transition-all duration-300 transform
                     ${idx <= step 
-                      ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg scale-110' 
+                      ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg scale-105 sm:scale-110' 
                       : 'bg-gray-200 text-gray-600'
                     }
                   `}>
                     {idx < step ? '✓' : idx + 1}
                   </div>
                   <span className={`
-                    ml-1 sm:ml-2 text-xs sm:text-sm whitespace-nowrap hidden sm:inline
+                    ml-1 sm:ml-2 text-[10px] sm:text-xs md:text-sm whitespace-nowrap hidden md:inline
                     ${idx <= step ? 'text-purple-600 font-semibold' : 'text-gray-500'}
                   `}>
                     {t(stepKey)}
                   </span>
                   {idx < displayStepKeys.length - 1 && (
                     <div className={`
-                      w-6 sm:w-12 md:w-16 h-1 mx-1 sm:mx-2 md:mx-4 rounded-full transition-all duration-300
+                      w-4 sm:w-8 md:w-12 lg:w-16 h-0.5 sm:h-1 mx-1 sm:mx-2 rounded-full transition-all duration-300
                       ${idx < step ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-gray-200'}
                     `} />
                   )}

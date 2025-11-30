@@ -2865,7 +2865,12 @@
     "errors": {
       "connection": "Firestore connection blocked",
       "troubleshoot": "Troubleshooting",
-      "generic": "An error occurred"
+      "troubleshoot1": "1. Disable Ad Blocker for localhost:5174",
+      "troubleshoot2": "2. Add googleapis.com to whitelist",
+      "troubleshoot3": "3. Try Incognito/Private mode",
+      "troubleshoot4": "4. Check Firewall/Antivirus",
+      "generic": "An error occurred",
+      "notFound": "Quiz not found"
     },
     "retryConnection": "Retry Connection",
     "status": {

@@ -253,7 +253,7 @@ export class ModernMultiplayerService {
     const result: any = Array.isArray(obj) ? [] : {};
     
     for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
         const value = obj[key];
         if (value !== undefined) {
           result[key] = typeof value === 'object' ? this.removeUndefined(value) : value;

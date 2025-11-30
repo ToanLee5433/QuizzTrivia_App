@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Globe } from 'lucide-react';
+import ReactDOM from 'react-dom';
 
 interface LanguageSwitcherProps {
   variant?: 'light' | 'dark' | 'header';
@@ -8,6 +9,23 @@ interface LanguageSwitcherProps {
 
 const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ variant = 'light' }) => {
   const { t, i18n } = useTranslation();
+  const [isOpen, setIsOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        buttonRef.current && !buttonRef.current.contains(event.target as Node) &&
+        dropdownRef.current && !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const languages = [
     { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳' },
@@ -65,29 +83,41 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ variant = 'light' }
     }
   };
 
-  return (
-    <div className="relative group z-[100]">
-      <button className={getButtonStyles()}>
-        <Globe className={`w-4 h-4 ${getIconColor()}`} />
-        <span className={`${getTextColor()} text-sm font-medium hidden sm:inline`}>
-          {currentLanguage.flag} {currentLanguage.name}
-        </span>
-        <span className={`${getTextColor()} text-sm font-medium sm:hidden`}>
-          {currentLanguage.flag}
-        </span>
-        <svg className={`w-3 h-3 ${getArrowColor()} ml-1`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-      
-      <div className="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-xl border border-gray-200 py-1 min-w-[160px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[200]">
+  // Calculate dropdown position
+  const getDropdownPosition = () => {
+    if (!buttonRef.current) return { top: 0, right: 0 };
+    const rect = buttonRef.current.getBoundingClientRect();
+    return {
+      top: rect.bottom + 8, // 8px margin
+      right: window.innerWidth - rect.right,
+    };
+  };
+
+  // Dropdown rendered via Portal to escape stacking context
+  const renderDropdown = () => {
+    if (!isOpen) return null;
+    const pos = getDropdownPosition();
+    
+    return ReactDOM.createPortal(
+      <div 
+        ref={dropdownRef}
+        className="fixed bg-white rounded-lg shadow-2xl border border-gray-200 py-1 min-w-[180px] animate-fadeIn"
+        style={{ 
+          top: pos.top, 
+          right: pos.right,
+          zIndex: 99999,
+        }}
+      >
         <div className="px-3 py-2 border-b border-gray-200">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{t('common.selectLanguage')}</p>
         </div>
         {languages.map((language) => (
           <button
             key={language.code}
-            onClick={() => changeLanguage(language.code)}
+            onClick={() => {
+              changeLanguage(language.code);
+              setIsOpen(false);
+            }}
             className={`w-full px-4 py-3 text-left text-sm hover:bg-gray-50 transition-colors flex items-center space-x-3 ${
               i18n.language === language.code ? 'text-blue-600 bg-blue-50 font-medium' : 'text-gray-700'
             }`}
@@ -95,11 +125,37 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ variant = 'light' }
             <span className="text-lg">{language.flag}</span>
             <span className="flex-1">{language.name}</span>
             {i18n.language === language.code && (
-              <span className="text-blue-600 font-bold">✓</span>
+              <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
             )}
           </button>
         ))}
-      </div>
+      </div>,
+      document.body
+    );
+  };
+
+  return (
+    <div className="relative">
+      <button 
+        ref={buttonRef}
+        onClick={() => setIsOpen(!isOpen)}
+        className={getButtonStyles()}
+      >
+        <Globe className={`w-4 h-4 ${getIconColor()}`} />
+        <span className={`${getTextColor()} text-sm font-medium hidden sm:inline`}>
+          {currentLanguage.flag} {currentLanguage.name}
+        </span>
+        <span className={`${getTextColor()} text-sm font-medium sm:hidden`}>
+          {currentLanguage.flag}
+        </span>
+        <svg className={`w-3 h-3 ${getArrowColor()} ml-1 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      
+      {renderDropdown()}
     </div>
   );
 };

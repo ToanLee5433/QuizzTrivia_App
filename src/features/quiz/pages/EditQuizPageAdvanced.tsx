@@ -218,20 +218,6 @@ const EditQuizPageAdvanced: React.FC = () => {
     }));
   };
 
-  // Move question function for future drag-and-drop feature
-  // @ts-ignore - Reserved for future use
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const moveQuestion = (fromIndex: number, toIndex: number) => {
-    if (toIndex < 0 || toIndex >= quizInfo.questions.length) return;
-    
-    setQuizInfo(prev => {
-      const newQuestions = [...prev.questions];
-      const [moved] = newQuestions.splice(fromIndex, 1);
-      newQuestions.splice(toIndex, 0, moved);
-      return { ...prev, questions: newQuestions };
-    });
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

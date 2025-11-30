@@ -105,7 +105,7 @@ const Header: React.FC<HeaderProps> = () => {
   return (
     <>
       <header 
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${
           visible ? 'translate-y-0' : '-translate-y-full'
         } ${
           scrolled 

@@ -3082,6 +3082,10 @@
     "errors": {
       "connection": "Kết nối Firestore bị chặn",
       "troubleshoot": "Khắc phục",
+      "troubleshoot1": "1. Tắt Ad Blocker cho localhost:5174",
+      "troubleshoot2": "2. Thêm googleapis.com vào whitelist",
+      "troubleshoot3": "3. Thử chế độ Incognito/Private",
+      "troubleshoot4": "4. Kiểm tra Firewall/Antivirus",
       "generic": "Có lỗi xảy ra",
       "notFound": "Không tìm thấy quiz"
     },

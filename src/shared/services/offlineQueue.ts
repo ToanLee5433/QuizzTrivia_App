@@ -4,7 +4,7 @@
  * Handles Quiz, Flashcard, Forum, and Media offline actions
  */
 
-// @ts-ignore - uuid module types
+// @ts-expect-error - uuid module types
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../../features/flashcard/services/database';
 import type { PendingAction } from '../../features/flashcard/services/database';
