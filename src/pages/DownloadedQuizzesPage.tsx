@@ -155,9 +155,9 @@ export const DownloadedQuizzesPage: React.FC = () => {
     }
   };
 
-  // Play quiz
+  // Play quiz - go to preview first
   const handlePlay = (quizId: string) => {
-    navigate(`/quiz/${quizId}?offline=true`);
+    navigate(`/quiz/${quizId}/preview?offline=true`);
   };
 
   // ============================================================================

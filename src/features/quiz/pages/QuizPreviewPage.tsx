@@ -92,6 +92,8 @@ const QuizPreviewPage: React.FC = () => {
   const { t, i18n, ready } = useTranslation('common', { useSuspense: false });
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = React.useState(() => new URLSearchParams(window.location.search));
+  const isOfflineMode = searchParams.get('offline') === 'true';
   const activeLocale = useMemo(
     () => i18n.language || (typeof navigator !== 'undefined' ? navigator.language : 'en'),
     [i18n.language]
@@ -279,8 +281,9 @@ const QuizPreviewPage: React.FC = () => {
       localStorage.setItem(`quiz_settings_${quiz.id}`, JSON.stringify(quizSettings));
     }
 
-    // Navigate to quiz page (password already unlocked at QuizList)
-    navigate(`/quiz/${quiz.id}`);
+    // Navigate to quiz page, preserve offline mode if present
+    const quizUrl = isOfflineMode ? `/quiz/${quiz.id}?offline=true` : `/quiz/${quiz.id}`;
+    navigate(quizUrl);
   };
 
   // 🎨 Handle settings save
@@ -1322,6 +1325,10 @@ const QuizPreviewPage: React.FC = () => {
           onSave={handleSettingsSave}
           currentSettings={quizSettings || undefined}
           quizId={quiz.id}
+          quiz={{
+            duration: quiz.duration || 0,
+            questions: quiz.questions || []
+          }}
         />
       )}
     </div>

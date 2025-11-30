@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { RootState } from '../../../../lib/store';
+import { setQuizTimer } from '../../store';
 import { useQuizData, useQuizSession, useQuizTimer, useQuizNavigation, useQuizSettings } from './hooks';
 import Timer from './components/Timer';
 import QuestionRenderer from './components/QuestionRenderer';
@@ -118,14 +119,27 @@ interface QuizPageContentProps {
 
 const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
   
   // Load quiz settings
-  const { settings, shuffleQuestionsArray, shuffleQuestionAnswers } = useQuizSettings();
+  const { settings, shuffleQuestionsArray, shuffleQuestionAnswers, calculateTotalTime } = useQuizSettings();
   
   // State for pause and settings modal
   const [isPaused, setIsPaused] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  
+  // Apply user settings for timer (override quiz.duration from Firestore)
+  useEffect(() => {
+    const userTotalTime = calculateTotalTime(quiz.questions.length);
+    console.log('⏱️ Applying user time settings:', {
+      mode: settings.mode,
+      userTotalTime,
+      quizDuration: quiz.duration,
+      questionCount: quiz.questions.length
+    });
+    dispatch(setQuizTimer(userTotalTime));
+  }, [dispatch, calculateTotalTime, quiz.questions.length, quiz.duration, settings.mode]);
   
   // Apply shuffling to questions (memoized to prevent re-shuffling)
   const shuffledQuiz = useMemo(() => {
@@ -528,6 +542,10 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
         onClose={handleCloseSettings}
         onSave={handleCloseSettings}
         quizId={shuffledQuiz.id}
+        quiz={{
+          duration: quiz.duration || 0,
+          questions: quiz.questions || []
+        }}
       />
     </div>
   );

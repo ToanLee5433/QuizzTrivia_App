@@ -559,33 +559,6 @@
         "hard": "Khó"
       }
     },
-    "quizSettings": {
-      "title": "Cài đặt Quiz",
-      "subtitle": "Tùy chỉnh trải nghiệm làm quiz của bạn",
-      "timePerQuestion": "Thời gian mỗi câu",
-      "timeDesc": "Thời gian giới hạn cho mỗi câu hỏi. Chọn 'Không giới hạn' để không đặt thời gian.",
-      "timeOptions": {
-        "noLimit": "Không giới hạn",
-        "seconds30": "30 giây",
-        "seconds45": "45 giây",
-        "minute1": "1 phút",
-        "minute1_5": "1.5 phút",
-        "minutes2": "2 phút",
-        "minutes3": "3 phút"
-      },
-      "shuffleQuestions": "Trộn câu hỏi",
-      "shuffleQuestionsDesc": "Hiển thị câu hỏi theo thứ tự ngẫu nhiên",
-      "shuffleAnswers": "Trộn đáp án",
-      "shuffleAnswersDesc": "Hiển thị các lựa chọn theo thứ tự ngẫu nhiên",
-      "showExplanations": "Hiển thị giải thích",
-      "showExplanationsDesc": "Hiển thị giải thích sau khi trả lời",
-      "autoSubmit": "Tự động nộp bài",
-      "autoSubmitDesc": "Tự động nộp bài khi hết giờ",
-      "soundEffects": "Hiệu ứng âm thanh",
-      "soundEffectsDesc": "Phát âm thanh khi trả lời đúng/sai",
-      "reset": "Đặt lại",
-      "save": "Lưu cài đặt"
-    },
     "categories": {
       "headerDesc": "Quản lý chủ đề quiz",
       "enterName": "Nhập tên chủ đề",
@@ -4834,7 +4807,10 @@
       "correctAnswer": "Đáp án đúng",
       "noAnswers": "Chưa có đáp án nào cho câu hỏi này.",
       "emptyQuestion": "Câu hỏi chưa có tiêu đề",
-      "moreQuestions": "và {{count}} câu hỏi nữa..."
+      "moreQuestions": "và {{count}} câu hỏi nữa...",
+      "showMore": "Xem thêm ({{count}} câu hỏi)",
+      "showLess": "Thu gọn",
+      "keyboardHint": "Sử dụng phím ← → để di chuyển giữa các câu hỏi"
     },
     "facts": {
       "minutes": "phút",
@@ -4922,6 +4898,69 @@
     "daysAgo": "{{days}} ngày trước",
     "justNow": "Vừa xong",
     "neverActive": "Chưa hoạt động"
+  },
+  "quizSettings": {
+    "title": "Cài đặt Quiz",
+    "subtitle": "Tùy chỉnh trải nghiệm làm quiz của bạn",
+    "mode": {
+      "title": "Chế độ chơi",
+      "exam": "Chế độ Thi",
+      "examDesc": "Làm bài một mạch, nộp bài rồi mới biết điểm. Phù hợp để đánh giá năng lực.",
+      "practice": "Chế độ Luyện tập",
+      "practiceDesc": "Biết kết quả ngay sau mỗi câu, có giải thích chi tiết. Phù hợp để học và ghi nhớ."
+    },
+    "examConfig": {
+      "title": "Cài đặt chế độ Thi",
+      "totalTime": "Tổng thời gian",
+      "totalTimeDesc": "Thời gian làm toàn bộ bài thi",
+      "allowReview": "Cho phép xem lại",
+      "allowReviewDesc": "Xem lại đáp án và giải thích sau khi nộp bài"
+    },
+    "practiceConfig": {
+      "title": "Cài đặt chế độ Luyện tập",
+      "timePerQuestion": "Thời gian mỗi câu",
+      "timePerQuestionDesc": "Thời gian giới hạn cho mỗi câu hỏi",
+      "instantFeedback": "Phản hồi tức thì",
+      "instantFeedbackDesc": "Hiển thị đúng/sai ngay khi chọn đáp án",
+      "showExplanation": "Hiển thị giải thích",
+      "showExplanationDesc": "Hiển thị giải thích sau mỗi câu trả lời",
+      "retryOnWrong": "Cho phép thử lại",
+      "retryOnWrongDesc": "Nếu sai, được chọn lại đến khi đúng"
+    },
+    "commonSettings": "Cài đặt chung",
+    "shuffleQuestions": "Trộn câu hỏi",
+    "shuffleQuestionsDesc": "Hiển thị câu hỏi theo thứ tự ngẫu nhiên",
+    "shuffleAnswers": "Trộn đáp án",
+    "shuffleAnswersDesc": "Hiển thị các lựa chọn theo thứ tự ngẫu nhiên",
+    "autoAdvance": "Chọn đáp án tức thì",
+    "autoAdvanceDesc": "Tự động sang câu tiếp theo sau khi chọn đáp án",
+    "autoAdvanceDisabledNote": "Tắt khi Phản hồi tức thì đang BẬT (cần thời gian xem kết quả)",
+    "autoSubmit": "Tự động nộp bài",
+    "autoSubmitDesc": "Tự động nộp bài khi hết giờ",
+    "soundEffects": "Hiệu ứng âm thanh",
+    "soundEffectsDesc": "Hiệu ứng âm thanh khi làm bài",
+    "showExplanations": "Hiển thị giải thích",
+    "showExplanationsDesc": "Hiển thị giải thích sau khi trả lời",
+    "reset": "Đặt lại",
+    "save": "Lưu cài đặt",
+    "timeOptions": {
+      "noLimit": "Không giới hạn",
+      "seconds30": "30 giây",
+      "seconds45": "45 giây",
+      "minute1": "1 phút",
+      "minute1_5": "1.5 phút",
+      "minutes2": "2 phút",
+      "minutes3": "3 phút"
+    },
+    "totalTimeOptions": {
+      "noLimit": "Không giới hạn",
+      "minutes15": "15 phút",
+      "minutes30": "30 phút",
+      "minutes45": "45 phút",
+      "minutes60": "60 phút",
+      "minutes90": "90 phút",
+      "minutes120": "120 phút"
+    }
   },
   "accountStatus": {
     "active": "Hoạt động",

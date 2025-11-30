@@ -384,7 +384,7 @@ const AdminStats: React.FC = () => {
                   <td className="py-3 px-4">
                     <div className="flex space-x-2">
                       <button
-                        onClick={() => navigate(`/quiz/${quiz.id}`)}
+                        onClick={() => navigate(`/quiz/${quiz.id}/preview`)}
                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                         title={t('admin.quizManagement.tooltips.preview')}
                       >

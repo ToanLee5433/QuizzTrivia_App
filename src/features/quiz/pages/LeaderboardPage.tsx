@@ -663,7 +663,7 @@ const LeaderboardPage: React.FC = () => {
                   
                   {/* Navigation Button */}
                   <button
-                    onClick={() => navigate(`/quiz/${quiz.id}`)}
+                    onClick={() => navigate(`/quiz/${quiz.id}/preview`)}
                     className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg text-sm sm:text-base"
                   >
                     <FaFire className="w-3 sm:w-4 h-3 sm:h-4" />

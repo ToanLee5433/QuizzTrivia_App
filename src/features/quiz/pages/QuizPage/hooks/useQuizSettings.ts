@@ -2,34 +2,30 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Question } from '../../../types';
 
-export interface QuizSettings {
-  timePerQuestion: number;
-  shuffleQuestions: boolean;
-  shuffleAnswers: boolean;
-  showExplanations: boolean;
-  autoSubmit: boolean;
-  soundEffects: boolean;
-  darkMode: boolean;
-}
+// Import types from centralized location
+import {
+  QuizSettings,
+  QuizMode,
+  ExamConfig,
+  PracticeConfig,
+  DEFAULT_QUIZ_SETTINGS,
+  SETTINGS_VERSION
+} from '../../../types/quizSettings';
 
-export const DEFAULT_SETTINGS: QuizSettings = {
-  timePerQuestion: 0, // 0 = no time limit
-  shuffleQuestions: false,
-  shuffleAnswers: false,
-  showExplanations: true,
-  autoSubmit: false,
-  soundEffects: true,
-  darkMode: false
-};
+// Re-export types for backward compatibility
+export type { QuizSettings, QuizMode, ExamConfig, PracticeConfig };
+
+// Re-export DEFAULT_SETTINGS for backward compatibility (alias)
+export const DEFAULT_SETTINGS = DEFAULT_QUIZ_SETTINGS;
 
 /**
  * Hook to load and manage quiz settings
  */
 export const useQuizSettings = () => {
   const { id: quizId } = useParams<{ id: string }>();
-  const [settings, setSettings] = useState<QuizSettings>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<QuizSettings>(DEFAULT_QUIZ_SETTINGS);
 
-  // Load settings from localStorage on mount
+  // Load settings from localStorage on mount with VERSION CHECK
   useEffect(() => {
     if (!quizId) return;
 
@@ -37,15 +33,23 @@ export const useQuizSettings = () => {
       const savedSettings = localStorage.getItem(`quiz_settings_${quizId}`);
       if (savedSettings) {
         const parsed = JSON.parse(savedSettings);
-        console.log('✅ Loaded quiz settings:', parsed);
-        setSettings({ ...DEFAULT_SETTINGS, ...parsed });
+        
+        // VERSION CHECK - Only trust settings with current version
+        if (parsed.version === SETTINGS_VERSION) {
+          console.log('✅ Loaded quiz settings (v' + SETTINGS_VERSION + '):', parsed);
+          setSettings({ ...DEFAULT_QUIZ_SETTINGS, ...parsed });
+        } else {
+          // Old version - use defaults (will be migrated when modal opens)
+          console.log(`🔄 Found old settings v${parsed.version || 0}, using defaults`);
+          setSettings(DEFAULT_QUIZ_SETTINGS);
+        }
       } else {
         console.log('📋 Using default quiz settings');
-        setSettings(DEFAULT_SETTINGS);
+        setSettings(DEFAULT_QUIZ_SETTINGS);
       }
     } catch (error) {
       console.error('❌ Failed to load quiz settings:', error);
-      setSettings(DEFAULT_SETTINGS);
+      setSettings(DEFAULT_QUIZ_SETTINGS);
     }
   }, [quizId]);
 
@@ -83,19 +87,92 @@ export const useQuizSettings = () => {
   }, [settings.shuffleAnswers]);
 
   /**
-   * Calculate total time based on timePerQuestion setting
+   * Calculate total time based on mode and settings
+   * - Exam Mode: Use totalTime from examConfig (in minutes, convert to seconds)
+   * - Practice Mode: Use timePerQuestion * questionCount (already in seconds)
    */
   const calculateTotalTime = useCallback((questionCount: number): number => {
-    if (settings.timePerQuestion === 0) {
-      return 0; // No time limit
+    if (settings.mode === 'exam') {
+      // Exam mode: totalTime is in minutes, convert to seconds
+      if (settings.examConfig.totalTime === 0) {
+        return 0; // No time limit
+      }
+      return settings.examConfig.totalTime * 60; // minutes to seconds
+    } else {
+      // Practice mode: timePerQuestion is in seconds
+      const timePerQ = settings.practiceConfig.timePerQuestion || settings.timePerQuestion;
+      if (timePerQ === 0) {
+        return 0; // No time limit
+      }
+      return timePerQ * questionCount;
     }
-    return settings.timePerQuestion * questionCount;
-  }, [settings.timePerQuestion]);
+  }, [settings.mode, settings.examConfig.totalTime, settings.practiceConfig.timePerQuestion, settings.timePerQuestion]);
+
+  /**
+   * Check if instant feedback should be shown (Practice mode only)
+   */
+  const shouldShowInstantFeedback = useCallback((): boolean => {
+    return settings.mode === 'practice' && settings.practiceConfig.instantFeedback;
+  }, [settings.mode, settings.practiceConfig.instantFeedback]);
+
+  /**
+   * Check if retry on wrong is enabled (Practice mode only)
+   */
+  const canRetryOnWrong = useCallback((): boolean => {
+    return settings.mode === 'practice' && settings.practiceConfig.retryOnWrong;
+  }, [settings.mode, settings.practiceConfig.retryOnWrong]);
+
+  /**
+   * Check if review is allowed before submit (Exam mode)
+   */
+  const canReviewBeforeSubmit = useCallback((): boolean => {
+    return settings.mode === 'exam' && settings.examConfig.allowReview;
+  }, [settings.mode, settings.examConfig.allowReview]);
+
+  /**
+   * Check if quiz is in exam mode
+   */
+  const isExamMode = useCallback((): boolean => {
+    return settings.mode === 'exam';
+  }, [settings.mode]);
+
+  /**
+   * Check if quiz is in practice mode
+   */
+  const isPracticeMode = useCallback((): boolean => {
+    return settings.mode === 'practice';
+  }, [settings.mode]);
+
+  /**
+   * Check if auto advance is enabled
+   * Note: Auto advance is disabled when Practice mode + Instant Feedback is ON
+   */
+  const shouldAutoAdvance = useCallback((): boolean => {
+    // If Practice mode with Instant Feedback, auto advance is disabled
+    if (settings.mode === 'practice' && settings.practiceConfig.instantFeedback) {
+      return false;
+    }
+    return settings.autoAdvance;
+  }, [settings.mode, settings.practiceConfig.instantFeedback, settings.autoAdvance]);
+
+  /**
+   * Check if explanation should be shown (Practice mode only)
+   */
+  const shouldShowExplanation = useCallback((): boolean => {
+    return settings.mode === 'practice' && (settings.practiceConfig.showExplanation ?? settings.showExplanations ?? true);
+  }, [settings.mode, settings.practiceConfig.showExplanation, settings.showExplanations]);
 
   return {
     settings,
     shuffleQuestionsArray,
     shuffleQuestionAnswers,
-    calculateTotalTime
+    calculateTotalTime,
+    shouldShowInstantFeedback,
+    canRetryOnWrong,
+    canReviewBeforeSubmit,
+    isExamMode,
+    isPracticeMode,
+    shouldAutoAdvance,
+    shouldShowExplanation
   };
 };

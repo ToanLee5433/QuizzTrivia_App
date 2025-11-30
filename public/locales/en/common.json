@@ -550,33 +550,6 @@
         "hard": "Hard"
       }
     },
-    "quizSettings": {
-      "title": "Quiz Settings",
-      "subtitle": "Customize your quiz experience",
-      "timePerQuestion": "Time per question",
-      "timeDesc": "Time limit for each question. Choose 'No limit' for no time constraint.",
-      "timeOptions": {
-        "noLimit": "No limit",
-        "seconds30": "30 seconds",
-        "seconds45": "45 seconds",
-        "minute1": "1 minute",
-        "minute1_5": "1.5 minutes",
-        "minutes2": "2 minutes",
-        "minutes3": "3 minutes"
-      },
-      "shuffleQuestions": "Shuffle questions",
-      "shuffleQuestionsDesc": "Display questions in random order",
-      "shuffleAnswers": "Shuffle answers",
-      "shuffleAnswersDesc": "Display answer options in random order",
-      "showExplanations": "Show explanations",
-      "showExplanationsDesc": "Display explanations after answering",
-      "autoSubmit": "Auto-submit",
-      "autoSubmitDesc": "Automatically submit quiz when time expires",
-      "soundEffects": "Sound effects",
-      "soundEffectsDesc": "Play sounds for correct/incorrect answers",
-      "reset": "Reset",
-      "save": "Save Settings"
-    },
     "presence": {
       "online": "Online",
       "offline": "Offline",
@@ -4917,6 +4890,69 @@
     "daysAgo": "{{days}} days ago",
     "justNow": "Just now",
     "neverActive": "Never active"
+  },
+  "quizSettings": {
+    "title": "Quiz Settings",
+    "subtitle": "Customize your quiz experience",
+    "mode": {
+      "title": "Game Mode",
+      "exam": "Exam Mode",
+      "examDesc": "Complete all questions before seeing your score. Great for testing knowledge.",
+      "practice": "Practice Mode",
+      "practiceDesc": "Get instant feedback after each question with explanations. Great for learning."
+    },
+    "examConfig": {
+      "title": "Exam Mode Settings",
+      "totalTime": "Total Time",
+      "totalTimeDesc": "Time limit for the entire quiz",
+      "allowReview": "Allow Review",
+      "allowReviewDesc": "Review answers and explanations after submission"
+    },
+    "practiceConfig": {
+      "title": "Practice Mode Settings",
+      "timePerQuestion": "Time Per Question",
+      "timePerQuestionDesc": "Time limit for each question",
+      "instantFeedback": "Instant Feedback",
+      "instantFeedbackDesc": "Show correct/incorrect immediately after answering",
+      "showExplanation": "Show Explanation",
+      "showExplanationDesc": "Display explanation after each answer",
+      "retryOnWrong": "Allow Retry",
+      "retryOnWrongDesc": "Try again if answer is wrong"
+    },
+    "commonSettings": "Common Settings",
+    "shuffleQuestions": "Shuffle Questions",
+    "shuffleQuestionsDesc": "Display questions in random order",
+    "shuffleAnswers": "Shuffle Answers",
+    "shuffleAnswersDesc": "Display choices in random order",
+    "autoAdvance": "Instant Answer",
+    "autoAdvanceDesc": "Auto advance to next question after selecting answer",
+    "autoAdvanceDisabledNote": "Disabled when Instant Feedback is ON (need time to see feedback)",
+    "autoSubmit": "Auto Submit",
+    "autoSubmitDesc": "Automatically submit when time runs out",
+    "soundEffects": "Sound Effects",
+    "soundEffectsDesc": "Sound effects while taking the quiz",
+    "showExplanations": "Show Explanations",
+    "showExplanationsDesc": "Display explanations after answering",
+    "reset": "Reset",
+    "save": "Save Settings",
+    "timeOptions": {
+      "noLimit": "No Limit",
+      "seconds30": "30 seconds",
+      "seconds45": "45 seconds",
+      "minute1": "1 minute",
+      "minute1_5": "1.5 minutes",
+      "minutes2": "2 minutes",
+      "minutes3": "3 minutes"
+    },
+    "totalTimeOptions": {
+      "noLimit": "No Limit",
+      "minutes15": "15 minutes",
+      "minutes30": "30 minutes",
+      "minutes45": "45 minutes",
+      "minutes60": "60 minutes",
+      "minutes90": "90 minutes",
+      "minutes120": "120 minutes"
+    }
   },
   "accountStatus": {
     "active": "Active",

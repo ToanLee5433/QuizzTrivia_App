@@ -121,6 +121,7 @@ const quizSlice = createSlice({
       if (action.payload) {
         state.currentQuestionIndex = 0;
         state.userAnswers = {};
+        // Use quiz.duration as default, but can be overridden by setQuizTimer
         state.totalTime = action.payload.duration * 60; // Tổng thời gian (giây)
         state.timeLeft = state.totalTime;
         state.quizStartTime = Date.now();
@@ -133,6 +134,15 @@ const quizSlice = createSlice({
         state.totalTime = 0;
         state.isTimeWarning = false;
       }
+    },
+
+    // Override quiz timer with user settings (call after setCurrentQuiz)
+    setQuizTimer: (state, action: PayloadAction<number>) => {
+      // action.payload = total time in seconds (0 = no limit)
+      state.totalTime = action.payload;
+      state.timeLeft = action.payload;
+      state.quizStartTime = action.payload > 0 ? Date.now() : null;
+      state.isTimeWarning = false;
     },
 
     // Cập nhật timeLeft dựa trên thời gian thực tế đã trôi qua
@@ -253,6 +263,7 @@ const quizSlice = createSlice({
 export const {
   setQuizzes,
   setCurrentQuiz,
+  setQuizTimer,
   decrementTime,
   updateTimeLeft,
   resetQuizState,
