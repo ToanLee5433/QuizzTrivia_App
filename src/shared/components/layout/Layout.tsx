@@ -15,13 +15,20 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [showHeader, setShowHeader] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   
-  // Pages where header should be hidden initially (quiz pages)
-  const isQuizPage = location.pathname.startsWith('/quiz/') && !location.pathname.includes('/result');
+  // Pages where header should be hidden initially (only during active quiz playing)
+  // /quiz/:id (playing) should hide header, but /quiz/:id/preview, /quiz/:id/reviews etc should show header
+  const isActiveQuizPage = location.pathname.startsWith('/quiz/') && 
+    !location.pathname.includes('/preview') && 
+    !location.pathname.includes('/result') &&
+    !location.pathname.includes('/reviews') &&
+    !location.pathname.includes('/flashcards') &&
+    !location.pathname.includes('/materials') &&
+    !location.pathname.includes('/stats');
   const isResultPage = location.pathname.includes('/quiz-result') || location.pathname.includes('/result');
   
-  // Scroll-reveal header logic for quiz pages
+  // Scroll-reveal header logic for active quiz pages
   useEffect(() => {
-    if (!isQuizPage) {
+    if (!isActiveQuizPage) {
       setShowHeader(true);
       return;
     }
@@ -41,12 +48,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       setLastScrollY(currentScrollY);
     };
     
-    // Initially hide header on quiz pages
+    // Initially hide header on active quiz pages
     setShowHeader(false);
     
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isQuizPage, lastScrollY]);
+  }, [isActiveQuizPage, lastScrollY]);
   
   // Don't show navigation for login/register pages
   const authPages = ['/login', '/register'];
@@ -75,8 +82,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     return <div>{children}</div>;
   }
   
-  // For quiz pages, render without Layout wrapper (quiz has its own layout)
-  if (isQuizPage) {
+  // For active quiz playing pages, render without Header (quiz has its own minimal UI)
+  if (isActiveQuizPage) {
     return <div className="min-h-screen">{children}</div>;
   }
   

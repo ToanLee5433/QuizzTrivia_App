@@ -12,6 +12,7 @@ import QuickReviewSection from '../../../shared/components/QuickReviewSection';
 import { quizStatsService } from '../../../services/quizStatsService';
 import SafeHTML from '../../../shared/components/ui/SafeHTML';
 import { useTranslation } from 'react-i18next';
+import soundService from '../../../services/soundService';
 
 
 interface ResultState {
@@ -199,6 +200,20 @@ export const ResultPage: React.FC = () => {
       navigate('/quiz-list');
     }
   }, [attemptId, location.state, navigate]);
+
+  // Play victory sound when result is loaded
+  useEffect(() => {
+    if (result) {
+      const score = result.score || 0;
+      // Play victory sound for good scores, otherwise just applause
+      if (score >= 60) {
+        soundService.play('victory');
+        setTimeout(() => soundService.play('applause'), 500);
+      } else {
+        soundService.play('applause');
+      }
+    }
+  }, [result]);
 
   useEffect(() => {
     if (!quizId) return;

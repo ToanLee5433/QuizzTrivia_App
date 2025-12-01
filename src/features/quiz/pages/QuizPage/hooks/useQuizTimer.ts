@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../../../lib/store';
 import { updateTimeLeft } from '../../../store';
+import soundService from '../../../../../services/soundService';
 
 interface UseQuizTimerProps {
   onTimeUp: () => void;
@@ -44,9 +45,27 @@ export const useQuizTimer = ({ onTimeUp, isActive = true }: UseQuizTimerProps) =
   useEffect(() => {
     if (timeLeft <= 0 && !hasTriggeredTimeUp && quizStartTime) {
       setHasTriggeredTimeUp(true);
+      soundService.play('timeup');
       onTimeUp();
     }
   }, [timeLeft, hasTriggeredTimeUp, onTimeUp, quizStartTime]);
+
+  // Play warning sounds when time is running low
+  useEffect(() => {
+    if (timeLeft > 0 && quizStartTime && totalTime > 0) {
+      const timeWarningThreshold = Math.ceil(totalTime * 0.1); // 10% of total time
+      
+      // Play countdown sound when entering warning zone
+      if (timeLeft === timeWarningThreshold) {
+        soundService.play('countdown');
+      }
+      
+      // Play tick sound in last 10 seconds
+      if (timeLeft <= 10 && timeLeft > 0) {
+        soundService.play('tick');
+      }
+    }
+  }, [timeLeft, quizStartTime, totalTime]);
 
   // Format time as MM:SS
   const formatTime = useCallback((seconds: number) => {

@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
@@ -29,6 +30,18 @@ const Header: React.FC<HeaderProps> = () => {
   const [prevScrollPos, setPrevScrollPos] = useState(0);
   const [visible, setVisible] = useState(true);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const userMenuButtonRef = useRef<HTMLButtonElement>(null);
+  const userDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Calculate dropdown position for Portal
+  const getDropdownPosition = () => {
+    if (!userMenuButtonRef.current) return { top: 0, right: 0 };
+    const rect = userMenuButtonRef.current.getBoundingClientRect();
+    return {
+      top: rect.bottom + 8,
+      right: window.innerWidth - rect.right,
+    };
+  };
 
   // Handle scroll effect with hide/show
   useEffect(() => {
@@ -50,7 +63,12 @@ const Header: React.FC<HeaderProps> = () => {
   // Close menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      // Check both the button ref and the dropdown ref (Portal)
+      const isClickInsideButton = userMenuButtonRef.current?.contains(target);
+      const isClickInsideDropdown = userDropdownRef.current?.contains(target);
+      
+      if (!isClickInsideButton && !isClickInsideDropdown) {
         setIsUserMenuOpen(false);
       }
     };
@@ -194,6 +212,7 @@ const Header: React.FC<HeaderProps> = () => {
               {user && (
                 <div className="relative z-[100]" ref={userMenuRef}>
                   <button
+                    ref={userMenuButtonRef}
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                     className={`flex items-center space-x-2 rounded-xl px-2 sm:px-3 py-2 transition-all duration-300 shadow-md hover:scale-105 group ${
                       scrolled
@@ -238,9 +257,17 @@ const Header: React.FC<HeaderProps> = () => {
                       isUserMenuOpen ? 'rotate-180' : ''
                     } ${scrolled ? 'text-slate-600 dark:text-slate-400' : 'text-white/90'}`} />
                   </button>
-                  {/* User Dropdown - Refined */}
-                  {isUserMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-64 sm:w-72 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden z-[200] animate-in slide-in-from-top-2 duration-200">
+                  {/* User Dropdown - Using Portal for proper z-index */}
+                  {isUserMenuOpen && ReactDOM.createPortal(
+                    <div 
+                      ref={userDropdownRef}
+                      className="fixed w-64 sm:w-72 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden animate-in slide-in-from-top-2 duration-200"
+                      style={{
+                        top: getDropdownPosition().top,
+                        right: getDropdownPosition().right,
+                        zIndex: 99999,
+                      }}
+                    >
                       {/* User Info Header */}
                       <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-3">
                         <div className="flex items-center space-x-3">
@@ -310,7 +337,8 @@ const Header: React.FC<HeaderProps> = () => {
                           <span className="font-medium text-sm">{t('auth.logout')}</span>
                         </button>
                       </div>
-                    </div>
+                    </div>,
+                    document.body
                   )}
                 </div>
               )}
@@ -344,14 +372,18 @@ const Header: React.FC<HeaderProps> = () => {
         </div>
       </header>
 
-      {/* Mobile Menu Overlay - Refined */}
-      {user && isMobileMenuOpen && (
+      {/* Mobile Menu Overlay - Using Portal for proper z-index */}
+      {user && isMobileMenuOpen && ReactDOM.createPortal(
         <>
           <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] lg:hidden animate-in fade-in duration-200"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm lg:hidden animate-in fade-in duration-200"
+            style={{ zIndex: 99998 }}
             onClick={() => setIsMobileMenuOpen(false)}
           />
-          <div className="fixed top-14 sm:top-16 left-0 right-0 bg-white shadow-2xl z-[70] lg:hidden animate-in slide-in-from-top-4 duration-300 max-h-[calc(100vh-3.5rem)] sm:max-h-[calc(100vh-4rem)] overflow-y-auto">
+          <div 
+            className="fixed top-14 sm:top-16 left-0 right-0 bg-white shadow-2xl lg:hidden animate-in slide-in-from-top-4 duration-300 max-h-[calc(100vh-3.5rem)] sm:max-h-[calc(100vh-4rem)] overflow-y-auto"
+            style={{ zIndex: 99999 }}
+          >
             <nav className="py-3 px-3 space-y-1">
               {navigationItems.map((item) => {
                 const Icon = item.icon;
@@ -389,7 +421,8 @@ const Header: React.FC<HeaderProps> = () => {
               </div>
             </nav>
           </div>
-        </>
+        </>,
+        document.body
       )}
 
       {/* Spacer to prevent content jump */}

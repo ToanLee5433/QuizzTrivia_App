@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +14,18 @@ const NotificationCenter: React.FC = () => {
   const [notifications, setNotifications] = useState<NotificationData[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Calculate dropdown position for Portal
+  const getDropdownPosition = () => {
+    if (!buttonRef.current) return { top: 0, right: 0 };
+    const rect = buttonRef.current.getBoundingClientRect();
+    return {
+      top: rect.bottom + 8,
+      right: window.innerWidth - rect.right,
+    };
+  };
 
   // Load real notifications from Firebase
   useEffect(() => {
@@ -85,12 +98,30 @@ const NotificationCenter: React.FC = () => {
     }
   };
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      const isClickInsideButton = buttonRef.current?.contains(target);
+      const isClickInsideDropdown = dropdownRef.current?.contains(target);
+      
+      if (!isClickInsideButton && !isClickInsideDropdown) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   if (!user) return null;
 
+  const pos = getDropdownPosition();
+
   return (
-    <div className="relative z-[9999]">
+    <div className="relative">
       {/* Notification Bell */}
       <button
+        ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 text-gray-600 hover:text-gray-900 transition-all duration-300 hover:scale-110"
         aria-label="Notifications"
@@ -103,9 +134,17 @@ const NotificationCenter: React.FC = () => {
         )}
       </button>
 
-      {/* Notification Dropdown */}
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 z-[10000] overflow-hidden">
+      {/* Notification Dropdown - Using Portal */}
+      {isOpen && ReactDOM.createPortal(
+        <div 
+          ref={dropdownRef}
+          className="fixed w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden"
+          style={{
+            top: pos.top,
+            right: pos.right,
+            zIndex: 99999,
+          }}
+        >
           {/* Header */}
           <div className="px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -178,7 +217,7 @@ const NotificationCenter: React.FC = () => {
                             notification.type === 'social' ? 'bg-pink-100 text-pink-700' :
                             'bg-purple-100 text-purple-700'
                           }`}>
-                            {notification.type}
+                            {t(`notifications.types.${notification.type}`, notification.type)}
                           </span>
                         </div>
                         {!notification.read && (
@@ -253,15 +292,8 @@ const NotificationCenter: React.FC = () => {
               </button>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Backdrop */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-[9998] bg-black/20 backdrop-blur-sm"
-          onClick={() => setIsOpen(false)}
-        />
+        </div>,
+        document.body
       )}
     </div>
   );
