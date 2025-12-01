@@ -1,11 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useOfflineQueue } from '../hooks/useOfflineQueue';
-import { Wifi, WifiOff, Cloud, AlertCircle } from 'lucide-react';
+import { Wifi, WifiOff, AlertCircle, Loader2 } from 'lucide-react';
 
 interface OfflineIndicatorProps {
   className?: string;
   showDetails?: boolean;
+}
+
+// 🔥 NEW: Sync progress tracking
+interface SyncProgress {
+  total: number;
+  synced: number;
+  isSyncing: boolean;
 }
 
 export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({ 
@@ -15,11 +22,53 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
   const { t } = useTranslation();
   const { isOnline, pendingCount, mediaCount, isSyncing } = useOfflineQueue();
   const [showTooltip, setShowTooltip] = useState(false);
+  
+  // 🔥 NEW: Track sync progress
+  const [syncProgress, setSyncProgress] = useState<SyncProgress>({
+    total: 0,
+    synced: 0,
+    isSyncing: false
+  });
+  
+  // Listen for sync progress events
+  useEffect(() => {
+    const handleSyncStart = (e: CustomEvent) => {
+      setSyncProgress({
+        total: e.detail?.total || pendingCount,
+        synced: 0,
+        isSyncing: true
+      });
+    };
+    
+    const handleSyncProgress = (e: CustomEvent) => {
+      setSyncProgress(prev => ({
+        ...prev,
+        synced: e.detail?.synced || prev.synced + 1
+      }));
+    };
+    
+    const handleSyncComplete = () => {
+      setSyncProgress(prev => ({
+        ...prev,
+        isSyncing: false
+      }));
+    };
+    
+    window.addEventListener('sync-start', handleSyncStart as EventListener);
+    window.addEventListener('sync-progress', handleSyncProgress as EventListener);
+    window.addEventListener('sync-complete', handleSyncComplete as EventListener);
+    
+    return () => {
+      window.removeEventListener('sync-start', handleSyncStart as EventListener);
+      window.removeEventListener('sync-progress', handleSyncProgress as EventListener);
+      window.removeEventListener('sync-complete', handleSyncComplete as EventListener);
+    };
+  }, [pendingCount]);
 
   // Status variants
   const getStatusVariant = () => {
     if (!isOnline) return 'offline';
-    if (isSyncing) return 'syncing';
+    if (isSyncing || syncProgress.isSyncing) return 'syncing';
     if (pendingCount > 0) return 'pending';
     return 'synced';
   };
@@ -37,9 +86,18 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
   // Icons
   const renderIcon = () => {
     if (!isOnline) return <WifiOff className="w-4 h-4" />;
-    if (isSyncing) return <Cloud className="w-4 h-4 animate-pulse" />;
+    // 🔥 NEW: Spinner when syncing
+    if (isSyncing || syncProgress.isSyncing) return <Loader2 className="w-4 h-4 animate-spin" />;
     if (pendingCount > 0) return <AlertCircle className="w-4 h-4" />;
     return <Wifi className="w-4 h-4" />;
+  };
+
+  // 🔥 NEW: Sync progress text
+  const getSyncProgressText = () => {
+    if (syncProgress.isSyncing && syncProgress.total > 0) {
+      return `(${syncProgress.synced}/${syncProgress.total})`;
+    }
+    return '';
   };
 
 
@@ -62,10 +120,17 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
         {renderIcon()}
         {showDetails && (
           <span className="hidden sm:inline">
-            {isOnline ? t('offline.indicator.syncing') : t('offline.indicator.offline')}
+            {/* 🔥 NEW: Show sync progress when syncing */}
+            {(isSyncing || syncProgress.isSyncing) ? (
+              <>
+                {t('offline.indicator.syncing')} {getSyncProgressText()}
+              </>
+            ) : (
+              isOnline ? (pendingCount > 0 ? t('offline.indicator.pending') : t('offline.indicator.synced')) : t('offline.indicator.offline')
+            )}
           </span>
         )}
-        {pendingCount > 0 && (
+        {pendingCount > 0 && !syncProgress.isSyncing && (
           <span className="ml-1 px-2 py-0.5 bg-white/20 rounded-full text-xs font-bold">
             {pendingCount}
           </span>

@@ -13,6 +13,10 @@ import type { PendingAction } from '../../features/flashcard/services/database';
 // CONFIGURATION
 // ============================================================================
 
+// 🔥 APP VERSION: For version mismatch detection during sync
+// Update this when scoring logic or data format changes
+export const APP_VERSION = '1.1.0';
+
 const CONFIG = {
   MAX_QUEUE_SIZE: 200,           // Maximum pending items
   MAX_RETRIES: 5,                // Max retry attempts per item
@@ -60,7 +64,12 @@ export async function enqueueAction(
     retries: 0,
     priority: action.priority || CONFIG.NORMAL_PRIORITY,
     ttl,
-    userId
+    userId,
+    // 🔥 EDGE CASE: Include appVersion for version mismatch detection
+    meta: {
+      ...action.meta,
+      appVersion: APP_VERSION
+    }
   };
   
   await db.pending.add(record);
@@ -165,6 +174,285 @@ export async function enqueueVote(
     },
     priority: CONFIG.LOW_PRIORITY,
     meta: { targetId, targetType }
+  }, userId);
+}
+
+// ============================================================================
+// QUIZ CRUD HELPERS (NEW)
+// ============================================================================
+
+/**
+ * Helper: Enqueue quiz creation
+ * 
+ * 🔥 MEDIA DEPENDENCY HANDLING:
+ * - Media phải được lưu vào db.media TRƯỚC khi gọi hàm này
+ * - Dùng key format: 'local://[mediaKey]' trong coverImage
+ * - syncWorker sẽ tự động resolve và upload media khi sync
+ * 
+ * @example
+ * // Lưu media trước
+ * await db.media.add({ mediaKey: 'img123', blob: imageBlob, createdAt: Date.now() });
+ * // Sau đó enqueue quiz với local reference
+ * await enqueueQuizCreate({ title: 'Quiz', coverImage: 'local://img123' }, userId);
+ */
+export async function enqueueQuizCreate(
+  quizData: {
+    title: string;
+    description?: string;
+    category?: string;
+    difficulty?: string;
+    questions?: any[];
+    timeLimit?: number;
+    coverImage?: string;  // Có thể là 'local://mediaKey' hoặc URL thực
+    isPublic?: boolean;
+  },
+  userId: string,
+  localId?: string
+): Promise<string> {
+  const quizId = localId || uuidv4();
+  
+  // 🔥 VALIDATE: Nếu có local media reference, đảm bảo blob tồn tại
+  if (quizData.coverImage?.startsWith('local://')) {
+    const mediaKey = quizData.coverImage.replace('local://', '');
+    const mediaExists = await db.media.where('mediaKey').equals(mediaKey).count();
+    if (mediaExists === 0) {
+      console.warn(`⚠️ Media blob '${mediaKey}' not found. Make sure to save media before enqueuing quiz.`);
+    }
+  }
+  
+  return enqueueAction({
+    type: 'create_quiz',
+    payload: { ...quizData, id: quizId },
+    priority: CONFIG.NORMAL_PRIORITY,
+    meta: { localId: quizId }
+  }, userId);
+}
+
+/**
+ * Helper: Enqueue quiz update
+ * 
+ * 🔥 MEDIA DEPENDENCY: Same as enqueueQuizCreate
+ * Dùng 'local://mediaKey' cho media mới, blob phải tồn tại trong db.media
+ */
+export async function enqueueQuizUpdate(
+  quizId: string,
+  updates: Record<string, any>,
+  userId: string
+): Promise<string> {
+  // 🔥 VALIDATE: Kiểm tra local media references
+  const mediaFields = ['coverImage', 'imageUrl', 'audioUrl'];
+  for (const field of mediaFields) {
+    if (updates[field]?.startsWith?.('local://')) {
+      const mediaKey = updates[field].replace('local://', '');
+      const mediaExists = await db.media.where('mediaKey').equals(mediaKey).count();
+      if (mediaExists === 0) {
+        console.warn(`⚠️ Media blob '${mediaKey}' not found for field '${field}'.`);
+      }
+    }
+  }
+  
+  return enqueueAction({
+    type: 'update_quiz',
+    payload: { 
+      id: quizId, 
+      ...updates,
+      clientUpdatedAt: Date.now() // For conflict resolution
+    },
+    priority: CONFIG.NORMAL_PRIORITY,
+    meta: { quizId }
+  }, userId);
+}
+
+/**
+ * Helper: Enqueue quiz delete
+ */
+export async function enqueueQuizDelete(
+  quizId: string,
+  userId: string
+): Promise<string> {
+  return enqueueAction({
+    type: 'delete_quiz',
+    payload: { id: quizId },
+    priority: CONFIG.NORMAL_PRIORITY,
+    meta: { quizId }
+  }, userId);
+}
+
+// ============================================================================
+// 🆕 COMBINED HELPERS: Media + Action in one call (RECOMMENDED)
+// ============================================================================
+
+/**
+ * Lưu media blob và trả về local reference key
+ * Dùng kết quả này trong coverImage, imageUrl, etc.
+ * 
+ * @example
+ * const localRef = await saveMediaForOffline(imageBlob, 'quiz-cover');
+ * await enqueueQuizCreate({ title: 'Quiz', coverImage: localRef }, userId);
+ */
+export async function saveMediaForOffline(
+  blob: Blob,
+  prefix: string = 'media'
+): Promise<string> {
+  const mediaKey = `${prefix}_${uuidv4()}`;
+  
+  await db.media.add({
+    mediaKey,
+    blob,
+    createdAt: new Date(),
+    size: blob.size
+  } as any); // Type cast để tương thích với schema
+  
+  return `local://${mediaKey}`;
+}
+
+/**
+ * 🔥 RECOMMENDED: Tạo quiz với media trong một lần gọi
+ * Đảm bảo media được lưu trước khi enqueue quiz
+ */
+export async function enqueueQuizCreateWithMedia(
+  quizData: {
+    title: string;
+    description?: string;
+    category?: string;
+    difficulty?: string;
+    questions?: any[];
+    timeLimit?: number;
+    isPublic?: boolean;
+  },
+  coverImageBlob?: Blob,
+  userId?: string
+): Promise<{ actionId: string; localQuizId: string }> {
+  if (!userId) throw new Error('userId is required');
+  
+  const localQuizId = uuidv4();
+  let coverImage: string | undefined;
+  
+  // Lưu media blob trước (nếu có)
+  if (coverImageBlob) {
+    coverImage = await saveMediaForOffline(coverImageBlob, 'quiz-cover');
+    console.log('✅ Media saved for offline:', coverImage);
+  }
+  
+  // Enqueue quiz với local media reference
+  const actionId = await enqueueQuizCreate(
+    { ...quizData, coverImage },
+    userId,
+    localQuizId
+  );
+  
+  return { actionId, localQuizId };
+}
+
+/**
+ * Helper: Enqueue deck update
+ */
+export async function enqueueDeckUpdate(
+  deckId: string,
+  updates: Record<string, any>,
+  userId: string
+): Promise<string> {
+  return enqueueAction({
+    type: 'update_deck',
+    payload: { id: deckId, ...updates },
+    priority: CONFIG.NORMAL_PRIORITY,
+    meta: { deckId }
+  }, userId);
+}
+
+/**
+ * Helper: Enqueue deck delete
+ */
+export async function enqueueDeckDelete(
+  deckId: string,
+  userId: string
+): Promise<string> {
+  return enqueueAction({
+    type: 'delete_deck',
+    payload: { id: deckId },
+    priority: CONFIG.NORMAL_PRIORITY,
+    meta: { deckId }
+  }, userId);
+}
+
+/**
+ * Helper: Enqueue flashcard create
+ */
+export async function enqueueCardCreate(
+  cardData: {
+    deckId: string;
+    front: string;
+    back: string;
+    imageUrl?: string;
+    audioUrl?: string;
+    tags?: string[];
+  },
+  userId: string,
+  localId?: string
+): Promise<string> {
+  const cardId = localId || uuidv4();
+  
+  return enqueueAction({
+    type: 'create_card',
+    payload: { ...cardData, id: cardId },
+    priority: CONFIG.NORMAL_PRIORITY,
+    meta: { localId: cardId, deckId: cardData.deckId }
+  }, userId);
+}
+
+/**
+ * Helper: Enqueue flashcard update
+ */
+export async function enqueueCardUpdate(
+  cardId: string,
+  updates: Record<string, any>,
+  userId: string
+): Promise<string> {
+  return enqueueAction({
+    type: 'update_card',
+    payload: { id: cardId, ...updates },
+    priority: CONFIG.NORMAL_PRIORITY,
+    meta: { cardId }
+  }, userId);
+}
+
+/**
+ * Helper: Enqueue flashcard delete
+ */
+export async function enqueueCardDelete(
+  cardId: string,
+  userId: string
+): Promise<string> {
+  return enqueueAction({
+    type: 'delete_card',
+    payload: { id: cardId },
+    priority: CONFIG.NORMAL_PRIORITY,
+    meta: { cardId }
+  }, userId);
+}
+
+/**
+ * Helper: Enqueue card review (spaced repetition)
+ */
+export async function enqueueCardReview(
+  cardId: string,
+  deckId: string,
+  quality: number, // SM-2 quality rating (0-5)
+  timeSpent: number,
+  userId: string
+): Promise<string> {
+  return enqueueAction({
+    type: 'review_card',
+    payload: {
+      cardId,
+      deckId,
+      userId,
+      quality,
+      timeSpent,
+      reviewedAt: Date.now()
+    },
+    priority: CONFIG.HIGH_PRIORITY, // Reviews are important
+    meta: { cardId, deckId }
   }, userId);
 }
 
@@ -401,12 +689,29 @@ export async function markActionProcessed(
 // ============================================================================
 
 export const offlineQueueService = {
-  // Enqueue
+  // Enqueue - General
   enqueueAction,
-  enqueueDeckCreate,
-  enqueueQuizResult,
   enqueueMediaUpload,
   enqueueVote,
+  
+  // Enqueue - Quiz
+  enqueueQuizResult,
+  enqueueQuizCreate,
+  enqueueQuizUpdate,
+  enqueueQuizDelete,
+  
+  // 🆕 Combined helpers (Media + Action)
+  saveMediaForOffline,
+  enqueueQuizCreateWithMedia,
+  
+  // Enqueue - Flashcard
+  enqueueDeckCreate,
+  enqueueDeckUpdate,
+  enqueueDeckDelete,
+  enqueueCardCreate,
+  enqueueCardUpdate,
+  enqueueCardDelete,
+  enqueueCardReview,
   
   // Query
   getPendingActions,

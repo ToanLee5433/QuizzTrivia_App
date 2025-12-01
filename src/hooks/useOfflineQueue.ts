@@ -1,9 +1,20 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  enqueueAction,
+  enqueueQuizCreate,
+  enqueueQuizUpdate,
+  enqueueQuizDelete,
+  enqueueMediaUpload,
+  enqueueDeckCreate,
+  enqueueDeckUpdate,
+  enqueueDeckDelete,
+  enqueueCardCreate,
+  enqueueCardUpdate,
+  enqueueCardDelete,
+  enqueueCardReview,
   getAllPending,
   retryAction,
-  deleteAction
+  deleteAction,
+  cleanupSynced
 } from '../shared/services/offlineQueue';
 import type { PendingAction } from '../features/flashcard/services/database';
 
@@ -13,10 +24,21 @@ interface UseOfflineQueueReturn {
   pendingCount: number;
   mediaCount: number;
   isSyncing: boolean;
-  createQuizOffline: (quizData: any) => Promise<string>;
-  updateQuizOffline: (id: string, quizData: any) => Promise<string>;
-  deleteQuizOffline: (id: string) => Promise<string>;
-  uploadMediaOffline: (file: File, path: string) => Promise<string>;
+  // Quiz operations
+  createQuizOffline: (quizData: any, userId: string) => Promise<string>;
+  updateQuizOffline: (id: string, updates: any, userId: string) => Promise<string>;
+  deleteQuizOffline: (id: string, userId: string) => Promise<string>;
+  // Flashcard operations
+  createDeckOffline: (deckData: any, userId: string) => Promise<string>;
+  updateDeckOffline: (id: string, updates: any, userId: string) => Promise<string>;
+  deleteDeckOffline: (id: string, userId: string) => Promise<string>;
+  createCardOffline: (cardData: any, userId: string) => Promise<string>;
+  updateCardOffline: (id: string, updates: any, userId: string) => Promise<string>;
+  deleteCardOffline: (id: string, userId: string) => Promise<string>;
+  reviewCardOffline: (cardId: string, deckId: string, quality: number, timeSpent: number, userId: string) => Promise<string>;
+  // Media
+  uploadMediaOffline: (mediaKey: string, path: string, userId: string) => Promise<string>;
+  // Queue management
   retryFailedAction: (id: number) => Promise<void>;
   deleteFailedAction: (id: number) => Promise<void>;
   refreshQueue: () => Promise<void>;
@@ -25,6 +47,7 @@ interface UseOfflineQueueReturn {
 
 /**
  * Hook for managing offline queue operations
+ * 🔥 COMPLETE: All CRUD operations for Quiz & Flashcard
  */
 export function useOfflineQueue(): UseOfflineQueueReturn {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -73,46 +96,84 @@ export function useOfflineQueue(): UseOfflineQueueReturn {
   const pendingCount = pendingActions.filter(a => a.status === 'pending' || a.status === 'syncing').length;
   const mediaCount = pendingActions.filter(a => a.type === 'upload_media').length;
 
-  // Create quiz offline
-  const createQuizOffline = useCallback(async (quizData: any): Promise<string> => {
-    const userId = quizData.createdBy || 'anonymous';
-    return enqueueAction({ type: 'create_quiz', payload: quizData }, userId);
+  // ============================================================================
+  // QUIZ OPERATIONS
+  // ============================================================================
+
+  const createQuizOffline = useCallback(async (quizData: any, userId: string): Promise<string> => {
+    return enqueueQuizCreate(quizData, userId);
   }, []);
 
-  // Update quiz offline
-  const updateQuizOffline = useCallback(async (id: string, quizData: any): Promise<string> => {
-    const userId = quizData.updatedBy || 'anonymous';
-    return enqueueAction({ type: 'update_quiz', payload: { id, ...quizData } }, userId);
+  const updateQuizOffline = useCallback(async (id: string, updates: any, userId: string): Promise<string> => {
+    return enqueueQuizUpdate(id, updates, userId);
   }, []);
 
-  // Delete quiz offline
-  const deleteQuizOffline = useCallback(async (id: string): Promise<string> => {
-    return enqueueAction({ type: 'delete_quiz', payload: { id } }, 'current-user');
+  const deleteQuizOffline = useCallback(async (id: string, userId: string): Promise<string> => {
+    return enqueueQuizDelete(id, userId);
   }, []);
 
-  // Upload media offline
-  const uploadMediaOffline = useCallback(async (file: File, path: string): Promise<string> => {
-    return enqueueAction({ 
-      type: 'upload_media', 
-      payload: { file, path } 
-    }, 'current-user');
+  // ============================================================================
+  // FLASHCARD OPERATIONS
+  // ============================================================================
+
+  const createDeckOffline = useCallback(async (deckData: any, userId: string): Promise<string> => {
+    return enqueueDeckCreate(deckData, userId);
   }, []);
 
-  // Retry failed action
+  const updateDeckOffline = useCallback(async (id: string, updates: any, userId: string): Promise<string> => {
+    return enqueueDeckUpdate(id, updates, userId);
+  }, []);
+
+  const deleteDeckOffline = useCallback(async (id: string, userId: string): Promise<string> => {
+    return enqueueDeckDelete(id, userId);
+  }, []);
+
+  const createCardOffline = useCallback(async (cardData: any, userId: string): Promise<string> => {
+    return enqueueCardCreate(cardData, userId);
+  }, []);
+
+  const updateCardOffline = useCallback(async (id: string, updates: any, userId: string): Promise<string> => {
+    return enqueueCardUpdate(id, updates, userId);
+  }, []);
+
+  const deleteCardOffline = useCallback(async (id: string, userId: string): Promise<string> => {
+    return enqueueCardDelete(id, userId);
+  }, []);
+
+  const reviewCardOffline = useCallback(async (
+    cardId: string, 
+    deckId: string, 
+    quality: number, 
+    timeSpent: number, 
+    userId: string
+  ): Promise<string> => {
+    return enqueueCardReview(cardId, deckId, quality, timeSpent, userId);
+  }, []);
+
+  // ============================================================================
+  // MEDIA OPERATIONS
+  // ============================================================================
+
+  const uploadMediaOffline = useCallback(async (mediaKey: string, path: string, userId: string): Promise<string> => {
+    return enqueueMediaUpload(mediaKey, path, userId);
+  }, []);
+
+  // ============================================================================
+  // QUEUE MANAGEMENT
+  // ============================================================================
+
   const retryFailedAction = useCallback(async (id: number) => {
     await retryAction(id);
     await refreshQueue();
   }, [refreshQueue]);
 
-  // Delete failed action
   const deleteFailedAction = useCallback(async (id: number) => {
     await deleteAction(id);
     await refreshQueue();
   }, [refreshQueue]);
 
-  // Clear completed actions
   const clearCompleted = useCallback(async () => {
-    // Implementation would filter and delete completed actions
+    await cleanupSynced(0); // Remove all synced immediately
     await refreshQueue();
   }, [refreshQueue]);
 
@@ -122,10 +183,21 @@ export function useOfflineQueue(): UseOfflineQueueReturn {
     pendingCount,
     mediaCount,
     isSyncing,
+    // Quiz
     createQuizOffline,
     updateQuizOffline,
     deleteQuizOffline,
+    // Flashcard
+    createDeckOffline,
+    updateDeckOffline,
+    deleteDeckOffline,
+    createCardOffline,
+    updateCardOffline,
+    deleteCardOffline,
+    reviewCardOffline,
+    // Media
     uploadMediaOffline,
+    // Queue management
     retryFailedAction,
     deleteFailedAction,
     refreshQueue,

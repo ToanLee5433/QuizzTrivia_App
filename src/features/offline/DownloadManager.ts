@@ -2,46 +2,21 @@
  * ❄️ COLD LAYER: Download Manager
  * ===================================
  * Quản lý tải Quiz về máy để sử dụng hoàn toàn offline (không cần mạng)
- * - Cache Media Assets (images, audio) vào Cache API
- * - Lưu Quiz Data vào IndexedDB riêng biệt (không dùng Firestore cache)
+ * - Cache Media Assets (images, audio) vào IndexedDB via Dexie
+ * - Lưu Quiz Data vào Dexie (Single Source of Truth - không dùng native IndexedDB riêng)
  * - Quản lý storage quota và cleanup
+ * 
+ * 🔥 REFACTORED: Sử dụng Dexie từ database.ts thay vì native IndexedDB
  */
 
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../../lib/firebase/config';
+import { db as firebaseDb } from '../../lib/firebase/config';
+import { db as dexieDb } from '../../features/flashcard/services/database';
+import type { DownloadedQuiz } from '../../features/flashcard/services/database';
 
-// ============================================================================
-// TYPES & INTERFACES
-// ============================================================================
-
-export interface DownloadedQuiz {
-  id: string;
-  userId: string; // 🔐 SECURITY: Owner of this download
-  title: string;
-  description?: string;
-  category?: string;
-  difficulty?: string;
-  questions: QuizQuestion[];
-  coverImage?: string;
-  downloadedAt: number;
-  updatedAt?: number; // 🔥 Track server update time
-  version: number;
-  size: number; // Bytes
-  schemaVersion: number; // 🌪️ CRITICAL: Schema migration support
-  mediaUrls?: string[]; // 🧹 CRITICAL: Track media for cleanup
-  searchKeywords?: string[]; // 🔍 SEARCH OPTIMIZATION: Tokenized keywords for fast search
-}
-
-export interface QuizQuestion {
-  id: string;
-  question: string;
-  options: string[];
-  correctAnswer: number;
-  explanation?: string;
-  image?: string;
-  audio?: string;
-  timeLimit?: number;
-}
+// Re-export types for backward compatibility  
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export type { DownloadedQuiz, DownloadedQuizQuestion as QuizQuestion, MediaBlobEntry } from '../../features/flashcard/services/database';
 
 export interface DownloadProgress {
   quizId: string;
@@ -66,75 +41,123 @@ export interface StorageInfo {
 // ============================================================================
 
 const CACHE_NAME = 'quiz-media-v1';
-const DB_NAME = 'QuizOfflineDB';
-const DB_VERSION = 3; // Bumped: Added userId index for security
-const STORE_NAME = 'downloaded_quizzes';
-const MEDIA_STORE_NAME = 'media_blobs'; // NEW: Store media as Blobs
 const CURRENT_SCHEMA_VERSION = 2; // 🌪️ Track schema changes for migration
 
 // Warning threshold: 80% of quota
 const STORAGE_WARNING_THRESHOLD = 0.8;
 
+// 🔥 STORAGE LIMIT: Giới hạn tổng dung lượng quiz offline (5GB)
+// Lý do: Đảm bảo app không chiếm quá nhiều storage của device
+// Lưu ý: Quota thực tế phụ thuộc vào bộ nhớ trống của thiết bị
+const STORAGE_LIMIT_BYTES = 5 * 1024 * 1024 * 1024; // 5GB
+
+// 🔥 IMAGE COMPRESSION: Quality settings
+const IMAGE_COMPRESSION_QUALITY = 0.7; // 70% JPEG quality
+const MAX_IMAGE_DIMENSION = 1920; // Max width/height for images
+
+// Legacy DB name - for migration cleanup
+const LEGACY_DB_NAME = 'QuizOfflineDB';
+
 // ============================================================================
-// IndexedDB SETUP (Cold Layer Store)
+// LEGACY DATABASE MIGRATION (One-time cleanup)
 // ============================================================================
 
-let dbInstance: IDBDatabase | null = null;
-
-async function openDB(): Promise<IDBDatabase> {
-  if (dbInstance) return dbInstance;
-
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => {
-      dbInstance = request.result;
-      resolve(request.result);
+/**
+ * 🔄 Migrate data from legacy native IndexedDB to Dexie
+ * Called once on app startup, then deletes the old DB
+ */
+async function migrateLegacyDatabase(): Promise<void> {
+  return new Promise((resolve) => {
+    // Check if legacy DB exists
+    const request = indexedDB.open(LEGACY_DB_NAME);
+    
+    request.onerror = () => {
+      // Legacy DB doesn't exist - no migration needed
+      resolve();
     };
-
-    request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
-
-      // Create store for downloaded quizzes
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+    
+    request.onsuccess = async () => {
+      const legacyDb = request.result;
+      
+      // Check if stores exist
+      if (!legacyDb.objectStoreNames.contains('downloaded_quizzes')) {
+        legacyDb.close();
+        // Delete empty legacy DB
+        indexedDB.deleteDatabase(LEGACY_DB_NAME);
+        console.log('[DownloadManager] 🗑️ Deleted empty legacy DB');
+        resolve();
+        return;
+      }
+      
+      try {
+        // Migrate quizzes
+        const quizTransaction = legacyDb.transaction(['downloaded_quizzes'], 'readonly');
+        const quizStore = quizTransaction.objectStore('downloaded_quizzes');
         
-        // 🔐 SECURITY: Index by userId to ensure data isolation
-        store.createIndex('userId', 'userId', { unique: false });
+        const quizzes = await new Promise<any[]>((res, rej) => {
+          const req = quizStore.getAll();
+          req.onsuccess = () => res(req.result || []);
+          req.onerror = () => rej(req.error);
+        });
         
-        // Schema version index for migration
-        store.createIndex('schemaVersion', 'schemaVersion', { unique: false });
+        if (quizzes.length > 0) {
+          console.log(`[DownloadManager] 🔄 Migrating ${quizzes.length} quizzes from legacy DB...`);
+          
+          // Insert into Dexie
+          await dexieDb.downloadedQuizzes.bulkPut(quizzes.map(q => ({
+            ...q,
+            isDownloaded: true
+          })));
+          
+          console.log(`[DownloadManager] ✅ Migrated ${quizzes.length} quizzes to Dexie`);
+        }
         
-        // 🔍 SEARCH OPTIMIZATION: Index for title search
-        store.createIndex('title', 'title', { unique: false });
-        
-        // 🔍 SEARCH OPTIMIZATION: Multi-entry index for keywords (advanced search)
-        store.createIndex('searchKeywords', 'searchKeywords', { unique: false, multiEntry: true });
-        
-        console.log('✅ Created IndexedDB store for quizzes with search indexes');
-      } else {
-        // Migration: Add userId index if upgrading from v1/v2
-        const transaction = (event.currentTarget as IDBOpenDBRequest).transaction;
-        if (transaction) {
-          const store = transaction.objectStore(STORE_NAME);
-          if (!store.indexNames.contains('userId')) {
-            store.createIndex('userId', 'userId', { unique: false });
-            console.log('✅ Added userId index for security');
+        // Migrate media blobs if store exists
+        if (legacyDb.objectStoreNames.contains('media_blobs')) {
+          const mediaTransaction = legacyDb.transaction(['media_blobs'], 'readonly');
+          const mediaStore = mediaTransaction.objectStore('media_blobs');
+          
+          const mediaBlobs = await new Promise<any[]>((res, rej) => {
+            const req = mediaStore.getAll();
+            req.onsuccess = () => res(req.result || []);
+            req.onerror = () => rej(req.error);
+          });
+          
+          if (mediaBlobs.length > 0) {
+            console.log(`[DownloadManager] 🔄 Migrating ${mediaBlobs.length} media blobs...`);
+            
+            await dexieDb.mediaBlobs.bulkPut(mediaBlobs.map(m => ({
+              url: m.url,
+              quizId: m.quizId,
+              blob: m.blob,
+              type: m.type,
+              contentType: m.contentType,
+              savedAt: m.savedAt || Date.now(),
+              size: m.blob?.size
+            })));
+            
+            console.log(`[DownloadManager] ✅ Migrated ${mediaBlobs.length} media blobs to Dexie`);
           }
         }
+        
+        legacyDb.close();
+        
+        // Delete legacy database after successful migration
+        indexedDB.deleteDatabase(LEGACY_DB_NAME);
+        console.log('[DownloadManager] 🗑️ Deleted legacy QuizOfflineDB');
+        
+      } catch (error) {
+        console.error('[DownloadManager] Migration error:', error);
+        legacyDb.close();
       }
-
-      // 🔥 NEW: Store media as Blobs (không bị token expiration)
-      if (!db.objectStoreNames.contains(MEDIA_STORE_NAME)) {
-        const mediaStore = db.createObjectStore(MEDIA_STORE_NAME, { keyPath: 'url' });
-        mediaStore.createIndex('quizId', 'quizId', { unique: false });
-        mediaStore.createIndex('type', 'type', { unique: false }); // 'image' | 'audio'
-        console.log('✅ Created IndexedDB store for media Blobs');
-      }
+      
+      resolve();
     };
   });
 }
+
+// Run migration on module load
+migrateLegacyDatabase().catch(console.error);
 
 // ============================================================================
 // MEDIA EXTRACTION
@@ -230,6 +253,178 @@ function isIOSSafari(): boolean {
 }
 
 /**
+ * 🖼️ MICRO-OPTIMIZATION: Compress image to WebP/JPEG 70%
+ * Reduces image size by ~60-80% with minimal visual quality loss
+ */
+async function compressImage(blob: Blob): Promise<Blob> {
+  // Skip if not an image
+  if (!blob.type.startsWith('image/')) {
+    return blob;
+  }
+
+  // Skip if already small (< 100KB)
+  if (blob.size < 100 * 1024) {
+    return blob;
+  }
+
+  try {
+    // Create image element
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(blob);
+    
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error('Image load failed'));
+      img.src = objectUrl;
+    });
+
+    URL.revokeObjectURL(objectUrl);
+
+    // Calculate new dimensions (maintain aspect ratio)
+    let { width, height } = img;
+    if (width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION) {
+      const ratio = Math.min(MAX_IMAGE_DIMENSION / width, MAX_IMAGE_DIMENSION / height);
+      width = Math.round(width * ratio);
+      height = Math.round(height * ratio);
+    }
+
+    // Draw to canvas
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      return blob;
+    }
+    ctx.drawImage(img, 0, 0, width, height);
+
+    // Try WebP first (better compression)
+    let compressedBlob: Blob | null = null;
+    
+    // Check WebP support
+    const supportsWebP = canvas.toDataURL('image/webp').startsWith('data:image/webp');
+    
+    if (supportsWebP) {
+      compressedBlob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob((b) => resolve(b), 'image/webp', IMAGE_COMPRESSION_QUALITY);
+      });
+    }
+
+    // Fallback to JPEG
+    if (!compressedBlob) {
+      compressedBlob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob((b) => resolve(b), 'image/jpeg', IMAGE_COMPRESSION_QUALITY);
+      });
+    }
+
+    if (compressedBlob && compressedBlob.size < blob.size) {
+      const savedPercent = ((1 - compressedBlob.size / blob.size) * 100).toFixed(1);
+      console.log(`[DownloadManager] 🖼️ Image compressed: ${(blob.size/1024).toFixed(0)}KB → ${(compressedBlob.size/1024).toFixed(0)}KB (-${savedPercent}%)`);
+      return compressedBlob;
+    }
+
+    return blob;
+  } catch (error) {
+    console.warn('[DownloadManager] Image compression failed, using original:', error);
+    return blob;
+  }
+}
+
+/**
+ * 🔍 Check if storage data has been evicted (Safari issue)
+ * Returns true if data might have been deleted by the browser
+ */
+export async function checkEvictionStatus(userId: string): Promise<{
+  evicted: boolean;
+  expectedCount: number;
+  actualCount: number;
+}> {
+  try {
+    // Get expected count from localStorage (survives eviction better)
+    const expectedKey = `quiz_download_count_${userId}`;
+    const expectedCountStr = localStorage.getItem(expectedKey);
+    const expectedCount = expectedCountStr ? parseInt(expectedCountStr, 10) : 0;
+
+    // Get actual count from IndexedDB
+    const quizzes = await dexieDb.downloadedQuizzes
+      .where('userId')
+      .equals(userId)
+      .count();
+
+    const evicted = expectedCount > 0 && quizzes < expectedCount * 0.5; // >50% lost = eviction
+
+    if (evicted) {
+      console.warn(`[DownloadManager] ⚠️ EVICTION DETECTED: Expected ${expectedCount}, found ${quizzes}`);
+    }
+
+    return {
+      evicted,
+      expectedCount,
+      actualCount: quizzes
+    };
+  } catch (error) {
+    console.error('[DownloadManager] Failed to check eviction status:', error);
+    return { evicted: false, expectedCount: 0, actualCount: 0 };
+  }
+}
+
+/**
+ * 📊 Update expected quiz count (call after successful download)
+ */
+async function updateExpectedQuizCount(userId: string): Promise<void> {
+  try {
+    const count = await dexieDb.downloadedQuizzes
+      .where('userId')
+      .equals(userId)
+      .count();
+    localStorage.setItem(`quiz_download_count_${userId}`, count.toString());
+  } catch (error) {
+    console.warn('[DownloadManager] Failed to update expected count:', error);
+  }
+}
+
+/**
+ * 🔥 Check storage limit before download
+ * Returns available space in bytes, or error if limit exceeded
+ */
+export async function checkStorageLimit(userId: string): Promise<{
+  canDownload: boolean;
+  usedBytes: number;
+  limitBytes: number;
+  availableBytes: number;
+  percentUsed: number;
+}> {
+  try {
+    // Calculate total size of user's downloaded quizzes
+    const quizzes = await dexieDb.downloadedQuizzes
+      .where('userId')
+      .equals(userId)
+      .toArray();
+    
+    const usedBytes = quizzes.reduce((total, quiz) => total + (quiz.size || 0), 0);
+    const availableBytes = STORAGE_LIMIT_BYTES - usedBytes;
+    const percentUsed = (usedBytes / STORAGE_LIMIT_BYTES) * 100;
+
+    return {
+      canDownload: usedBytes < STORAGE_LIMIT_BYTES,
+      usedBytes,
+      limitBytes: STORAGE_LIMIT_BYTES,
+      availableBytes: Math.max(0, availableBytes),
+      percentUsed
+    };
+  } catch (error) {
+    console.error('[DownloadManager] Failed to check storage limit:', error);
+    return {
+      canDownload: true, // Allow on error
+      usedBytes: 0,
+      limitBytes: STORAGE_LIMIT_BYTES,
+      availableBytes: STORAGE_LIMIT_BYTES,
+      percentUsed: 0
+    };
+  }
+}
+
+/**
  * 🔥 Request persistent storage to prevent eviction
  * Safari can delete IndexedDB when storage is low
  */
@@ -285,13 +480,13 @@ async function verifyQuizExists(quizId: string, userId: string): Promise<boolean
 }
 
 // ============================================================================
-// CACHE MANAGEMENT
+// CACHE MANAGEMENT (Using Dexie)
 // ============================================================================
 
 /**
  * 🔥 Cache media files as Blobs (FIX: Signed URL expiration)
  * - Fetch URL → Blob
- * - Save Blob to IndexedDB (không có token)
+ * - Save Blob to Dexie (không có token)
  * - Blob never expires
  */
 async function cacheMediaFiles(
@@ -299,7 +494,6 @@ async function cacheMediaFiles(
   urls: string[],
   onProgress?: (current: number, total: number, file: string) => void
 ): Promise<{ success: number; failed: string[] }> {
-  const idb = await openDB();
   const failed: string[] = [];
   let success = 0;
 
@@ -315,27 +509,29 @@ async function cacheMediaFiles(
           throw new Error(`HTTP ${response.status}`);
         }
         
-        const blob = await response.blob();
-        const contentType = response.headers.get('Content-Type') || blob.type;
+        let blob = await response.blob();
+        const originalContentType = response.headers.get('Content-Type') || blob.type;
         
         // 2. Determine media type
-        const mediaType = contentType.startsWith('image/') ? 'image' : 'audio';
+        const mediaType: 'image' | 'audio' = originalContentType.startsWith('image/') ? 'image' : 'audio';
 
-        // 3. Save to IndexedDB
-        const transaction = idb.transaction([MEDIA_STORE_NAME], 'readwrite');
-        const store = transaction.objectStore(MEDIA_STORE_NAME);
-        
-        await new Promise<void>((resolve, reject) => {
-          const request = store.put({
-            url, // Original URL as key
-            quizId,
-            blob,
-            type: mediaType,
-            contentType,
-            savedAt: Date.now(),
-          });
-          request.onsuccess = () => resolve();
-          request.onerror = () => reject(request.error);
+        // 🔥 MICRO-OPTIMIZATION: Compress images before saving
+        if (mediaType === 'image') {
+          blob = await compressImage(blob);
+        }
+
+        // Determine final content type (may change after compression)
+        const contentType = blob.type || originalContentType;
+
+        // 3. Save to Dexie
+        await dexieDb.mediaBlobs.put({
+          url, // Original URL as key
+          quizId,
+          blob,
+          type: mediaType,
+          contentType,
+          savedAt: Date.now(),
+          size: blob.size
         });
 
         return url;
@@ -363,26 +559,13 @@ async function cacheMediaFiles(
 }
 
 /**
- * 🧹 CRITICAL FIX: Xóa cached media từ CẢ IndexedDB VÀ Cache Storage
- * Trước đây chỉ xóa IndexedDB → Storage không giảm
+ * 🧹 CRITICAL FIX: Xóa cached media từ CẢ Dexie VÀ Cache Storage
  */
 async function deleteCachedMedia(urls: string[]): Promise<void> {
-  // 1. Delete from IndexedDB (media Blobs)
-  const idb = await openDB();
-  const transaction = idb.transaction([MEDIA_STORE_NAME], 'readwrite');
-  const store = transaction.objectStore(MEDIA_STORE_NAME);
+  // 1. Delete from Dexie (media Blobs)
+  await dexieDb.mediaBlobs.bulkDelete(urls);
 
-  await Promise.all(
-    urls.map((url) => {
-      return new Promise<void>((resolve, reject) => {
-        const request = store.delete(url);
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
-      });
-    })
-  );
-
-  console.log(`[DownloadManager] 🗑️ Deleted ${urls.length} media from IndexedDB`);
+  console.log(`[DownloadManager] 🗑️ Deleted ${urls.length} media from Dexie`);
 
   // 2. 🔥 FIX: Also delete from Cache Storage API
   // Service Worker caches media files here as well
@@ -443,7 +626,17 @@ export async function downloadQuizForOffline(
     return { success: false, error: 'User ID is required for security' };
   }
   try {
-    // 🔥 Stage 0: Request persistent storage (Safari fix)
+    // 🔥 Stage 0: Check storage limit (5GB cap)
+    const storageCheck = await checkStorageLimit(userId);
+    if (!storageCheck.canDownload) {
+      const usedGB = (storageCheck.usedBytes / 1024 / 1024 / 1024).toFixed(2);
+      return { 
+        success: false, 
+        error: `Đã đạt giới hạn lưu trữ (${usedGB}GB/5GB). Vui lòng xóa bớt quiz cũ để tải thêm.` 
+      };
+    }
+
+    // 🔥 Stage 0.5: Request persistent storage (Safari fix)
     await requestPersistentStorage();
 
     // Stage 1: Fetch Data
@@ -453,7 +646,7 @@ export async function downloadQuizForOffline(
       progress: 10,
     });
 
-    const docRef = doc(db, 'quizzes', quizId);
+    const docRef = doc(firebaseDb, 'quizzes', quizId);
     const snapshot = await getDoc(docRef);
 
     if (!snapshot.exists()) {
@@ -525,7 +718,7 @@ export async function downloadQuizForOffline(
       });
     }
 
-    // Stage 3: Calculate Size & Save to IndexedDB
+    // Stage 3: Calculate Size & Save to Dexie
     onProgress?.({
       quizId,
       stage: 'saving-data',
@@ -534,14 +727,10 @@ export async function downloadQuizForOffline(
 
     quizData.size = await estimateQuizSize(quizData, extractedUrls);
 
-    const idb = await openDB();
-    const transaction = idb.transaction([STORE_NAME], 'readwrite');
-    const store = transaction.objectStore(STORE_NAME);
-
-    await new Promise<void>((resolve, reject) => {
-      const request = store.put(quizData);
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+    // Save to Dexie (Single Source of Truth)
+    await dexieDb.downloadedQuizzes.put({
+      ...quizData,
+      isDownloaded: true
     });
 
     // Stage 4: 🔥 CRITICAL: Prefetch QuizPage for TRUE Offline Playback
@@ -597,25 +786,36 @@ export async function downloadQuizForOffline(
       progress: 100,
     });
 
+    // 🔥 Update expected quiz count (for eviction detection)
+    await updateExpectedQuizCount(userId);
+
     console.log(`✅ [DownloadManager] Quiz ${quizId} downloaded successfully`);
     return { success: true };
   } catch (error) {
     const errorMsg = (error as Error).message;
+    const errorName = (error as Error).name;
     console.error(`❌ [DownloadManager] Download failed:`, error);
+
+    // 🔥 EDGE CASE: Handle QuotaExceededError (Storage full)
+    let friendlyError = errorMsg;
+    if (errorName === 'QuotaExceededError' || errorMsg.includes('quota') || errorMsg.includes('Quota')) {
+      friendlyError = 'Bộ nhớ đầy! Vui lòng xóa bớt quiz cũ đã tải để giải phóng dung lượng.';
+      console.warn('[DownloadManager] 💾 Storage quota exceeded - user needs to free up space');
+    }
 
     onProgress?.({
       quizId,
       stage: 'error',
       progress: 0,
-      error: errorMsg,
+      error: friendlyError,
     });
 
-    return { success: false, error: errorMsg };
+    return { success: false, error: friendlyError };
   }
 }
 
 // ============================================================================
-// GET DOWNLOADED QUIZZES
+// GET DOWNLOADED QUIZZES (Using Dexie)
 // ============================================================================
 
 /**
@@ -630,21 +830,14 @@ export async function getDownloadedQuizzes(userId: string): Promise<DownloadedQu
   }
 
   try {
-    const idb = await openDB();
-    const transaction = idb.transaction([STORE_NAME], 'readonly');
-    const store = transaction.objectStore(STORE_NAME);
-    const index = store.index('userId');
-
-    return new Promise((resolve, reject) => {
-      // 🔐 Query by userId index (tối ưu + bảo mật)
-      const request = index.getAll(userId);
-      request.onsuccess = () => {
-        const results = request.result || [];
-        console.log(`[DownloadManager] Found ${results.length} quizzes for user ${userId}`);
-        resolve(results);
-      };
-      request.onerror = () => reject(request.error);
-    });
+    // Query using Dexie index
+    const results = await dexieDb.downloadedQuizzes
+      .where('userId')
+      .equals(userId)
+      .toArray();
+    
+    console.log(`[DownloadManager] Found ${results.length} quizzes for user ${userId}`);
+    return results;
   } catch (error) {
     console.error('[DownloadManager] Failed to get downloaded quizzes:', error);
     return [];
@@ -667,29 +860,19 @@ export async function getDownloadedQuiz(
   }
 
   try {
-    const idb = await openDB();
-    const transaction = idb.transaction([STORE_NAME], 'readonly');
-    const store = transaction.objectStore(STORE_NAME);
-
-    return new Promise((resolve, reject) => {
-      const request = store.get(quizId);
-      request.onsuccess = () => {
-        const result = request.result;
-        
-        // 🔐 SECURITY: Verify ownership
-        if (result && result.userId === userId) {
-          // 🌪️ SCHEMA MIGRATION: Check and migrate if needed
-          const migratedData = migrateSchemaIfNeeded(result);
-          resolve(migratedData);
-        } else if (result) {
-          console.warn(`[DownloadManager] User ${userId} tried to access quiz owned by ${result.userId}`);
-          resolve(null); // Return null instead of exposing other user's data
-        } else {
-          resolve(null);
-        }
-      };
-      request.onerror = () => reject(request.error);
-    });
+    const result = await dexieDb.downloadedQuizzes.get(quizId);
+    
+    // 🔐 SECURITY: Verify ownership
+    if (result && result.userId === userId) {
+      // 🌪️ SCHEMA MIGRATION: Check and migrate if needed
+      const migratedData = migrateSchemaIfNeeded(result);
+      return migratedData;
+    } else if (result) {
+      console.warn(`[DownloadManager] User ${userId} tried to access quiz owned by ${result.userId}`);
+      return null; // Return null instead of exposing other user's data
+    }
+    
+    return null;
   } catch (error) {
     console.error('[DownloadManager] Failed to get quiz:', error);
     return null;
@@ -707,7 +890,7 @@ export async function isQuizDownloaded(quizId: string, userId: string): Promise<
 }
 
 // ============================================================================
-// DELETE QUIZ
+// DELETE QUIZ (Using Dexie)
 // ============================================================================
 
 /**
@@ -731,23 +914,15 @@ export async function deleteDownloadedQuiz(quizId: string, userId: string): Prom
       return false;
     }
 
-    // 2. 🧹 Delete media Blobs from IndexedDB (PREVENT ORPHANED MEDIA)
+    // 2. 🧹 Delete media Blobs from Dexie (PREVENT ORPHANED MEDIA)
     const mediaUrls = quiz.mediaUrls || extractMediaUrls(quiz);
     if (mediaUrls.length > 0) {
       await deleteCachedMedia(mediaUrls);
       console.log(`[DownloadManager] 🧹 Cleaned up ${mediaUrls.length} media Blobs`);
     }
 
-    // 3. Delete quiz from IndexedDB
-    const idb = await openDB();
-    const transaction = idb.transaction([STORE_NAME], 'readwrite');
-    const store = transaction.objectStore(STORE_NAME);
-
-    await new Promise<void>((resolve, reject) => {
-      const request = store.delete(quizId);
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
+    // 3. Delete quiz from Dexie
+    await dexieDb.downloadedQuizzes.delete(quizId);
 
     console.log(`✅ [DownloadManager] Quiz ${quizId} deleted (data + media)`);
     return true;
@@ -769,37 +944,13 @@ export async function clearAllDownloads(userId: string): Promise<number> {
   }
 
   try {
-    const quizzes = await getDownloadedQuizzes(userId);
-    const count = quizzes.length;
-
-    // 🔐 Delete only this user's quizzes (not clear all)
-    const idb = await openDB();
-    const quizTransaction = idb.transaction([STORE_NAME], 'readwrite');
-    const store = quizTransaction.objectStore(STORE_NAME);
-
-    // Delete each quiz individually
-    await Promise.all(
-      quizzes.map((quiz) => {
-        return new Promise<void>((resolve, reject) => {
-          const request = store.delete(quiz.id);
-          request.onsuccess = () => resolve();
-          request.onerror = () => reject(request.error);
-        });
-      })
-    );
-
-    // Clear media Blobs from IndexedDB
-    const mediaTransaction = idb.transaction([MEDIA_STORE_NAME], 'readwrite');
-    await new Promise<void>((resolve, reject) => {
-      const request = mediaTransaction.objectStore(MEDIA_STORE_NAME).clear();
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
+    // Use Dexie helper method to clear downloads for user
+    const count = await dexieDb.clearDownloadsForUser(userId);
 
     // 🔥 FIX: Also clear Cache Storage API
     await clearCacheStorage();
 
-    console.log(`✅ [DownloadManager] Cleared ${count} downloaded quizzes + media (IndexedDB + Cache Storage)`);
+    console.log(`✅ [DownloadManager] Cleared ${count} downloaded quizzes + media (Dexie + Cache Storage)`);
     return count;
   } catch (error) {
     console.error('[DownloadManager] Failed to clear downloads:', error);
@@ -914,7 +1065,7 @@ function migrateSchemaIfNeeded(data: any): DownloadedQuiz {
 }
 
 // ============================================================================
-// ORPHANED MEDIA CLEANUP (Garbage Collection)
+// ORPHANED MEDIA CLEANUP (Garbage Collection) - Using Dexie
 // ============================================================================
 
 /**
@@ -942,38 +1093,23 @@ export async function cleanupOrphanedMedia(userId: string): Promise<number> {
     
     console.log(`[DownloadManager] Found ${referencedUrls.size} referenced media URLs`);
     
-    // 2. Get all stored media Blobs
-    const idb = await openDB();
-    const transaction = idb.transaction([MEDIA_STORE_NAME], 'readwrite');
-    const store = transaction.objectStore(MEDIA_STORE_NAME);
-    const index = store.index('quizId');
-    
-    const allMedia = await new Promise<any[]>((resolve, reject) => {
-      const request = index.getAll(userId);
-      request.onsuccess = () => resolve(request.result || []);
-      request.onerror = () => reject(request.error);
-    });
+    // 2. Get all stored media Blobs from Dexie
+    const allMedia = await dexieDb.mediaBlobs.toArray();
     
     console.log(`[DownloadManager] Found ${allMedia.length} stored media Blobs`);
     
-    // 3. Delete orphaned media
-    let deletedCount = 0;
-    for (const media of allMedia) {
-      if (!referencedUrls.has(media.url)) {
-        // This media is not referenced by any quiz → DELETE IT
-        await new Promise<void>((resolve, reject) => {
-          const deleteReq = store.delete(media.url);
-          deleteReq.onsuccess = () => resolve();
-          deleteReq.onerror = () => reject(deleteReq.error);
-        });
-        
-        deletedCount++;
-        console.log(`[DownloadManager] 🗑️ Deleted orphaned media: ${media.url}`);
-      }
+    // 3. Find and delete orphaned media
+    const orphanedUrls = allMedia
+      .filter(media => !referencedUrls.has(media.url))
+      .map(media => media.url);
+    
+    if (orphanedUrls.length > 0) {
+      await dexieDb.mediaBlobs.bulkDelete(orphanedUrls);
+      console.log(`[DownloadManager] 🗑️ Deleted ${orphanedUrls.length} orphaned media files`);
     }
     
-    console.log(`✅ [DownloadManager] Cleanup complete: Deleted ${deletedCount} orphaned media files`);
-    return deletedCount;
+    console.log(`✅ [DownloadManager] Cleanup complete: Deleted ${orphanedUrls.length} orphaned media files`);
+    return orphanedUrls.length;
   } catch (error) {
     console.error('[DownloadManager] Orphaned media cleanup failed:', error);
     return 0;
@@ -1003,27 +1139,17 @@ export function scheduleMediaCleanup(userId: string): void {
 }
 
 // ============================================================================
-// GET CACHED MEDIA (for OfflineImage component)
+// GET CACHED MEDIA (for OfflineImage component) - Using Dexie
 // ============================================================================
 
 /**
- * 🔥 Get cached media Blob from IndexedDB
+ * 🔥 Get cached media Blob from Dexie
  * This is used by OfflineImage component
  */
 export async function getCachedMediaBlob(url: string): Promise<Blob | null> {
   try {
-    const idb = await openDB();
-    const transaction = idb.transaction([MEDIA_STORE_NAME], 'readonly');
-    const store = transaction.objectStore(MEDIA_STORE_NAME);
-
-    return new Promise((resolve, reject) => {
-      const request = store.get(url);
-      request.onsuccess = () => {
-        const result = request.result;
-        resolve(result ? result.blob : null);
-      };
-      request.onerror = () => reject(request.error);
-    });
+    const result = await dexieDb.mediaBlobs.get(url);
+    return result ? result.blob : null;
   } catch (error) {
     console.error('[DownloadManager] Failed to get cached Blob:', error);
     return null;
@@ -1074,7 +1200,7 @@ export async function checkForUpdate(quizId: string, userId: string): Promise<Up
       };
     }
 
-    const docRef = doc(db, 'quizzes', quizId);
+    const docRef = doc(firebaseDb, 'quizzes', quizId);
     const snapshot = await getDoc(docRef);
 
     if (!snapshot.exists()) {
@@ -1148,11 +1274,11 @@ export async function updateDownloadedQuiz(
 }
 
 // ============================================================================
-// SEARCH (OPTIMIZED)
+// SEARCH (OPTIMIZED) - Using Dexie
 // ============================================================================
 
 /**
- * 🔍 OPTIMIZED: Search quizzes using IndexedDB index (FAST)
+ * 🔍 OPTIMIZED: Search quizzes using Dexie index (FAST)
  * - Uses searchKeywords multiEntry index (không cần load tất cả vào RAM)
  * - Returns user-scoped results only
  * @param query - Search query (single keyword or phrase)
@@ -1171,43 +1297,26 @@ export async function searchQuizzes(query: string, userId: string): Promise<Down
   }
 
   try {
-    const idb = await openDB();
-    const transaction = idb.transaction([STORE_NAME], 'readonly');
-    const store = transaction.objectStore(STORE_NAME);
-    const keywordIndex = store.index('searchKeywords');
-
     // Normalize query
     const keyword = query.toLowerCase().trim();
 
-    return new Promise((resolve, reject) => {
-      const results: DownloadedQuiz[] = [];
-      const seenIds = new Set<string>(); // Dedupe (vì multiEntry có thể trả về duplicates)
+    // Query using Dexie multiEntry index
+    const results = await dexieDb.downloadedQuizzes
+      .where('searchKeywords')
+      .equals(keyword)
+      .filter(quiz => quiz.userId === userId) // 🔐 Filter by userId (security)
+      .toArray();
 
-      // 🔥 Query using index (FAST - không cần getAll())
-      const request = keywordIndex.openCursor(IDBKeyRange.only(keyword));
-
-      request.onsuccess = (event) => {
-        const cursor = (event.target as IDBRequest).result;
-        
-        if (cursor) {
-          const quiz = cursor.value as DownloadedQuiz;
-          
-          // 🔐 Filter by userId (security)
-          if (quiz.userId === userId && !seenIds.has(quiz.id)) {
-            results.push(quiz);
-            seenIds.add(quiz.id);
-          }
-          
-          cursor.continue();
-        } else {
-          // Done
-          console.log(`[DownloadManager] Found ${results.length} results for "${query}"`);
-          resolve(results);
-        }
-      };
-
-      request.onerror = () => reject(request.error);
+    // Dedupe if needed (multiEntry can return duplicates)
+    const seenIds = new Set<string>();
+    const uniqueResults = results.filter(quiz => {
+      if (seenIds.has(quiz.id)) return false;
+      seenIds.add(quiz.id);
+      return true;
     });
+
+    console.log(`[DownloadManager] Found ${uniqueResults.length} results for "${query}"`);
+    return uniqueResults;
   } catch (error) {
     console.error('[DownloadManager] Search failed:', error);
     return [];
@@ -1239,6 +1348,10 @@ export const downloadManager = {
   hasEnoughStorage,
   isStorageWarning,
   
+  // 🔥 NEW: Storage Limit & Eviction
+  checkStorageLimit,      // Check against 4GB limit
+  checkEvictionStatus,    // Detect if Safari evicted data
+  
   // Media
   getCachedMediaBlob,
   
@@ -1257,6 +1370,7 @@ export const downloadManager = {
   // Constants
   CACHE_NAME,
   STORAGE_WARNING_THRESHOLD,
+  STORAGE_LIMIT_BYTES,    // 🔥 NEW: 4GB limit
   CURRENT_SCHEMA_VERSION,
 };
 

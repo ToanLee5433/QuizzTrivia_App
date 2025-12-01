@@ -63,11 +63,31 @@ export const DownloadedQuizzesPage: React.FC = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
   const [updatesAvailable, setUpdatesAvailable] = useState<Set<string>>(new Set()); // 🔥 Track quizzes with updates
+  const [evictionWarning, setEvictionWarning] = useState(false); // 🔥 NEW: Eviction detected
 
   // Load data
   useEffect(() => {
     loadData();
   }, []);
+
+  // 🔥 Check for eviction on mount (Safari issue)
+  useEffect(() => {
+    const checkEviction = async () => {
+      if (!userId) return;
+      const status = await downloadManager.checkEvictionStatus(userId);
+      if (status.evicted) {
+        setEvictionWarning(true);
+        toast.warning(
+          t('downloadedQuizzes.evictionWarning', { 
+            expected: status.expectedCount, 
+            actual: status.actualCount 
+          }),
+          { autoClose: false }
+        );
+      }
+    };
+    checkEviction();
+  }, [userId, t]);
 
   // 🔥 Check for updates when online
   useEffect(() => {
@@ -92,7 +112,7 @@ export const DownloadedQuizzesPage: React.FC = () => {
     };
 
     checkUpdates();
-  }, [quizzes]);
+  }, [quizzes, userId, t]);
 
   const loadData = async () => {
     if (!userId) {
@@ -178,6 +198,29 @@ export const DownloadedQuizzesPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
       <div className="max-w-7xl mx-auto">
+        {/* 🔥 Eviction Warning Banner */}
+        {evictionWarning && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 mb-6"
+          >
+            <div className="flex items-start gap-3">
+              <svg className="h-6 w-6 text-yellow-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div>
+                <h3 className="text-sm font-semibold text-yellow-800 dark:text-yellow-200">
+                  {t('downloadedQuizzes.evictionTitle')}
+                </h3>
+                <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                  {t('downloadedQuizzes.evictionMessage')}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -245,6 +288,16 @@ export const DownloadedQuizzesPage: React.FC = () => {
                   {formatBytes(storageInfo.available)}
                 </p>
               </div>
+            </div>
+
+            {/* 🔥 Storage Notice */}
+            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
+              <p className="text-xs text-blue-700 dark:text-blue-300 flex items-start gap-2">
+                <svg className="h-4 w-4 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{t('downloadedQuizzes.storageNotice')}</span>
+              </p>
             </div>
           </motion.div>
         )}

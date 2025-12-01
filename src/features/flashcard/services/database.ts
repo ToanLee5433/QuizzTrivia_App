@@ -100,9 +100,54 @@ export interface ProcessedAction {
   userId: string;
 }
 
+// ============================================================================
+// DOWNLOADED QUIZ TYPES (Migrated from DownloadManager - Single Source of Truth)
+// ============================================================================
+
+export interface DownloadedQuizQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  explanation?: string;
+  image?: string;
+  audio?: string;
+  timeLimit?: number;
+}
+
+export interface DownloadedQuiz {
+  id: string;
+  userId: string;                    // 🔐 SECURITY: Owner of this download
+  title: string;
+  description?: string;
+  category?: string;
+  difficulty?: string;
+  questions: DownloadedQuizQuestion[];
+  coverImage?: string;
+  downloadedAt: number;
+  updatedAt?: number;                // Track server update time
+  version: number;
+  size: number;                      // Bytes
+  schemaVersion: number;             // Schema migration support
+  mediaUrls?: string[];              // Track media for cleanup
+  searchKeywords?: string[];         // Tokenized keywords for fast search
+  isDownloaded?: boolean;            // 🔥 Flag to distinguish from cache
+}
+
+export interface MediaBlobEntry {
+  url: string;                       // Primary key - original URL
+  quizId: string;
+  blob: Blob;
+  type: 'image' | 'audio';
+  contentType: string;
+  savedAt: number;
+  size?: number;
+}
+
 /**
  * Main Application Database
  * Supports offline-first for Flashcard, Quiz, Forum, and Media
+ * 🔥 UNIFIED: Single Source of Truth for ALL offline data
  */
 export class AppDatabase extends Dexie {
   // ========================================================================
@@ -115,7 +160,7 @@ export class AppDatabase extends Dexie {
   /** Processed actions - for local idempotency check */
   processedActions!: Table<ProcessedAction, string>;
   
-  /** Media blobs for offline storage */
+  /** Media blobs for offline storage (general) */
   media!: Table<MediaBlob & { mediaKey: string }, number>;
   
   // ========================================================================
@@ -139,6 +184,16 @@ export class AppDatabase extends Dexie {
   
   /** Quiz results not yet synced */
   results!: Table<CachedResult, string>;
+  
+  // ========================================================================
+  // DOWNLOADED QUIZZES (Cold Storage - Migrated from DownloadManager)
+  // ========================================================================
+  
+  /** Downloaded quizzes for TRUE offline playback */
+  downloadedQuizzes!: Table<DownloadedQuiz, string>;
+  
+  /** Media blobs for downloaded quizzes (images, audio as Blob) */
+  mediaBlobs!: Table<MediaBlobEntry, string>;
   
   // ========================================================================
   // FORUM TABLES
@@ -173,6 +228,67 @@ export class AppDatabase extends Dexie {
       // Forum tables
       posts: 'id, authorId, category, cachedAt'
     });
+
+    // ======================================================================
+    // VERSION 2: Add Downloaded Quizzes & Media Blobs (Migration from DownloadManager)
+    // 🔥 UNIFIED: Single Source of Truth for ALL offline data
+    // ======================================================================
+    this.version(2).stores({
+      // Core offline tables (unchanged)
+      pending: '++id, actionId, status, userId, createdAt, priority, ttl, [status+createdAt], [status+priority]',
+      processedActions: 'actionId, userId, processedAt',
+      media: '++id, mediaKey, createdAt, size',
+      
+      // Flashcard tables (unchanged)
+      decks: 'id, authorId, public, createdAt, updatedAt, lastSync, syncStatus',
+      cards: 'id, deckId, difficulty, createdAt, updatedAt, lastSync, syncStatus',
+      spacedData: 'cardId, [deckId+userId], userId, nextReview, lastReview',
+      deckProgress: '[deckId+userId], deckId, userId, lastStudy',
+      
+      // Quiz tables (unchanged)
+      quizzes: 'id, category, difficulty, cachedAt, expiresAt',
+      questions: 'id, quizId, cachedAt',
+      results: 'id, [quizId+userId], userId, quizId, completedAt, synced',
+      
+      // Forum tables (unchanged)
+      posts: 'id, authorId, category, cachedAt',
+
+      // 🔥 NEW: Downloaded Quizzes (Cold Storage - from DownloadManager)
+      downloadedQuizzes: 'id, userId, category, downloadedAt, *searchKeywords',
+      
+      // 🔥 NEW: Media Blobs for downloaded quizzes
+      mediaBlobs: 'url, quizId, type, savedAt'
+    });
+
+    // ======================================================================
+    // VERSION 3: Optimize indexes + Add conflict resolution support
+    // ======================================================================
+    this.version(3).stores({
+      // Core offline tables - ADD compound index [userId+status] for faster queries
+      pending: '++id, actionId, status, userId, createdAt, priority, ttl, [status+createdAt], [status+priority], [userId+status]',
+      processedActions: 'actionId, userId, processedAt',
+      media: '++id, mediaKey, createdAt, size',
+      
+      // Flashcard tables - ADD serverUpdatedAt for conflict resolution
+      decks: 'id, authorId, public, createdAt, updatedAt, lastSync, syncStatus, serverUpdatedAt',
+      cards: 'id, deckId, difficulty, createdAt, updatedAt, lastSync, syncStatus, serverUpdatedAt',
+      spacedData: 'cardId, [deckId+userId], userId, nextReview, lastReview',
+      deckProgress: '[deckId+userId], deckId, userId, lastStudy',
+      
+      // Quiz tables - unchanged
+      quizzes: 'id, category, difficulty, cachedAt, expiresAt',
+      questions: 'id, quizId, cachedAt',
+      results: 'id, [quizId+userId], userId, quizId, completedAt, synced',
+      
+      // Forum tables - unchanged  
+      posts: 'id, authorId, category, cachedAt',
+
+      // Downloaded Quizzes - ADD userId+category compound index
+      downloadedQuizzes: 'id, userId, category, downloadedAt, *searchKeywords, [userId+category]',
+      
+      // Media Blobs - unchanged
+      mediaBlobs: 'url, quizId, type, savedAt'
+    });
   }
 
   /**
@@ -190,8 +306,31 @@ export class AppDatabase extends Dexie {
       this.quizzes.clear(),
       this.questions.clear(),
       this.results.clear(),
-      this.posts.clear()
+      this.posts.clear(),
+      this.downloadedQuizzes.clear(),
+      this.mediaBlobs.clear()
     ]);
+  }
+
+  /**
+   * Clear downloaded quizzes for a specific user
+   */
+  async clearDownloadsForUser(userId: string): Promise<number> {
+    // Get all downloaded quizzes for this user
+    const quizzes = await this.downloadedQuizzes.where('userId').equals(userId).toArray();
+    const quizIds = quizzes.map(q => q.id);
+    
+    // Delete media blobs for these quizzes
+    let deletedMedia = 0;
+    for (const quizId of quizIds) {
+      deletedMedia += await this.mediaBlobs.where('quizId').equals(quizId).delete();
+    }
+    
+    // Delete the quizzes
+    const deletedQuizzes = await this.downloadedQuizzes.where('userId').equals(userId).delete();
+    
+    console.log(`[DB] Cleared ${deletedQuizzes} quizzes and ${deletedMedia} media blobs for user ${userId}`);
+    return deletedQuizzes;
   }
 
   /**
@@ -210,12 +349,20 @@ export class AppDatabase extends Dexie {
       this.quizzes.count(),
       this.questions.count(),
       this.results.count(),
-      this.posts.count()
+      this.posts.count(),
+      this.downloadedQuizzes.count(),
+      this.mediaBlobs.count()
     ]);
     
     // Get media blob sizes
     const mediaBlobs = await this.media.toArray();
     const mediaSize = mediaBlobs.reduce((sum: number, blob: any) => sum + (blob.size || 0), 0);
+    
+    // Get downloaded media blob sizes
+    const downloadedBlobs = await this.mediaBlobs.toArray();
+    const downloadedMediaSize = downloadedBlobs.reduce((sum: number, entry: any) => {
+      return sum + (entry.blob?.size || entry.size || 0);
+    }, 0);
     
     // Rough estimate: 1KB per deck, 500B per card, 200B per other record
     const estimatedSize = 
@@ -230,9 +377,36 @@ export class AppDatabase extends Dexie {
       counts[8] * 512 + // questions
       counts[9] * 512 + // results
       counts[10] * 1024 + // posts
-      mediaSize; // actual media size
+      counts[11] * 2048 + // downloadedQuizzes (larger)
+      mediaSize +
+      downloadedMediaSize;
     
     return estimatedSize;
+  }
+
+  /**
+   * Get storage statistics
+   */
+  async getStorageStats(): Promise<{
+    downloadedQuizzes: number;
+    mediaBlobs: number;
+    totalSizeBytes: number;
+    pendingActions: number;
+  }> {
+    const [quizCount, blobCount, pendingCount] = await Promise.all([
+      this.downloadedQuizzes.count(),
+      this.mediaBlobs.count(),
+      this.pending.where('status').equals('pending').count()
+    ]);
+    
+    const totalSize = await this.getDatabaseSize();
+    
+    return {
+      downloadedQuizzes: quizCount,
+      mediaBlobs: blobCount,
+      totalSizeBytes: totalSize,
+      pendingActions: pendingCount
+    };
   }
 
   /**

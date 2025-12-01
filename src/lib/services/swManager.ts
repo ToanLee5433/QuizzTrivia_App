@@ -119,3 +119,59 @@ export async function clearAllCaches() {
   }
   return 0;
 }
+
+/**
+ * 🔥 Clear only Workbox/PWA caches (preserves quiz-media-v1 for offline quizzes)
+ */
+export async function clearPWACaches() {
+  if ('caches' in window) {
+    try {
+      const cacheNames = await caches.keys();
+      // Filter out user-downloaded quiz media cache
+      const pwaCaches = cacheNames.filter(name => 
+        name !== 'quiz-media-v1' && (
+          name.startsWith('workbox-') || 
+          name.includes('-cache') ||
+          name.includes('precache')
+        )
+      );
+      await Promise.all(pwaCaches.map((name) => caches.delete(name)));
+      console.log('[SW] Cleared PWA caches:', pwaCaches);
+      return pwaCaches.length;
+    } catch (error) {
+      console.error('[SW] Failed to clear PWA caches:', error);
+      return 0;
+    }
+  }
+  return 0;
+}
+
+/**
+ * 🔥 Get cache storage info
+ */
+export async function getCacheStorageInfo(): Promise<{
+  caches: { name: string; size: number }[];
+  total: number;
+}> {
+  if ('caches' in window) {
+    try {
+      const cacheNames = await caches.keys();
+      const cacheInfos: { name: string; size: number }[] = [];
+      
+      for (const name of cacheNames) {
+        const cache = await caches.open(name);
+        const keys = await cache.keys();
+        // Rough estimate - actual size calculation requires reading all responses
+        cacheInfos.push({ name, size: keys.length });
+      }
+      
+      return {
+        caches: cacheInfos,
+        total: cacheInfos.reduce((sum, c) => sum + c.size, 0)
+      };
+    } catch (error) {
+      console.error('[SW] Failed to get cache info:', error);
+    }
+  }
+  return { caches: [], total: 0 };
+}

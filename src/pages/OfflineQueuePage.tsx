@@ -18,14 +18,32 @@ const OfflineQueuePage: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const actionTypeLabels: Record<string, string> = {
+    // Quiz actions
     'create_quiz': t('offlineQueue.actions.createQuiz', 'Create Quiz'),
     'update_quiz': t('offlineQueue.actions.updateQuiz', 'Update Quiz'),
     'delete_quiz': t('offlineQueue.actions.deleteQuiz', 'Delete Quiz'),
+    'submit_result': t('offlineQueue.actions.submitResult', 'Submit Quiz Result'),
+    'submit_answer': t('offlineQueue.actions.submitAnswer', 'Submit Answer'),
+    // Flashcard actions
+    'create_deck': t('offlineQueue.actions.createDeck', 'Create Deck'),
+    'update_deck': t('offlineQueue.actions.updateDeck', 'Update Deck'),
+    'delete_deck': t('offlineQueue.actions.deleteDeck', 'Delete Deck'),
     'create_card': t('offlineQueue.actions.createCard', 'Create Flashcard'),
     'update_card': t('offlineQueue.actions.updateCard', 'Update Flashcard'),
     'delete_card': t('offlineQueue.actions.deleteCard', 'Delete Flashcard'),
+    'review_card': t('offlineQueue.actions.reviewCard', 'Review Flashcard'),
     'update_progress': t('offlineQueue.actions.updateProgress', 'Update Progress'),
-    'upload_media': t('offlineQueue.actions.uploadMedia', 'Upload Media')
+    // Media & misc
+    'upload_media': t('offlineQueue.actions.uploadMedia', 'Upload Media'),
+    'vote': t('offlineQueue.actions.vote', 'Vote'),
+    'favorite': t('offlineQueue.actions.favorite', 'Favorite'),
+    // Forum (scaffolded)
+    'create_post': t('offlineQueue.actions.createPost', 'Create Post'),
+    'update_post': t('offlineQueue.actions.updatePost', 'Update Post'),
+    'delete_post': t('offlineQueue.actions.deletePost', 'Delete Post'),
+    'create_comment': t('offlineQueue.actions.createComment', 'Create Comment'),
+    'update_comment': t('offlineQueue.actions.updateComment', 'Update Comment'),
+    'delete_comment': t('offlineQueue.actions.deleteComment', 'Delete Comment'),
   };
 
   const handleRefresh = async () => {
