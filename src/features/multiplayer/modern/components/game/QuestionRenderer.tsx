@@ -10,6 +10,8 @@ import { Check, GripVertical } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Question, OrderingItem, Answer } from '../../../../quiz/types';
 import { PowerUpType } from '../../types/game.types';
+import { VideoPlayer } from '../../../../../shared/components/ui/VideoPlayer';
+import { TrimmedAudio } from '../../../../../shared/components/ui/TrimmedAudio';
 import {
   DndContext,
   closestCenter,
@@ -126,6 +128,21 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
         disabled={disabled}
       />;
 
+    // Audio/Video/Image/Multimedia types all use multiple choice with media in question
+    case 'audio':
+    case 'video':
+    case 'image':
+    case 'multimedia':
+    case 'rich_content':
+      return <MultipleChoiceRenderer 
+        question={question}
+        answers={availableAnswers}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        revealedAnswer={revealedAnswer}
+      />;
+
     default:
       return <div className="text-white">Unsupported question type: {question.type}</div>;
   }
@@ -197,6 +214,28 @@ const MultipleChoiceRenderer: React.FC<MultipleChoiceRendererProps> = ({
                     alt={answer.text}
                     className="mt-3 w-full rounded-lg max-h-48 object-cover"
                   />
+                )}
+                
+                {/* Answer Audio - with trim support */}
+                {answer.audioUrl && (
+                  <div className="mt-3" onClick={(e) => e.stopPropagation()}>
+                    <TrimmedAudio
+                      url={answer.audioUrl}
+                      trimSettings={answer.mediaTrim}
+                      className="w-full"
+                    />
+                  </div>
+                )}
+                
+                {/* Answer Video - with trim support */}
+                {answer.videoUrl && (
+                  <div className="mt-3 rounded-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                    <VideoPlayer
+                      url={answer.videoUrl}
+                      trimSettings={answer.mediaTrim}
+                      className="w-full max-h-48"
+                    />
+                  </div>
                 )}
               </div>
 

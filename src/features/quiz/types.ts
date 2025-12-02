@@ -6,11 +6,20 @@ export interface Answer {
   imageUrl?: string; // Cho dạng chọn ảnh
   audioUrl?: string; // For audio answers
   videoUrl?: string; // For video answers
+  mediaTrim?: MediaTrimSettings; // 🎬 Trim cho audio/video trong đáp án
 }
 
 export type AnswerValue = string | string[] | number | boolean | Record<string, string> | null;
 
 export type AnswerMap = Record<string, AnswerValue>;
+
+// 🎬 Media Trim Settings - Non-destructive trimming
+export interface MediaTrimSettings {
+  startTime: number;      // Giây (VD: 10)
+  endTime: number;        // Giây (VD: 120)
+  duration: number;       // Tổng độ dài đoạn cắt (endTime - startTime)
+  isTrimmed: boolean;     // Cờ đánh dấu có cắt hay không (quan trọng để skip logic)
+}
 
 // 🎯 Extended Question Types
 export type QuestionType = 
@@ -68,7 +77,7 @@ export interface Question {
   correctAnswer?: string;
   acceptedAnswers?: string[];
   
-  // Media attachments
+  // Media attachments for question
   imageUrl?: string;
   audioUrl?: string;
   videoUrl?: string;
@@ -79,11 +88,20 @@ export interface Question {
     description?: string;
   }>;
   
+  // 🆕 Media attachments for explanation (giải thích cũng có thể có media)
+  explanationImageUrl?: string;
+  explanationAudioUrl?: string;
+  explanationVideoUrl?: string;
+  explanationMediaTrim?: MediaTrimSettings; // Trim cho audio/video giải thích
+  
   // 🆕 For advanced question types
   orderingItems?: OrderingItem[];      // For 'ordering' type
   matchingPairs?: MatchingPair[];      // For 'matching' type
   blanks?: BlankItem[];                // For 'fill_blanks' type
   textWithBlanks?: string;             // Template text with {blank} markers
+  
+  // 🎬 Media trim settings (non-destructive)
+  mediaTrim?: MediaTrimSettings;       // Cho video/audio trong câu hỏi
 }
 
 export interface QuizStats {

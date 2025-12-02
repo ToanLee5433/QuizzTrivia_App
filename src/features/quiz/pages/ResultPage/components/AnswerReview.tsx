@@ -4,6 +4,8 @@ import { Quiz } from '../../../types';
 import { ResultState } from '../types';
 import Button from '../../../../../shared/components/ui/Button';
 import SafeHTML from '../../../../../shared/components/ui/SafeHTML';
+import { VideoPlayer } from '../../../../../shared/components/ui/VideoPlayer';
+import { TrimmedAudio } from '../../../../../shared/components/ui/TrimmedAudio';
 
 
 interface AnswerReviewProps {
@@ -188,12 +190,24 @@ export const AnswerReview: React.FC<AnswerReviewProps> = ({ quiz, result }) => {
                           <span className="font-medium">
                             {String.fromCharCode(65 + question.answers.indexOf(answer))}.
                           </span>
-                          <div className="flex items-center gap-2">
+                          <div className="flex-1 flex flex-col gap-2">
                             {answer.imageUrl && (
                               <img src={answer.imageUrl} alt={answer.text || 'Answer'} className="w-16 h-16 object-cover rounded" />
                             )}
+                            {answer.audioUrl && (
+                              <TrimmedAudio 
+                                url={answer.audioUrl} 
+                                trimSettings={answer.mediaTrim}
+                                className="w-full max-w-xs"
+                              />
+                            )}
                             {answer.videoUrl && (
-                              <div className="text-sm text-blue-600">📹 Video: {answer.videoUrl}</div>
+                              <VideoPlayer 
+                                url={answer.videoUrl} 
+                                trimSettings={answer.mediaTrim}
+                                className="w-full max-w-xs rounded-lg" 
+                                style={{ maxHeight: '120px' }}
+                              />
                             )}
                             <span>{answer.text}</span>
                           </div>
@@ -234,7 +248,27 @@ export const AnswerReview: React.FC<AnswerReviewProps> = ({ quiz, result }) => {
                             <span className="font-medium mr-3">
                               {String.fromCharCode(65 + question.answers.indexOf(answer))}.
                             </span>
-                            <span>{answer.text}</span>
+                            <div className="flex-1 flex flex-col gap-2">
+                              {answer.imageUrl && (
+                                <img src={answer.imageUrl} alt={answer.text || 'Answer'} className="w-16 h-16 object-cover rounded" />
+                              )}
+                              {answer.audioUrl && (
+                                <TrimmedAudio 
+                                  url={answer.audioUrl} 
+                                  trimSettings={answer.mediaTrim}
+                                  className="w-full max-w-xs"
+                                />
+                              )}
+                              {answer.videoUrl && (
+                                <VideoPlayer 
+                                  url={answer.videoUrl} 
+                                  trimSettings={answer.mediaTrim}
+                                  className="w-full max-w-xs rounded-lg" 
+                                  style={{ maxHeight: '120px' }}
+                                />
+                              )}
+                              <span>{answer.text}</span>
+                            </div>
                             {answer.isCorrect && (
                               <span className="ml-auto text-green-600 font-medium">
                                 ✓ {t('result.should_select', 'Should Select')}
@@ -415,6 +449,37 @@ export const AnswerReview: React.FC<AnswerReviewProps> = ({ quiz, result }) => {
                   <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <span className="font-medium text-blue-800">{t('result.explanation', 'Explanation')}: </span>
                     <SafeHTML content={question.explanation} className="text-blue-700" />
+                    
+                    {/* 🆕 Explanation Media */}
+                    {(question.explanationImageUrl || question.explanationAudioUrl || question.explanationVideoUrl) && (
+                      <div className="mt-3 space-y-3">
+                        {question.explanationImageUrl && (
+                          <div className="rounded-lg overflow-hidden">
+                            <img 
+                              src={question.explanationImageUrl} 
+                              alt="Explanation" 
+                              className="max-w-full h-auto max-h-48 object-contain rounded-lg border border-blue-200"
+                            />
+                          </div>
+                        )}
+                        {question.explanationAudioUrl && (
+                          <TrimmedAudio
+                            url={question.explanationAudioUrl}
+                            trimSettings={question.explanationMediaTrim}
+                            className="w-full"
+                          />
+                        )}
+                        {question.explanationVideoUrl && (
+                          <div className="rounded-lg overflow-hidden">
+                            <VideoPlayer
+                              url={question.explanationVideoUrl}
+                              trimSettings={question.explanationMediaTrim}
+                              className="max-h-48"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

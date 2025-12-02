@@ -3,6 +3,7 @@ import { Question, AnswerValue } from '../../../types';
 import { useTranslation } from 'react-i18next';
 import { GripVertical } from 'lucide-react';
 import { VideoPlayer } from '../../../../../shared/components/ui/VideoPlayer';
+import { TrimmedAudio } from '../../../../../shared/components/ui/TrimmedAudio';
 import {
   DndContext,
   closestCenter,
@@ -493,10 +494,12 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
             </div>
             <p className="text-gray-600 font-medium">{t('quiz.questionRenderer.audioHint', '🎧 Nghe audio và trả lời câu hỏi:')}</p>
           </div>
-          <audio controls className="w-full">
-            <source src={question.audioUrl} type="audio/mpeg" />
-            {t('quiz.questionRenderer.audioNotSupported', 'Trình duyệt không hỗ trợ phát audio')}
-          </audio>
+          <TrimmedAudio 
+            url={question.audioUrl} 
+            className="w-full"
+            trimSettings={question.mediaTrim}
+            nativeControls={false}
+          />
         </div>
       )}
       {renderMultipleChoice()}
@@ -515,7 +518,11 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
             </div>
             <p className="text-gray-600 font-medium">{t('quiz.questionRenderer.videoHint', '🎬 Xem video và trả lời câu hỏi:')}</p>
           </div>
-          <VideoPlayer url={question.videoUrl} className="w-full rounded-lg" />
+          <VideoPlayer 
+            url={question.videoUrl} 
+            className="w-full rounded-lg"
+            trimSettings={question.mediaTrim}
+          />
         </div>
       )}
       {renderMultipleChoice()}
@@ -889,15 +896,19 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
               </div>
             )}
             {question.audioUrl && (
-              <audio controls className="w-full">
-                <source src={question.audioUrl} />
-              </audio>
+              <TrimmedAudio 
+                url={question.audioUrl} 
+                className="w-full"
+                trimSettings={question.mediaTrim}
+                nativeControls={false}
+              />
             )}
             {question.videoUrl && (
               <VideoPlayer 
                 url={question.videoUrl} 
                 className="w-full rounded-xl shadow-md" 
                 style={{ maxHeight: '500px' }}
+                trimSettings={question.mediaTrim}
               />
             )}
           </div>
@@ -926,16 +937,19 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
                   </div>
                 )}
                 {answer.audioUrl && (
-                  <div className="mb-3">
-                    <audio controls className="w-full" onClick={(e) => e.stopPropagation()}>
-                      <source src={answer.audioUrl} />
-                    </audio>
+                  <div className="mb-3" onClick={(e) => e.stopPropagation()}>
+                    <TrimmedAudio 
+                      url={answer.audioUrl} 
+                      trimSettings={answer.mediaTrim}
+                      className="w-full"
+                    />
                   </div>
                 )}
                 {answer.videoUrl && (
                   <div className="mb-3" onClick={(e) => e.stopPropagation()}>
                     <VideoPlayer 
                       url={answer.videoUrl} 
+                      trimSettings={answer.mediaTrim}
                       className="w-full rounded-lg" 
                       style={{ maxHeight: '200px' }}
                     />
@@ -1089,9 +1103,45 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <div>
+            <div className="flex-1">
               <p className="font-bold text-blue-800 mb-1">{t('quiz.feedback.explanation', 'Giải thích')}</p>
               <p className="text-blue-700" dangerouslySetInnerHTML={{ __html: question.explanation }} />
+              
+              {/* 🆕 Explanation Media */}
+              {(question.explanationImageUrl || question.explanationAudioUrl || question.explanationVideoUrl) && (
+                <div className="mt-3 space-y-3">
+                  {/* Explanation Image */}
+                  {question.explanationImageUrl && (
+                    <div className="rounded-lg overflow-hidden">
+                      <img 
+                        src={question.explanationImageUrl} 
+                        alt="Explanation" 
+                        className="max-w-full h-auto max-h-64 object-contain rounded-lg border border-blue-200"
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Explanation Audio - with trim support */}
+                  {question.explanationAudioUrl && (
+                    <TrimmedAudio
+                      url={question.explanationAudioUrl}
+                      trimSettings={question.explanationMediaTrim}
+                      className="w-full"
+                    />
+                  )}
+                  
+                  {/* Explanation Video - with trim support */}
+                  {question.explanationVideoUrl && (
+                    <div className="rounded-lg overflow-hidden">
+                      <VideoPlayer
+                        url={question.explanationVideoUrl}
+                        trimSettings={question.explanationMediaTrim}
+                        className="max-h-64"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

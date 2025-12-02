@@ -126,6 +126,14 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
     onChange({ ...question, answers: newAnswers });
   };
 
+  // 🎬 Handle answer with mediaTrim for audio/video
+  const handleAnswerWithTrim = (idx: number, updates: Partial<Answer>) => {
+    const newAnswers = question.answers.map((a, i) =>
+      i === idx ? { ...a, ...updates } : a
+    );
+    onChange({ ...question, answers: newAnswers });
+  };
+
   const handleAddAnswer = () => {
     if (question.type === 'multiple' || question.type === 'checkbox' || question.type === 'image' || question.type === 'audio' || question.type === 'video' || question.type === 'multimedia') {
       const newAnswer: Answer = {
@@ -495,7 +503,9 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
               type="audio"
               currentUrl={question.audioUrl}
               onUploadComplete={(url) => onChange({ ...question, audioUrl: url })}
-              onRemove={() => onChange({ ...question, audioUrl: '' })}
+              onRemove={() => onChange({ ...question, audioUrl: '', mediaTrim: undefined })}
+              onTrimChange={(trim) => onChange({ ...question, mediaTrim: trim || undefined })}
+              trimSettings={question.mediaTrim}
               label={t('quizCreation.audioFile')}
               maxSizeMB={10}
             />
@@ -546,7 +556,9 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
               type="video"
               currentUrl={question.videoUrl}
               onUploadComplete={(url) => onChange({ ...question, videoUrl: url })}
-              onRemove={() => onChange({ ...question, videoUrl: '' })}
+              onRemove={() => onChange({ ...question, videoUrl: '', mediaTrim: undefined })}
+              onTrimChange={(trim) => onChange({ ...question, mediaTrim: trim || undefined })}
+              trimSettings={question.mediaTrim}
               label={t('quizCreation.videoFile')}
               maxSizeMB={100}
             />
@@ -653,7 +665,9 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
                 type="audio"
                 currentUrl={question.audioUrl}
                 onUploadComplete={(url) => onChange({ ...question, audioUrl: url })}
-                onRemove={() => onChange({ ...question, audioUrl: '' })}
+                onRemove={() => onChange({ ...question, audioUrl: '', mediaTrim: undefined })}
+                onTrimChange={(trim) => onChange({ ...question, mediaTrim: trim || undefined })}
+                trimSettings={question.mediaTrim}
                 maxSizeMB={10}
               />
             )}
@@ -662,7 +676,9 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
                 type="video"
                 currentUrl={question.videoUrl}
                 onUploadComplete={(url) => onChange({ ...question, videoUrl: url })}
-                onRemove={() => onChange({ ...question, videoUrl: '' })}
+                onRemove={() => onChange({ ...question, videoUrl: '', mediaTrim: undefined })}
+                onTrimChange={(trim) => onChange({ ...question, mediaTrim: trim || undefined })}
+                trimSettings={question.mediaTrim}
                 maxSizeMB={100}
               />
             )}
@@ -803,8 +819,10 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
                   <MediaUploader
                     type="audio"
                     currentUrl={a.audioUrl}
-                    onUploadComplete={(url) => handleAnswerChange(idx, 'audioUrl', url)}
-                    onRemove={() => handleAnswerChange(idx, 'audioUrl', '')}
+                    onUploadComplete={(url) => handleAnswerWithTrim(idx, { audioUrl: url })}
+                    onRemove={() => handleAnswerWithTrim(idx, { audioUrl: '', mediaTrim: undefined })}
+                    onTrimChange={(trim) => handleAnswerWithTrim(idx, { mediaTrim: trim || undefined })}
+                    trimSettings={a.mediaTrim}
                     maxSizeMB={10}
                   />
                 )}
@@ -812,8 +830,10 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
                   <MediaUploader
                     type="video"
                     currentUrl={a.videoUrl}
-                    onUploadComplete={(url) => handleAnswerChange(idx, 'videoUrl', url)}
-                    onRemove={() => handleAnswerChange(idx, 'videoUrl', '')}
+                    onUploadComplete={(url) => handleAnswerWithTrim(idx, { videoUrl: url })}
+                    onRemove={() => handleAnswerWithTrim(idx, { videoUrl: '', mediaTrim: undefined })}
+                    onTrimChange={(trim) => handleAnswerWithTrim(idx, { mediaTrim: trim || undefined })}
+                    trimSettings={a.mediaTrim}
                     maxSizeMB={50}
                   />
                 )}
@@ -1117,15 +1137,69 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
         </div>
       )}
 
-      {/* Giải thích */}
-      <div className="mt-4">
+      {/* Giải thích với Media Support */}
+      <div className="mt-4 space-y-3">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          {t('placeholders.answerExplanation')}
+        </label>
         <textarea
-          className="w-full border p-2 rounded"
+          className="w-full border p-2 rounded dark:bg-slate-700 dark:border-slate-600 dark:text-white"
           placeholder={t('placeholders.answerExplanation')}
           rows={2}
           value={question.explanation || ''}
           onChange={e => onChange({ ...question, explanation: e.target.value })}
         />
+        
+        {/* Media cho Explanation */}
+        <div className="border border-dashed border-gray-300 dark:border-slate-600 rounded-lg p-3 bg-gray-50 dark:bg-slate-800/50">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+            {t('createQuiz.questions.explanationMedia', 'Thêm media cho giải thích (tùy chọn)')}
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {/* Explanation Image */}
+            <div>
+              <MediaUploader
+                type="image"
+                currentUrl={question.explanationImageUrl || ''}
+                onUploadComplete={(url: string) => onChange({ ...question, explanationImageUrl: url || undefined })}
+                onRemove={() => onChange({ ...question, explanationImageUrl: undefined })}
+                label={t('createQuiz.questions.explanationImage', 'Ảnh giải thích')}
+              />
+            </div>
+            
+            {/* Explanation Audio */}
+            <div>
+              <MediaUploader
+                type="audio"
+                currentUrl={question.explanationAudioUrl || ''}
+                onUploadComplete={(url: string) => onChange({ ...question, explanationAudioUrl: url || undefined })}
+                onRemove={() => onChange({ ...question, explanationAudioUrl: undefined, explanationMediaTrim: undefined })}
+                onTrimChange={(trim) => onChange({ 
+                  ...question, 
+                  explanationMediaTrim: trim || undefined 
+                })}
+                trimSettings={question.explanationMediaTrim}
+                label={t('createQuiz.questions.explanationAudio', 'Audio giải thích')}
+              />
+            </div>
+            
+            {/* Explanation Video */}
+            <div>
+              <MediaUploader
+                type="video"
+                currentUrl={question.explanationVideoUrl || ''}
+                onUploadComplete={(url: string) => onChange({ ...question, explanationVideoUrl: url || undefined })}
+                onRemove={() => onChange({ ...question, explanationVideoUrl: undefined, explanationMediaTrim: undefined })}
+                onTrimChange={(trim) => onChange({ 
+                  ...question, 
+                  explanationMediaTrim: trim || undefined 
+                })}
+                trimSettings={question.explanationMediaTrim}
+                label={t('createQuiz.questions.explanationVideo', 'Video giải thích')}
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

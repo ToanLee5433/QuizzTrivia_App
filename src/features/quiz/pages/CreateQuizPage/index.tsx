@@ -331,7 +331,9 @@ const CreateQuizPage: React.FC = () => {
             ...(a.imageUrl && { imageUrl: a.imageUrl }),
             ...(a.audioUrl && { audioUrl: a.audioUrl }),
             ...(a.videoUrl && { videoUrl: a.videoUrl }),
-            ...(a.richText && { richText: a.richText })
+            ...(a.richText && { richText: a.richText }),
+            // 🎬 Media trim for answers
+            ...(a.mediaTrim && a.mediaTrim.isTrimmed && { mediaTrim: a.mediaTrim })
           })),
           explanation: q.explanation || '',
           points: q.points !== undefined ? q.points : 1,
@@ -343,6 +345,13 @@ const CreateQuizPage: React.FC = () => {
           ...(q.videoUrl && { videoUrl: q.videoUrl }),
           ...(q.richText && { richText: q.richText }),
           ...(q.richExplanation && { richExplanation: q.richExplanation }),
+          // 🎬 Media trim for question
+          ...(q.mediaTrim && q.mediaTrim.isTrimmed && { mediaTrim: q.mediaTrim }),
+          // 🆕 Explanation media support
+          ...(q.explanationImageUrl && { explanationImageUrl: q.explanationImageUrl }),
+          ...(q.explanationAudioUrl && { explanationAudioUrl: q.explanationAudioUrl }),
+          ...(q.explanationVideoUrl && { explanationVideoUrl: q.explanationVideoUrl }),
+          ...(q.explanationMediaTrim && q.explanationMediaTrim.isTrimmed && { explanationMediaTrim: q.explanationMediaTrim }),
           // 🆕 Support for ordering questions
           ...(q.orderingItems && q.orderingItems.length > 0 && {
             orderingItems: q.orderingItems.map(item => ({
@@ -501,7 +510,9 @@ const CreateQuizPage: React.FC = () => {
             ...(a.imageUrl && { imageUrl: a.imageUrl }),
             ...(a.audioUrl && { audioUrl: a.audioUrl }),
             ...(a.videoUrl && { videoUrl: a.videoUrl }),
-            ...(a.richText && { richText: a.richText })
+            ...(a.richText && { richText: a.richText }),
+            // 🎬 Media trim for answers
+            ...(a.mediaTrim && a.mediaTrim.isTrimmed && { mediaTrim: a.mediaTrim })
           })),
           explanation: q.explanation || '',
           points: q.points !== undefined ? q.points : 1,
@@ -513,6 +524,13 @@ const CreateQuizPage: React.FC = () => {
           ...(q.videoUrl && { videoUrl: q.videoUrl }),
           ...(q.richText && { richText: q.richText }),
           ...(q.richExplanation && { richExplanation: q.richExplanation }),
+          // 🎬 Media trim for question
+          ...(q.mediaTrim && q.mediaTrim.isTrimmed && { mediaTrim: q.mediaTrim }),
+          // 🆕 Explanation media support
+          ...(q.explanationImageUrl && { explanationImageUrl: q.explanationImageUrl }),
+          ...(q.explanationAudioUrl && { explanationAudioUrl: q.explanationAudioUrl }),
+          ...(q.explanationVideoUrl && { explanationVideoUrl: q.explanationVideoUrl }),
+          ...(q.explanationMediaTrim && q.explanationMediaTrim.isTrimmed && { explanationMediaTrim: q.explanationMediaTrim }),
           // 🆕 Support for ordering questions
           ...(q.orderingItems && q.orderingItems.length > 0 && {
             orderingItems: q.orderingItems.map(item => ({

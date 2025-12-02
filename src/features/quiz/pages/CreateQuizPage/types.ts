@@ -1,17 +1,10 @@
 import { LearningResource } from '../../types/learning';
-import { Question as GlobalQuestion, QuestionType } from '../../types'; // 🔧 Import from global types
+import { Question as GlobalQuestion, QuestionType, Answer as GlobalAnswer, MediaTrimSettings } from '../../types'; // 🔧 Import from global types
 
 // Re-export for backward compatibility
 export type Question = GlobalQuestion;
-export type { QuestionType };
-
-// Legacy Answer type (kept for compatibility)
-export interface Answer {
-  id: string;
-  text: string;
-  isCorrect: boolean;
-  imageUrl?: string;
-}
+export type Answer = GlobalAnswer;
+export type { QuestionType, MediaTrimSettings };
 
 export interface QuizFormData {
   title: string;

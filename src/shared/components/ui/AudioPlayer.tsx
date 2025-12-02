@@ -1,18 +1,31 @@
 /**
  * AudioPlayer - Component phát âm thanh fullscreen với waveform UI
+ * Hỗ trợ trim settings để phát chỉ phần được chọn
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { X, Play, Pause, Volume2, VolumeX, Download, SkipBack, SkipForward } from 'lucide-react';
+import { X, Play, Pause, Volume2, VolumeX, Download, SkipBack, SkipForward, Scissors } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { MediaTrimSettings } from '../../../features/quiz/types';
+import { formatTime as formatTrimTime } from '../../../utils/mediaTrimUtils';
 
 interface AudioPlayerProps {
   audioUrl: string;
   title?: string;
   onClose: () => void;
+  /** Trim settings - if provided, will only play the trimmed portion */
+  trimSettings?: MediaTrimSettings | null;
+  /** Show trim indicator */
+  showTrimBadge?: boolean;
 }
 
-const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, title, onClose }) => {
+const AudioPlayer: React.FC<AudioPlayerProps> = ({ 
+  audioUrl, 
+  title, 
+  onClose,
+  trimSettings,
+  showTrimBadge = true,
+}) => {
   const { t } = useTranslation();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -21,6 +34,13 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, title, onClose }) =
   const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  // Trim settings
+  const hasTrim = trimSettings?.isTrimmed && trimSettings.startTime !== undefined && trimSettings.endTime !== undefined;
+  const trimStart = hasTrim ? trimSettings.startTime : 0;
+  const trimEnd = hasTrim ? trimSettings.endTime : duration;
+  const effectiveDuration = hasTrim ? (trimEnd - trimStart) : duration;
+  const effectiveCurrentTime = hasTrim ? Math.max(0, currentTime - trimStart) : currentTime;
+
   const togglePlayPause = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -28,10 +48,14 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, title, onClose }) =
     if (isPlaying) {
       audio.pause();
     } else {
+      // If at the end of trim range, reset to start
+      if (hasTrim && audio.currentTime >= trimEnd) {
+        audio.currentTime = trimStart;
+      }
       audio.play();
     }
     setIsPlaying(!isPlaying);
-  }, [isPlaying]);
+  }, [isPlaying, hasTrim, trimStart, trimEnd]);
 
   useEffect(() => {
     const handleKeyboard = (e: KeyboardEvent) => {
@@ -64,8 +88,25 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, title, onClose }) =
     const audio = audioRef.current;
     if (!audio) return;
 
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const handleLoadedMetadata = () => setDuration(audio.duration);
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+      
+      // Trim boundary check - stop at end of trim range
+      if (hasTrim && audio.currentTime >= trimEnd) {
+        audio.pause();
+        setIsPlaying(false);
+        audio.currentTime = trimStart; // Reset to trim start
+      }
+    };
+    
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration);
+      // Set initial position to trim start
+      if (hasTrim && audio.currentTime < trimStart) {
+        audio.currentTime = trimStart;
+      }
+    };
+    
     const handleEnded = () => setIsPlaying(false);
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
@@ -77,15 +118,22 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, title, onClose }) =
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, []);
+  }, [hasTrim, trimStart, trimEnd]);
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     const audio = audioRef.current;
     if (!audio) return;
 
     const time = parseFloat(e.target.value);
-    audio.currentTime = time;
-    setCurrentTime(time);
+    
+    // If trimmed, adjust to work within trim range
+    if (hasTrim) {
+      const actualTime = trimStart + time;
+      audio.currentTime = Math.min(Math.max(actualTime, trimStart), trimEnd);
+    } else {
+      audio.currentTime = time;
+    }
+    setCurrentTime(audio.currentTime);
   };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,7 +163,13 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, title, onClose }) =
     const audio = audioRef.current;
     if (!audio) return;
 
-    audio.currentTime = Math.max(0, Math.min(duration, audio.currentTime + seconds));
+    if (hasTrim) {
+      // Stay within trim bounds when skipping
+      const newTime = Math.max(trimStart, Math.min(trimEnd, audio.currentTime + seconds));
+      audio.currentTime = newTime;
+    } else {
+      audio.currentTime = Math.max(0, Math.min(duration, audio.currentTime + seconds));
+    }
   };
 
   const handleDownload = () => {
@@ -151,7 +205,16 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, title, onClose }) =
                 🎵 {title}
               </h2>
             )}
-            <p className="text-blue-200 text-sm">Audio Player</p>
+            <div className="flex items-center gap-2">
+              <p className="text-blue-200 text-sm">Audio Player</p>
+              {/* Trim Badge */}
+              {showTrimBadge && hasTrim && (
+                <div className="flex items-center gap-1 px-2 py-0.5 bg-purple-500/30 text-purple-200 text-xs rounded-full">
+                  <Scissors className="w-3 h-3" />
+                  <span>{formatTrimTime(trimStart)} - {formatTrimTime(trimEnd)}</span>
+                </div>
+              )}
+            </div>
           </div>
           
           <button
@@ -169,7 +232,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, title, onClose }) =
             const height = isPlaying 
               ? Math.random() * 100 + 20 
               : 30;
-            const isActive = (currentTime / duration) * 50 > i;
+            const progress = effectiveDuration > 0 ? effectiveCurrentTime / effectiveDuration : 0;
+            const isActive = progress * 50 > i;
             
             return (
               <div
@@ -193,17 +257,19 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, title, onClose }) =
           <input
             type="range"
             min="0"
-            max={duration || 0}
-            value={currentTime}
+            max={effectiveDuration || 0}
+            value={effectiveCurrentTime}
             onChange={handleSeek}
             className="w-full h-2 bg-white bg-opacity-20 rounded-lg appearance-none cursor-pointer accent-blue-500"
             style={{
-              background: `linear-gradient(to right, rgb(59, 130, 246) 0%, rgb(59, 130, 246) ${(currentTime / duration) * 100}%, rgba(255,255,255,0.2) ${(currentTime / duration) * 100}%, rgba(255,255,255,0.2) 100%)`
+              background: effectiveDuration > 0 
+                ? `linear-gradient(to right, rgb(59, 130, 246) 0%, rgb(59, 130, 246) ${(effectiveCurrentTime / effectiveDuration) * 100}%, rgba(255,255,255,0.2) ${(effectiveCurrentTime / effectiveDuration) * 100}%, rgba(255,255,255,0.2) 100%)`
+                : 'rgba(255,255,255,0.2)'
             }}
           />
           <div className="flex justify-between mt-2">
-            <span className="text-white text-sm">{formatTime(currentTime)}</span>
-            <span className="text-white text-sm">{formatTime(duration)}</span>
+            <span className="text-white text-sm">{formatTime(effectiveCurrentTime)}</span>
+            <span className="text-white text-sm">{formatTime(effectiveDuration)}</span>
           </div>
         </div>
 

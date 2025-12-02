@@ -28,6 +28,8 @@ import soundService from '../../../../../services/soundService';
 import QuestionRenderer from './QuestionRenderer';
 import PowerUpPanel from './PowerUpPanel';
 import StreakIndicator from './StreakIndicator';
+import { VideoPlayer } from '../../../../../shared/components/ui/VideoPlayer';
+import { TrimmedAudio } from '../../../../../shared/components/ui/TrimmedAudio';
 
 interface PlayerGameViewProps {
   roomId: string;
@@ -401,6 +403,28 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
                             src={questionState.question.imageUrl}
                             alt="Question"
                             className="w-full rounded-xl object-cover max-h-80"
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Question Audio - with trim support */}
+                      {questionState.question.audioUrl && (
+                        <div className="mt-4">
+                          <TrimmedAudio
+                            url={questionState.question.audioUrl}
+                            trimSettings={questionState.question.mediaTrim}
+                            className="w-full"
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Question Video - with trim support */}
+                      {questionState.question.videoUrl && (
+                        <div className="mt-4 rounded-xl overflow-hidden">
+                          <VideoPlayer
+                            url={questionState.question.videoUrl}
+                            trimSettings={questionState.question.mediaTrim}
+                            className="w-full max-h-80"
                           />
                         </div>
                       )}

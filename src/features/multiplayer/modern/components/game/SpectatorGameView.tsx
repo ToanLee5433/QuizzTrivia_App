@@ -24,6 +24,8 @@ import soundService from '../../../../../services/soundService';
 import { Answer } from '../../../../quiz/types';
 import { useTranslation } from 'react-i18next';
 import { ref, onValue, getDatabase } from 'firebase/database';
+import { VideoPlayer } from '../../../../../shared/components/ui/VideoPlayer';
+import { TrimmedAudio } from '../../../../../shared/components/ui/TrimmedAudio';
 
 interface SpectatorGameViewProps {
   roomId: string;
@@ -311,6 +313,28 @@ const SpectatorGameView: React.FC<SpectatorGameViewProps> = ({
                       src={questionState.question.imageUrl}
                       alt="Question"
                       className="w-full rounded-xl object-cover max-h-48"
+                    />
+                  </div>
+                )}
+                
+                {/* Question Audio - with trim support */}
+                {questionState.question.audioUrl && (
+                  <div className="mt-3">
+                    <TrimmedAudio
+                      url={questionState.question.audioUrl}
+                      trimSettings={questionState.question.mediaTrim}
+                      className="w-full"
+                    />
+                  </div>
+                )}
+                
+                {/* Question Video - with trim support */}
+                {questionState.question.videoUrl && (
+                  <div className="mt-3 rounded-xl overflow-hidden">
+                    <VideoPlayer
+                      url={questionState.question.videoUrl}
+                      trimSettings={questionState.question.mediaTrim}
+                      className="w-full max-h-48"
                     />
                   </div>
                 )}

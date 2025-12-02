@@ -1,14 +1,18 @@
 /**
  * 📸🎵🎬 Media Uploader Component
  * Upload images, audio, and video files for quiz questions
+ * Supports video/audio trimming
  */
 
 import { useState, useRef } from 'react';
-import { Upload, X, Loader2, Image as ImageIcon, Music, Video } from 'lucide-react';
+import { Upload, X, Loader2, Image as ImageIcon, Music, Video, Scissors, Edit2 } from 'lucide-react';
 import { storageService } from '../../../services/firebase/storageService';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import { VideoPlayer } from '../../../shared/components/ui/VideoPlayer';
+import { MediaTrimmerModal } from './MediaTrimmer';
+import { MediaTrimSettings } from '../types';
+import { getTrimDisplayString, canTrimMedia } from '../../../utils/mediaTrimUtils';
 
 interface MediaUploaderProps {
   type: 'image' | 'audio' | 'video';
@@ -17,6 +21,10 @@ interface MediaUploaderProps {
   onRemove?: () => void;
   maxSizeMB?: number;
   label?: string;
+  /** Current trim settings */
+  trimSettings?: MediaTrimSettings;
+  /** Called when trim settings change */
+  onTrimChange?: (trim: MediaTrimSettings | undefined) => void;
 }
 
 export const MediaUploader: React.FC<MediaUploaderProps> = ({
@@ -26,12 +34,19 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
   onRemove,
   maxSizeMB = type === 'video' ? 100 : 10,
   label,
+  trimSettings,
+  onTrimChange,
 }) => {
   const { t } = useTranslation();
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentUrl || null);
+  const [showTrimModal, setShowTrimModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Check if current media can be trimmed
+  const canTrim = (type === 'video' || type === 'audio') && previewUrl && canTrimMedia(previewUrl);
+  const trimDisplayString = getTrimDisplayString(trimSettings);
 
   const acceptTypes = {
     image: 'image/*',
@@ -62,6 +77,9 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
     setUploading(true);
     setProgress(0);
 
+    // Clear previous trim settings when uploading new file
+    onTrimChange?.(undefined);
+
     try {
       // Generate unique path
       const timestamp = Date.now();
@@ -90,6 +108,7 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
   const handleRemove = () => {
     setPreviewUrl(null);
     onRemove?.();
+    onTrimChange?.(undefined); // Clear trim settings
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -97,6 +116,19 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
 
   const handleClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleTrimSave = (newTrim: MediaTrimSettings) => {
+    onTrimChange?.(newTrim);
+    setShowTrimModal(false);
+    if (newTrim.isTrimmed) {
+      toast.success(t('mediaTrimmer.trimSaved', 'Đã lưu cài đặt cắt'));
+    }
+  };
+
+  const handleClearTrim = () => {
+    onTrimChange?.(undefined);
+    toast.info(t('mediaTrimmer.trimCleared', 'Đã xóa cài đặt cắt'));
   };
 
   return (
@@ -203,6 +235,52 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
             <Upload className="w-4 h-4 inline mr-1" />
             {t('mediaUploader.change')}
           </button>
+
+          {/* Trim button - only for video/audio */}
+          {canTrim && (
+            <button
+              type="button"
+              onClick={() => setShowTrimModal(true)}
+              className="absolute bottom-2 left-2 px-3 py-1 bg-blue-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-600 shadow-lg text-sm font-medium flex items-center gap-1"
+              title={t('mediaTrimmer.trim', 'Cắt')}
+            >
+              <Scissors className="w-4 h-4" />
+              {trimSettings?.isTrimmed 
+                ? t('mediaTrimmer.editTrim', 'Chỉnh sửa') 
+                : t('mediaTrimmer.trim', 'Cắt')
+              }
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Trim info display */}
+      {trimDisplayString && (
+        <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <div className="flex items-center gap-2">
+            <Scissors className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <span className="text-sm text-blue-700 dark:text-blue-300">
+              {t('mediaTrimmer.trimmed', 'Đã cắt')}: <strong>{trimDisplayString}</strong>
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowTrimModal(true)}
+              className="p-1.5 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-800 rounded transition-colors"
+              title={t('mediaTrimmer.editTrim', 'Chỉnh sửa')}
+            >
+              <Edit2 className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={handleClearTrim}
+              className="p-1.5 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors"
+              title={t('mediaTrimmer.clearTrim', 'Xóa cắt')}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       )}
 
@@ -220,11 +298,23 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
             if (url) {
               setPreviewUrl(url);
               onUploadComplete(url);
+              onTrimChange?.(undefined); // Clear trim on URL change
             }
           }}
           className="flex-1 text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
         />
       </div>
+
+      {/* Trim Modal */}
+      {canTrim && previewUrl && (
+        <MediaTrimmerModal
+          mediaUrl={previewUrl}
+          initialTrim={trimSettings}
+          onSave={handleTrimSave}
+          onClose={() => setShowTrimModal(false)}
+          isOpen={showTrimModal}
+        />
+      )}
     </div>
   );
 };
