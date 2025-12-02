@@ -16,6 +16,7 @@ import { unlockQuiz } from '../../../../lib/services/quizAccessService';
 import { toast } from 'react-toastify';
 import { Quiz, AnswerValue, Question } from '../../types';
 import soundService from '../../../../services/soundService';
+import musicService from '../../../../services/musicService';
 import { quizPresenceService } from '../../../../services/quizPresenceService';
 
 const QuizPage: React.FC = () => {
@@ -264,6 +265,15 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
     if (settings.soundEffects) {
       soundService.play('gameStart');
     }
+    
+    // 🎵 Start game music
+    musicService.unlock();
+    musicService.play('game', 1000); // Fade in 1 second
+    
+    return () => {
+      // Stop music when leaving quiz (will be replaced by victory music on results)
+      musicService.stop(500);
+    };
   }, [settings.soundEffects]);
   
   // Track presence when user starts playing

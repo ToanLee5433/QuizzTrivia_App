@@ -28,6 +28,7 @@ import MemoizedPlayerCard from './MemoizedPlayerCard';
 import SharedScreen from './SharedScreen';
 import { gameEngine } from '../services/gameEngine';
 import soundService from '../../../../services/soundService';
+import musicService from '../../../../services/musicService';
 
 // Import enhanced components
 import ModernRealtimeChat from './ModernRealtimeChat';
@@ -70,6 +71,8 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
   const handleKickPlayer = useCallback(async (player: ModernPlayer) => {
     try {
       await modernMultiplayerService.kickPlayer(player.id);
+      // 🔊 Play kick sound when player is kicked
+      soundService.play('kick');
       console.log('✅ Player kicked:', player.name);
     } catch (error) {
       console.error('❌ Failed to kick player:', error);
@@ -79,6 +82,8 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
   const handleToggleReady = useCallback(async () => {
     try {
       await modernMultiplayerService.toggleReady();
+      // 🔊 Play ready sound when toggling ready status
+      soundService.play('ready');
       console.log('✅ Ready status toggled');
     } catch (error) {
       console.error('❌ Failed to toggle ready:', error);
@@ -192,6 +197,9 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
     try {
       setIsStarting(true);
       console.log('🎮 Starting game with new engine...');
+      
+      // 🔊 Play start sound when game is starting
+      soundService.play('start');
       
       // Clear chat messages before starting game
       await clearChatMessages();
@@ -458,6 +466,10 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
         
         setIsLoadingRoom(false);
 
+        // 🎵 Start lobby music
+        musicService.unlock();
+        musicService.play('lobby', 1000); // Fade in 1 second
+
         // Set up room data listener (Firestore) for quiz info and settings
         // ✅ REMOVED: Firestore chat listener - now using ModernRealtimeChat (RTDB)
         let roomUnsubscribe: (() => void) | undefined;
@@ -497,6 +509,9 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
           modernMultiplayerService.off('game:updated', gameUpdateId);
           modernMultiplayerService.off('room:updated', roomUpdateId);
           modernMultiplayerService.off('error', errorId);
+          
+          // 🎵 Stop lobby music when leaving
+          musicService.stop(500);
           
           // Note: Don't clear state here as it causes race conditions in StrictMode
           // State will be cleaned up when component truly unmounts

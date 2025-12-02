@@ -1,6 +1,10 @@
 import { Howl } from 'howler';
 
-export type SoundType = 'correct' | 'wrong' | 'countdown' | 'gameStart' | 'tick' | 'transition' | 'powerup' | 'click' | 'join' | 'ready' | 'kick' | 'start' | 'timeup' | 'victory' | 'applause';
+export type SoundType = 
+  | 'correct' | 'wrong' | 'countdown' | 'gameStart' | 'tick' | 'transition' | 'powerup' | 'click' 
+  | 'join' | 'ready' | 'kick' | 'start' | 'timeup' | 'victory' | 'applause'
+  // 🆕 New sounds
+  | 'streak' | 'coin' | 'error' | 'levelUp' | 'notification' | 'whoosh';
 
 interface SoundConfig {
   src: string;
@@ -79,6 +83,32 @@ class SoundService {
     applause: {
       src: '/sounds/applause.mp3',
       volume: 0.6,
+    },
+    
+    // 🆕 New sounds
+    streak: {
+      src: '/sounds/streak.mp3',
+      volume: 0.7,
+    },
+    coin: {
+      src: '/sounds/coin.mp3',
+      volume: 0.6,
+    },
+    error: {
+      src: '/sounds/error.mp3',
+      volume: 0.5,
+    },
+    levelUp: {
+      src: '/sounds/level-up.mp3',
+      volume: 0.7,
+    },
+    notification: {
+      src: '/sounds/notification.mp3',
+      volume: 0.5,
+    },
+    whoosh: {
+      src: '/sounds/whoosh.mp3',
+      volume: 0.4,
     },
   };
 
@@ -180,6 +210,58 @@ class SoundService {
       }
     } else {
       console.warn(`⚠️ Sound not found: ${type}`);
+    }
+  }
+
+  /**
+   * 🔥 Play streak sound with pitch scaling based on combo count
+   * - Combo 1: Base pitch (1.0)
+   * - Combo 2-6: Increasing pitch (+0.1 per combo)
+   * - Combo > 6: Capped at max pitch (1.5)
+   * 
+   * @param currentCombo - Current streak count (1, 2, 3...)
+   */
+  playStreakSound(currentCombo: number): void {
+    if (!this.enabled || currentCombo <= 0) return;
+
+    // Auto-unlock on first play attempt
+    if (!this.audioUnlocked) {
+      this.unlock();
+    }
+
+    const sound = this.sounds.get('streak');
+    if (!sound) {
+      console.warn('⚠️ Streak sound not found');
+      return;
+    }
+
+    try {
+      // Lazy load if not loaded yet
+      if (sound.state() === 'unloaded') {
+        sound.load();
+      }
+
+      // --- PITCH SCALING LOGIC ---
+      const BASE_PITCH = 1.0;   // Normal speed
+      const PITCH_STEP = 0.1;   // +10% pitch per combo
+      const MAX_COMBO_CAP = 6;  // Cap pitch increase at combo 6
+
+      // Calculate effective combo (capped at 6)
+      const effectiveCombo = Math.min(currentCombo, MAX_COMBO_CAP);
+      
+      // Calculate final pitch
+      // Combo 1: 1.0 + (0 * 0.1) = 1.0
+      // Combo 2: 1.0 + (1 * 0.1) = 1.1
+      // Combo 6+: 1.0 + (5 * 0.1) = 1.5 (Max)
+      const finalPitch = BASE_PITCH + ((effectiveCombo - 1) * PITCH_STEP);
+
+      // Play with pitch (Howler uses 'rate' for playback speed/pitch)
+      const soundId = sound.play();
+      sound.rate(finalPitch, soundId);
+
+      console.log(`🔊 Streak Sound | Combo: ${currentCombo} | Effective: ${effectiveCombo} | Pitch: ${finalPitch.toFixed(1)}`);
+    } catch (error) {
+      console.error('❌ Error playing streak sound:', error);
     }
   }
 

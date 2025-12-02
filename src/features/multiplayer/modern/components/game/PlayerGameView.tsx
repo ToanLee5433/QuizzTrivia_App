@@ -25,6 +25,7 @@ import {
 } from '../../types/game.types';
 import { gameEngine } from '../../services/gameEngine';
 import soundService from '../../../../../services/soundService';
+import musicService from '../../../../../services/musicService';
 import QuestionRenderer from './QuestionRenderer';
 import PowerUpPanel from './PowerUpPanel';
 import StreakIndicator from './StreakIndicator';
@@ -62,6 +63,16 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
   // Track question index to detect question changes
   const lastQuestionIndexRef = useRef(questionState?.questionIndex);
 
+  // 🎵 Start game music when component mounts
+  useEffect(() => {
+    // Crossfade from lobby music to game music
+    musicService.crossfade('game', 2000);
+    
+    return () => {
+      // Music will be handled by next component (victory music or stop)
+    };
+  }, []);
+
   // Guard: Check if question data is ready (after hooks)
   const hasQuestionData = questionState?.question?.text && questionState?.question?.answers;
 
@@ -69,6 +80,11 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
   useEffect(() => {
     // Only reset when question index actually changes
     if (questionState?.questionIndex !== lastQuestionIndexRef.current) {
+      // 🔊 Play whoosh sound when transitioning to new question (skip first question)
+      if (lastQuestionIndexRef.current !== undefined && lastQuestionIndexRef.current >= 0) {
+        soundService.play('whoosh');
+      }
+      
       lastQuestionIndexRef.current = questionState?.questionIndex;
       setSelectedAnswer(null);
       setShowResult(false);
@@ -118,7 +134,14 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
       const answer = questionState.answers[player.id];
       if (answer) {
         setIsCorrect(answer.isCorrect);
-        setPointsEarned(answer.points + (answer.streakBonus || 0));
+        const totalPoints = answer.points + (answer.streakBonus || 0);
+        setPointsEarned(totalPoints);
+        
+        // 🔊 Play coin sound when earning points
+        if (totalPoints > 0 && isRevealingPhase) {
+          setTimeout(() => soundService.play('coin'), 300);
+        }
+        
         // ✅ FIX: Chỉ show result khi đang ở Revealing Phase
         if (isRevealingPhase) {
           setShowResult(true);
@@ -149,12 +172,29 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
 
   // 🔊 SFX: Transition sound khi vào Revealing Phase
   const hasPlayedRevealSound = useRef(false);
+  const STREAK_MILESTONES = [3, 5, 7, 10]; // Milestone levels
+  
   useEffect(() => {
     if (isRevealingPhase && !hasPlayedRevealSound.current) {
       hasPlayedRevealSound.current = true;
       // Play correct/wrong sound based on result
       if (isCorrect === true) {
         soundService.play('correct');
+        
+        // 🎖️ Play levelUp sound when reaching a streak milestone
+        if (STREAK_MILESTONES.includes(player.streak)) {
+          setTimeout(() => {
+            soundService.play('levelUp');
+          }, 150);
+        }
+        
+        // 🔥 Play streak sound with pitch scaling if player has streak >= 2
+        if (player.streak >= 2) {
+          // Delay streak sound slightly to not overlap with correct sound
+          setTimeout(() => {
+            soundService.playStreakSound(player.streak);
+          }, 300);
+        }
       } else if (isCorrect === false) {
         soundService.play('wrong');
       } else {
@@ -165,13 +205,16 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
     if (!isRevealingPhase) {
       hasPlayedRevealSound.current = false;
     }
-  }, [isRevealingPhase, isCorrect]);
+  }, [isRevealingPhase, isCorrect, player.streak]);
 
   // ============= POWER-UPS =============
   const handlePowerUpUse = useCallback(async (powerUpType: PowerUpType) => {
     try {
       await gameEngine.usePowerUp(roomId, player.id, powerUpType);
       setActivePowerUps(prev => [...prev, powerUpType]);
+      
+      // 🔊 Play powerup sound when using any power-up
+      soundService.play('powerup');
       
       // Apply power-up effects
       switch (powerUpType) {
@@ -187,6 +230,8 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
       }
     } catch (error) {
       console.error('Failed to use power-up:', error);
+      // 🔊 Play error sound on failure
+      soundService.play('error');
     }
   }, [roomId, player.id]);
 

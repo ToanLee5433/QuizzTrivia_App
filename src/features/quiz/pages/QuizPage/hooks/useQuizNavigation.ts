@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Question, AnswerMap } from '../../../types';
 import { isAnswerProvided } from '../utils';
+import soundService from '../../../../../services/soundService';
 
 interface UseQuizNavigationProps {
   questions: Question[];
@@ -23,12 +24,16 @@ export const useQuizNavigation = ({
 
   const goToNextQuestion = useCallback(() => {
     if (currentQuestionIndex < questions.length - 1) {
+      // 🔊 Play transition sound when going to next question
+      soundService.play('transition');
       onQuestionChange(currentQuestionIndex + 1);
     }
   }, [currentQuestionIndex, questions.length, onQuestionChange]);
 
   const goToPreviousQuestion = useCallback(() => {
     if (currentQuestionIndex > 0) {
+      // 🔊 Play whoosh sound when going back
+      soundService.play('whoosh');
       onQuestionChange(currentQuestionIndex - 1);
     }
   }, [currentQuestionIndex, onQuestionChange]);

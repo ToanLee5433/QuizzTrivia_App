@@ -13,6 +13,7 @@ import { quizStatsService } from '../../../services/quizStatsService';
 import SafeHTML from '../../../shared/components/ui/SafeHTML';
 import { useTranslation } from 'react-i18next';
 import soundService from '../../../services/soundService';
+import musicService from '../../../services/musicService';
 
 
 interface ResultState {
@@ -205,6 +206,10 @@ export const ResultPage: React.FC = () => {
   useEffect(() => {
     if (result) {
       const score = result.score || 0;
+      
+      // 🎵 Play victory music (crossfade from game music if playing)
+      musicService.crossfade('victory', 1500);
+      
       // Play victory sound for good scores, otherwise just applause
       if (score >= 60) {
         soundService.play('victory');
@@ -213,6 +218,11 @@ export const ResultPage: React.FC = () => {
         soundService.play('applause');
       }
     }
+    
+    return () => {
+      // Stop music when leaving result page
+      musicService.stop(500);
+    };
   }, [result]);
 
   useEffect(() => {

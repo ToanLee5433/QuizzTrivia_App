@@ -22,6 +22,8 @@ import { LeaderboardEntry, ModernPlayer } from '../../types/game.types';
 import { useTranslation } from 'react-i18next';
 import { ref, onValue, getDatabase } from 'firebase/database';
 import confetti from 'canvas-confetti';
+import soundService from '../../../../../services/soundService';
+import musicService from '../../../../../services/musicService';
 
 interface GameResultsViewProps {
   roomId: string;
@@ -94,6 +96,13 @@ const GameResultsView: React.FC<GameResultsViewProps> = ({
   // Trigger confetti for winners
   useEffect(() => {
     if (finalLeaderboard.length > 0) {
+      // 🎵 Crossfade to victory music
+      musicService.crossfade('victory', 2000);
+      
+      // 🔊 Play victory/applause sounds
+      soundService.play('victory');
+      setTimeout(() => soundService.play('applause'), 500);
+      
       // Delay to show animation first
       setTimeout(() => {
         confetti({
@@ -108,6 +117,11 @@ const GameResultsView: React.FC<GameResultsViewProps> = ({
         setShowDetails(true);
       }, 1500);
     }
+    
+    return () => {
+      // Stop music when leaving results
+      musicService.stop(1000);
+    };
   }, [finalLeaderboard.length]);
 
   const getMedalColor = (rank: number) => {

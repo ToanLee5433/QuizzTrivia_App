@@ -21,6 +21,7 @@ import {
 import { QuestionState, ModernPlayer, LeaderboardEntry } from '../../types/game.types';
 import { gameEngine } from '../../services/gameEngine';
 import soundService from '../../../../../services/soundService';
+import musicService from '../../../../../services/musicService';
 import { Answer } from '../../../../quiz/types';
 import { useTranslation } from 'react-i18next';
 import { ref, onValue, getDatabase } from 'firebase/database';
@@ -49,10 +50,24 @@ const SpectatorGameView: React.FC<SpectatorGameViewProps> = ({
   
   // ✅ Track question changes to detect new questions
   const lastQuestionIndexRef = useRef<number | undefined>(undefined);
+
+  // 🎵 Start game music when spectator view mounts
+  useEffect(() => {
+    // Crossfade from lobby music to game music
+    musicService.crossfade('game', 2000);
+    
+    return () => {
+      // Music will be handled by next component
+    };
+  }, []);
   
-  // ✅ Reset on question change
+  // ✅ Reset on question change + play whoosh sound
   useEffect(() => {
     if (questionState?.questionIndex !== lastQuestionIndexRef.current) {
+      // 🔊 Play whoosh sound when transitioning to new question (skip first)
+      if (lastQuestionIndexRef.current !== undefined && lastQuestionIndexRef.current >= 0) {
+        soundService.play('whoosh');
+      }
       lastQuestionIndexRef.current = questionState?.questionIndex;
     }
   }, [questionState?.questionIndex]);
