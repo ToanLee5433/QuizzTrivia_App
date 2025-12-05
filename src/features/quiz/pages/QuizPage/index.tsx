@@ -18,6 +18,7 @@ import { Quiz, AnswerValue, Question } from '../../types';
 import soundService from '../../../../services/soundService';
 import musicService from '../../../../services/musicService';
 import { quizPresenceService } from '../../../../services/quizPresenceService';
+import { useSettings } from '../../../../contexts/SettingsContext';
 
 const QuizPage: React.FC = () => {
   const { t } = useTranslation();
@@ -129,10 +130,12 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
   const dispatch = useDispatch();
   const { t } = useTranslation();
   const user = useSelector((state: RootState) => state.auth.user);
+  const { soundEffectsEnabled, isMusicPlayerEnabled } = useSettings();
   
   // Load quiz settings with helper functions
   const { 
     settings, 
+    reloadSettings,
     shuffleQuestionsArray, 
     shuffleQuestionAnswers, 
     calculateTotalTime,
@@ -155,7 +158,8 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
   }>({});
   
   // State for Practice Mode per-question timer
-  const [practiceTimeLeft, setPracticeTimeLeft] = useState<number>(0);
+  // Initialize to -1 to distinguish "not started" from "time up" (0)
+  const [practiceTimeLeft, setPracticeTimeLeft] = useState<number>(-1);
   const [isPracticeTimerPaused, setIsPracticeTimerPaused] = useState(false);
   
   // Reset all states when quiz changes (for retake functionality)
@@ -235,6 +239,8 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
   useEffect(() => {
     if (settings.mode !== 'practice' || practiceTimePerQuestion === 0) return;
     if (isPaused || isPracticeTimerPaused || session.isCompleted) return;
+    // Don't start countdown if timer hasn't been initialized yet
+    if (practiceTimeLeft <= 0) return;
     
     const interval = setInterval(() => {
       setPracticeTimeLeft(prev => {
@@ -247,7 +253,19 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
     }, 1000);
     
     return () => clearInterval(interval);
-  }, [settings.mode, practiceTimePerQuestion, isPaused, isPracticeTimerPaused, session.isCompleted]);
+  }, [settings.mode, practiceTimePerQuestion, isPaused, isPracticeTimerPaused, session.isCompleted, practiceTimeLeft]);
+  
+  // 🔊 Play tick sound during last 5 seconds of practice mode
+  useEffect(() => {
+    if (settings.mode !== 'practice' || practiceTimePerQuestion === 0) return;
+    if (isPaused || isPracticeTimerPaused || session.isCompleted) return;
+    
+    // Play tick sound when timer is between 1-5 seconds (not -1 which means not initialized)
+    if (practiceTimeLeft >= 1 && practiceTimeLeft <= 5 && settings.soundEffects) {
+      console.log('🔔 Practice mode tick sound at:', practiceTimeLeft, 'seconds');
+      soundService.play('tick');
+    }
+  }, [practiceTimeLeft, settings.mode, practiceTimePerQuestion, isPaused, isPracticeTimerPaused, session.isCompleted, settings.soundEffects]);
   
   // Reset practice timer when question changes
   useEffect(() => {
@@ -257,24 +275,79 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
       console.log('⏱️ Practice timer reset for question:', session.currentQuestionIndex + 1);
     }
   }, [session.currentQuestionIndex, settings.mode, practiceTimePerQuestion]);
-  
-  // Initialize sound service on mount
+
+  // Handle practice mode time up - mark question as wrong when timer reaches 0
+  // Note: practiceTimeLeft === -1 means "not initialized", 0 means "time actually ran out"
   useEffect(() => {
+    if (settings.mode !== 'practice' || practiceTimePerQuestion === 0) return;
+    // Only trigger when timer ACTUALLY reaches 0 (not when initialized as -1)
+    if (practiceTimeLeft !== 0 || isPracticeTimerPaused || session.isCompleted) return;
+    
+    const question = shuffledQuiz.questions?.[session.currentQuestionIndex];
+    if (!question) return;
+    
+    // Skip if already answered
+    if (feedbackState[question.id]?.isAnswered) return;
+    
+    console.log('⏱️ Practice mode TIME UP for question:', question.id, '- marking as wrong');
+    
+    // Play time up sound
     soundService.unlock();
-    soundService.setEnabled(settings.soundEffects);
-    if (settings.soundEffects) {
+    soundService.setEnabled(true);
+    soundService.play('timeup');
+    
+    // Get correct answer for this question type
+    let correctAnswer: string | string[] | Record<string, string> | null = null;
+    if (question.type === 'multiple' || question.type === 'boolean') {
+      const correct = question.answers?.find(a => a.isCorrect);
+      correctAnswer = correct?.id || null;
+    } else if (question.type === 'checkbox') {
+      correctAnswer = question.answers?.filter(a => a.isCorrect).map(a => a.id) || [];
+    }
+    
+    // Mark as wrong (unanswered due to time up)
+    setFeedbackState(prev => ({
+      ...prev,
+      [question.id]: {
+        isAnswered: true,
+        isCorrect: false,
+        correctAnswer
+      }
+    }));
+    
+    // Pause timer to prevent re-triggering
+    setIsPracticeTimerPaused(true);
+  }, [practiceTimeLeft, settings.mode, practiceTimePerQuestion, isPracticeTimerPaused, session.currentQuestionIndex, session.isCompleted, shuffledQuiz.questions, feedbackState]);
+  
+  // Initialize sound service on mount - use global settings
+  useEffect(() => {
+    // 🔊 Sound effects - use global setting OR local quiz setting
+    const shouldEnableSound = soundEffectsEnabled || settings.soundEffects;
+    
+    soundService.unlock();
+    soundService.setEnabled(shouldEnableSound);
+    
+    console.log('[QuizPage] Sound enabled:', shouldEnableSound, '(global:', soundEffectsEnabled, ', local:', settings.soundEffects, ')');
+    
+    if (shouldEnableSound) {
       soundService.play('gameStart');
     }
     
-    // 🎵 Start game music
+    // 🎵 Start game music - use global setting
     musicService.unlock();
-    musicService.play('game', 1000); // Fade in 1 second
+    musicService.setEnabled(isMusicPlayerEnabled); // Explicitly set enabled state
+    if (isMusicPlayerEnabled) {
+      console.log('[QuizPage] Starting game music');
+      musicService.play('game', 1000); // Fade in 1 second
+    } else {
+      console.log('[QuizPage] Music disabled in settings');
+    }
     
     return () => {
       // Stop music when leaving quiz (will be replaced by victory music on results)
       musicService.stop(500);
     };
-  }, [settings.soundEffects]);
+  }, [settings.soundEffects, soundEffectsEnabled, isMusicPlayerEnabled]);
   
   // Track presence when user starts playing
   useEffect(() => {
@@ -305,8 +378,9 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
   
   // Update sound enabled state when settings change
   useEffect(() => {
-    soundService.setEnabled(settings.soundEffects);
-  }, [settings.soundEffects]);
+    const shouldEnableSound = soundEffectsEnabled || settings.soundEffects;
+    soundService.setEnabled(shouldEnableSound);
+  }, [settings.soundEffects, soundEffectsEnabled]);
   
   // Keyboard shortcuts for pause - with focus check
   useEffect(() => {
@@ -365,7 +439,8 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
   };
   const handleCloseSettings = () => {
     setShowSettingsModal(false);
-    // Settings are automatically reloaded from localStorage by useQuizSettings
+    // Reload settings from localStorage after modal saves
+    reloadSettings();
   };
   const handleExitFromPause = () => {
     setIsPaused(false);
@@ -779,8 +854,14 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
               feedback={shouldShowInstantFeedback() ? {
                 isAnswered: feedbackState[currentQuestion.id]?.isAnswered || false,
                 isCorrect: feedbackState[currentQuestion.id]?.isCorrect ?? null,
-                correctAnswer: feedbackState[currentQuestion.id]?.correctAnswer ?? null,
-                showExplanation: shouldShowExplanation() && (feedbackState[currentQuestion.id]?.isAnswered || false)
+                // Hide correct answer when retry is enabled AND answer is wrong (let them try again)
+                correctAnswer: (settings.practiceConfig.retryOnWrong && !feedbackState[currentQuestion.id]?.isCorrect) 
+                  ? null 
+                  : feedbackState[currentQuestion.id]?.correctAnswer ?? null,
+                // Hide explanation when retry is enabled AND answer is wrong (don't reveal answer)
+                showExplanation: shouldShowExplanation() && 
+                  (feedbackState[currentQuestion.id]?.isAnswered || false) &&
+                  (!settings.practiceConfig.retryOnWrong || feedbackState[currentQuestion.id]?.isCorrect === true)
               } : undefined}
               disabled={shouldShowInstantFeedback() && feedbackState[currentQuestion.id]?.isAnswered}
             />
@@ -933,6 +1014,7 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
           duration: quiz.duration || 0,
           questions: quiz.questions || []
         }}
+        isQuizInProgress={true}
       />
     </div>
   );

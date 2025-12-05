@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
 import { toast } from 'react-toastify';
@@ -11,10 +11,12 @@ import {
   deleteDoc, 
   doc,
   query,
-  where
+  where,
+  limit
 } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 import { initializeCategories } from '../../../utils/initializeCategories';
+import { useNavigate } from 'react-router-dom';
 import {
   Plus,
   Search,
@@ -24,10 +26,38 @@ import {
   X,
   FolderOpen,
   BookOpen,
-  User,
   BarChart3,
-  Eye
+  Eye,
+  Users,
+  Award,
+  ChevronDown,
+  ChevronUp,
+  Filter,
+  RefreshCw,
+  ExternalLink,
+  Play,
+  Target
 } from 'lucide-react';
+
+interface Quiz {
+  id: string;
+  title: string;
+  description?: string;
+  questionCount: number;
+  playCount: number;
+  avgScore?: number;
+  difficulty?: string;
+  createdAt: Date;
+  createdBy: string;
+  status: string;
+}
+
+interface CategoryStats {
+  totalPlays: number;
+  avgScore: number;
+  totalUsers: number;
+  completionRate: number;
+}
 
 interface Category {
   id: string;
@@ -37,16 +67,31 @@ interface Category {
   color: string;
   createdAt: Date;
   quizCount?: number;
+  stats?: CategoryStats;
+  quizzes?: Quiz[];
 }
+
+type SortField = 'name' | 'quizCount' | 'createdAt' | 'totalPlays';
+type SortOrder = 'asc' | 'desc';
 
 const CategoryManagement: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [loadingQuizzes, setLoadingQuizzes] = useState(false);
+  
+  // Sorting and filtering
+  const [sortField, setSortField] = useState<SortField>('quizCount');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [filterEmpty, setFilterEmpty] = useState<'all' | 'withQuizzes' | 'empty'>('all');
   
   const [formData, setFormData] = useState({
     name: '',
@@ -56,22 +101,31 @@ const CategoryManagement: React.FC = () => {
   });
 
   const colors = [
-    { value: 'blue', label: t('categories.colors.blue'), class: 'bg-blue-500' },
-    { value: 'green', label: t('categories.colors.green'), class: 'bg-green-500' },
-    { value: 'purple', label: t('categories.colors.purple'), class: 'bg-purple-500' },
-    { value: 'red', label: t('categories.colors.red'), class: 'bg-red-500' },
-    { value: 'yellow', label: t('categories.colors.yellow'), class: 'bg-yellow-500' },
-    { value: 'pink', label: t('categories.colors.pink'), class: 'bg-pink-500' },
-    { value: 'indigo', label: t('categories.colors.indigo'), class: 'bg-indigo-500' },
-    { value: 'gray', label: t('categories.colors.gray'), class: 'bg-gray-500' }
+    { value: 'blue', label: t('categories.colors.blue', 'Xanh dương'), class: 'bg-blue-500', gradient: 'from-blue-500 to-blue-600' },
+    { value: 'green', label: t('categories.colors.green', 'Xanh lá'), class: 'bg-green-500', gradient: 'from-green-500 to-green-600' },
+    { value: 'purple', label: t('categories.colors.purple', 'Tím'), class: 'bg-purple-500', gradient: 'from-purple-500 to-purple-600' },
+    { value: 'red', label: t('categories.colors.red', 'Đỏ'), class: 'bg-red-500', gradient: 'from-red-500 to-red-600' },
+    { value: 'yellow', label: t('categories.colors.yellow', 'Vàng'), class: 'bg-yellow-500', gradient: 'from-yellow-500 to-yellow-600' },
+    { value: 'pink', label: t('categories.colors.pink', 'Hồng'), class: 'bg-pink-500', gradient: 'from-pink-500 to-pink-600' },
+    { value: 'indigo', label: t('categories.colors.indigo', 'Chàm'), class: 'bg-indigo-500', gradient: 'from-indigo-500 to-indigo-600' },
+    { value: 'teal', label: t('categories.colors.teal', 'Xanh ngọc'), class: 'bg-teal-500', gradient: 'from-teal-500 to-teal-600' },
+    { value: 'orange', label: t('categories.colors.orange', 'Cam'), class: 'bg-orange-500', gradient: 'from-orange-500 to-orange-600' },
+    { value: 'cyan', label: t('categories.colors.cyan', 'Lam'), class: 'bg-cyan-500', gradient: 'from-cyan-500 to-cyan-600' },
+    { value: 'emerald', label: t('categories.colors.emerald', 'Ngọc lục bảo'), class: 'bg-emerald-500', gradient: 'from-emerald-500 to-emerald-600' },
+    { value: 'gray', label: t('categories.colors.gray', 'Xám'), class: 'bg-gray-500', gradient: 'from-gray-500 to-gray-600' }
   ];
 
-  const icons = ['📚', '🔬', '💻', '🎨', '📊', '🌍', '🏃‍♂️', '🎵', '🍳', '📈', '🧮', '📝'];
+  const icons = ['📚', '🔬', '💻', '🎨', '📊', '🌍', '🏃‍♂️', '🎵', '🍳', '📈', '🧮', '📝', '🎯', '🧠', '💡', '🏆', '⚡', '🔥', '🌟', '💎', '🎮', '🎬', '📱', '🚀'];
 
-  const loadCategories = useCallback(async () => {
+  const loadCategories = useCallback(async (showRefreshIndicator = false) => {
     try {
-      setLoading(true);
-      console.log('🔍 Loading categories from Firebase...');
+      if (showRefreshIndicator) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+      
+      console.log('🔍 Loading categories with stats from Firebase...');
       
       // Initialize default categories if none exist
       await initializeCategories();
@@ -82,52 +136,208 @@ const CategoryManagement: React.FC = () => {
       console.log('📊 Found categories in DB:', snapshot.size);
       const loadedCategories: Category[] = [];
       
-      for (const doc of snapshot.docs) {
-        const data = doc.data();
-        console.log('📝 Category data:', { id: doc.id, ...data });
+      for (const docSnap of snapshot.docs) {
+        const data = docSnap.data();
         
-        // Đếm số quiz trong danh mục này
+        // Get quizzes in this category
         const quizzesRef = collection(db, 'quizzes');
-        const quizzesSnapshot = await getDocs(query(quizzesRef, where('category', '==', data.name)));
+        const quizzesQuery = query(quizzesRef, where('category', '==', data.name));
+        const quizzesSnapshot = await getDocs(quizzesQuery);
+        
+        // Calculate stats from quiz results
+        let totalPlays = 0;
+        let totalScore = 0;
+        let scoreCount = 0;
+        const uniqueUsers = new Set<string>();
+        
+        for (const quizDoc of quizzesSnapshot.docs) {
+          const quizData = quizDoc.data();
+          totalPlays += quizData.playCount || 0;
+          
+          // Get results for this quiz
+          try {
+            const resultsRef = collection(db, 'quizResults');
+            const resultsQuery = query(resultsRef, where('quizId', '==', quizDoc.id), limit(100));
+            const resultsSnapshot = await getDocs(resultsQuery);
+            
+            resultsSnapshot.docs.forEach(resultDoc => {
+              const resultData = resultDoc.data();
+              if (resultData.score !== undefined) {
+                totalScore += resultData.score;
+                scoreCount++;
+              }
+              if (resultData.userId) {
+                uniqueUsers.add(resultData.userId);
+              }
+            });
+          } catch (err) {
+            console.warn('Could not load results for quiz:', quizDoc.id);
+          }
+        }
         
         loadedCategories.push({
-          id: doc.id,
+          id: docSnap.id,
           name: data.name,
-          description: data.description,
-          icon: data.icon,
-          color: data.color,
+          description: data.description || '',
+          icon: data.icon || '📚',
+          color: data.color || 'blue',
           createdAt: data.createdAt?.toDate() || new Date(),
-          quizCount: quizzesSnapshot.size
+          quizCount: quizzesSnapshot.size,
+          stats: {
+            totalPlays,
+            avgScore: scoreCount > 0 ? Math.round(totalScore / scoreCount) : 0,
+            totalUsers: uniqueUsers.size,
+            completionRate: totalPlays > 0 ? Math.round((scoreCount / totalPlays) * 100) : 0
+          }
         });
       }
       
-      console.log('✅ Loaded categories:', loadedCategories);
-      setCategories(loadedCategories.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()));
+      console.log('✅ Loaded categories with stats:', loadedCategories);
+      setCategories(loadedCategories);
     } catch (error) {
       console.error('❌ Error loading categories:', error);
-      toast.error(t('categories.loadError'));
+      toast.error(t('categories.loadError', 'Lỗi khi tải danh mục'));
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, [t]);
 
-  // Move useEffect before conditional return - Fix React Hooks rules
+  // Load quizzes for selected category
+  const loadCategoryQuizzes = useCallback(async (category: Category) => {
+    setLoadingQuizzes(true);
+    try {
+      const quizzesRef = collection(db, 'quizzes');
+      // Simple query without orderBy to avoid index requirement
+      const quizzesQuery = query(
+        quizzesRef, 
+        where('category', '==', category.name)
+      );
+      const quizzesSnapshot = await getDocs(quizzesQuery);
+      
+      const quizzes: Quiz[] = quizzesSnapshot.docs.map(doc => {
+        const data = doc.data();
+        // Handle different date formats (Timestamp, number, Date, string)
+        let createdAt: Date;
+        if (data.createdAt?.toDate) {
+          createdAt = data.createdAt.toDate();
+        } else if (typeof data.createdAt === 'number') {
+          createdAt = new Date(data.createdAt);
+        } else if (data.createdAt instanceof Date) {
+          createdAt = data.createdAt;
+        } else if (typeof data.createdAt === 'string') {
+          createdAt = new Date(data.createdAt);
+        } else {
+          createdAt = new Date();
+        }
+        return {
+          id: doc.id,
+          title: data.title || t('categories.untitled'),
+          description: data.description || '',
+          questionCount: data.questions?.length || data.questionCount || 0,
+          playCount: data.playCount || 0,
+          avgScore: data.avgScore || 0,
+          difficulty: data.difficulty || 'medium',
+          createdAt,
+          createdBy: data.createdBy || '',
+          status: data.status || 'approved'
+        };
+      });
+      
+      // Sort on client side by createdAt desc
+      quizzes.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      
+      setSelectedCategory({ ...category, quizzes });
+    } catch (error) {
+      console.error('Error loading quizzes:', error);
+      toast.error(t('categories.loadQuizzesError'));
+    } finally {
+      setLoadingQuizzes(false);
+    }
+  }, [t]);
+
   useEffect(() => {
     if (!user || user.role !== 'admin') return;
     loadCategories();
   }, [user, loadCategories]);
 
+  // Sorted and filtered categories
+  const processedCategories = useMemo(() => {
+    let result = [...categories];
+    
+    // Filter
+    if (filterEmpty === 'withQuizzes') {
+      result = result.filter(c => (c.quizCount || 0) > 0);
+    } else if (filterEmpty === 'empty') {
+      result = result.filter(c => !c.quizCount || c.quizCount === 0);
+    }
+    
+    // Search
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(c => 
+        c.name.toLowerCase().includes(term) ||
+        c.description.toLowerCase().includes(term)
+      );
+    }
+    
+    // Sort
+    result.sort((a, b) => {
+      let comparison = 0;
+      switch (sortField) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case 'quizCount':
+          comparison = (a.quizCount || 0) - (b.quizCount || 0);
+          break;
+        case 'createdAt':
+          comparison = a.createdAt.getTime() - b.createdAt.getTime();
+          break;
+        case 'totalPlays':
+          comparison = (a.stats?.totalPlays || 0) - (b.stats?.totalPlays || 0);
+          break;
+      }
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+    
+    return result;
+  }, [categories, filterEmpty, searchTerm, sortField, sortOrder]);
+
+  // Total stats
+  const totalStats = useMemo(() => {
+    return {
+      totalCategories: categories.length,
+      categoriesWithQuizzes: categories.filter(c => (c.quizCount || 0) > 0).length,
+      totalQuizzes: categories.reduce((sum, c) => sum + (c.quizCount || 0), 0),
+      emptyCategories: categories.filter(c => !c.quizCount || c.quizCount === 0).length,
+      totalPlays: categories.reduce((sum, c) => sum + (c.stats?.totalPlays || 0), 0),
+      totalUsers: categories.reduce((sum, c) => sum + (c.stats?.totalUsers || 0), 0),
+      avgScore: categories.length > 0 
+        ? Math.round(categories.reduce((sum, c) => sum + (c.stats?.avgScore || 0), 0) / categories.filter(c => (c.stats?.avgScore || 0) > 0).length) || 0
+        : 0
+    };
+  }, [categories]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.name.trim()) {
-      toast.error(t('categories.enterName'));
+      toast.error(t('categories.enterName', 'Vui lòng nhập tên danh mục'));
+      return;
+    }
+
+    // Check duplicate name
+    const duplicateName = categories.find(
+      c => c.name.toLowerCase() === formData.name.trim().toLowerCase() && c.id !== editingCategory?.id
+    );
+    if (duplicateName) {
+      toast.error(t('categories.duplicateName', 'Tên danh mục đã tồn tại'));
       return;
     }
 
     try {
       if (editingCategory) {
-        // Update existing category
         const categoryRef = doc(db, 'categories', editingCategory.id);
         await updateDoc(categoryRef, {
           name: formData.name.trim(),
@@ -143,9 +353,8 @@ const CategoryManagement: React.FC = () => {
             : cat
         ));
         
-        toast.success(t('categories.updateSuccess'));
+        toast.success(t('categories.updateSuccess', 'Cập nhật danh mục thành công'));
       } else {
-        // Add new category
         const docRef = await addDoc(collection(db, 'categories'), {
           name: formData.name.trim(),
           description: formData.description.trim(),
@@ -161,20 +370,20 @@ const CategoryManagement: React.FC = () => {
           icon: formData.icon,
           color: formData.color,
           createdAt: new Date(),
-          quizCount: 0
+          quizCount: 0,
+          stats: { totalPlays: 0, avgScore: 0, totalUsers: 0, completionRate: 0 }
         };
         
         setCategories(prev => [newCategory, ...prev]);
-        toast.success(t('categories.addSuccess'));
+        toast.success(t('categories.addSuccess', 'Thêm danh mục thành công'));
       }
       
-      // Reset form
       setFormData({ name: '', description: '', icon: '📚', color: 'blue' });
       setShowAddForm(false);
       setEditingCategory(null);
     } catch (error) {
       console.error('Error saving category:', error);
-      toast.error(t('categories.saveError'));
+      toast.error(t('categories.saveError', 'Lỗi khi lưu danh mục'));
     }
   };
 
@@ -189,213 +398,348 @@ const CategoryManagement: React.FC = () => {
     setShowAddForm(true);
   };
 
-  const handleDelete = async (categoryId: string, categoryName: string) => {
-    if (!confirm(t('categories.confirmDeleteName', {name: categoryName, defaultValue: `Are you sure you want to delete category "${categoryName}"?`}))) {
+  const handleDelete = async (categoryId: string, categoryName: string, quizCount: number) => {
+    if (quizCount > 0) {
+      toast.warning(t('categories.cannotDeleteWithQuizzes', 'Không thể xóa danh mục có quiz. Hãy di chuyển các quiz sang danh mục khác trước.'));
+      return;
+    }
+    
+    if (!confirm(t('categories.confirmDeleteName', { name: categoryName, defaultValue: `Bạn có chắc muốn xóa danh mục "${categoryName}"?` }))) {
       return;
     }
 
     try {
       await deleteDoc(doc(db, 'categories', categoryId));
       setCategories(prev => prev.filter(cat => cat.id !== categoryId));
-      toast.success(t('categories.deleteSuccess'));
+      toast.success(t('categories.deleteSuccess', 'Xóa danh mục thành công'));
     } catch (error) {
       console.error('Error deleting category:', error);
-      toast.error(t('categories.deleteError'));
+      toast.error(t('categories.deleteError', 'Lỗi khi xóa danh mục'));
     }
   };
 
-  const filteredCategories = categories.filter(category =>
-    category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    category.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const getGradientClass = (color: string) => {
+    const colorObj = colors.find(c => c.value === color);
+    return colorObj?.gradient || 'from-blue-500 to-blue-600';
+  };
 
-  const getColorClass = (color: string) => {
-    const colorMap: { [key: string]: string } = {
-      blue: 'bg-blue-500',
-      green: 'bg-green-500',
-      purple: 'bg-purple-500',
-      red: 'bg-red-500',
-      yellow: 'bg-yellow-500',
-      pink: 'bg-pink-500',
-      indigo: 'bg-indigo-500',
-      gray: 'bg-gray-500'
-    };
-    return colorMap[color] || 'bg-blue-500';
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'easy': return 'bg-green-100 text-green-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'hard': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortOrder('desc');
+    }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">{t('loadingData')}</p>
+          <div className="relative">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-200 border-t-purple-600 mx-auto"></div>
+            <FolderOpen className="w-6 h-6 text-purple-600 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+          </div>
+          <p className="mt-4 text-gray-600 font-medium">{t('categories.loading', 'Đang tải danh mục...')}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Modern Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-700 rounded-2xl flex items-center justify-center">
-                <FolderOpen className="w-6 h-6 text-white" />
+              <div className="w-14 h-14 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-200">
+                <FolderOpen className="w-7 h-7 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">{t('admin.categoryManagement')}</h1>
-                <p className="text-gray-600">{t('admin.categories.headerDesc')}</p>
+                <h1 className="text-2xl font-bold text-gray-900">{t('admin.categoryManagement', 'Quản lý danh mục')}</h1>
+                <p className="text-gray-500 text-sm">{t('admin.categories.headerDesc', 'Quản lý các danh mục quiz của hệ thống')}</p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => loadCategories(true)}
+                disabled={refreshing}
+                className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">{t('refresh', 'Làm mới')}</span>
+              </button>
               <button
                 onClick={() => {
                   setShowAddForm(true);
                   setEditingCategory(null);
                   setFormData({ name: '', description: '', icon: '📚', color: 'blue' });
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg shadow-purple-200"
               >
                 <Plus className="w-5 h-5" />
-                {t('categories.add')}
+                {t('categories.add', 'Thêm danh mục')}
               </button>
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <User className="w-4 h-4" />
-                <span>{user?.email}</span>
-                <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">{t('ui.admin')}</span>
-              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">{t('categories.total')}</p>
-                <p className="text-2xl font-bold text-gray-900">{categories.length}</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                <FolderOpen className="w-5 h-5 text-purple-600" />
               </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <FolderOpen className="w-6 h-6 text-purple-600" />
-              </div>
+              <span className="text-2xl font-bold text-gray-900">{totalStats.totalCategories}</span>
             </div>
+            <p className="text-xs text-gray-500 font-medium">{t('categories.total', 'Tổng danh mục')}</p>
           </div>
           
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">{t('categories.withQuizzes')}</p>
-                <p className="text-2xl font-bold text-green-600">{categories.filter(c => c.quizCount && c.quizCount > 0).length}</p>
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                <BookOpen className="w-5 h-5 text-green-600" />
               </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-green-600" />
-              </div>
+              <span className="text-2xl font-bold text-green-600">{totalStats.categoriesWithQuizzes}</span>
             </div>
+            <p className="text-xs text-gray-500 font-medium">{t('categories.withQuizzes', 'Có quiz')}</p>
           </div>
           
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">{t('categories.totalQuizzes')}</p>
-                <p className="text-2xl font-bold text-blue-600">{categories.reduce((sum, c) => sum + (c.quizCount || 0), 0)}</p>
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                <BarChart3 className="w-5 h-5 text-blue-600" />
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <BarChart3 className="w-6 h-6 text-blue-600" />
-              </div>
+              <span className="text-2xl font-bold text-blue-600">{totalStats.totalQuizzes}</span>
             </div>
+            <p className="text-xs text-gray-500 font-medium">{t('categories.totalQuizzes', 'Tổng quiz')}</p>
           </div>
           
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">{t('categories.empty')}</p>
-                <p className="text-2xl font-bold text-orange-600">{categories.filter(c => !c.quizCount || c.quizCount === 0).length}</p>
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
+                <Eye className="w-5 h-5 text-orange-600" />
               </div>
-              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                <Eye className="w-6 h-6 text-orange-600" />
-              </div>
+              <span className="text-2xl font-bold text-orange-600">{totalStats.emptyCategories}</span>
             </div>
+            <p className="text-xs text-gray-500 font-medium">{t('categories.empty', 'Trống')}</p>
+          </div>
+          
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+                <Play className="w-5 h-5 text-indigo-600" />
+              </div>
+              <span className="text-2xl font-bold text-indigo-600">{totalStats.totalPlays.toLocaleString()}</span>
+            </div>
+            <p className="text-xs text-gray-500 font-medium">{t('categories.totalPlays', 'Lượt chơi')}</p>
+          </div>
+          
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 bg-cyan-100 rounded-xl flex items-center justify-center">
+                <Users className="w-5 h-5 text-cyan-600" />
+              </div>
+              <span className="text-2xl font-bold text-cyan-600">{totalStats.totalUsers.toLocaleString()}</span>
+            </div>
+            <p className="text-xs text-gray-500 font-medium">{t('categories.totalUsers', 'Người chơi')}</p>
+          </div>
+          
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
+                <Award className="w-5 h-5 text-amber-600" />
+              </div>
+              <span className="text-2xl font-bold text-amber-600">{totalStats.avgScore}%</span>
+            </div>
+            <p className="text-xs text-gray-500 font-medium">{t('categories.avgScore', 'Điểm TB')}</p>
           </div>
         </div>
 
-        {/* Search */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+        {/* Search and Filters */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6">
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
-              type="text"
-                placeholder={t('categories.searchPlaceholder')}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-            />
+                type="text"
+                placeholder={t('categories.searchPlaceholder', 'Tìm kiếm danh mục...')}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+              />
+            </div>
+            
+            {/* Filter */}
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-gray-400" />
+              <select
+                value={filterEmpty}
+                onChange={(e) => setFilterEmpty(e.target.value as 'all' | 'withQuizzes' | 'empty')}
+                className="px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm bg-white"
+              >
+                <option value="all">{t('categories.filterAll', 'Tất cả')}</option>
+                <option value="withQuizzes">{t('categories.filterWithQuizzes', 'Có quiz')}</option>
+                <option value="empty">{t('categories.filterEmpty', 'Trống')}</option>
+              </select>
+            </div>
+            
+            {/* Sort buttons */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-gray-500 hidden sm:inline">{t('sortBy')}:</span>
+              {[
+                { field: 'name' as SortField, label: t('name') },
+                { field: 'quizCount' as SortField, label: t('quizCount') },
+                { field: 'totalPlays' as SortField, label: t('plays') },
+                { field: 'createdAt' as SortField, label: t('date') }
+              ].map(({ field, label }) => (
+                <button
+                  key={field}
+                  onClick={() => handleSort(field)}
+                  className={`flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm transition-all ${
+                    sortField === field 
+                      ? 'bg-purple-100 text-purple-700 font-medium' 
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {label}
+                  {sortField === field && (
+                    sortOrder === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Categories Grid */}
-        {filteredCategories.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-            <FolderOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('categories.noCategories')}</h3>
-            <p className="text-gray-600 mb-4">
-              {searchTerm ? t('categories.noSearchMatch') : t('categories.noneCreated')}
+        {processedCategories.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FolderOpen className="w-10 h-10 text-gray-300" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('categories.noCategories', 'Không có danh mục nào')}</h3>
+            <p className="text-gray-500 mb-6 max-w-md mx-auto">
+              {searchTerm 
+                ? t('categories.noSearchMatch', 'Không tìm thấy danh mục phù hợp') 
+                : t('categories.noneCreated', 'Chưa có danh mục nào được tạo')}
             </p>
-            <button
-              onClick={() => {
-                setShowAddForm(true);
-                setEditingCategory(null);
-                setFormData({ name: '', description: '', icon: '📚', color: 'blue' });
-              }}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors mx-auto"
-            >
-              <Plus className="w-5 h-5" />
-              {t('categories.createFirst')}
-            </button>
+            {!searchTerm && (
+              <button
+                onClick={() => {
+                  setShowAddForm(true);
+                  setEditingCategory(null);
+                  setFormData({ name: '', description: '', icon: '📚', color: 'blue' });
+                }}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg"
+              >
+                <Plus className="w-5 h-5" />
+                {t('categories.createFirst', 'Tạo danh mục đầu tiên')}
+              </button>
+            )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCategories.map((category) => (
-              <div key={category.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-12 h-12 ${getColorClass(category.color)} rounded-xl flex items-center justify-center text-2xl`}>
-                      {category.icon}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            {processedCategories.map((category, index) => (
+              <div 
+                key={category.id} 
+                className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:border-purple-200 transition-all duration-300 cursor-pointer"
+                style={{ animationDelay: `${index * 50}ms` }}
+                onClick={() => loadCategoryQuizzes(category)}
+              >
+                {/* Header with gradient */}
+                <div className={`bg-gradient-to-r ${getGradientClass(category.color)} p-4`}>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-3xl shadow-lg">
+                        {category.icon}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-white">{category.name}</h3>
+                        <p className="text-white/80 text-sm">{category.quizCount || 0} quiz</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-900">{category.name}</h3>
-                      <p className="text-sm text-gray-600">{category.quizCount || 0} {t('categories.quizSuffix')}</p>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleEdit(category); }}
+                        className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+                        title={t('edit', 'Sửa')}
+                      >
+                        <Edit className="w-4 h-4 text-white" />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDelete(category.id, category.name, category.quizCount || 0); }}
+                        className="p-2 bg-white/20 hover:bg-red-500 rounded-lg transition-colors"
+                        title={t('delete', 'Xóa')}
+                      >
+                        <Trash2 className="w-4 h-4 text-white" />
+                      </button>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleEdit(category)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title={t('edit')}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(category.id, category.name)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title={t('delete')}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
                   </div>
                 </div>
                 
-                <p className="text-gray-600 text-sm mb-4">{category.description}</p>
-                
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span>{t('categories.createdAtLabel')}: {category.createdAt.toLocaleDateString()}</span>
-                  <span className={`px-2 py-1 rounded-full text-white ${getColorClass(category.color)}`}>
-                    {category.color}
-                  </span>
+                {/* Content */}
+                <div className="p-4">
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-2 min-h-[40px]">
+                    {category.description || t('categories.noDescription', 'Chưa có mô tả')}
+                  </p>
+                  
+                  {/* Stats */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="bg-gray-50 rounded-xl p-3 text-center">
+                      <div className="flex items-center justify-center gap-1 text-indigo-600 mb-1">
+                        <Play className="w-4 h-4" />
+                        <span className="font-bold">{(category.stats?.totalPlays || 0).toLocaleString()}</span>
+                      </div>
+                      <p className="text-xs text-gray-500">{t('plays', 'Lượt chơi')}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-xl p-3 text-center">
+                      <div className="flex items-center justify-center gap-1 text-amber-600 mb-1">
+                        <Award className="w-4 h-4" />
+                        <span className="font-bold">{category.stats?.avgScore || 0}%</span>
+                      </div>
+                      <p className="text-xs text-gray-500">{t('avgScore', 'Điểm TB')}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-xl p-3 text-center">
+                      <div className="flex items-center justify-center gap-1 text-cyan-600 mb-1">
+                        <Users className="w-4 h-4" />
+                        <span className="font-bold">{category.stats?.totalUsers || 0}</span>
+                      </div>
+                      <p className="text-xs text-gray-500">{t('categories.totalUsers')}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-xl p-3 text-center">
+                      <div className="flex items-center justify-center gap-1 text-green-600 mb-1">
+                        <Target className="w-4 h-4" />
+                        <span className="font-bold">{category.stats?.completionRate || 0}%</span>
+                      </div>
+                      <p className="text-xs text-gray-500">{t('completion', 'Hoàn thành')}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Footer */}
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                    <span className="text-xs text-gray-400">
+                      {t('categories.createdAtLabel', 'Tạo ngày')}: {category.createdAt.toLocaleDateString('vi-VN')}
+                    </span>
+                    <div className="flex items-center gap-1 text-purple-600 text-sm font-medium group-hover:text-purple-700">
+                      <span>{t('viewDetails', 'Xem chi tiết')}</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
@@ -403,13 +747,129 @@ const CategoryManagement: React.FC = () => {
         )}
       </div>
 
+      {/* Category Detail Modal */}
+      {selectedCategory && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl mx-2 sm:mx-auto">
+            {/* Modal Header */}
+            <div className={`bg-gradient-to-r ${getGradientClass(selectedCategory.color)} p-4 sm:p-6`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-2xl sm:text-4xl">
+                    {selectedCategory.icon}
+                  </div>
+                  <div>
+                    <h2 className="text-lg sm:text-2xl font-bold text-white">{selectedCategory.name}</h2>
+                    <p className="text-white/80 text-sm sm:text-base">{selectedCategory.quizCount || 0} quiz • {selectedCategory.stats?.totalPlays || 0} {t('plays')}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedCategory(null)}
+                  className="p-2 bg-white/20 hover:bg-white/30 rounded-xl transition-colors"
+                >
+                  <X className="w-6 h-6 text-white" />
+                </button>
+              </div>
+            </div>
+            
+            {/* Modal Content */}
+            <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+              {/* Stats */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+                <div className="bg-indigo-50 rounded-xl p-4 text-center">
+                  <Play className="w-6 h-6 text-indigo-600 mx-auto mb-2" />
+                  <p className="text-xl font-bold text-indigo-600">{(selectedCategory.stats?.totalPlays || 0).toLocaleString()}</p>
+                  <p className="text-xs text-gray-500">{t('totalPlays', 'Tổng lượt chơi')}</p>
+                </div>
+                <div className="bg-amber-50 rounded-xl p-4 text-center">
+                  <Award className="w-6 h-6 text-amber-600 mx-auto mb-2" />
+                  <p className="text-xl font-bold text-amber-600">{selectedCategory.stats?.avgScore || 0}%</p>
+                  <p className="text-xs text-gray-500">{t('avgScore', 'Điểm trung bình')}</p>
+                </div>
+                <div className="bg-cyan-50 rounded-xl p-4 text-center">
+                  <Users className="w-6 h-6 text-cyan-600 mx-auto mb-2" />
+                  <p className="text-xl font-bold text-cyan-600">{selectedCategory.stats?.totalUsers || 0}</p>
+                  <p className="text-xs text-gray-500">{t('totalUsers', 'Người chơi')}</p>
+                </div>
+                <div className="bg-green-50 rounded-xl p-4 text-center">
+                  <Target className="w-6 h-6 text-green-600 mx-auto mb-2" />
+                  <p className="text-xl font-bold text-green-600">{selectedCategory.stats?.completionRate || 0}%</p>
+                  <p className="text-xs text-gray-500">{t('completionRate', 'Tỉ lệ hoàn thành')}</p>
+                </div>
+              </div>
+              
+              {/* Quizzes List */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <BookOpen className="w-5 h-5 text-purple-600" />
+                  {t('categories.quizzesInCategory', 'Quiz trong danh mục')}
+                </h3>
+                
+                {loadingQuizzes ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-200 border-t-purple-600"></div>
+                    <span className="ml-3 text-gray-500">{t('loading', 'Đang tải...')}</span>
+                  </div>
+                ) : selectedCategory.quizzes && selectedCategory.quizzes.length > 0 ? (
+                  <div className="space-y-3">
+                    {selectedCategory.quizzes.map((quiz, index) => (
+                      <div 
+                        key={quiz.id}
+                        className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors cursor-pointer"
+                        onClick={() => navigate(`/quiz-preview/${quiz.id}`)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <span className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 font-bold text-sm">
+                              {index + 1}
+                            </span>
+                            <div>
+                              <h4 className="font-medium text-gray-900">{quiz.title}</h4>
+                              <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-1 text-xs text-gray-500">
+                                <span className="flex items-center gap-1">
+                                  <BookOpen className="w-3 h-3" /> {quiz.questionCount} {t('questions')}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Play className="w-3 h-3" /> {quiz.playCount} {t('plays')}
+                                </span>
+                                <span className={`px-2 py-0.5 rounded-full text-xs ${getDifficultyColor(quiz.difficulty || 'medium')}`}>
+                                  {quiz.difficulty === 'easy' ? t('quiz.difficulty.easy', 'Dễ') : quiz.difficulty === 'hard' ? t('quiz.difficulty.hard', 'Khó') : t('quiz.difficulty.medium', 'Trung bình')}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {quiz.avgScore !== undefined && quiz.avgScore > 0 && (
+                              <div className="text-right hidden sm:block">
+                                <p className="text-sm font-semibold text-amber-600">{quiz.avgScore}%</p>
+                                <p className="text-xs text-gray-400">{t('avgScore')}</p>
+                              </div>
+                            )}
+                            <ExternalLink className="w-4 h-4 text-gray-400" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 bg-gray-50 rounded-xl">
+                    <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500">{t('categories.noQuizzesInCategory', 'Chưa có quiz nào trong danh mục này')}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Add/Edit Form Modal */}
       {showAddForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold">
-                {editingCategory ? t('categories.editTitle') : t('categories.addTitle')}
+              <h2 className="text-xl font-bold text-gray-900">
+                {editingCategory ? t('categories.editTitle', 'Chỉnh sửa danh mục') : t('categories.addTitle', 'Thêm danh mục mới')}
               </h2>
               <button
                 onClick={() => {
@@ -417,37 +877,50 @@ const CategoryManagement: React.FC = () => {
                   setEditingCategory(null);
                   setFormData({ name: '', description: '', icon: '📚', color: 'blue' });
                 }}
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             
-            <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Preview */}
+            <div className={`bg-gradient-to-r ${getGradientClass(formData.color)} rounded-xl p-4 mb-6`}>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-2xl">
+                  {formData.icon}
+                </div>
+                <div>
+                  <h3 className="font-bold text-white">{formData.name || t('categories.namePlaceholder')}</h3>
+                  <p className="text-white/80 text-sm">{t('preview')}</p>
+                </div>
+              </div>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('categories.name')} *
+                  {t('categories.name', 'Tên danh mục')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  placeholder={t('categories.namePlaceholder')}
+                  className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                  placeholder={t('categories.namePlaceholder', 'Nhập tên danh mục')}
                   required
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('categories.description')}
+                  {t('categories.description', 'Mô tả')}
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"
+                  className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none transition-all"
                   rows={3}
-                  placeholder={t('categories.descriptionPlaceholder')}
+                  placeholder={t('categories.descriptionPlaceholder', 'Mô tả ngắn về danh mục')}
                 />
               </div>
               
@@ -455,14 +928,14 @@ const CategoryManagement: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Icon
                 </label>
-                <div className="grid grid-cols-6 gap-2">
+                <div className="grid grid-cols-8 gap-2">
                   {icons.map((icon) => (
                     <button
                       key={icon}
                       type="button"
                       onClick={() => setFormData({ ...formData, icon })}
-                      className={`p-3 text-2xl border-2 rounded-lg hover:bg-gray-50 transition-colors ${
-                        formData.icon === icon ? 'border-purple-500 bg-purple-50' : 'border-gray-200'
+                      className={`p-2.5 text-xl border-2 rounded-xl hover:bg-gray-50 transition-all ${
+                        formData.icon === icon ? 'border-purple-500 bg-purple-50 scale-110' : 'border-gray-200'
                       }`}
                     >
                       {icon}
@@ -473,20 +946,19 @@ const CategoryManagement: React.FC = () => {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('categories.color')}
+                  {t('categories.color', 'Màu sắc')}
                 </label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-6 gap-2">
                   {colors.map((color) => (
                     <button
                       key={color.value}
                       type="button"
                       onClick={() => setFormData({ ...formData, color: color.value })}
-                      className={`p-3 border-2 rounded-lg hover:bg-gray-50 transition-colors ${
-                        formData.color === color.value ? 'border-purple-500 bg-purple-50' : 'border-gray-200'
+                      className={`p-2 border-2 rounded-xl hover:bg-gray-50 transition-all ${
+                        formData.color === color.value ? 'border-purple-500 bg-purple-50 scale-105' : 'border-gray-200'
                       }`}
                     >
-                      <div className={`w-6 h-6 ${color.class} rounded-full mx-auto mb-1`}></div>
-                      <span className="text-xs">{color.label}</span>
+                      <div className={`w-6 h-6 ${color.class} rounded-full mx-auto`}></div>
                     </button>
                   ))}
                 </div>
@@ -500,16 +972,16 @@ const CategoryManagement: React.FC = () => {
                     setEditingCategory(null);
                     setFormData({ name: '', description: '', icon: '📚', color: 'blue' });
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium"
                 >
-                  {t('cancel')}
+                  {t('cancel', 'Hủy')}
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all font-medium shadow-lg"
                 >
                   <Save className="w-4 h-4" />
-                  {editingCategory ? t('update') : t('categories.create')}
+                  {editingCategory ? t('update', 'Cập nhật') : t('categories.create', 'Tạo')}
                 </button>
               </div>
             </form>

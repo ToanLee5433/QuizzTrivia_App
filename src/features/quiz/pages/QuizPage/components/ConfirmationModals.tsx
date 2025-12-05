@@ -2,6 +2,7 @@ import React from 'react';
 import { Question } from '../../../types';
 import { useTranslation } from 'react-i18next';
 import ConfirmDialog from '../../../../../shared/components/ui/ConfirmDialog';
+import soundService from '../../../../../services/soundService';
 
 interface ConfirmationModalsProps {
   modalControls: {
@@ -27,6 +28,12 @@ const ConfirmationModals: React.FC<ConfirmationModalsProps> = ({
 }) => {
   const { t } = useTranslation();
 
+  // 🔊 Play victory sound and call the original submit handler
+  const handleConfirmSubmit = () => {
+    soundService.play('victory');
+    onConfirmSubmit();
+  };
+
   return (
     <>
       {/* Exit Confirmation Modal */}
@@ -45,7 +52,7 @@ const ConfirmationModals: React.FC<ConfirmationModalsProps> = ({
       <ConfirmDialog
         isOpen={modalControls.showSubmitModal}
         onClose={() => modalControls.setShowSubmitModal(false)}
-        onConfirm={onConfirmSubmit}
+        onConfirm={handleConfirmSubmit}
         title={`✅ ${t('confirmDialog.submitQuiz.title')}`}
         message={t('confirmDialog.submitQuiz.message')}
         confirmText={t('confirmDialog.submitQuiz.confirm')}
@@ -85,7 +92,7 @@ const ConfirmationModals: React.FC<ConfirmationModalsProps> = ({
                 {t('confirmDialog.unanswered.continue')}
               </button>
               <button
-                onClick={onConfirmSubmit}
+                onClick={handleConfirmSubmit}
                 className="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
               >
                 {t('confirmDialog.unanswered.submitAnyway')}

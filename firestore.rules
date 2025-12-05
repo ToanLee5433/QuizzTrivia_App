@@ -320,8 +320,8 @@ service cloud.firestore {
          NOTE: Simplified validation - hash verification happens client-side
       */
       match /access/{uid} {
-        // Read: User can read their own access record
-        allow read: if signedIn() && request.auth.uid == uid;
+        // Read: User can read their own access record; Admin can read all
+        allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
         
         // Create: User can create access record for themselves
         // Hash verification is done client-side before calling this
@@ -329,8 +329,14 @@ service cloud.firestore {
           request.auth.uid == uid &&
           request.resource.data.unlockedAt != null;
         
-        // No update or delete
-        allow update, delete: if false;
+        // Delete: Only admin or quiz owner can delete access records (for cleanup)
+        allow delete: if signedIn() && (
+          isAdmin() || 
+          quizDoc(quizId).data.createdBy == request.auth.uid
+        );
+        
+        // No update
+        allow update: if false;
       }
       
       /* --- QUESTIONS SUBCOLLECTION (BẢO VỆ NỘI DUNG ĐỀ) ---
@@ -367,6 +373,25 @@ service cloud.firestore {
           quizDoc(quizId).data.createdBy == request.auth.uid
         );
       }
+      
+      /* --- RESOURCES SUBCOLLECTION ---
+         Learning resources attached to quiz
+         Only owner/admin can manage
+      */
+      match /resources/{resourceId} {
+        // Read: Same as questions - based on quiz visibility
+        allow read: if signedIn() && (
+          isAdmin() ||
+          quizDoc(quizId).data.createdBy == request.auth.uid ||
+          quizDoc(quizId).data.status == 'approved'
+        );
+        
+        // Write/Delete: Only owner or admin
+        allow write: if signedIn() && (
+          isAdmin() ||
+          quizDoc(quizId).data.createdBy == request.auth.uid
+        );
+      }
     }
     
     /* ===== OTHER COLLECTIONS (keep existing logic) ===== */
@@ -386,14 +411,17 @@ service cloud.firestore {
     
     // User favorites
     match /user_favorites/{userId} {
-      allow read, write: if signedIn() && request.auth.uid == userId;
+      // Users can read/write their own favorites; Admin can update all (for cleanup when deleting quiz)
+      allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
+      allow write: if signedIn() && (request.auth.uid == userId || isAdmin());
     }
     
     // User quiz activities (tracking views, attempts, etc.)
     match /userQuizActivities/{activityId} {
       allow read: if signedIn();
       allow create, update: if signedIn() && request.resource.data.userId == request.auth.uid;
-      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
+      // Admin can delete activities (for cleanup when deleting quiz)
+      allow delete: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
     }
     
     // Quiz completions (global activity log for tracking quiz completions)
@@ -416,7 +444,9 @@ service cloud.firestore {
         request.resource.data.userId == request.auth.uid &&
         request.resource.data.quizId is string &&
         isQuizApproved(request.resource.data.quizId);
-      allow update, delete: if signedIn() && resource.data.userId == request.auth.uid;
+      // User can update/delete their own; Admin can delete all (for cleanup when deleting quiz)
+      allow update: if signedIn() && resource.data.userId == request.auth.uid;
+      allow delete: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
     }
     
     // Edit requests

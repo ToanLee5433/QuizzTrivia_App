@@ -49,7 +49,7 @@ export const DEFAULT_QUIZ_SETTINGS: QuizSettings = {
   shuffleAnswers: false,
   autoAdvance: false, // Default: need to click "Next" button
   autoSubmit: true,
-  soundEffects: false,
+  soundEffects: true, // Default: enable sound effects
   darkMode: false,
   examConfig: {
     totalTime: 0, // No limit - will be overridden by Firestore quiz.duration

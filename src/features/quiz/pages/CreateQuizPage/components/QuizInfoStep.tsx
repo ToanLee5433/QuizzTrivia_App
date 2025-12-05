@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { QuizFormData } from '../types';
 import { difficulties } from '../constants';
@@ -6,7 +6,7 @@ import { useCategories } from '../hooks/useCategories';
 import RichTextEditor from '../../../../../shared/components/ui/RichTextEditor';
 import RichTextViewer from '../../../../../shared/components/ui/RichTextViewer';
 import ImageUploader from '../../../../../components/ImageUploader';
-import { BookOpen, Clock, Tag, Star, FileText, ImageIcon, Lock, Key, Loader } from 'lucide-react';
+import { BookOpen, Clock, Tag, Star, FileText, ImageIcon, Lock, Key, Loader, X } from 'lucide-react';
 
 interface QuizInfoStepProps {
   quiz: QuizFormData;
@@ -16,6 +16,55 @@ interface QuizInfoStepProps {
 const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
   const { t } = useTranslation();
   const { categories, loading: categoriesLoading } = useCategories();
+  const [tagInput, setTagInput] = useState('');
+  
+  // Handle tag input - add tag when comma or Enter is pressed
+  const handleTagInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    
+    // If user types comma, add the tag and clear input
+    if (value.endsWith(',')) {
+      const newTag = value.slice(0, -1).trim();
+      if (newTag && !quiz.tags?.includes(newTag)) {
+        setQuiz(q => ({
+          ...q,
+          tags: [...(q.tags || []), newTag]
+        }));
+      }
+      setTagInput('');
+    } else {
+      setTagInput(value);
+    }
+  };
+  
+  // Handle Enter key to add tag
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const newTag = tagInput.trim();
+      if (newTag && !quiz.tags?.includes(newTag)) {
+        setQuiz(q => ({
+          ...q,
+          tags: [...(q.tags || []), newTag]
+        }));
+      }
+      setTagInput('');
+    } else if (e.key === 'Backspace' && !tagInput && quiz.tags?.length) {
+      // Remove last tag if backspace on empty input
+      setQuiz(q => ({
+        ...q,
+        tags: q.tags?.slice(0, -1) || []
+      }));
+    }
+  };
+  
+  // Remove a specific tag
+  const removeTag = (tagToRemove: string) => {
+    setQuiz(q => ({
+      ...q,
+      tags: q.tags?.filter(tag => tag !== tagToRemove) || []
+    }));
+  };
   
   // Helper để lấy tên category đã được dịch
   const getCategoryDisplayName = (categoryName: string) => {
@@ -153,15 +202,38 @@ const QuizInfoStep: React.FC<QuizInfoStepProps> = ({ quiz, setQuiz }) => {
             <Tag className="w-4 h-4" />
             {t('quizCreation.tagsOptional')}
           </label>
-          <input
-            className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-            placeholder={t('placeholders.enterTags')}
-            value={quiz.tags?.join(', ') || ''}
-            onChange={e => setQuiz(q => ({ 
-              ...q, 
-              tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag) 
-            }))}
-          />
+          
+          {/* Tags container with chips */}
+          <div className="w-full p-3 border-2 border-gray-200 rounded-xl focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-colors bg-white">
+            <div className="flex flex-wrap gap-2 items-center">
+              {/* Existing tags as chips */}
+              {quiz.tags?.map((tag, index) => (
+                <span 
+                  key={index}
+                  className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => removeTag(tag)}
+                    className="hover:bg-blue-200 rounded-full p-0.5 transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+              
+              {/* Input for new tag */}
+              <input
+                type="text"
+                className="flex-1 min-w-[120px] p-1 border-0 outline-none focus:ring-0 text-sm"
+                placeholder={quiz.tags?.length ? t('placeholders.addMoreTags', 'Thêm tag...') : t('placeholders.enterTags')}
+                value={tagInput}
+                onChange={handleTagInputChange}
+                onKeyDown={handleTagKeyDown}
+              />
+            </div>
+          </div>
           <p className="text-sm text-gray-500">{t('quizCreation.tagsExample')}</p>
         </div>
 

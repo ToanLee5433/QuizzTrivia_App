@@ -28,10 +28,13 @@ console.error = (...args) => {
     typeof args[0] === 'string' && 
     (
       args[0].includes('findDOMNode') ||
-      args[0].includes('Warning: findDOMNode is deprecated')
+      args[0].includes('Warning: findDOMNode is deprecated') ||
+      // Suppress Firestore WebChannel transport errors (normal during network issues)
+      args[0].includes('WebChannelConnection') ||
+      args[0].includes('transport errored')
     )
   ) {
-    // Suppress ReactQuill findDOMNode error
+    // Suppress known non-critical errors
     return;
   }
   originalError.apply(console, args);
@@ -42,10 +45,13 @@ console.warn = (...args) => {
     typeof args[0] === 'string' && 
     (
       args[0].includes('findDOMNode') ||
-      args[0].includes('Warning: findDOMNode is deprecated')
+      args[0].includes('Warning: findDOMNode is deprecated') ||
+      // Suppress Firestore network retry warnings
+      args[0].includes('WebChannelConnection') ||
+      args[0].includes('transport errored')
     )
   ) {
-    // Suppress ReactQuill findDOMNode warning
+    // Suppress known non-critical warnings
     return;
   }
   originalWarn.apply(console, args);

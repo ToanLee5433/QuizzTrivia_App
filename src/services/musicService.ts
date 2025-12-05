@@ -114,16 +114,27 @@ class MusicService {
   unlock(): void {
     if (this.unlocked) return;
     
-    // Create a silent sound to unlock
-    const unlock = new Howl({
-      src: ['data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7v////////////////////////////////////////////////////////////////////////////////////////////////AAAAAExhdmM1OC4xMwAAAAAAAAAAAAAAACQAAAAAAAAAAYZHzLfxAAAAAAAAAAAAAAAAAAAA//tQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ=='],
-      volume: 0,
-      onend: () => {
-        this.unlocked = true;
-        console.log('[MusicService] Audio context unlocked');
-      },
-    });
-    unlock.play();
+    try {
+      // Create a silent sound to unlock - using minimal valid MP3
+      const unlock = new Howl({
+        src: ['data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA'],
+        volume: 0,
+        onend: () => {
+          this.unlocked = true;
+          console.log('[MusicService] Audio context unlocked');
+        },
+        onloaderror: () => {
+          // Fallback: mark as unlocked anyway to prevent blocking
+          this.unlocked = true;
+          console.warn('[MusicService] Audio unlock failed, marking as unlocked anyway');
+        },
+      });
+      unlock.play();
+    } catch (error) {
+      // If any error occurs, just mark as unlocked to prevent blocking
+      this.unlocked = true;
+      console.warn('[MusicService] Audio unlock error, marking as unlocked:', error);
+    }
   }
 
   /**
@@ -325,6 +336,9 @@ class MusicService {
    */
   setEnabled(enabled: boolean): void {
     this.enabled = enabled;
+    
+    // Persist to localStorage so it persists across sessions
+    localStorage.setItem('musicPlayerEnabled', String(enabled));
     
     if (!enabled) {
       this.stopAll();

@@ -45,6 +45,8 @@ export const useQuizTimer = ({ onTimeUp, isActive = true }: UseQuizTimerProps) =
   useEffect(() => {
     if (timeLeft <= 0 && !hasTriggeredTimeUp && quizStartTime) {
       setHasTriggeredTimeUp(true);
+      soundService.unlock();
+      soundService.setEnabled(true);
       soundService.play('timeup');
       onTimeUp();
     }
@@ -53,16 +55,18 @@ export const useQuizTimer = ({ onTimeUp, isActive = true }: UseQuizTimerProps) =
   // Play warning sounds when time is running low
   useEffect(() => {
     if (timeLeft > 0 && quizStartTime && totalTime > 0) {
-      const timeWarningThreshold = Math.ceil(totalTime * 0.1); // 10% of total time
+      // Unlock and enable sound for countdown
+      soundService.unlock();
+      soundService.setEnabled(true);
       
-      // Play countdown sound when entering warning zone
-      if (timeLeft === timeWarningThreshold) {
-        soundService.play('countdown');
-      }
-      
-      // Play tick sound in last 10 seconds
-      if (timeLeft <= 10 && timeLeft > 0) {
+      // Play countdown sound when entering last 5 seconds
+      if (timeLeft <= 5) {
         soundService.play('tick');
+        
+        // Play countdown sound specifically at 5 seconds
+        if (timeLeft === 5) {
+          soundService.play('countdown');
+        }
       }
     }
   }, [timeLeft, quizStartTime, totalTime]);

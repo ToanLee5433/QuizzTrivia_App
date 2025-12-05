@@ -57,6 +57,7 @@ interface QuizSettingsModalProps {
   currentSettings?: QuizSettings;
   quizId: string;
   quiz?: QuizData; // Optional: used to set defaults from Firestore
+  isQuizInProgress?: boolean; // When true, disable shuffle options (can't change mid-quiz)
 }
 
 export const QuizSettingsModal: React.FC<QuizSettingsModalProps> = ({
@@ -65,7 +66,8 @@ export const QuizSettingsModal: React.FC<QuizSettingsModalProps> = ({
   onSave,
   currentSettings,
   quizId,
-  quiz
+  quiz,
+  isQuizInProgress = false
 }) => {
   const { t } = useTranslation();
   
@@ -422,6 +424,9 @@ export const QuizSettingsModal: React.FC<QuizSettingsModalProps> = ({
                     <p className="text-sm text-gray-600 dark:text-gray-300">
                       {t('quizSettings.practiceConfig.retryOnWrongDesc', 'Allow retrying wrong answers')}
                     </p>
+                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 italic">
+                      {t('quizSettings.practiceConfig.retryOnWrongNote', '💡 When enabled, correct answer and explanation will be hidden until you get it right')}
+                    </p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer ml-4">
                     <input
@@ -477,50 +482,58 @@ export const QuizSettingsModal: React.FC<QuizSettingsModalProps> = ({
               </h3>
 
             {/* Shuffle Questions */}
-            <div className="flex items-start justify-between p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+            <div className={`flex items-start justify-between p-4 rounded-lg ${isQuizInProgress ? 'bg-gray-100 dark:bg-gray-800 opacity-60' : 'bg-purple-50 dark:bg-purple-900/20'}`}>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <Shuffle className="w-5 h-5 text-purple-600" />
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                  <Shuffle className={`w-5 h-5 ${isQuizInProgress ? 'text-gray-400' : 'text-purple-600'}`} />
+                  <h3 className={`font-semibold ${isQuizInProgress ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-white'}`}>
                     {t('quizSettings.shuffleQuestions', 'Shuffle questions')}
                   </h3>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-300">
-                  {t('quizSettings.shuffleQuestionsDesc', 'Display questions in random order')}
+                  {isQuizInProgress 
+                    ? t('quizSettings.cannotChangeMidQuiz', 'Cannot change while quiz is in progress')
+                    : t('quizSettings.shuffleQuestionsDesc', 'Display questions in random order')
+                  }
                 </p>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer ml-4">
+              <label className={`relative inline-flex items-center ml-4 ${isQuizInProgress ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
                 <input
                   type="checkbox"
                   checked={settings.shuffleQuestions}
-                  onChange={(e) => setSettings({ ...settings, shuffleQuestions: e.target.checked })}
+                  onChange={(e) => !isQuizInProgress && setSettings({ ...settings, shuffleQuestions: e.target.checked })}
+                  disabled={isQuizInProgress}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-purple-600"></div>
+                <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 ${isQuizInProgress ? 'peer-checked:bg-gray-400' : 'peer-checked:bg-purple-600'}`}></div>
               </label>
             </div>
 
             {/* Shuffle Answers */}
-            <div className="flex items-start justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+            <div className={`flex items-start justify-between p-4 rounded-lg ${isQuizInProgress ? 'bg-gray-100 dark:bg-gray-800 opacity-60' : 'bg-green-50 dark:bg-green-900/20'}`}>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <Shuffle className="w-5 h-5 text-green-600" />
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                  <Shuffle className={`w-5 h-5 ${isQuizInProgress ? 'text-gray-400' : 'text-green-600'}`} />
+                  <h3 className={`font-semibold ${isQuizInProgress ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-white'}`}>
                     {t('quizSettings.shuffleAnswers', 'Shuffle answers')}
                   </h3>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-300">
-                  {t('quizSettings.shuffleAnswersDesc', 'Display answer options in random order')}
+                  {isQuizInProgress 
+                    ? t('quizSettings.cannotChangeMidQuiz', 'Cannot change while quiz is in progress')
+                    : t('quizSettings.shuffleAnswersDesc', 'Display answer options in random order')
+                  }
                 </p>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer ml-4">
+              <label className={`relative inline-flex items-center ml-4 ${isQuizInProgress ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
                 <input
                   type="checkbox"
                   checked={settings.shuffleAnswers}
-                  onChange={(e) => setSettings({ ...settings, shuffleAnswers: e.target.checked })}
+                  onChange={(e) => !isQuizInProgress && setSettings({ ...settings, shuffleAnswers: e.target.checked })}
+                  disabled={isQuizInProgress}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"></div>
+                <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 ${isQuizInProgress ? 'peer-checked:bg-gray-400' : 'peer-checked:bg-green-600'}`}></div>
               </label>
             </div>
 

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { RootState } from '../../../../../lib/store';
 import { LeaderboardEntry } from '../types';
 import { safeNumber, formatDetailedTime, formatDateTime, getRankDisplay, getRankBackgroundColor } from '../utils';
+import soundService from '../../../../../services/soundService';
 
 interface LeaderboardProps {
   leaderboard: LeaderboardEntry[];
@@ -20,6 +21,31 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = React.useState('');
   const [showAll, setShowAll] = React.useState(false);
+  const [hasPlayedApplause, setHasPlayedApplause] = React.useState(false);
+  const leaderboardRef = useRef<HTMLDivElement>(null);
+
+  // 🎉 Play applause sound when user scrolls to leaderboard and rank is top 5
+  useEffect(() => {
+    if (hasPlayedApplause || loadingStats || !userRank || userRank > 5) return;
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && !hasPlayedApplause) {
+          console.log('🎉 Top 5 leaderboard visible! Playing applause for rank:', userRank);
+          soundService.play('applause');
+          setHasPlayedApplause(true);
+        }
+      },
+      { threshold: 0.3 } // Trigger when 30% of leaderboard is visible
+    );
+    
+    if (leaderboardRef.current) {
+      observer.observe(leaderboardRef.current);
+    }
+    
+    return () => observer.disconnect();
+  }, [userRank, loadingStats, hasPlayedApplause]);
 
   // Debug logging
   console.log('🏆 Leaderboard render:', {
@@ -65,7 +91,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
   const totalAttempts = leaderboard.length;
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 mb-8">
+    <div ref={leaderboardRef} className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 mb-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
           🏆 {t('result.leaderboard', 'Bảng xếp hạng')}

@@ -22,6 +22,27 @@ function cleanupI18nCache() {
   }
 }
 
+// 🔥 Safe localStorage setter with quota handling
+function safeSetLocalStorage(key: string, value: string): boolean {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (e: any) {
+    if (e?.name === 'QuotaExceededError') {
+      console.warn('[i18n] localStorage quota exceeded, cleaning up...');
+      cleanupI18nCache();
+      try {
+        localStorage.setItem(key, value);
+        return true;
+      } catch {
+        console.warn('[i18n] Still cannot save to localStorage after cleanup');
+        return false;
+      }
+    }
+    return false;
+  }
+}
+
 // i18n configuration - using external locale files with offline support
 
 i18n
@@ -74,21 +95,9 @@ i18n
           
           const data = await response.json();
           
-          // Cache in localStorage as backup
+          // Cache in localStorage as backup (non-blocking, ignore errors)
           const cacheKey = `i18n_cache_${url}`;
-          try {
-            localStorage.setItem(cacheKey, JSON.stringify(data));
-          } catch (e: any) {
-            // 🧹 If localStorage is full, cleanup old entries and retry
-            if (e?.name === 'QuotaExceededError') {
-              cleanupI18nCache();
-              try {
-                localStorage.setItem(cacheKey, JSON.stringify(data));
-              } catch {
-                // Still failed, just skip caching
-              }
-            }
-          }
+          safeSetLocalStorage(cacheKey, JSON.stringify(data));
           
           callback(null, { status: 200, data });
         } catch (error) {
@@ -96,19 +105,21 @@ i18n
           
           // Fallback to localStorage cache
           const cacheKey = `i18n_cache_${url}`;
-          const cached = localStorage.getItem(cacheKey);
-          
-          if (cached) {
-            try {
+          try {
+            const cached = localStorage.getItem(cacheKey);
+            
+            if (cached) {
               const data = JSON.parse(cached);
               console.log(`[i18n] Using cached translation for ${url}`);
               callback(null, { status: 200, data });
-            } catch (e) {
-              callback(error, { status: 500, data: null });
+              return;
             }
-          } else {
-            callback(error, { status: 500, data: null });
+          } catch (e) {
+            console.warn('[i18n] Failed to read from cache:', e);
           }
+          
+          // If no cache, return error
+          callback(error, { status: 500, data: null });
         }
       }
     },

@@ -162,8 +162,30 @@ export const useQuizSettings = () => {
     return settings.mode === 'practice' && (settings.practiceConfig.showExplanation ?? settings.showExplanations ?? true);
   }, [settings.mode, settings.practiceConfig.showExplanation, settings.showExplanations]);
 
+  /**
+   * Reload settings from localStorage (call after settings modal saves)
+   */
+  const reloadSettings = useCallback(() => {
+    if (!quizId) return;
+
+    try {
+      const savedSettings = localStorage.getItem(`quiz_settings_${quizId}`);
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings);
+        
+        if (parsed.version === SETTINGS_VERSION) {
+          console.log('🔄 Reloaded quiz settings (v' + SETTINGS_VERSION + '):', parsed);
+          setSettings({ ...DEFAULT_QUIZ_SETTINGS, ...parsed });
+        }
+      }
+    } catch (error) {
+      console.error('❌ Failed to reload quiz settings:', error);
+    }
+  }, [quizId]);
+
   return {
     settings,
+    reloadSettings,
     shuffleQuestionsArray,
     shuffleQuestionAnswers,
     calculateTotalTime,

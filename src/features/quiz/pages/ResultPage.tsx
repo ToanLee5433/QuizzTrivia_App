@@ -14,6 +14,7 @@ import SafeHTML from '../../../shared/components/ui/SafeHTML';
 import { useTranslation } from 'react-i18next';
 import soundService from '../../../services/soundService';
 import musicService from '../../../services/musicService';
+import { useSettings } from '../../../contexts/SettingsContext';
 
 
 interface ResultState {
@@ -159,6 +160,7 @@ export const ResultPage: React.FC = () => {
   const navigate = useNavigate();
   const { quizzes } = useSelector((state: RootState) => state.quiz);
   const { user } = useSelector((state: RootState) => state.auth);
+  const { soundEffectsEnabled, isMusicPlayerEnabled } = useSettings();
   
   const [result, setResult] = useState<ResultState | null>(location.state as ResultState || null);
   const [quizId, setQuizId] = useState<string | null>(null);
@@ -167,6 +169,8 @@ export const ResultPage: React.FC = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [userRank, setUserRank] = useState<number | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
+  const [hasPlayedLeaderboardApplause, setHasPlayedLeaderboardApplause] = useState(false);
+  const leaderboardRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     console.log('🔍 ResultPage useEffect - attemptId:', attemptId, 'location.state:', location.state);
@@ -208,7 +212,18 @@ export const ResultPage: React.FC = () => {
       const score = result.score || 0;
       
       // 🎵 Play victory music (crossfade from game music if playing)
-      musicService.crossfade('victory', 1500);
+      musicService.setEnabled(isMusicPlayerEnabled); // Explicitly set enabled state
+      if (isMusicPlayerEnabled) {
+        console.log('[ResultPage] Starting victory music');
+        musicService.crossfade('victory', 1500);
+      }
+      
+      // 🔊 Play victory sound effects - Always try to play on quiz completion
+      // Unlock audio context first (browser autoplay policy)
+      soundService.unlock();
+      soundService.setEnabled(true);
+      
+      console.log('[ResultPage] Playing victory sounds, score:', score, 'soundEnabled:', soundEffectsEnabled);
       
       // Play victory sound for good scores, otherwise just applause
       if (score >= 60) {
@@ -223,7 +238,31 @@ export const ResultPage: React.FC = () => {
       // Stop music when leaving result page
       musicService.stop(500);
     };
-  }, [result]);
+  }, [result, soundEffectsEnabled, isMusicPlayerEnabled]);
+
+  // Play applause when user scrolls to see leaderboard and they are in top 5
+  useEffect(() => {
+    if (hasPlayedLeaderboardApplause || !userRank || userRank > 5 || !leaderboardRef.current) return;
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !hasPlayedLeaderboardApplause) {
+            console.log('[ResultPage] User in top 5, playing applause on leaderboard view');
+            soundService.unlock();
+            soundService.setEnabled(true);
+            soundService.play('applause');
+            setHasPlayedLeaderboardApplause(true);
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+    
+    observer.observe(leaderboardRef.current);
+    
+    return () => observer.disconnect();
+  }, [userRank, hasPlayedLeaderboardApplause]);
 
   useEffect(() => {
     if (!quizId) return;
@@ -540,7 +579,7 @@ export const ResultPage: React.FC = () => {
         </div>
 
         {/* Leaderboard */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+        <div ref={leaderboardRef} className="bg-white rounded-2xl shadow-xl p-8 mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('resultPage.leaderboard')}</h2>
           {loadingStats ? (
             <div className="flex justify-center items-center h-24">
