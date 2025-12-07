@@ -24,7 +24,7 @@ if (!GOOGLE_AI_API_KEY) {
 const genAI = new GoogleGenerativeAI(GOOGLE_AI_API_KEY);
 
 /**
- * Generate embedding for a text using Google AI text-embedding-004
+ * Generate embedding for a text using Google AI gemini-embedding-001
  * ⚠️ Only use this for admin-side index building with proper API key configuration
  */
 export async function generateEmbedding(text: string): Promise<number[]> {
@@ -36,7 +36,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
   }
   
   try {
-    const model = genAI.getGenerativeModel({ model: 'text-embedding-004' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-embedding-001' });
     
     const result = await model.embedContent(text);
     

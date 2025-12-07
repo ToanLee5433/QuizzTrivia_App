@@ -27,7 +27,7 @@ export interface ChunkMetadata {
 
 // Chunk with vector embedding
 export interface IndexedChunk extends ChunkMetadata {
-  embedding: number[]; // 768-dimensional vector for text-embedding-004
+  embedding: number[]; // 768-dimensional vector for gemini-embedding-001
 }
 
 // Citation in response

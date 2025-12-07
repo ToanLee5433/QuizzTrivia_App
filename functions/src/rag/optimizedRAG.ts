@@ -140,17 +140,26 @@ void _agentIntentDoc;
  * Score thresholds - CẦN TUNE DỰA TRÊN PRODUCTION DATA
  * 
  * QUAN TRỌNG: Log topScore ra console trong 1 tuần đầu
- * để xác định ngưỡng phù hợp với model text-embedding-004
+ * để xác định ngưỡng phù hợp với model gemini-embedding-001
  * 
  * Giá trị hiện tại là estimates, có thể cần điều chỉnh:
  * - 0.70 có thể cao quá → giảm xuống 0.62-0.65
  * - Hoặc 0.70 có thể thấp quá → tăng lên 0.75
+ * 
+ * v4.3 NOTE: Tiếng Việt đa nghĩa nên các threshold có thể cần 
+ * điều chỉnh thấp hơn so với tiếng Anh. Monitor và tune!
  */
 const CONFIG = {
   // Fast Path: Nếu avg score >= threshold → skip AI rewriting
+  // Tunable: Start at 0.70, may need to lower for Vietnamese
   FAST_PATH_THRESHOLD: parseFloat(process.env.RAG_FAST_PATH_THRESHOLD || '0.70'),
   
+  // 🚀 NEW: High Confidence Skip - Nếu top score >= 0.85 → skip AI reranking hoàn toàn
+  // Rationale: Kết quả đã rất tốt, không cần tốn thời gian rerank
+  HIGH_CONFIDENCE_SKIP_RERANK: parseFloat(process.env.RAG_SKIP_RERANK_THRESHOLD || '0.85'),
+  
   // Minimum score để được coi là kết quả hợp lệ
+  // Tunable: 0.40 is conservative, can lower to 0.35 for more recall
   MIN_RELEVANCE_SCORE: parseFloat(process.env.RAG_MIN_RELEVANCE || '0.40'),
   
   // Số kết quả vector search
@@ -158,6 +167,10 @@ const CONFIG = {
   
   // Số kết quả cuối cùng trả về
   FINAL_TOP_K: parseInt(process.env.RAG_FINAL_TOP_K || '5'),
+  
+  // 🚀 OPTIMIZED: Giới hạn window rerank xuống 10 (từ 15) để giảm latency
+  // LLM complexity = O(K), smaller K = faster
+  RERANK_WINDOW_SIZE: parseInt(process.env.RAG_RERANK_WINDOW || '10'),
   
   // Enable/disable AI reranking
   ENABLE_AI_RERANK: process.env.RAG_ENABLE_RERANK !== 'false',
@@ -171,6 +184,7 @@ const CONFIG = {
   QUIZZES_PER_TOPIC: parseInt(process.env.RAG_QUIZZES_PER_TOPIC || '3'),
   
   // NEW v4.1: Intent confidence threshold (below this = unclear)
+  // Tunable: Started at 0.65, Vietnamese may need lower (0.55-0.60) due to ambiguity
   INTENT_CONFIDENCE_THRESHOLD: parseFloat(process.env.RAG_INTENT_CONFIDENCE || '0.65'),
   
   // NEW v4.1: Enable analytics logging
@@ -224,6 +238,9 @@ interface RAGResponse {
     avgScore: number;
     topScore: number;
     confidence: ConfidenceLevel;
+    // v4.3: Raw scores for client debugging/UI
+    rawScores?: number[];           // Individual chunk scores
+    confidenceScore?: number;       // Numeric confidence (0-1)
     rewriteQueries?: string[];
     // NEW v4.2: Query contextualization metrics
     queryRewritten?: boolean;
@@ -270,11 +287,139 @@ function getGenAI(): GoogleGenerativeAI {
 }
 
 function getEmbeddingModel(): GenerativeModel {
-  return getGenAI().getGenerativeModel({ model: 'text-embedding-004' });
+  return getGenAI().getGenerativeModel({ model: 'gemini-embedding-001' });
 }
 
 function getChatModel(): GenerativeModel {
   return getGenAI().getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
+}
+
+// ============================================================
+// 🛡️ INDEX VALIDATION (Security & Stability Fix)
+// ============================================================
+
+interface IndexValidationResult {
+  isValid: boolean;
+  error?: string;
+  stats?: {
+    totalChunks: number;
+    validChunks: number;
+    invalidChunks: number;
+    embeddingDimension: number;
+  };
+}
+
+/**
+ * Validates vector index structure and data integrity
+ * Prevents crashes from corrupted or malformed index data
+ */
+function validateVectorIndex(index: any): IndexValidationResult {
+  // Check basic structure
+  if (!index || typeof index !== 'object') {
+    return { isValid: false, error: 'Index is null or not an object' };
+  }
+
+  if (!index.version || typeof index.version !== 'string') {
+    return { isValid: false, error: 'Missing or invalid version field' };
+  }
+
+  if (!Array.isArray(index.chunks)) {
+    return { isValid: false, error: 'Chunks must be an array' };
+  }
+
+  // Allow empty index but flag it
+  if (index.chunks.length === 0) {
+    return { 
+      isValid: true, 
+      stats: { totalChunks: 0, validChunks: 0, invalidChunks: 0, embeddingDimension: 0 }
+    };
+  }
+
+  // Validate sample of chunks (first 10 + random 10 for large indexes)
+  let validChunks = 0;
+  let invalidChunks = 0;
+  let embeddingDimension = 0;
+  
+  const sampleSize = Math.min(20, index.chunks.length);
+  const sampleIndices = new Set<number>();
+  
+  // First 10
+  for (let i = 0; i < Math.min(10, index.chunks.length); i++) {
+    sampleIndices.add(i);
+  }
+  
+  // Random 10 for large indexes
+  while (sampleIndices.size < sampleSize && index.chunks.length > 10) {
+    sampleIndices.add(Math.floor(Math.random() * index.chunks.length));
+  }
+
+  for (const idx of sampleIndices) {
+    const chunk = index.chunks[idx];
+    
+    if (!chunk || typeof chunk !== 'object') {
+      invalidChunks++;
+      continue;
+    }
+
+    // Check for chunkId (primary) or id (legacy)
+    if ((!chunk.chunkId || typeof chunk.chunkId !== 'string') && 
+        (!chunk.id || typeof chunk.id !== 'string')) {
+      invalidChunks++;
+      continue;
+    }
+
+    if (!chunk.text || typeof chunk.text !== 'string') {
+      invalidChunks++;
+      continue;
+    }
+
+    if (!Array.isArray(chunk.embedding) || chunk.embedding.length === 0) {
+      invalidChunks++;
+      continue;
+    }
+
+    // Check embedding dimension (should be 768 for gemini-embedding-001)
+    const dim = chunk.embedding.length;
+    if (embeddingDimension === 0) {
+      embeddingDimension = dim;
+    } else if (dim !== embeddingDimension) {
+      invalidChunks++;
+      continue;
+    }
+
+    // Validate embedding values are numbers
+    if (!chunk.embedding.every((v: any) => typeof v === 'number' && !isNaN(v))) {
+      invalidChunks++;
+      continue;
+    }
+
+    validChunks++;
+  }
+
+  // v4.3.1: STRICT - Fail if more than 5% of samples are invalid
+  // Rationale: 40% corrupt data = chatbot answers wrong half the time
+  const invalidRatio = invalidChunks / sampleSize;
+  if (invalidRatio > 0.05) {
+    return { 
+      isValid: false, 
+      error: `Index corruption too high: ${(invalidRatio * 100).toFixed(1)}% invalid (threshold: 5%). Please rebuild index.`
+    };
+  }
+
+  // Warn if embedding dimension is unexpected (768 for gemini-embedding-001)
+  if (embeddingDimension > 0 && embeddingDimension !== 768) {
+    console.warn(`Unexpected embedding dimension: ${embeddingDimension} (expected 768)`);
+  }
+
+  return {
+    isValid: true,
+    stats: {
+      totalChunks: index.chunks.length,
+      validChunks: Math.round((validChunks / sampleSize) * index.chunks.length),
+      invalidChunks: Math.round((invalidChunks / sampleSize) * index.chunks.length),
+      embeddingDimension,
+    }
+  };
 }
 
 // ============================================================
@@ -326,18 +471,31 @@ async function contextualizeQuery(
   try {
     const model = getChatModel();
     
+    // v4.3.1: Sanitize history content to prevent prompt injection
+    // Remove newlines and special characters that could break prompt structure
+    const sanitizeContent = (content: string): string => {
+      return content
+        .replace(/[\r\n]+/g, ' ')  // Remove newlines
+        .replace(/[`"']/g, '')     // Remove quotes that could break prompt
+        .substring(0, 200)
+        .trim();
+    };
+    
     // Format history cho prompt - focus on user's previous topic
     const historyText = history
       .slice(-5) // Chỉ lấy 5 tin nhắn gần nhất
-      .map(m => `${m.role === 'user' ? 'Người dùng' : 'Trợ lý'}: ${m.content.substring(0, 200)}`)
+      .map(m => `${m.role === 'user' ? 'Người dùng' : 'Trợ lý'}: ${sanitizeContent(m.content)}`)
       .join('\n');
+    
+    // Sanitize current question as well
+    const sanitizedQuestion = question.replace(/[\r\n]+/g, ' ').trim();
     
     const prompt = `Nhiệm vụ: Viết lại câu hỏi cuối cùng của người dùng thành một câu độc lập, đầy đủ ý nghĩa để hệ thống tìm kiếm quiz và tài liệu học tập hiểu được.
 
 Lịch sử hội thoại:
 ${historyText}
 
-Câu hỏi hiện tại: "${question}"
+Câu hỏi hiện tại: "${sanitizedQuestion}"
 
 Quy tắc:
 1. Nếu người dùng hỏi về một môn học/chủ đề MỚI (ví dụ: "Văn thì sao?", "Còn Lý?"), hãy viết thành: "Tìm quiz và tài liệu về [Môn học]" hoặc "Gợi ý lộ trình học [Môn học]"
@@ -407,6 +565,8 @@ function cosineSimilarity(a: number[], b: number[]): number {
  * Tận dụng Warm Instance của Cloud Functions:
  * - Cold Start: Tải từ Storage (1-2s)
  * - Warm Start: Dùng cache từ RAM (<50ms)
+ * 
+ * v4.3: Added try-catch for JSON.parse to handle corrupted files
  */
 async function loadVectorIndex(): Promise<VectorIndex | null> {
   const now = Date.now();
@@ -432,16 +592,38 @@ async function loadVectorIndex(): Promise<VectorIndex | null> {
     }
     
     const [content] = await file.download();
-    const index = JSON.parse(content.toString()) as VectorIndex;
+    
+    // 🛡️ Safe JSON parsing with specific error handling
+    let index: any;
+    try {
+      index = JSON.parse(content.toString());
+    } catch (parseError) {
+      console.error('❌ Index file has invalid JSON syntax:', parseError);
+      console.error('This usually means the file is corrupted or incomplete.');
+      console.error('Please rebuild the index using rebuildFullIndex function.');
+      return null;
+    }
+    
+    // 🛡️ Validate index structure and data integrity
+    const validation = validateVectorIndex(index);
+    if (!validation.isValid) {
+      console.error('❌ Index validation failed:', validation.error);
+      return null;
+    }
+    
+    if (validation.stats) {
+      console.log(`✅ Index validated: ${validation.stats.totalChunks} chunks, ` +
+        `${validation.stats.validChunks} valid, dim=${validation.stats.embeddingDimension}`);
+    }
     
     // Update global cache
-    globalVectorIndex = index;
+    globalVectorIndex = index as VectorIndex;
     globalIndexLoadTime = now;
     
     const duration = Date.now() - startTime;
     console.log(`✅ Index loaded: ${index.totalChunks} chunks in ${duration}ms`);
     
-    return index;
+    return index as VectorIndex;
   } catch (error) {
     console.error('❌ Failed to load index:', error);
     return null;
@@ -478,8 +660,127 @@ export function invalidateGlobalCache(): void {
  * - UNCLEAR: Không rõ ý định → Hỏi lại để làm rõ
  * 
  * FEW-SHOT PROMPTING để đảm bảo output 100% JSON
+ * 
+ * v4.4: Thêm Regex Heuristic layer để fast-route các request đơn giản
+ * Tiết kiệm 1-2s latency khi không cần gọi LLM
  */
+
+// ============================================================
+// 🚀 REGEX HEURISTIC LAYER (Fast Route without LLM)
+// ============================================================
+
+/**
+ * Fast intent detection using regex patterns - O(1) complexity
+ * Runs BEFORE LLM classification to save latency for obvious cases
+ * 
+ * Returns null if pattern not matched (falls through to LLM)
+ */
+function fastIntentDetection(question: string): IntentClassification | null {
+  const q = question.toLowerCase().trim();
+  
+  // 1. HELP patterns - highest priority
+  const helpPatterns = [
+    /^(help|trợ giúp|hướng dẫn|cách (sử dụng|dùng))/i,
+    /(làm (sao|thế nào) để|cách (để|nào)|chatbot.*làm (được )?gì)/i,
+    /^\/help$/i,  // Command pattern
+  ];
+  for (const pattern of helpPatterns) {
+    if (pattern.test(q)) {
+      return {
+        intent: 'help_support',
+        confidence: 0.95,
+        reasoning: 'Fast route: help pattern matched',
+      };
+    }
+  }
+  
+  // 2. GREETING patterns
+  const greetingPatterns = [
+    /^(xin chào|chào|hello|hi|hey|yo)[\s!.]*$/i,
+    /^(cảm ơn|thank|thanks|cám ơn)[\s!.]*$/i,
+    /^(bạn là ai|you are|who are you)\??$/i,
+    /^(tạm biệt|bye|goodbye)[\s!.]*$/i,
+  ];
+  for (const pattern of greetingPatterns) {
+    if (pattern.test(q)) {
+      return {
+        intent: 'general_chat',
+        confidence: 0.98,
+        reasoning: 'Fast route: greeting pattern matched',
+      };
+    }
+  }
+  
+  // 3. QUIZ BROWSE patterns (no specific topic)
+  const quizBrowsePatterns = [
+    /^(quiz|bài test|trắc nghiệm)[\s]*(hay|hot|mới|phổ biến|ngẫu nhiên)?[\s!?.]*$/i,
+    /^(cho|gợi ý|đề xuất|recommend)[\s]*(tôi|mình)?[\s]*(quiz|bài test)[\s!?.]*$/i,
+    /^(tôi|mình)?\s*(muốn|cần|xem)\s*(quiz|bài test)[\s!?.]*$/i,
+    /có (quiz|bài test) (gì|nào) không\??$/i,
+  ];
+  for (const pattern of quizBrowsePatterns) {
+    if (pattern.test(q)) {
+      return {
+        intent: 'quiz_browse',
+        confidence: 0.92,
+        reasoning: 'Fast route: quiz browse pattern (no topic)',
+      };
+    }
+  }
+  
+  // 4. DEFINITION questions ("X là gì?")
+  const definitionPattern = /^(.{2,30})\s+(là gì|nghĩa là gì|có nghĩa là gì|means what)\s*\??$/i;
+  const defMatch = q.match(definitionPattern);
+  if (defMatch) {
+    return {
+      intent: 'fact_retrieval',
+      confidence: 0.90,
+      extractedTopic: defMatch[1].trim(),
+      reasoning: 'Fast route: definition question pattern',
+    };
+  }
+  
+  // 5. LEARNING PATH patterns
+  const learningPatterns = [
+    /^(tôi|mình)?\s*(muốn|cần)\s*(học|trở thành|become)/i,
+    /^(lộ trình|roadmap|học)\s+(để\s+)?(trở thành|become|làm)/i,
+  ];
+  for (const pattern of learningPatterns) {
+    if (pattern.test(q)) {
+      // Extract topic from the rest of the question
+      const topicMatch = q.match(/(học|trở thành|become|làm)\s+(.+)$/i);
+      return {
+        intent: 'learning_path',
+        confidence: 0.88,
+        extractedTopic: topicMatch ? topicMatch[2].trim() : undefined,
+        reasoning: 'Fast route: learning path pattern',
+      };
+    }
+  }
+  
+  // 6. UNCLEAR patterns (too short or gibberish)
+  if (q.length < 3 || /^[a-z0-9]{1,3}$/i.test(q)) {
+    return {
+      intent: 'unclear',
+      confidence: 0.95,
+      reasoning: 'Fast route: query too short',
+      clarifyingQuestion: 'Mình chưa hiểu rõ. Bạn có thể nói cụ thể hơn không?',
+    };
+  }
+  
+  // No pattern matched - fall through to LLM
+  return null;
+}
+
 async function classifyIntent(question: string): Promise<IntentClassification> {
+  // 🚀 FAST PATH: Try regex heuristics first (O(1) instead of LLM call)
+  const fastResult = fastIntentDetection(question);
+  if (fastResult) {
+    console.log(`⚡ Fast route matched: ${fastResult.intent} (${fastResult.confidence})`);
+    return fastResult;
+  }
+  
+  // Fall through to LLM classification for complex queries
   const model = getChatModel();
   
   const prompt = `Bạn là Router Agent - hệ thống phân loại ý định người dùng.
@@ -1341,9 +1642,11 @@ async function smartSearch(
     };
   }
   
-  // Calculate scores
-  const avgScore = directResults.reduce((sum, r) => sum + r.score, 0) / directResults.length;
-  const topScore = directResults[0].score;
+  // Calculate scores (v4.3.1: Guard against NaN)
+  const avgScore = directResults.length > 0 
+    ? directResults.reduce((sum, r) => sum + r.score, 0) / directResults.length 
+    : 0;
+  const topScore = directResults[0]?.score || 0;
   
   // Log scores cho tuning (enable trong production đầu)
   if (CONFIG.LOG_SCORES_FOR_TUNING) {
@@ -1394,7 +1697,10 @@ async function smartSearch(
     .sort((a, b) => b.score - a.score)
     .slice(0, topK);
   
-  const newAvgScore = mergedResults.reduce((sum, r) => sum + r.score, 0) / mergedResults.length;
+  // v4.3.1: Guard against NaN when no results
+  const newAvgScore = mergedResults.length > 0 
+    ? mergedResults.reduce((sum, r) => sum + r.score, 0) / mergedResults.length 
+    : 0;
   const newTopScore = mergedResults[0]?.score || 0;
   
   return {
@@ -1621,16 +1927,28 @@ async function fetchPopularQuizzes(limit: number = 5): Promise<QuizRecommendatio
       const quizData = doc.data();
       if (!quizData) continue;
       
-      // Get actual question count
+      // Get actual question count - check multiple sources
+      // Priority: questionCount field > questions array length > questions subcollection
       let questionCount = quizData.questionCount || 0;
+      
+      // v4.3.1: Also check questions array (old structure)
+      if (questionCount === 0 && Array.isArray(quizData.questions)) {
+        questionCount = quizData.questions.length;
+      }
+      
+      // If still 0, check subcollection
       if (questionCount === 0) {
-        const questionsSnap = await quizzesRef.doc(doc.id).collection('questions').count().get();
-        questionCount = questionsSnap.data().count || 0;
+        try {
+          const questionsSnap = await quizzesRef.doc(doc.id).collection('questions').count().get();
+          questionCount = questionsSnap.data().count || 0;
+        } catch (err) {
+          console.log(`⚠️ Could not count questions subcollection for ${doc.id}:`, err);
+        }
       }
       
       // Skip quizzes with no questions
       if (questionCount === 0) {
-        console.log(`⚠️ Skipping quiz ${doc.id} - no questions`);
+        console.log(`⚠️ Skipping quiz ${doc.id} - no questions (checked: questionCount field, questions array, subcollection)`);
         continue;
       }
       
@@ -1681,11 +1999,21 @@ async function fetchQuizDetails(quizIds: string[]): Promise<QuizRecommendation[]
         console.log(`📖 Quiz ${quizId} exists, status: ${quizData?.status}`);
         
         if (quizData && quizData.status === 'approved') {
-          // Get actual question count from subcollection if not available
+          // v4.3.1: Get question count from multiple sources
+          // Priority: questionCount field > questions array > subcollection
           let questionCount = quizData.questionCount || 0;
+          
+          if (questionCount === 0 && Array.isArray(quizData.questions)) {
+            questionCount = quizData.questions.length;
+          }
+          
           if (questionCount === 0) {
-            const questionsSnap = await quizzesRef.doc(quizId).collection('questions').count().get();
-            questionCount = questionsSnap.data().count || 0;
+            try {
+              const questionsSnap = await quizzesRef.doc(quizId).collection('questions').count().get();
+              questionCount = questionsSnap.data().count || 0;
+            } catch (err) {
+              console.log(`⚠️ Could not count questions subcollection for ${quizId}`);
+            }
           }
           
           // Clean description (strip HTML)
@@ -2020,15 +2348,24 @@ export async function askQuestion(params: {
   );
   contexts = filteredResults as SearchResult[];
   
-  // 3. Optional AI Re-ranking (only for medium/low confidence)
-  if (enableRerank && confidence !== 'high' && contexts.length > topK) {
-    console.log('🔄 Applying AI Re-ranking...');
+  // 🚀 3. OPTIMIZED AI Re-ranking with Threshold Skip (v4.4)
+  // - Skip reranking entirely if topScore >= 0.85 (results already excellent)
+  // - Only rerank top RERANK_WINDOW_SIZE (10) instead of all results
+  // - This saves 1-2s latency on high-quality matches
+  const topScore = searchResult.topScore;
+  const shouldSkipRerank = topScore >= CONFIG.HIGH_CONFIDENCE_SKIP_RERANK;
+  
+  if (enableRerank && confidence !== 'high' && contexts.length > topK && !shouldSkipRerank) {
+    console.log(`🔄 Applying AI Re-ranking (topScore=${topScore.toFixed(3)} < ${CONFIG.HIGH_CONFIDENCE_SKIP_RERANK})...`);
     const chatModel = getChatModel();
+    
+    // v4.4: Limit to RERANK_WINDOW_SIZE for O(K) optimization
+    const windowSize = Math.min(contexts.length, CONFIG.RERANK_WINDOW_SIZE);
     
     // Token-optimized: chỉ gửi title + summary cho AI
     const reranked = await aiRerank(
       question,
-      contexts.map(c => ({
+      contexts.slice(0, windowSize).map(c => ({
         text: c.summary || c.text.substring(0, 150),
         title: c.title,
         chunkId: c.chunkId,
@@ -2047,6 +2384,8 @@ export async function askQuestion(params: {
       summary: r.text,
       score: r.rerankScore,
     }));
+  } else if (shouldSkipRerank) {
+    console.log(`⚡ Skipping AI Re-ranking (topScore=${topScore.toFixed(3)} >= ${CONFIG.HIGH_CONFIDENCE_SKIP_RERANK}) - Fast path!`);
   }
   
   // 4. Generate answer
@@ -2096,6 +2435,12 @@ export async function askQuestion(params: {
     finalAnswer += '\n\n💡 *Hiện tại chưa có quiz về chủ đề này trong hệ thống. Bạn có thể thử tìm kiếm chủ đề khác!*';
   }
   
+  // v4.3.1: Sanitize numeric values to prevent NaN in JSON response
+  const sanitizeNumber = (n: number | undefined): number => {
+    if (n === undefined || n === null || isNaN(n) || !isFinite(n)) return 0;
+    return n;
+  };
+  
   return {
     answer: finalAnswer,
     citations,
@@ -2105,8 +2450,8 @@ export async function askQuestion(params: {
     tokensUsed,
     searchMetrics: {
       fastPathUsed: searchResult.fastPathUsed,
-      avgScore: searchResult.avgScore,
-      topScore: searchResult.topScore,
+      avgScore: sanitizeNumber(searchResult.avgScore),
+      topScore: sanitizeNumber(searchResult.topScore),
       confidence,
       rewriteQueries: searchResult.rewriteQueries,
       queryRewritten: queryWasRewritten,

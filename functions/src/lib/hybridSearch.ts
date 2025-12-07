@@ -12,12 +12,47 @@
 import { GenerativeModel } from '@google/generative-ai';
 
 // ============================================================
+// 🔧 CONSTANTS
+// ============================================================
+
+// v4.3.1: Timeout for AI operations to prevent hanging
+const AI_QUERY_REWRITE_TIMEOUT_MS = 5000; // 5 seconds
+const AI_RERANK_TIMEOUT_MS = 10000; // 10 seconds
+
+/**
+ * Helper: Execute with timeout
+ */
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  operationName: string
+): Promise<T> {
+  let timeoutHandle: NodeJS.Timeout;
+  
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutHandle = setTimeout(() => {
+      reject(new Error(`${operationName} timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+  });
+  
+  try {
+    const result = await Promise.race([promise, timeoutPromise]);
+    clearTimeout(timeoutHandle!);
+    return result;
+  } catch (error) {
+    clearTimeout(timeoutHandle!);
+    throw error;
+  }
+}
+
+// ============================================================
 // 1️⃣ AI QUERY REWRITING (Thay thế từ điển đồng nghĩa thủ công)
 // ============================================================
 
 /**
  * AI Query Rewriting - Dùng LLM expand query thông minh
  * Thay thế hoàn toàn từ điển SYNONYMS thủ công
+ * v4.3.1: Added timeout protection
  */
 export async function rewriteQueryWithAI(
   originalQuery: string,
@@ -44,13 +79,18 @@ TRẢ VỀ JSON ARRAY (chỉ JSON, không giải thích):
 ["query1", "query2", "query3"]`;
 
   try {
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.3, // Low temperature for consistent output
-        maxOutputTokens: 200,
-      },
-    });
+    // v4.3.1: Wrap AI call with timeout
+    const result = await withTimeout(
+      model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.3, // Low temperature for consistent output
+          maxOutputTokens: 200,
+        },
+      }),
+      AI_QUERY_REWRITE_TIMEOUT_MS,
+      'AI Query Rewriting'
+    );
     
     const text = result.response.text();
     const cleanJson = text.replace(/```json\n?|\n?```/g, '').trim();
@@ -71,6 +111,7 @@ TRẢ VỀ JSON ARRAY (chỉ JSON, không giải thích):
 
 /**
  * AI Re-ranking - LLM đánh giá relevance chính xác hơn vector search
+ * v4.3.1: Added timeout protection and index validation
  */
 export async function aiRerank<T extends { text: string; title: string }>(
   query: string,
@@ -107,24 +148,42 @@ TRẢ VỀ JSON (chỉ JSON):
 {"rankings": [{"index": 0, "score": 0.95}, {"index": 3, "score": 0.80}]}`;
 
   try {
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.1, // Very low for consistent ranking
-        maxOutputTokens: 300,
-      },
-    });
+    // v4.3.1: Wrap AI call with timeout
+    const result = await withTimeout(
+      model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.1, // Very low for consistent ranking
+          maxOutputTokens: 300,
+        },
+      }),
+      AI_RERANK_TIMEOUT_MS,
+      'AI Re-ranking'
+    );
 
     const text = result.response.text();
     const cleanJson = text.replace(/```json\n?|\n?```/g, '').trim();
     const parsed = JSON.parse(cleanJson);
 
-    return parsed.rankings
-      .slice(0, topK)
-      .map((r: { index: number; score: number }) => ({
-        ...candidates[r.index],
-        rerankScore: r.score,
-      }));
+    // v4.3.1: Validate indices to prevent array out of bounds
+    const validRankings = parsed.rankings
+      .filter((r: { index: number; score: number }) => 
+        typeof r.index === 'number' && 
+        r.index >= 0 && 
+        r.index < candidates.length &&
+        typeof r.score === 'number'
+      )
+      .slice(0, topK);
+
+    if (validRankings.length === 0) {
+      console.warn('⚠️ AI Re-ranking returned no valid indices, using original order');
+      return candidates.slice(0, topK).map(c => ({ ...c, rerankScore: 0.5 }));
+    }
+
+    return validRankings.map((r: { index: number; score: number }) => ({
+      ...candidates[r.index],
+      rerankScore: r.score,
+    }));
   } catch (error) {
     console.warn('⚠️ AI Re-ranking failed, using original order:', error);
     return candidates.slice(0, topK).map(c => ({ ...c, rerankScore: 0.5 }));
@@ -158,6 +217,211 @@ const STOP_WORDS_EN = new Set([
 ]);
 
 const STOP_WORDS = new Set([...STOP_WORDS_VI, ...STOP_WORDS_EN]);
+
+// ============================================================
+// 🇻🇳 VIETNAMESE TOKENIZATION (v4.3 - Workaround for BM25)
+// ============================================================
+
+/**
+ * Common Vietnamese compound words that should be kept together
+ * This helps Orama BM25 search work better with Vietnamese
+ * 
+ * v4.4 EXPANDED: Added many more common compounds for better coverage
+ * Categories: Technology, Education, Subjects, General Vietnamese
+ */
+const VIETNAMESE_COMPOUNDS = new Map([
+  // === TECHNOLOGY (Công nghệ) ===
+  ['lập trình', 'laptrinh'],
+  ['lập trình viên', 'laptrinh_vien'],
+  ['cơ sở dữ liệu', 'cosodulieudata'],
+  ['trí tuệ nhân tạo', 'trituenhantao_ai'],
+  ['học máy', 'hocmay_ml'],
+  ['học sâu', 'hocsau_deeplearning'],
+  ['mạng nơ-ron', 'mangneuron_nn'],
+  ['phần mềm', 'phanmem_software'],
+  ['phần cứng', 'phancung_hardware'],
+  ['ứng dụng', 'ungdung_app'],
+  ['giao diện', 'giaodien_ui'],
+  ['thuật toán', 'thuattoan_algorithm'],
+  ['biến số', 'bienso_variable'],
+  ['hàm số', 'hamso_function'],
+  ['vòng lặp', 'vonglap_loop'],
+  ['mảng', 'mang_array'],
+  ['đối tượng', 'doituong_object'],
+  ['kế thừa', 'kethua_inheritance'],
+  ['đa hình', 'dahinh_polymorphism'],
+  ['đóng gói', 'donggoi_encapsulation'],
+  ['trừu tượng', 'truutuong_abstraction'],
+  ['mã nguồn', 'manguon_sourcecode'],
+  ['mã nguồn mở', 'manguonmo_opensource'],
+  ['kiến trúc', 'kientruc_architecture'],
+  ['thiết kế', 'thietke_design'],
+  ['bảo mật', 'baomat_security'],
+  ['xác thực', 'xacthuc_authentication'],
+  ['phân quyền', 'phanquyen_authorization'],
+  ['máy chủ', 'maychu_server'],
+  ['người dùng', 'nguoidung_user'],
+  ['trình duyệt', 'trinhduyet_browser'],
+  ['khung công tác', 'khungcongtac_framework'],
+  ['thư viện', 'thuvien_library'],
+  
+  // === EDUCATION (Giáo dục) ===
+  ['kiểm tra', 'kiemtra_test'],
+  ['bài tập', 'baitap_exercise'],
+  ['câu hỏi', 'cauhoi_question'],
+  ['đáp án', 'dapan_answer'],
+  ['lộ trình', 'lotrinh_roadmap'],
+  ['học tập', 'hoctap_learning'],
+  ['ôn tập', 'ontap_review'],
+  ['luyện tập', 'luyentap_practice'],
+  ['bài kiểm tra', 'baikiemtra_quiz'],
+  ['bài trắc nghiệm', 'baitracnghiem_multiplechoice'],
+  ['trắc nghiệm', 'tracnghiem_quiz'],
+  ['thi thử', 'thithu_mocktest'],
+  ['điểm số', 'diemso_score'],
+  ['kết quả', 'ketqua_result'],
+  ['chứng chỉ', 'chungchi_certificate'],
+  ['khóa học', 'khoahoc_course'],
+  ['bài học', 'baihoc_lesson'],
+  ['giảng viên', 'giangvien_instructor'],
+  ['sinh viên', 'sinhvien_student'],
+  ['học sinh', 'hocsinh_student'],
+  
+  // === SUBJECTS (Môn học) ===
+  ['toán học', 'toanhoc_math'],
+  ['vật lý', 'vatly_physics'],
+  ['hóa học', 'hoahoc_chemistry'],
+  ['sinh học', 'sinhhoc_biology'],
+  ['lịch sử', 'lichsu_history'],
+  ['địa lý', 'dialy_geography'],
+  ['ngữ văn', 'nguvan_literature'],
+  ['tiếng anh', 'tienganh_english'],
+  ['tin học', 'tinhoc_it_informatics'],
+  ['công nghệ', 'congnghe_technology'],
+  ['kinh tế', 'kinhte_economics'],
+  ['triết học', 'triethoc_philosophy'],
+  ['tâm lý học', 'tamlyhoc_psychology'],
+  
+  // === GENERAL VIETNAMESE (Từ ghép thông dụng) ===
+  ['như thế nào', 'nhutuknao_how'],
+  ['tại sao', 'taisao_why'],
+  ['là gì', 'lagi_what'],
+  ['ở đâu', 'odau_where'],
+  ['bao nhiêu', 'baonhieu_howmuch'],
+  ['khi nào', 'khinao_when'],
+  ['thế nào', 'thenao_how'],
+  ['cách nào', 'cachnao_howto'],
+]);
+
+/**
+ * 🇻🇳 Vietnamese n-gram generation for better BM25 matching (v4.4 Enhanced)
+ * 
+ * Generates multiple n-gram types for robust Vietnamese search:
+ * - Word unigrams (original words)
+ * - Word bigrams (2 consecutive words - crucial for Vietnamese compound words)
+ * - Word trigrams (3 consecutive words - for longer phrases)
+ * - Character bi-grams (for typo tolerance)
+ * 
+ * WHY: Vietnamese has many compound words ("lập trình", "cơ sở dữ liệu")
+ * that need to be kept together for accurate BM25 scoring.
+ */
+export function generateVietnameseNgrams(text: string, charN: number = 2): string[] {
+  const normalized = text.toLowerCase().trim();
+  const ngrams: string[] = [];
+  
+  // 1. Word-level tokens (unigrams)
+  const words = normalized.split(/\s+/).filter(w => w.length > 0);
+  ngrams.push(...words);
+  
+  // 2. 🆕 Word-level BIGRAMS (critical for Vietnamese compound words!)
+  // "lập trình viên" → ["lập trình", "trình viên"]
+  for (let i = 0; i < words.length - 1; i++) {
+    ngrams.push(`${words[i]} ${words[i + 1]}`);
+  }
+  
+  // 3. 🆕 Word-level TRIGRAMS (for longer phrases)
+  // "cơ sở dữ liệu" → "cơ sở dữ", "sở dữ liệu"
+  for (let i = 0; i < words.length - 2; i++) {
+    ngrams.push(`${words[i]} ${words[i + 1]} ${words[i + 2]}`);
+  }
+  
+  // 4. Character n-grams for each word (helps with typos and partial matches)
+  for (const word of words) {
+    if (word.length >= charN) {
+      for (let i = 0; i <= word.length - charN; i++) {
+        ngrams.push(word.substring(i, i + charN));
+      }
+    }
+    // Also add trigrams for longer words
+    if (word.length >= 3) {
+      for (let i = 0; i <= word.length - 3; i++) {
+        ngrams.push(word.substring(i, i + 3));
+      }
+    }
+  }
+  
+  return [...new Set(ngrams)];
+}
+
+/**
+ * Preprocess Vietnamese text for better search
+ * - Normalizes compound words
+ * - Removes diacritics for fallback matching
+ * - Generates n-grams for fuzzy matching
+ */
+export function preprocessVietnameseText(text: string): {
+  original: string;
+  normalized: string;
+  noDiacritics: string;
+  compounds: string;
+  ngrams: string[];
+} {
+  const lower = text.toLowerCase();
+  
+  // Replace compound words with joined versions
+  let compounds = lower;
+  for (const [compound, joined] of VIETNAMESE_COMPOUNDS) {
+    compounds = compounds.replace(new RegExp(compound, 'gi'), joined);
+  }
+  
+  return {
+    original: text,
+    normalized: lower,
+    noDiacritics: removeVietnameseDiacritics(lower),
+    compounds,
+    ngrams: generateVietnameseNgrams(lower),
+  };
+}
+
+/**
+ * Enhanced Vietnamese keyword extraction
+ * Uses compound word detection and n-grams
+ */
+export function extractVietnameseKeywords(text: string): string[] {
+  const processed = preprocessVietnameseText(text);
+  const keywords: string[] = [];
+  
+  // Extract regular keywords
+  const basicKeywords = extractKeywords(processed.normalized);
+  keywords.push(...basicKeywords);
+  
+  // Add compound word versions
+  for (const [compound, joined] of VIETNAMESE_COMPOUNDS) {
+    if (processed.normalized.includes(compound)) {
+      keywords.push(joined);
+    }
+  }
+  
+  // Add no-diacritics versions for fallback
+  for (const kw of basicKeywords) {
+    const noDiac = removeVietnameseDiacritics(kw);
+    if (noDiac !== kw) {
+      keywords.push(noDiac);
+    }
+  }
+  
+  return [...new Set(keywords)];
+}
 
 /**
  * Remove Vietnamese diacritics for matching

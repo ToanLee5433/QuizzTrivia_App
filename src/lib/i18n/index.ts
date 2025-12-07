@@ -4,62 +4,71 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import Backend from 'i18next-http-backend';
 
 const CACHE_BUSTER = import.meta.env.DEV ? Date.now() : 1731754800000;
+const LANGUAGE_KEY = 'i18nextLng';
 
-// 🧹 Cleanup old i18n cache entries when localStorage is full
+// 🧹 Cleanup ALL i18n cache entries immediately on load
+// File i18n đã quá lớn (~6000 dòng), không nên cache vào localStorage nữa
 function cleanupI18nCache() {
   try {
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
+      // Only remove cache entries, NEVER remove language preference
       if (key?.startsWith('i18n_cache_')) {
         keysToRemove.push(key);
       }
     }
-    keysToRemove.forEach(key => localStorage.removeItem(key));
-    console.log(`[i18n] Cleaned up ${keysToRemove.length} old cache entries`);
+    if (keysToRemove.length > 0) {
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      console.log(`[i18n] Cleaned up ${keysToRemove.length} old cache entries`);
+    }
   } catch (e) {
     console.warn('[i18n] Failed to cleanup cache:', e);
   }
 }
 
-// 🔥 Safe localStorage setter with quota handling
-function safeSetLocalStorage(key: string, value: string): boolean {
+// 🔥 Ensure language preference is preserved
+// If no language is set, default to Vietnamese
+function ensureLanguagePreference(): string {
   try {
-    localStorage.setItem(key, value);
-    return true;
-  } catch (e: any) {
-    if (e?.name === 'QuotaExceededError') {
-      console.warn('[i18n] localStorage quota exceeded, cleaning up...');
-      cleanupI18nCache();
-      try {
-        localStorage.setItem(key, value);
-        return true;
-      } catch {
-        console.warn('[i18n] Still cannot save to localStorage after cleanup');
-        return false;
-      }
+    const savedLang = localStorage.getItem(LANGUAGE_KEY);
+    // Only accept 'vi' or 'en', default to 'vi' for Vietnamese app
+    if (savedLang === 'vi' || savedLang === 'en') {
+      return savedLang;
     }
-    return false;
+    // Default to Vietnamese if not set or invalid
+    localStorage.setItem(LANGUAGE_KEY, 'vi');
+    return 'vi';
+  } catch (e) {
+    return 'vi';
   }
 }
 
-// i18n configuration - using external locale files with offline support
+// 🔥 Run cleanup immediately on module load to free up localStorage
+cleanupI18nCache();
+
+// Get the language to use (preserved or default)
+const initialLanguage = ensureLanguagePreference();
+
+// i18n configuration - using external locale files
+// NOTE: We rely on browser HTTP cache, NOT localStorage cache (files too large)
 
 i18n
   .use(Backend)
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    // Remove inline resources - will use external files only
-    // Don't set lng here - let LanguageDetector handle it from localStorage
+    // 🔥 Set explicit language from preserved preference (defaults to 'vi')
+    lng: initialLanguage,
     fallbackLng: 'vi',
     // Use common and multiplayer namespaces from external files
     ns: ['common', 'multiplayer'],
     defaultNS: 'common',
     
     detection: {
-      order: ['localStorage', 'navigator', 'htmlTag'],
-      lookupLocalStorage: 'i18nextLng',
+      // localStorage FIRST, then navigator as fallback
+      order: ['localStorage', 'navigator'],
+      lookupLocalStorage: LANGUAGE_KEY,
       caches: ['localStorage']
     },
     
@@ -69,59 +78,15 @@ i18n
 
     backend: {
       loadPath: `/locales/{{lng}}/{{ns}}.json?v=${CACHE_BUSTER}`,
-      addPath: '/locales/{{lng}}/{{ns}}.json',
       
-      // 🔥 CRITICAL: Add request options for offline support
+      // 🔥 Use browser cache, NOT localStorage (files too large ~400KB+)
       requestOptions: {
         mode: 'cors',
         credentials: 'same-origin',
-        cache: 'default' // Use browser cache when available
-      },
-      
-      // 🔥 Custom loader with offline fallback
-      request: async (options: any, url: string, _payload: any, callback: any) => {
-        try {
-          // Try normal fetch first
-          const response = await fetch(url, {
-            method: options.method || 'GET',
-            mode: 'cors',
-            credentials: 'same-origin',
-            cache: 'default' // Use cache-first strategy
-          });
-          
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-          }
-          
-          const data = await response.json();
-          
-          // Cache in localStorage as backup (non-blocking, ignore errors)
-          const cacheKey = `i18n_cache_${url}`;
-          safeSetLocalStorage(cacheKey, JSON.stringify(data));
-          
-          callback(null, { status: 200, data });
-        } catch (error) {
-          console.warn(`[i18n] Failed to fetch ${url}, trying localStorage cache...`);
-          
-          // Fallback to localStorage cache
-          const cacheKey = `i18n_cache_${url}`;
-          try {
-            const cached = localStorage.getItem(cacheKey);
-            
-            if (cached) {
-              const data = JSON.parse(cached);
-              console.log(`[i18n] Using cached translation for ${url}`);
-              callback(null, { status: 200, data });
-              return;
-            }
-          } catch (e) {
-            console.warn('[i18n] Failed to read from cache:', e);
-          }
-          
-          // If no cache, return error
-          callback(error, { status: 500, data: null });
-        }
+        cache: 'default' // Browser handles caching efficiently
       }
+      // NOTE: Removed custom request handler that cached to localStorage
+      // Browser HTTP cache is sufficient and doesn't have quota limits
     },
 
     // Performance optimizations

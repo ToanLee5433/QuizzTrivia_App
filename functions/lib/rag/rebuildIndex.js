@@ -17,7 +17,7 @@ const admin = require("firebase-admin");
 const generative_ai_1 = require("@google/generative-ai");
 const storage_1 = require("firebase-admin/storage");
 const optimizedRAG_1 = require("./optimizedRAG");
-const EMBEDDING_MODEL = 'text-embedding-004';
+const EMBEDDING_MODEL = 'gemini-embedding-001';
 /**
  * Generate embedding for text
  */

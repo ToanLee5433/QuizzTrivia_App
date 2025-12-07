@@ -1,5 +1,5 @@
 /**
- * 🚀 RAG Cloud Function - Ask Question Endpoint v4.2
+ * 🚀 RAG Cloud Function - Ask Question Endpoint v4.3
  * 
  * Firebase Function for AI-powered question answering
  * with Contextual Query Rewriting support
@@ -12,7 +12,8 @@
  * - Conversation history support (v4.2)
  * - Contextual query rewriting
  * - Permission-aware content retrieval
- * - Rate limiting
+ * - Distributed Rate limiting via RTDB (v4.3)
+ * - AI timeout protection (v4.3)
  * - Comprehensive logging (no sensitive data)
  * 
  * Usage from client:
@@ -38,36 +39,119 @@ if (!admin.apps.length) {
   admin.initializeApp();
 }
 
-// Note: The ragFlow module will be available after building the main app
-// For now, we'll structure the function to import it
-// In production, you'll need to build the main app first and copy the ragFlow to functions
+// RTDB reference for distributed rate limiting
+const rtdb = admin.database();
+
+// Rate limit configuration
+const RATE_LIMIT_CONFIG = {
+  maxRequests: 20,      // Max requests per window
+  windowMs: 60 * 1000,  // 1 minute window
+  cleanupIntervalMs: 5 * 60 * 1000, // Cleanup old entries every 5 minutes
+};
 
 /**
- * Rate limiter helper (simple in-memory implementation)
- * In production, use Redis or Firestore for distributed rate limiting
+ * 🔥 Distributed Rate Limiter using RTDB (v4.3)
+ * 
+ * Benefits over in-memory:
+ * - Works across multiple Cloud Function instances
+ * - Persists across cold starts
+ * - Low cost (RTDB is cheaper for high-frequency ops)
+ * - Auto-cleanup of old entries
+ * 
+ * RTDB Structure:
+ * /rateLimits/rag/{userId}: { count: number, resetTime: number }
  */
-const rateLimitCache = new Map<string, { count: number; resetTime: number }>();
-
-function checkRateLimit(userId: string, maxRequests: number = 20, windowMs: number = 60000): boolean {
+async function checkRateLimitDistributed(
+  userId: string, 
+  maxRequests: number = RATE_LIMIT_CONFIG.maxRequests, 
+  windowMs: number = RATE_LIMIT_CONFIG.windowMs
+): Promise<{ allowed: boolean; remaining: number; resetTime: number }> {
   const now = Date.now();
-  const userLimit = rateLimitCache.get(userId);
-
-  if (!userLimit || now > userLimit.resetTime) {
-    // New window
-    rateLimitCache.set(userId, {
-      count: 1,
-      resetTime: now + windowMs,
+  const userRef = rtdb.ref(`rateLimits/rag/${userId}`);
+  
+  try {
+    // Use transaction to ensure atomic read-modify-write
+    const result = await userRef.transaction((currentData) => {
+      // No existing data or window expired
+      if (!currentData || now > currentData.resetTime) {
+        return {
+          count: 1,
+          resetTime: now + windowMs,
+          lastRequest: now,
+        };
+      }
+      
+      // Within window, increment count
+      return {
+        ...currentData,
+        count: currentData.count + 1,
+        lastRequest: now,
+      };
     });
-    return true;
+    
+    // Check if transaction was committed
+    if (!result.committed) {
+      functions.logger.warn('Rate limit transaction not committed, allowing request');
+      return { allowed: true, remaining: maxRequests, resetTime: now + windowMs };
+    }
+    
+    const data = result.snapshot.val();
+    
+    // Safety check for null data
+    if (!data || typeof data.count !== 'number') {
+      functions.logger.warn('Rate limit data is invalid, allowing request');
+      return { allowed: true, remaining: maxRequests, resetTime: now + windowMs };
+    }
+    
+    const allowed = data.count <= maxRequests;
+    const remaining = Math.max(0, maxRequests - data.count);
+    
+    return { allowed, remaining, resetTime: data.resetTime };
+  } catch (error) {
+    // Fallback: Allow request if RTDB fails (graceful degradation)
+    functions.logger.warn('Rate limit check failed, allowing request:', error);
+    return { allowed: true, remaining: maxRequests, resetTime: now + windowMs };
   }
-
-  if (userLimit.count >= maxRequests) {
-    return false;
-  }
-
-  userLimit.count++;
-  return true;
 }
+
+/**
+ * Cleanup old rate limit entries (called periodically)
+ * Removes entries older than 2x window time
+ */
+async function cleanupOldRateLimits(): Promise<void> {
+  const cutoffTime = Date.now() - (RATE_LIMIT_CONFIG.windowMs * 2);
+  
+  try {
+    const rateLimitsRef = rtdb.ref('rateLimits/rag');
+    const snapshot = await rateLimitsRef.orderByChild('resetTime').endAt(cutoffTime).once('value');
+    
+    const updates: Record<string, null> = {};
+    snapshot.forEach((child) => {
+      updates[child.key!] = null;
+    });
+    
+    if (Object.keys(updates).length > 0) {
+      await rateLimitsRef.update(updates);
+      functions.logger.info(`Cleaned up ${Object.keys(updates).length} old rate limit entries`);
+    }
+  } catch (error) {
+    functions.logger.warn('Rate limit cleanup failed:', error);
+  }
+}
+
+/**
+ * 🕐 Scheduled Cloud Function for RTDB cleanup
+ * Run every 5 minutes via Cloud Scheduler
+ * Better than probabilistic cleanup (doesn't impact user latency)
+ */
+export const cleanupRateLimitsScheduled = functions.region('us-central1').runWith({
+  memory: '128MB',
+  timeoutSeconds: 60,
+}).pubsub.schedule('every 5 minutes').onRun(async () => {
+  functions.logger.info('Running scheduled rate limit cleanup');
+  await cleanupOldRateLimits();
+  return null;
+});
 
 /**
  * Validate question input
@@ -90,11 +174,22 @@ function validateQuestion(question: unknown): string {
   return trimmed;
 }
 
+// AI operation timeout (15 seconds for better UX)
+// Users typically leave after 8-10s without response
+const AI_TIMEOUT_MS = 15000;
+
 /**
- * Main Cloud Function: Ask RAG
+ * Main Cloud Function: Ask RAG v4.3
+ * 
+ * Improvements:
+ * - Distributed rate limiting via RTDB
+ * - AI timeout protection
+ * - Better error handling
  */
 export const askRAG = functions.region('us-central1').runWith({
-  memory: '256MB',
+  // v4.3.1: Increased from 256MB to prevent OOM with large indexes
+  // 2025 standard: Node.js AI SDKs + JSON loading require more RAM
+  memory: '512MB',
   timeoutSeconds: 60,
   maxInstances: 20,
   secrets: ['GOOGLE_AI_API_KEY'],
@@ -111,12 +206,14 @@ export const askRAG = functions.region('us-central1').runWith({
       const userId = context.auth.uid;
       functions.logger.info(`RAG request from user: ${userId.substring(0, 8)}...`);
 
-      // 2. Rate limiting
-      if (!checkRateLimit(userId)) {
-        functions.logger.warn(`Rate limit exceeded for user: ${userId.substring(0, 8)}...`);
+      // 2. Distributed Rate limiting via RTDB (v4.3)
+      const rateLimitResult = await checkRateLimitDistributed(userId);
+      if (!rateLimitResult.allowed) {
+        const resetIn = Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000);
+        functions.logger.warn(`Rate limit exceeded for user: ${userId.substring(0, 8)}..., reset in ${resetIn}s`);
         throw new functions.https.HttpsError(
           'resource-exhausted',
-          'Too many requests. Please try again later.'
+          `Too many requests. Please try again in ${resetIn} seconds. (${rateLimitResult.remaining} remaining)`
         );
       }
 
@@ -127,10 +224,10 @@ export const askRAG = functions.region('us-central1').runWith({
       const validatedTopK = typeof topK === 'number' && topK > 0 && topK <= 10 ? topK : 4;
       const validatedLang = targetLang === 'en' ? 'en' : 'vi';
       
-      // Validate history (v4.2)
-      const validatedHistory = Array.isArray(history) 
+      // Validate history (v4.3 - use pairs for context continuity)
+      // Take last 6 messages (3 pairs of user-assistant) to avoid cutting mid-conversation
+      let validatedHistory = Array.isArray(history) 
         ? history
-            .slice(-5) // Only last 5 messages
             .filter((m: any) => 
               m && 
               typeof m.role === 'string' && 
@@ -142,6 +239,13 @@ export const askRAG = functions.region('us-central1').runWith({
               content: m.content.substring(0, 500), // Truncate long messages
             }))
         : [];
+      
+      // Ensure even number of messages (pairs) for context continuity
+      // This prevents cutting off user's question without AI's answer
+      if (validatedHistory.length % 2 !== 0) {
+        validatedHistory = validatedHistory.slice(1); // Remove oldest to make even
+      }
+      validatedHistory = validatedHistory.slice(-6); // Max 3 pairs
 
       functions.logger.info('Request validated', {
         questionLength: validatedQuestion.length,
@@ -154,13 +258,27 @@ export const askRAG = functions.region('us-central1').runWith({
       // Uses: Global Caching, Fast Path, Hybrid Search, AI Reranking, Query Contextualization
       const { askQuestion } = await import('./optimizedRAG');
       
-      const result = await askQuestion({
-        question: validatedQuestion,
-        topK: validatedTopK,
-        targetLang: validatedLang,
-        userId,  // Pass userId for analytics
-        history: validatedHistory,  // NEW v4.2: Pass conversation history
+      // Create timeout promise
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => {
+          reject(new functions.https.HttpsError(
+            'deadline-exceeded',
+            'Request timed out. Please try a simpler question.'
+          ));
+        }, AI_TIMEOUT_MS);
       });
+      
+      // Race between AI call and timeout
+      const result = await Promise.race([
+        askQuestion({
+          question: validatedQuestion,
+          topK: validatedTopK,
+          targetLang: validatedLang,
+          userId,  // Pass userId for analytics
+          history: validatedHistory,  // NEW v4.2: Pass conversation history
+        }),
+        timeoutPromise,
+      ]);
 
       // 5. Log metrics (no sensitive data)
       functions.logger.info('RAG request completed', {

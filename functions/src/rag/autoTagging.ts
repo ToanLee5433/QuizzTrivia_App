@@ -72,7 +72,7 @@ interface VectorIndex {
 // 🧠 GEMINI TAG GENERATION
 // ============================================================
 
-const EMBEDDING_MODEL = 'text-embedding-004';
+const EMBEDDING_MODEL = 'gemini-embedding-001';
 const CHAT_MODEL = 'gemini-2.5-flash-lite';
 
 /**
@@ -277,16 +277,25 @@ async function updateIndexWithTags(
 
 /**
  * Add new quiz to index (if not exists)
+ * v4.3.1: Auto-create empty index if not exists
  */
 async function addQuizToIndex(
   quizId: string,
   quizData: QuizData,
   tags: string[]
 ): Promise<void> {
-  const index = await loadCurrentIndex();
+  let index = await loadCurrentIndex();
+  
+  // v4.3.1: Create empty index if not exists
   if (!index) {
-    console.log('⚠️ No index exists, skip adding quiz');
-    return;
+    console.log('⚠️ No index exists, creating new index...');
+    index = {
+      version: '1.0.0',
+      createdAt: Date.now(),
+      totalChunks: 0,
+      chunks: [],
+      sources: {},
+    };
   }
   
   // Check if quiz already indexed

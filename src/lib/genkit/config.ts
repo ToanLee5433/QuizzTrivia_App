@@ -6,7 +6,7 @@
  * API keys should NOT be stored in frontend code
  * 
  * Features:
- * - Google AI provider (Gemini 2.5 Flash Lite + text-embedding-004)
+ * - Google AI provider (Gemini 2.5 Flash Lite + gemini-embedding-001)
  * - Permission-aware retrieval (public + password chunks)
  * - Citation extraction
  * - Vietnamese language support
@@ -25,7 +25,7 @@ export const GENKIT_CONFIG = {
   chatModel: 'gemini-2.5-flash-lite',
   
   // Model for embeddings
-  embeddingModel: 'text-embedding-004',
+  embeddingModel: 'gemini-embedding-001',
   
   // Generation parameters (optimized for gemini-2.5-flash-lite)
   // Model limits: RPM 4000, TPM 4M, max output 65536 tokens

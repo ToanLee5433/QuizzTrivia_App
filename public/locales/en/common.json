@@ -881,7 +881,15 @@
       "displayNameRequired": "Display name is required",
       "passwordMismatch": "Passwords don't match",
       "passwordTooShort": "Password too short (min 6 characters)",
-      "termsRequired": "You must agree to terms"
+      "termsRequired": "You must agree to terms",
+      "password": {
+        "minLength": "Password must be at least 8 characters",
+        "uppercase": "Password must contain at least 1 uppercase letter",
+        "lowercase": "Password must contain at least 1 lowercase letter",
+        "number": "Password must contain at least 1 number",
+        "special": "Password must contain at least 1 special character (!@#$%^&*...)",
+        "hint": "Use at least 8 characters, including numbers, lowercase, uppercase and special characters"
+      }
     },
     "roleSelection": {
       "title": "Choose your role",
@@ -5776,6 +5784,11 @@
         "viewHistory": "View quiz history"
       }
     }
+  },
+  "rag": {
+    "totalAttempts": "Attempts",
+    "averageScore": "Avg. Score",
+    "averageRating": "Rating"
   },
   "stats": {
     "difficultyDistribution": "Difficulty Distribution",

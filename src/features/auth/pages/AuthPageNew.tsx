@@ -82,8 +82,25 @@ const AuthPage: React.FC = () => {
         return false;
       }
 
-      if (formData.password.length < 6) {
-        toast.error(t('auth.validation.passwordTooShort'));
+      // Strong password validation: 8+ chars, uppercase, lowercase, number, special char
+      if (formData.password.length < 8) {
+        toast.error(t('auth.validation.password.minLength'));
+        return false;
+      }
+      if (!/[A-Z]/.test(formData.password)) {
+        toast.error(t('auth.validation.password.uppercase'));
+        return false;
+      }
+      if (!/[a-z]/.test(formData.password)) {
+        toast.error(t('auth.validation.password.lowercase'));
+        return false;
+      }
+      if (!/[0-9]/.test(formData.password)) {
+        toast.error(t('auth.validation.password.number'));
+        return false;
+      }
+      if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(formData.password)) {
+        toast.error(t('auth.validation.password.special'));
         return false;
       }
 
@@ -383,6 +400,12 @@ const AuthPage: React.FC = () => {
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
+            {/* Password hint - only show for register */}
+            {!isLogin && (
+              <p className="mt-1 text-xs text-gray-500">
+                {t('auth.validation.password.hint')}
+              </p>
+            )}
           </div>
 
           {/* Confirm Password - Only for register */}

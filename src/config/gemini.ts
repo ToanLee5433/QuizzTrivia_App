@@ -21,7 +21,7 @@ export const GEMINI_CONFIG = {
   // Model configuration
   MODEL: {
     DEFAULT: 'gemini-2.5-flash-lite',
-    EMBEDDING: 'text-embedding-004'
+    EMBEDDING: 'gemini-embedding-001'
   },
   
   // Rate limits for gemini-2.5-flash-lite (Updated 2025-11)

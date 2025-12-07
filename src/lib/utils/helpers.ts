@@ -148,32 +148,45 @@ export const isValidEmail = (email: string): boolean => {
 
 /**
  * Validate password strength
+ * Requirements: minimum 8 characters, including number, lowercase, uppercase, and special character
  */
 export const validatePassword = (password: string): {
   isValid: boolean;
   errors: string[];
+  errorKeys: string[]; // i18n keys for errors
 } => {
   const errors: string[] = [];
+  const errorKeys: string[] = [];
   
-  if (password.length < 6) {
-    errors.push('Mật khẩu phải có ít nhất 6 ký tự');
+  if (password.length < 8) {
+    errors.push('Mật khẩu phải có ít nhất 8 ký tự');
+    errorKeys.push('auth.validation.password.minLength');
   }
   
   if (!/[A-Z]/.test(password)) {
     errors.push('Mật khẩu phải có ít nhất 1 chữ hoa');
+    errorKeys.push('auth.validation.password.uppercase');
   }
   
   if (!/[a-z]/.test(password)) {
     errors.push('Mật khẩu phải có ít nhất 1 chữ thường');
+    errorKeys.push('auth.validation.password.lowercase');
   }
   
   if (!/[0-9]/.test(password)) {
     errors.push('Mật khẩu phải có ít nhất 1 số');
+    errorKeys.push('auth.validation.password.number');
+  }
+  
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password)) {
+    errors.push('Mật khẩu phải có ít nhất 1 ký tự đặc biệt');
+    errorKeys.push('auth.validation.password.special');
   }
   
   return {
     isValid: errors.length === 0,
     errors,
+    errorKeys,
   };
 };
 

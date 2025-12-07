@@ -87,7 +87,7 @@ const oramaSchema = {
   category: 'string',
   difficulty: 'string',
   tags: 'string[]',
-  embedding: 'vector[768]', // text-embedding-004 outputs 768 dimensions
+  embedding: 'vector[768]', // gemini-embedding-001 outputs 768 dimensions
 } as const;
 
 // ============================================================
@@ -121,8 +121,10 @@ export async function initializeOramaFromIndex(
     schema: oramaSchema,
   });
   
-  // Insert all chunks
+  // Insert all chunks with error tracking
   let insertedCount = 0;
+  const failedChunks: string[] = [];
+  
   for (const chunk of jsonIndex.chunks) {
     try {
       await insert(db, {
@@ -139,7 +141,15 @@ export async function initializeOramaFromIndex(
       insertedCount++;
     } catch (error) {
       console.error(`Failed to insert chunk ${chunk.chunkId}:`, error);
+      failedChunks.push(chunk.chunkId);
     }
+  }
+  
+  // v4.3.1: Fail if too many chunks failed to insert (>5%)
+  const failureRate = failedChunks.length / jsonIndex.chunks.length;
+  if (failureRate > 0.05) {
+    console.error(`❌ Too many failed inserts: ${failedChunks.length}/${jsonIndex.chunks.length} (${(failureRate * 100).toFixed(1)}%)`);
+    throw new Error(`Orama initialization failed: ${failedChunks.length} chunks failed to insert`);
   }
   
   // Cache the instance
@@ -147,7 +157,8 @@ export async function initializeOramaFromIndex(
   globalOramaLoadTime = Date.now();
   
   const duration = Date.now() - startTime;
-  console.log(`✅ Orama DB initialized: ${insertedCount} chunks in ${duration}ms`);
+  console.log(`✅ Orama DB initialized: ${insertedCount} chunks in ${duration}ms` + 
+    (failedChunks.length > 0 ? ` (${failedChunks.length} failed)` : ''));
   
   return db;
 }

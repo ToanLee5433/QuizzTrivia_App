@@ -325,6 +325,25 @@
           }
         }
       }
+    },
+    
+    "rateLimits": {
+      "rag": {
+        "$userId": {
+          ".read": false,
+          ".write": false,
+          "count": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100"
+          },
+          "resetTime": {
+            ".validate": "newData.isNumber()"
+          },
+          "lastRequest": {
+            ".validate": "newData.isNumber()"
+          }
+        },
+        ".indexOn": ["resetTime"]
+      }
     }
   }
 }

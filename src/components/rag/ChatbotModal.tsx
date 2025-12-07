@@ -36,6 +36,9 @@ interface ChatbotModalProps {
   onClose: () => void;
 }
 
+// v4.3.1: Constants for memory management
+const MAX_MESSAGES = 50; // Limit messages to prevent memory leaks
+
 export function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
   const { t } = useTranslation();
   const currentUser = auth.currentUser;
@@ -45,6 +48,29 @@ export function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // v4.3.1: Cleanup on unmount or close
+  useEffect(() => {
+    return () => {
+      // Cancel any pending requests when component unmounts
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
+  // v4.3.1: Clear messages when modal closes to free memory
+  useEffect(() => {
+    if (!isOpen) {
+      // Keep last 10 messages for context when reopening
+      setMessages(prev => prev.slice(-10));
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    }
+  }, [isOpen]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -62,6 +88,12 @@ export function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading || !currentUser) return;
 
+    // v4.3.1: Cancel any previous pending request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
@@ -69,7 +101,13 @@ export function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
       timestamp: Date.now(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    // v4.3.1: Limit messages to prevent memory leaks
+    setMessages(prev => {
+      const updated = [...prev, userMessage];
+      return updated.length > MAX_MESSAGES 
+        ? updated.slice(-MAX_MESSAGES) 
+        : updated;
+    });
     setInput('');
     setIsLoading(true);
     setError(null);
@@ -97,6 +135,11 @@ export function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
         targetLang: 'vi'
       });
       
+      // v4.3.1: Check if request was aborted
+      if (abortControllerRef.current?.signal.aborted) {
+        return;
+      }
+      
       const responseData = result.data as { success: boolean; data: any };
       
       if (!responseData.success) {
@@ -120,13 +163,24 @@ export function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
         processingTime: aiResponse.processingTime || 0,
       };
 
-      setMessages(prev => [...prev, assistantMessage]);
+      // v4.3.1: Limit messages when adding assistant response
+      setMessages(prev => {
+        const updated = [...prev, assistantMessage];
+        return updated.length > MAX_MESSAGES 
+          ? updated.slice(-MAX_MESSAGES) 
+          : updated;
+      });
 
     } catch (err) {
+      // v4.3.1: Don't show error if request was aborted
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
       console.error('Error sending message:', err);
       setError('Đã xảy ra lỗi. Vui lòng thử lại sau.');
     } finally {
       setIsLoading(false);
+      abortControllerRef.current = null;
     }
   };
 

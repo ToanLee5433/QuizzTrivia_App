@@ -881,7 +881,15 @@
       "displayNameRequired": "Tên hiển thị là bắt buộc",
       "passwordMismatch": "Mật khẩu không khớp",
       "passwordTooShort": "Mật khẩu quá ngắn (tối thiểu 6 ký tự)",
-      "termsRequired": "Bạn phải đồng ý với điều khoản"
+      "termsRequired": "Bạn phải đồng ý với điều khoản",
+      "password": {
+        "minLength": "Mật khẩu phải có ít nhất 8 ký tự",
+        "uppercase": "Mật khẩu phải có ít nhất 1 chữ hoa",
+        "lowercase": "Mật khẩu phải có ít nhất 1 chữ thường",
+        "number": "Mật khẩu phải có ít nhất 1 số",
+        "special": "Mật khẩu phải có ít nhất 1 ký tự đặc biệt (!@#$%^&*...)",
+        "hint": "Sử dụng tối thiểu 8 ký tự, bao gồm số, chữ thường, chữ in hoa và ký tự đặc biệt"
+      }
     },
     "roleSelection": {
       "title": "Chọn vai trò của bạn",
@@ -5776,6 +5784,11 @@
         "viewHistory": "Xem lịch sử làm bài"
       }
     }
+  },
+  "rag": {
+    "totalAttempts": "Lượt làm",
+    "averageScore": "Điểm trung bình",
+    "averageRating": "Đánh giá"
   },
   "stats": {
     "difficultyDistribution": "Phân bố độ khó",
