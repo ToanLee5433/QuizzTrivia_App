@@ -1076,13 +1076,12 @@
       "topPerformers": "Most Popular Quizzes",
       "timeScoreStats": "Time & Score Statistics",
       "avgTimeLimit": "Avg Time/Question",
-      "avgPassingScore": "Avg Passing Score",
       "avgQuestions": "Avg Questions/Quiz",
       "avgScoreAll": "Overall Avg Score",
-      "approvedRatio": "Approved/Total"
+      "approvedRatio": "Approved/Total",
+      "totalPlaysAll": "Total Plays"
     },
     "timeLimit": "Time Limit",
-    "passingScore": "Passing Score",
     "exportSuccess": "Exported successfully!",
     "exportCSV": "Export CSV",
     "colors": {

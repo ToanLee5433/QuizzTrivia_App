@@ -61,7 +61,6 @@ interface Quiz {
   creatorName?: string;
   status: string;
   timeLimit?: number;
-  passingScore?: number;
   likes?: number;
   rating?: number;
   tags?: string[];
@@ -278,8 +277,7 @@ const CategoryManagement: React.FC = () => {
           createdBy: data.createdBy || '',
           creatorName,
           status: data.status || 'approved',
-          timeLimit: data.settings?.timeLimit || data.timeLimit || 30,
-          passingScore: data.settings?.passingScore || data.passingScore || 60,
+          timeLimit: data.timeLimit || data.settings?.timeLimit || 0,
           likes: data.likes || 0,
           rating: data.rating || 0,
           tags: data.tags || []
@@ -965,7 +963,7 @@ const CategoryManagement: React.FC = () => {
                           <div 
                             key={quiz.id}
                             className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-lg hover:border-purple-200 transition-all cursor-pointer group"
-                            onClick={() => navigate(`/quiz-preview/${quiz.id}`)}
+                            onClick={() => navigate(`/quiz/${quiz.id}/preview`)}
                           >
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex-1 min-w-0 mr-2">
@@ -1040,7 +1038,7 @@ const CategoryManagement: React.FC = () => {
                         onClick={() => {
                           if (!selectedCategory.quizzes?.length) return;
                           const csvContent = [
-                            ['ID', 'Tên Quiz', 'Tác giả', 'Số câu', 'Lượt chơi', 'Điểm TB', 'Độ khó', 'Trạng thái', 'Thời gian', 'Điểm đậu', 'Ngày tạo'].join(','),
+                            ['ID', 'Tên Quiz', 'Tác giả', 'Số câu', 'Lượt chơi', 'Điểm TB', 'Độ khó', 'Trạng thái', 'Thời gian (s)', 'Ngày tạo'].join(','),
                             ...selectedCategory.quizzes.map(q => [
                               q.id,
                               `"${q.title.replace(/"/g, '""')}"`,
@@ -1050,8 +1048,7 @@ const CategoryManagement: React.FC = () => {
                               q.avgScore || 0,
                               q.difficulty || 'medium',
                               q.status,
-                              q.timeLimit || 30,
-                              q.passingScore || 60,
+                              q.timeLimit || 0,
                               q.createdAt.toLocaleDateString('vi-VN')
                             ].join(','))
                           ].join('\n');
@@ -1113,7 +1110,7 @@ const CategoryManagement: React.FC = () => {
                           <div 
                             key={quiz.id}
                             className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md hover:border-purple-200 transition-all cursor-pointer"
-                            onClick={() => navigate(`/quiz-preview/${quiz.id}`)}
+                            onClick={() => navigate(`/quiz/${quiz.id}/preview`)}
                           >
                             <div className="flex items-start gap-4">
                               <span className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 font-bold shrink-0">
@@ -1154,12 +1151,11 @@ const CategoryManagement: React.FC = () => {
                                   <span className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-lg">
                                     <Play className="w-3 h-3" /> {quiz.playCount.toLocaleString()} {t('plays')}
                                   </span>
-                                  <span className="flex items-center gap-1 bg-blue-50 text-blue-600 px-2 py-1 rounded-lg" title={t('categories.timeLimit', 'Thời gian')}>
-                                    ⏱️ {quiz.timeLimit || 30}s
-                                  </span>
-                                  <span className="flex items-center gap-1 bg-purple-50 text-purple-600 px-2 py-1 rounded-lg" title={t('categories.passingScore', 'Điểm đậu')}>
-                                    🎯 {quiz.passingScore || 60}%
-                                  </span>
+                                  {(quiz.timeLimit ?? 0) > 0 && (
+                                    <span className="flex items-center gap-1 bg-blue-50 text-blue-600 px-2 py-1 rounded-lg" title={t('categories.timeLimit', 'Thời gian')}>
+                                      ⏱️ {quiz.timeLimit}s
+                                    </span>
+                                  )}
                                   {(quiz.avgScore ?? 0) > 0 && (
                                     <span className="flex items-center gap-1 bg-amber-100 text-amber-700 px-2 py-1 rounded-lg">
                                       <Award className="w-3 h-3" /> {quiz.avgScore}%
@@ -1279,22 +1275,23 @@ const CategoryManagement: React.FC = () => {
                       const quizzes = selectedCategory.quizzes || [];
                       if (quizzes.length === 0) return <p className="text-gray-500 text-center py-4">{t('categories.noQuizzesInCategory')}</p>;
                       
-                      const avgTimeLimit = Math.round(quizzes.reduce((acc, q) => acc + (q.timeLimit || 30), 0) / quizzes.length);
-                      const avgPassingScore = Math.round(quizzes.reduce((acc, q) => acc + (q.passingScore || 60), 0) / quizzes.length);
+                      const quizzesWithTime = quizzes.filter(q => q.timeLimit && q.timeLimit > 0);
+                      const avgTimeLimit = quizzesWithTime.length > 0 
+                        ? Math.round(quizzesWithTime.reduce((acc, q) => acc + (q.timeLimit || 0), 0) / quizzesWithTime.length) 
+                        : 0;
                       const avgQuestions = Math.round(quizzes.reduce((acc, q) => acc + q.questionCount, 0) / quizzes.length);
                       const totalQuestions = quizzes.reduce((acc, q) => acc + q.questionCount, 0);
                       const avgScoreAll = Math.round(quizzes.reduce((acc, q) => acc + (q.avgScore || 0), 0) / quizzes.length);
+                      const totalPlays = quizzes.reduce((acc, q) => acc + q.playCount, 0);
                       
                       return (
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                          <div className="bg-blue-50 rounded-xl p-4 text-center">
-                            <p className="text-2xl font-bold text-blue-600">{avgTimeLimit}s</p>
-                            <p className="text-xs text-blue-600 mt-1">{t('categories.analytics.avgTimeLimit', 'TB thời gian/câu')}</p>
-                          </div>
-                          <div className="bg-purple-50 rounded-xl p-4 text-center">
-                            <p className="text-2xl font-bold text-purple-600">{avgPassingScore}%</p>
-                            <p className="text-xs text-purple-600 mt-1">{t('categories.analytics.avgPassingScore', 'TB điểm đậu')}</p>
-                          </div>
+                          {avgTimeLimit > 0 && (
+                            <div className="bg-blue-50 rounded-xl p-4 text-center">
+                              <p className="text-2xl font-bold text-blue-600">{avgTimeLimit}s</p>
+                              <p className="text-xs text-blue-600 mt-1">{t('categories.analytics.avgTimeLimit', 'TB thời gian/câu')}</p>
+                            </div>
+                          )}
                           <div className="bg-indigo-50 rounded-xl p-4 text-center">
                             <p className="text-2xl font-bold text-indigo-600">{avgQuestions}</p>
                             <p className="text-xs text-indigo-600 mt-1">{t('categories.analytics.avgQuestions', 'TB câu hỏi/quiz')}</p>
@@ -1306,6 +1303,10 @@ const CategoryManagement: React.FC = () => {
                           <div className="bg-amber-50 rounded-xl p-4 text-center">
                             <p className="text-2xl font-bold text-amber-600">{avgScoreAll}%</p>
                             <p className="text-xs text-amber-600 mt-1">{t('categories.analytics.avgScoreAll', 'Điểm TB chung')}</p>
+                          </div>
+                          <div className="bg-purple-50 rounded-xl p-4 text-center">
+                            <p className="text-2xl font-bold text-purple-600">{totalPlays.toLocaleString()}</p>
+                            <p className="text-xs text-purple-600 mt-1">{t('categories.analytics.totalPlaysAll', 'Tổng lượt chơi')}</p>
                           </div>
                           <div className="bg-cyan-50 rounded-xl p-4 text-center">
                             <p className="text-2xl font-bold text-cyan-600">
@@ -1332,7 +1333,7 @@ const CategoryManagement: React.FC = () => {
                             <div 
                               key={quiz.id}
                               className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 cursor-pointer transition-colors"
-                              onClick={() => navigate(`/quiz-preview/${quiz.id}`)}
+                              onClick={() => navigate(`/quiz/${quiz.id}/preview`)}
                             >
                               <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${
                                 idx === 0 ? 'bg-yellow-400 text-yellow-900' :
