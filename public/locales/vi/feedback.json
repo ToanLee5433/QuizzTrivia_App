@@ -1,0 +1,148 @@
+{
+  "title": "Phản hồi về ứng dụng",
+  "subtitle": "Giúp chúng tôi cải thiện hệ thống",
+  "form": {
+    "title": "Gửi phản hồi về ứng dụng",
+    "subject": "Tiêu đề",
+    "subjectPlaceholder": "Ví dụ: Lỗi không thể tạo quiz mới",
+    "description": "Mô tả ngắn gọn",
+    "descriptionPlaceholder": "Mô tả chi tiết vấn đề bạn gặp phải hoặc ý tưởng của bạn...",
+    "richDescription": "Mô tả chi tiết (Tùy chọn)",
+    "richDescriptionPlaceholder": "Bạn có thể định dạng văn bản, thêm danh sách, màu sắc...",
+    "richDescriptionHelp": "Sử dụng trình soạn thảo để định dạng nội dung chi tiết hơn",
+    "type": "Loại phản hồi",
+    "priority": "Mức độ ưu tiên",
+    "screenshots": "Ảnh minh họa (Tối đa 5 ảnh, mỗi ảnh < 5MB)",
+    "uploadScreenshots": "Chọn ảnh",
+    "dropFiles": "Thả file vào đây hoặc click để tải lên",
+    "maxFiles": "Tối đa 5 hình ảnh",
+    "submit": "Gửi phản hồi",
+    "submitting": "Đang gửi...",
+    "infoTitle": "Lưu ý khi gửi phản hồi:",
+    "infoItem1": "Mô tả rõ ràng, chi tiết vấn đề bạn gặp phải",
+    "infoItem2": "Đính kèm ảnh chụp màn hình nếu có thể",
+    "infoItem3": "Admin sẽ xem xét và phản hồi trong 24-48 giờ",
+    "infoItem4": "Bạn có thể xem trạng thái phản hồi trong phần thông báo"
+  },
+  "types": {
+    "bug": "Báo lỗi",
+    "feature": "Yêu cầu tính năng",
+    "improvement": "Cải tiến",
+    "question": "Câu hỏi",
+    "other": "Khác"
+  },
+  "priority": {
+    "low": "Thấp",
+    "medium": "Trung bình",
+    "high": "Cao",
+    "critical": "Khẩn cấp"
+  },
+  "status": {
+    "pending": "Chờ xử lý",
+    "inProgress": "Đang xử lý",
+    "in-progress": "Đang xử lý",
+    "resolved": "Đã giải quyết",
+    "closed": "Đã đóng"
+  },
+  "success": {
+    "submitted": "Gửi phản hồi thành công! Cảm ơn bạn đã đóng góp.",
+    "updated": "Cập nhật phản hồi thành công!",
+    "statusUpdated": "Cập nhật trạng thái thành công!"
+  },
+  "errors": {
+    "subjectRequired": "Vui lòng nhập tiêu đề",
+    "subjectMinLength": "Tiêu đề phải có ít nhất 10 ký tự",
+    "descriptionRequired": "Vui lòng nhập nội dung phản hồi",
+    "descriptionMinLength": "Nội dung phải có ít nhất 20 ký tự",
+    "submitFailed": "Không thể gửi phản hồi. Vui lòng thử lại.",
+    "loadFailed": "Tải danh sách phản hồi thất bại",
+    "updateFailed": "Cập nhật phản hồi thất bại",
+    "uploadFailed": "Tải ảnh lên thất bại",
+    "maxFilesExceeded": "Chỉ được tải tối đa 5 hình ảnh",
+    "invalidFileType": "Chỉ chấp nhận file hình ảnh",
+    "fileTooLarge": "File {{filename}} vượt quá 5MB",
+    "loginRequired": "Bạn cần đăng nhập để gửi phản hồi"
+  },
+  "management": {
+    "title": "Phản hồi về ứng dụng",
+    "subtitle": "Xem và quản lý phản hồi từ người dùng",
+    "filters": "Bộ lọc",
+    "searchPlaceholder": "Tìm kiếm theo tiêu đề, mô tả, người dùng, email...",
+    "allStatuses": "Tất cả trạng thái",
+    "allTypes": "Tất cả loại",
+    "allPriorities": "Tất cả mức độ",
+    "date": {
+      "all": "Tất cả thời gian",
+      "today": "Hôm nay",
+      "week": "Tuần này",
+      "month": "Tháng này"
+    },
+    "showing": "Hiển thị {{count}} trong số {{total}} phản hồi",
+    "noFeedback": "Không tìm thấy phản hồi nào",
+    "attachments": "tệp đính kèm"
+  },
+  "stats": {
+    "total": "Tổng số",
+    "pending": "Chờ xử lý",
+    "inProgress": "Đang xử lý",
+    "resolved": "Đã giải quyết",
+    "closed": "Đã đóng"
+  },
+  "detail": {
+    "title": "Chi tiết phản hồi",
+    "user": "Người dùng",
+    "email": "Email",
+    "createdAt": "Ngày tạo",
+    "updatedAt": "Cập nhật lần cuối",
+    "subject": "Tiêu đề",
+    "description": "Mô tả",
+    "detailedDescription": "Mô tả chi tiết",
+    "screenshots": "Ảnh chụp màn hình",
+    "adminSection": "Thao tác quản trị",
+    "status": "Trạng thái",
+    "priority": "Mức độ ưu tiên",
+    "adminResponse": "Phản hồi của quản trị viên",
+    "responsePlaceholder": "Nhập phản hồi của bạn cho người dùng...",
+    "previousResponse": "Phản hồi trước đó",
+    "respondedBy": "Phản hồi bởi {{name}} vào lúc {{date}}"
+  },
+  "table": {
+    "user": "Người dùng",
+    "subject": "Tiêu đề",
+    "type": "Loại",
+    "priority": "Mức độ",
+    "status": "Trạng thái",
+    "date": "Ngày",
+    "actions": "Thao tác"
+  },
+  "actions": {
+    "view": "Xem"
+  },
+  "noFeedbacks": "Chưa có phản hồi nào",
+  "type": {
+    "bug": "Lỗi",
+    "feature": "Tính năng",
+    "improvement": "Cải tiến",
+    "question": "Câu hỏi",
+    "other": "Khác"
+  },
+  "filters": {
+    "search": "Tìm kiếm phản hồi...",
+    "allStatus": "Tất cả trạng thái",
+    "allPriority": "Tất cả mức độ"
+  },
+  "notifications": {
+    "statusChanged": {
+      "title": "Cập nhật trạng thái phản hồi",
+      "body": "Phản hồi '{{subject}}' của bạn đã được chuyển sang trạng thái {{status}}",
+      "pending": "chờ xử lý",
+      "inProgress": "đang xử lý",
+      "resolved": "đã giải quyết",
+      "closed": "đã đóng"
+    },
+    "adminResponse": {
+      "title": "Phản hồi từ quản trị viên",
+      "body": "Quản trị viên đã phản hồi cho phản hồi của bạn: {{subject}}"
+    }
+  }
+}

@@ -64,7 +64,7 @@ const NotificationBanner: React.FC = () => {
         setNotification(activeNotification);
       } catch (err) {
         console.error('Error loading notifications:', err);
-        setError('Error loading notifications');
+        setError(t('notifications.error'));
       } finally {
         setLoading(false);
       }

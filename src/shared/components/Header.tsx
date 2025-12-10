@@ -23,7 +23,7 @@ const Header: React.FC<HeaderProps> = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
-  const { t } = useTranslation();
+  const { t } = useTranslation(['common', 'feedback']);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -96,11 +96,11 @@ const Header: React.FC<HeaderProps> = () => {
       
       await signOut(auth);
       dispatch(logout());
-      toast.success('Đăng xuất thành công!');
+      toast.success(t('auth.logoutSuccess'));
       navigate('/login');
     } catch (error) {
       console.error('Logout error:', error);
-      toast.error('Có lỗi xảy ra khi đăng xuất');
+      toast.error(t('auth.logoutError'));
     }
   };
 
@@ -324,7 +324,19 @@ const Header: React.FC<HeaderProps> = () => {
                           className="w-full flex items-center px-4 py-2.5 text-slate-700 dark:text-slate-200 hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 dark:hover:from-purple-900/30 dark:hover:to-pink-900/30 transition-all duration-200 group"
                         >
                           <Settings className="w-4 h-4 mr-2.5 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform" />
-                          <span className="font-medium text-sm">Cài đặt</span>
+                          <span className="font-medium text-sm">{t('common:settings.title')}</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            navigate('/feedback');
+                            setIsUserMenuOpen(false);
+                          }}
+                          className="w-full flex items-center px-4 py-2.5 text-slate-700 dark:text-slate-200 hover:bg-gradient-to-r hover:from-green-50 hover:to-teal-50 dark:hover:from-green-900/30 dark:hover:to-teal-900/30 transition-all duration-200 group"
+                        >
+                          <svg className="w-4 h-4 mr-2.5 text-green-600 dark:text-green-400 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                          </svg>
+                          <span className="font-medium text-sm">{t('feedback:title')}</span>
                         </button>
                         <button
                           onClick={() => {

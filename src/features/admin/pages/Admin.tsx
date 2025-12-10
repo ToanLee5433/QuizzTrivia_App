@@ -9,7 +9,7 @@ import { collection, addDoc, getDocs, updateDoc, doc, query, where, limit, getCo
 import { db } from '../../../lib/firebase/config';
 
 const Admin: React.FC = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['common', 'feedback']);
   // State cho thống kê
   const [stats, setStats] = useState({
     totalQuizzes: 0,
@@ -320,6 +320,12 @@ const Admin: React.FC = () => {
               className="w-full text-left p-2 md:p-3 hover:bg-gray-50 rounded border block text-sm md:text-base"
             >
               🔐 {t('admin.roles')}
+            </Link>
+            <Link 
+              to="/admin/feedbacks" 
+              className="w-full text-left p-2 md:p-3 hover:bg-gray-50 rounded border block text-sm md:text-base"
+            >
+              💬 {t('feedback:management.title')}
             </Link>
           </div>
         </div>

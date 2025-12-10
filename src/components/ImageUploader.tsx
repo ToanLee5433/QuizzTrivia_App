@@ -49,7 +49,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     // Validate file type
     const allowedTypes = options.allowedTypes || ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     if (!allowedTypes.includes(file.type)) {
-      toast.error(`Chỉ chấp nhận: ${allowedTypes.map(t => t.split('/')[1]).join(', ')}`);
+      toast.error(t('imageUploader.invalidFileType', { types: allowedTypes.map(t => t.split('/')[1]).join(', ') }));
       return;
     }
 
@@ -57,7 +57,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     const maxSizeKB = options.maxSizeKB || 5120;
     const fileSizeKB = file.size / 1024;
     if (fileSizeKB > maxSizeKB) {
-      toast.error(`Kích thước file vượt quá ${maxSizeKB}KB`);
+      toast.error(t('imageUploader.fileTooLarge', { maxSize: maxSizeKB }));
       return;
     }
 
@@ -103,7 +103,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         
         onUploadSuccess(result);
       } else {
-        toast.error(result.error || 'Upload thất bại');
+        toast.error(result.error || t('imageUploader.uploadFailed'));
         if (onUploadError) {
           onUploadError(result.error || 'Upload failed');
         }
@@ -137,7 +137,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       if (compressBeforeUpload && selectedFile.type !== 'image/gif') {
         toast.info(t('imageUploader.compressing'), { autoClose: 1000 });
         fileToUpload = await compressImage(selectedFile, 1920, 1080, 0.85, true); // WebP
-        toast.success(`Đã nén: ${Math.round(selectedFile.size / 1024)}KB → ${Math.round(fileToUpload.size / 1024)}KB`, { autoClose: 1500 });
+        toast.success(t('imageUploader.compressed', { originalSize: Math.round(selectedFile.size / 1024), compressedSize: Math.round(fileToUpload.size / 1024) }), { autoClose: 1500 });
       }
 
       // Upload with progress callback
@@ -159,7 +159,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         
         onUploadSuccess(result);
       } else {
-        toast.error(result.error || 'Upload thất bại');
+        toast.error(result.error || t('imageUploader.uploadFailed'));
         if (onUploadError) {
           onUploadError(result.error || 'Upload failed');
         }
@@ -205,7 +205,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         handleFileSelect({ target: { files: dataTransfer.files } } as any);
       }
     } else {
-      toast.error('Vui lòng chọn file ảnh');
+      toast.error(t('imageUploader.selectImageFile'));
     }
   };
 

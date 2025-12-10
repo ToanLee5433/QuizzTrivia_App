@@ -6,12 +6,14 @@ import { db, auth } from '../../../lib/firebase/config';
 import { logout } from '../store';
 import { toast } from 'react-toastify';
 import { setUserOffline } from '../../../utils/presenceUtils';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Component này sẽ tự động kiểm tra trạng thái isActive của user mỗi 5s.
  * Nếu user bị khoá, sẽ tự động logout và hiển thị thông báo.
  */
 const AutoLogoutOnBan = () => {
+  const { t } = useTranslation();
   const user = useSelector((state: RootState) => state.auth.user);
   const dispatch = useDispatch();
 
@@ -32,7 +34,7 @@ const AutoLogoutOnBan = () => {
             }
             
             dispatch(logout());
-            toast.error('Tài khoản của bạn đã bị khoá. Vui lòng liên hệ quản trị viên.');
+            toast.error(t('auth.accountBanned'));
             if (auth.currentUser) await auth.signOut();
           }
         }
@@ -46,7 +48,7 @@ const AutoLogoutOnBan = () => {
       isUnmounted = true;
       clearInterval(interval);
     };
-  }, [user?.uid, dispatch]);
+  }, [user?.uid, dispatch, t]);
 
   return null;
 };

@@ -711,9 +711,9 @@ export const ResultPage: React.FC = () => {
             onClick={() => {
               // Share functionality
               navigator.clipboard.writeText(
-                `I scored ${percentage}% on "${quiz.title}" quiz! 🎯`
+                t('resultPage.shareText', { percentage, title: quiz.title })
               );
-              toast.success('Result copied to clipboard!');
+              toast.success(t('resultPage.copiedToClipboard'));
             }}
           >
             {t('resultPage.shareResult')}

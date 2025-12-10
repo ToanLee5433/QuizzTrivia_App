@@ -494,6 +494,41 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
+    /* ===== Feedback Collection ===== */
+    match /feedbacks/{feedbackId} {
+      // Users can read their own feedbacks; admins can read all
+      allow read: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if signedIn() && (
+        // Users can list only their feedbacks
+        request.auth.uid == resource.data.userId ||
+        // Admins can list all feedbacks
+        isAdmin()
+      );
+      
+      // Authenticated users can create feedback
+      allow create: if signedIn() &&
+                      request.resource.data.userId == request.auth.uid &&
+                      request.resource.data.subject is string &&
+                      request.resource.data.subject.size() > 0 &&
+                      request.resource.data.subject.size() <= 200 &&
+                      request.resource.data.description is string &&
+                      request.resource.data.description.size() > 0 &&
+                      request.resource.data.description.size() <= 2000 &&
+                      request.resource.data.type in ['bug', 'feature', 'improvement', 'question', 'other'] &&
+                      request.resource.data.priority in ['low', 'medium', 'high', 'critical'] &&
+                      request.resource.data.status == 'pending';
+      
+      // Users can update their own pending feedbacks (edit before admin reviews)
+      // Admins can update any feedback (change status, priority, add response)
+      allow update: if signedIn() && (
+        (resource.data.userId == request.auth.uid && resource.data.status == 'pending') ||
+        isAdmin()
+      );
+      
+      // Only admins can delete feedbacks
+      allow delete: if isAdmin();
+    }
+    
     // Default: deny all
     match /{document=**} {
       allow read, write: if false;

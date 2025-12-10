@@ -1,0 +1,148 @@
+{
+  "title": "App Feedback",
+  "subtitle": "Help us improve the system",
+  "form": {
+    "title": "Send feedback about the application",
+    "subject": "Subject",
+    "subjectPlaceholder": "Example: Cannot create new quiz",
+    "description": "Brief description",
+    "descriptionPlaceholder": "Describe in detail the issue you encountered or your idea...",
+    "richDescription": "Detailed description (Optional)",
+    "richDescriptionPlaceholder": "You can format text, add lists, colors...",
+    "richDescriptionHelp": "Use the editor to format more detailed content",
+    "type": "Feedback type",
+    "priority": "Priority level",
+    "screenshots": "Screenshots (Max 5 images, each < 5MB)",
+    "uploadScreenshots": "Choose images",
+    "dropFiles": "Drop files here or click to upload",
+    "maxFiles": "Maximum 5 images",
+    "submit": "Send feedback",
+    "submitting": "Sending...",
+    "infoTitle": "Notes when sending feedback:",
+    "infoItem1": "Describe the problem you encountered clearly and in detail",
+    "infoItem2": "Attach screenshots if possible",
+    "infoItem3": "Admin will review and respond within 24-48 hours",
+    "infoItem4": "You can view feedback status in notifications section"
+  },
+  "types": {
+    "bug": "Bug Report",
+    "feature": "Feature Request",
+    "improvement": "Improvement",
+    "question": "Question",
+    "other": "Other"
+  },
+  "priority": {
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "critical": "Critical"
+  },
+  "status": {
+    "pending": "Pending",
+    "inProgress": "In Progress",
+    "in-progress": "In Progress",
+    "resolved": "Resolved",
+    "closed": "Closed"
+  },
+  "success": {
+    "submitted": "Feedback sent successfully! Thank you for your contribution.",
+    "updated": "Feedback updated successfully!",
+    "statusUpdated": "Status updated successfully!"
+  },
+  "errors": {
+    "subjectRequired": "Please enter a subject",
+    "subjectMinLength": "Subject must be at least 10 characters",
+    "descriptionRequired": "Please enter feedback content",
+    "descriptionMinLength": "Content must be at least 20 characters",
+    "submitFailed": "Cannot send feedback. Please try again.",
+    "loadFailed": "Failed to load feedback list",
+    "updateFailed": "Failed to update feedback",
+    "uploadFailed": "Failed to upload image",
+    "maxFilesExceeded": "Maximum 5 images allowed",
+    "invalidFileType": "Only image files accepted",
+    "fileTooLarge": "File {{filename}} exceeds 5MB",
+    "loginRequired": "You need to login to send feedback"
+  },
+  "management": {
+    "title": "App Feedback",
+    "subtitle": "View and manage user feedback",
+    "filters": "Filters",
+    "searchPlaceholder": "Search by subject, description, user, email...",
+    "allStatuses": "All statuses",
+    "allTypes": "All types",
+    "allPriorities": "All priorities",
+    "date": {
+      "all": "All time",
+      "today": "Today",
+      "week": "This week",
+      "month": "This month"
+    },
+    "showing": "Showing {{count}} of {{total}} feedbacks",
+    "noFeedback": "No feedback found",
+    "attachments": "attachments"
+  },
+  "stats": {
+    "total": "Total",
+    "pending": "Pending",
+    "inProgress": "In Progress",
+    "resolved": "Resolved",
+    "closed": "Closed"
+  },
+  "detail": {
+    "title": "Feedback Details",
+    "user": "User",
+    "email": "Email",
+    "createdAt": "Created at",
+    "updatedAt": "Last updated",
+    "subject": "Subject",
+    "description": "Description",
+    "detailedDescription": "Detailed description",
+    "screenshots": "Screenshots",
+    "adminSection": "Admin Actions",
+    "status": "Status",
+    "priority": "Priority",
+    "adminResponse": "Admin response",
+    "responsePlaceholder": "Enter your response for the user...",
+    "previousResponse": "Previous response",
+    "respondedBy": "Responded by {{name}} at {{date}}"
+  },
+  "table": {
+    "user": "User",
+    "subject": "Subject",
+    "type": "Type",
+    "priority": "Priority",
+    "status": "Status",
+    "date": "Date",
+    "actions": "Actions"
+  },
+  "actions": {
+    "view": "View"
+  },
+  "noFeedbacks": "No feedback yet",
+  "type": {
+    "bug": "Bug",
+    "feature": "Feature",
+    "improvement": "Improvement",
+    "question": "Question",
+    "other": "Other"
+  },
+  "filters": {
+    "search": "Search feedback...",
+    "allStatus": "All statuses",
+    "allPriority": "All priorities"
+  },
+  "notifications": {
+    "statusChanged": {
+      "title": "Feedback Status Update",
+      "body": "Your feedback '{{subject}}' has been changed to {{status}}",
+      "pending": "pending",
+      "inProgress": "in progress",
+      "resolved": "resolved",
+      "closed": "closed"
+    },
+    "adminResponse": {
+      "title": "Admin Response",
+      "body": "Admin has responded to your feedback: {{subject}}"
+    }
+  }
+}

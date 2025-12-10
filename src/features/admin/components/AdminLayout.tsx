@@ -10,7 +10,7 @@ interface AdminLayoutProps {
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children, title }) => {
   const { user } = useSelector((state: RootState) => state.auth);
-  const { t } = useTranslation();
+  const { t } = useTranslation('common');
 
   if (user?.role !== 'admin') {
     return (

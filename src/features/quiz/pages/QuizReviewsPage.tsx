@@ -176,7 +176,7 @@ const QuizReviewsPage: React.FC = () => {
 
   const handleHelpfulClick = async (reviewId: string) => {
     if (!currentUser?.uid) {
-      toast.error('Please login to mark reviews as helpful');
+      toast.error(t('quiz.reviews.loginToMarkHelpful'));
       return;
     }
 
@@ -185,7 +185,7 @@ const QuizReviewsPage: React.FC = () => {
       const reviewDoc = await getDoc(reviewRef);
       
       if (!reviewDoc.exists()) {
-        toast.error('Review not found');
+        toast.error(t('quiz.reviews.notFound'));
         return;
       }
 
@@ -199,31 +199,31 @@ const QuizReviewsPage: React.FC = () => {
           helpful: (reviewData.helpful || 1) - 1,
           helpfulBy: arrayRemove(currentUser.uid)
         });
-        toast.success('Removed from helpful');
+        toast.success(t('quiz.reviews.removedFromHelpful'));
       } else {
         // Add to helpful
         await updateDoc(reviewRef, {
           helpful: (reviewData.helpful || 0) + 1,
           helpfulBy: arrayUnion(currentUser.uid)
         });
-        toast.success('Marked as helpful');
+        toast.success(t('quiz.reviews.markedAsHelpful'));
       }
 
       // Reload reviews to show updated count
       setTimeout(() => loadQuizAndReviews(), 500);
     } catch (error) {
       console.error('Error marking review as helpful:', error);
-      toast.error('Failed to update helpful status');
+      toast.error(t('quiz.reviews.failedToUpdateHelpful'));
     }
   };
 
   const handleReportClick = async (reviewId: string) => {
     if (!currentUser?.uid) {
-      toast.error('Please login to report reviews');
+      toast.error(t('quiz.reviews.loginToReport'));
       return;
     }
 
-    const reason = prompt('Please provide a reason for reporting this review:');
+    const reason = prompt(t('quiz.reviews.reportReasonPrompt'));
     if (!reason || reason.trim() === '') {
       return;
     }
@@ -233,7 +233,7 @@ const QuizReviewsPage: React.FC = () => {
       const reviewDoc = await getDoc(reviewRef);
       
       if (!reviewDoc.exists()) {
-        toast.error('Review not found');
+        toast.error(t('quiz.reviews.notFound'));
         return;
       }
 
@@ -242,7 +242,7 @@ const QuizReviewsPage: React.FC = () => {
       
       // Check if user already reported
       if (reportedBy.includes(currentUser.uid)) {
-        toast.warning('You have already reported this review');
+        toast.warning(t('quiz.reviews.alreadyReported'));
         return;
       }
 
@@ -257,10 +257,10 @@ const QuizReviewsPage: React.FC = () => {
         })
       });
 
-      toast.success('Review reported successfully. Admins will review it.');
+      toast.success(t('quiz.reviews.reportedSuccess'));
     } catch (error) {
       console.error('Error reporting review:', error);
-      toast.error('Failed to report review');
+      toast.error(t('quiz.reviews.failedToReport'));
     }
   };
 

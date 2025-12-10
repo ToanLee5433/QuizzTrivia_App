@@ -61,8 +61,8 @@ i18n
     // 🔥 Set explicit language from preserved preference (defaults to 'vi')
     lng: initialLanguage,
     fallbackLng: 'vi',
-    // Use common and multiplayer namespaces from external files
-    ns: ['common', 'multiplayer'],
+    // Use common, multiplayer and feedback namespaces from external files
+    ns: ['common', 'multiplayer', 'feedback'],
     defaultNS: 'common',
     
     detection: {

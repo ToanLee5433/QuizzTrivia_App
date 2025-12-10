@@ -49,6 +49,10 @@ const QuizDetailedStats = React.lazy(() => import('./features/quiz/pages/QuizDet
 // Flashcard Feature
 const FlashcardPage = React.lazy(() => import('./features/flashcard/pages/FlashcardPage'));
 
+// Feedback Feature
+const FeedbackPage = React.lazy(() => import('./features/feedback/pages/FeedbackPage'));
+const FeedbackManagement = React.lazy(() => import('./features/feedback/components/FeedbackManagement'));
+
 // Stage 4: Admin Features - All lazy loaded for better performance
 const Admin = React.lazy(() => import('./features/admin/pages/Admin'));
 const AdminQuizManagement = React.lazy(() => import('./features/admin/pages/AdminQuizManagement'));
@@ -452,6 +456,14 @@ const AppContent: React.FC = () => {
           </ProtectedRoute>
         } />
         
+        <Route path="/feedback" element={
+          <ProtectedRoute>
+            <Suspense fallback={<LoadingFallback />}>
+              <FeedbackPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        
         {/* <Route path="/offline" element={
           <ProtectedRoute>
             <Suspense fallback={<LoadingFallback />}>
@@ -633,6 +645,14 @@ const AppContent: React.FC = () => {
           <AdminProtectedRoute>
             <Suspense fallback={<LoadingFallback />}>
               <AdminUtilities />
+            </Suspense>
+          </AdminProtectedRoute>
+        } />
+        
+        <Route path="/admin/feedbacks" element={
+          <AdminProtectedRoute>
+            <Suspense fallback={<LoadingFallback />}>
+              <FeedbackManagement />
             </Suspense>
           </AdminProtectedRoute>
         } />

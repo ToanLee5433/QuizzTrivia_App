@@ -42,7 +42,7 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({ user, onRoleSelected }) =
       localStorage.setItem(`user_role_${user.uid}`, role);
       
       // Call callback với role để parent có thể navigate
-      toast.success(`Chào mừng bạn với vai trò ${role === 'user' ? 'Người dùng' : 'Người tạo'}!`);
+      toast.success(t('auth.roleSelection.welcomeWithRole', { role: role === 'user' ? t('auth.roleSelection.userRole.title') : t('auth.roleSelection.creatorRole.title') }));
       
       // Gọi callback ngay lập tức, không delay
       onRoleSelected(role);
@@ -61,7 +61,7 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({ user, onRoleSelected }) =
       localStorage.setItem(`user_role_${user.uid}`, role);
       
       // Call callback với role để parent có thể navigate
-      toast.success(`Chào mừng bạn với vai trò ${role === 'user' ? 'Người dùng' : 'Người tạo'}!`);
+      toast.success(t('auth.roleSelection.welcomeWithRole', { role: role === 'user' ? t('auth.roleSelection.userRole.title') : t('auth.roleSelection.creatorRole.title') }));
       
       // Gọi callback ngay lập tức, không delay
       onRoleSelected(role);
@@ -69,7 +69,7 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({ user, onRoleSelected }) =
       // Hiển thị thông báo nhẹ nhàng nếu sync notifications được bật
       const showSyncNotif = localStorage.getItem('showSyncNotifications') === 'true';
       if (showSyncNotif) {
-        toast.info('Vai trò đã được chọn. Dữ liệu sẽ được đồng bộ khi kết nối ổn định.');
+        toast.info(t('auth.roleSelection.syncPending'));
       }
       
     } finally {

@@ -19,7 +19,7 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBack }) => {
     e.preventDefault();
     
     if (!email) {
-      toast.error('Vui lòng nhập email');
+      toast.error(t('auth.validation.emailRequired'));
       return;
     }
 
@@ -27,16 +27,16 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBack }) => {
     try {
       // Sử dụng Firebase sendPasswordResetEmail
       await sendPasswordResetEmail(auth, email);
-      toast.success('Email đặt lại mật khẩu đã được gửi! Hãy kiểm tra hộp thư của bạn.');
+      toast.success(t('auth.resetPasswordSuccess'));
       setSent(true);
     } catch (error: any) {
       console.error('Error resetting password:', error);
       if (error.code === 'auth/user-not-found') {
-        toast.error('Không tìm thấy tài khoản với email này');
+        toast.error(t('auth.errors.userNotFound'));
       } else if (error.code === 'auth/invalid-email') {
-        toast.error('Email không hợp lệ');
+        toast.error(t('auth.errors.invalidEmail'));
       } else {
-        toast.error('Có lỗi xảy ra. Vui lòng thử lại.');
+        toast.error(t('auth.errors.genericError'));
       }
     } finally {
       setLoading(false);

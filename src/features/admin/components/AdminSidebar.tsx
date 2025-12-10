@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 const AdminSidebar: React.FC = () => {
   const location = useLocation();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { t } = useTranslation();
+  const { t } = useTranslation(['common', 'feedback']);
 
   if (user?.role !== 'admin') {
     return null;
@@ -49,6 +49,12 @@ const AdminSidebar: React.FC = () => {
       href: '/admin/roles',
       icon: '🔐',
       current: location.pathname === '/admin/roles'
+    },
+    {
+      name: t('feedback:management.title'),
+      href: '/admin/feedbacks',
+      icon: '💬',
+      current: location.pathname === '/admin/feedbacks'
     }
   ];
 

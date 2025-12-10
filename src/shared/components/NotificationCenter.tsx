@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { RootState } from '../../lib/store';
 import { notificationService, NotificationData } from '../../services/notificationService';
 import { toast } from 'react-toastify';
+import { CheckCircle } from 'lucide-react';
 
 const NotificationCenter: React.FC = () => {
   const { t } = useTranslation();
@@ -48,7 +49,7 @@ const NotificationCenter: React.FC = () => {
       await notificationService.markAsRead(id);
     } catch (error) {
       console.error('Error marking notification as read:', error);
-      toast.error('Failed to mark as read');
+      toast.error(t('notifications.error'));
     }
   };
 
@@ -56,10 +57,10 @@ const NotificationCenter: React.FC = () => {
     if (!user?.uid) return;
     try {
       await notificationService.markAllAsRead(user.uid);
-      toast.success('All notifications marked as read');
+      toast.success(t('notifications.allMarkedRead'));
     } catch (error) {
       console.error('Error marking all as read:', error);
-      toast.error('Failed to mark all as read');
+      toast.error(t('notifications.error'));
     }
   };
 
@@ -68,7 +69,7 @@ const NotificationCenter: React.FC = () => {
       await notificationService.deleteNotification(id);
     } catch (error) {
       console.error('Error deleting notification:', error);
-      toast.error('Failed to delete notification');
+      toast.error(t('notifications.deleteError'));
     }
   };
 
@@ -163,13 +164,14 @@ const NotificationCenter: React.FC = () => {
                   className="text-sm text-white hover:text-blue-100 font-medium transition-colors px-3 py-1 rounded-lg hover:bg-white/20"
                   title={t("notifications.markAllRead")}
                 >
-                  ✓ {t("notifications.markAllRead")}
+                  <CheckCircle className="w-4 h-4 inline mr-1" />
+                  {t("notifications.markAllRead")}
                 </button>
               )}
               <button
                 onClick={() => setIsOpen(false)}
                 className="text-white hover:text-blue-100 transition-colors p-1"
-                aria-label="Close"
+                aria-label={t("common.close")}
               >
                 <span className="text-2xl">&times;</span>
               </button>
