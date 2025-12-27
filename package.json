@@ -117,6 +117,7 @@
     "@vitest/coverage-v8": "^4.0.9",
     "autoprefixer": "^10.4.21",
     "babel-jest": "^30.0.5",
+    "baseline-browser-mapping": "^2.9.11",
     "chromatic": "^13.3.3",
     "eslint": "^8.55.0",
     "eslint-plugin-i18next": "^6.1.3",
