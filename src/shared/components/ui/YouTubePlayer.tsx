@@ -98,7 +98,7 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
 
   if (!videoId) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center">
+      <div className="fixed inset-0 bg-black bg-opacity-90 z-[200] flex items-center justify-center">
         <div className="bg-white rounded-xl p-8 max-w-md text-center">
           <div className="text-6xl mb-4">❌</div>
           <h3 className="text-xl font-bold text-gray-900 mb-2">{t('common.youtubePlayer.invalidLink')}</h3>
@@ -120,7 +120,7 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
   return (
     <div 
       ref={containerRef}
-      className="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black bg-opacity-95 z-[200] flex items-center justify-center p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();

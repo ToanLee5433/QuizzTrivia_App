@@ -18,7 +18,7 @@ import { motion } from 'framer-motion';
 import {
   Clock, Target, Users,
   BookOpen, Play, AlertCircle, Star, Brain,
-  ArrowLeft, Settings, FileText, Video, Image as ImageIcon, Music, Link as LinkIcon, Presentation, Trophy, ChevronRight, ChevronDown, ChevronUp,
+  ArrowLeft, Settings, FileText, Video, Image as ImageIcon, Music, Link as LinkIcon, Presentation, Trophy, ChevronDown, ChevronUp,
   Eye, Activity, Percent, Share2, Repeat, ShieldCheck, Globe
 } from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
@@ -28,6 +28,9 @@ import { reviewService } from '../services/reviewService';
 import { QuizReviewStats } from '../types/review';
 import RichTextViewer from '../../../shared/components/ui/RichTextViewer';
 import QuizSettingsModal, { QuizSettings } from '../components/QuizSettingsModal';
+import ImageViewer from '../../../shared/components/ui/ImageViewer';
+import PDFViewer from '../../../shared/components/ui/PDFViewer';
+import AudioPlayer from '../../../shared/components/ui/AudioPlayer';
 
 type QuizResource = NonNullable<Quiz['resources']>[number];
 
@@ -114,6 +117,20 @@ const QuizPreviewPage: React.FC = () => {
   const [currentViewers, setCurrentViewers] = useState<number>(0);
   const [activePlayers, setActivePlayers] = useState<number>(0);
   const [realAverageScore, setRealAverageScore] = useState<number>(0); // Real average from quizResults
+  
+  // Resource viewer state
+  const [selectedResource, setSelectedResource] = useState<QuizResource | null>(null);
+  const [resourceViewerType, setResourceViewerType] = useState<string | null>(null);
+
+  const handleViewResource = (resource: QuizResource) => {
+    setSelectedResource(resource);
+    setResourceViewerType(resource.type);
+  };
+
+  const closeResourceViewer = () => {
+    setSelectedResource(null);
+    setResourceViewerType(null);
+  };
 
   const shareUrl = useMemo(() => {
     if (!quiz) return '';
@@ -841,22 +858,18 @@ const QuizPreviewPage: React.FC = () => {
                   {quiz.resources?.map((resource: QuizResource, index: number) => {
                     const ResourceIcon = getResourceIcon(resource.type);
                     return (
-                      <motion.a
+                      <motion.div
                         key={resource.id || index}
-                        href={resource.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
                         initial={{ x: -20, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
                         transition={{ delay: 0.1 * index }}
-                        whileHover={{ scale: 1.02 }}
-                        className="group flex items-start gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
+                        className="group flex items-start gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 transition-all"
                       >
                         <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
                           <ResourceIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                          <h3 className="font-semibold text-slate-900 dark:text-white">
                             {resource.title}
                           </h3>
                           <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -877,9 +890,26 @@ const QuizPreviewPage: React.FC = () => {
                               {resource.description}
                             </p>
                           )}
+                          <div className="flex gap-2 mt-3">
+                            <button
+                              onClick={() => handleViewResource(resource)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                            >
+                              <Eye className="w-4 h-4" />
+                              {t('common.view', 'Xem')}
+                            </button>
+                            <a
+                              href={resource.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors text-sm"
+                            >
+                              <LinkIcon className="w-4 h-4" />
+                              {t('common.openExternal', 'Mở')}
+                            </a>
+                          </div>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors flex-shrink-0 self-center" />
-                      </motion.a>
+                      </motion.div>
                     );
                   })}
                 </div>
@@ -1316,6 +1346,242 @@ const QuizPreviewPage: React.FC = () => {
           </div>
         </motion.div>
       </div>
+
+      {/* Resource Viewers */}
+      {/* Universal Video Viewer - supports both YouTube and direct video */}
+      {selectedResource && resourceViewerType === 'video' && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 p-4">
+          <div className="relative w-full max-w-6xl flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4 px-2">
+              <div className="flex-1">
+                {selectedResource.title && (
+                  <h2 className="text-white text-xl font-semibold truncate">
+                    {selectedResource.title}
+                  </h2>
+                )}
+              </div>
+              <button
+                onClick={closeResourceViewer}
+                className="p-2 text-white hover:bg-red-600 rounded-lg transition-colors"
+                title={t('common.close')}
+              >
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Video Player */}
+            <div className="relative bg-black rounded-lg overflow-hidden shadow-2xl" style={{ aspectRatio: '16/9' }}>
+              {(() => {
+                const url = selectedResource.url;
+                // Check if YouTube URL
+                const youtubeRegex = /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+                const youtubeMatch = url.match(youtubeRegex);
+                
+                if (youtubeMatch) {
+                  const videoId = youtubeMatch[1];
+                  return (
+                    <iframe
+                      src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
+                      title={selectedResource.title || "Video"}
+                      className="absolute inset-0 w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      style={{ border: 'none' }}
+                    />
+                  );
+                }
+                
+                // Check if Google Drive URL
+                const driveRegex = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/;
+                const driveMatch = url.match(driveRegex);
+                
+                if (driveMatch) {
+                  const fileId = driveMatch[1];
+                  return (
+                    <iframe
+                      src={`https://drive.google.com/file/d/${fileId}/preview`}
+                      title={selectedResource.title || "Video"}
+                      className="absolute inset-0 w-full h-full"
+                      allow="autoplay; encrypted-media"
+                      allowFullScreen
+                      style={{ border: 'none' }}
+                    />
+                  );
+                }
+                
+                // Direct video file
+                return (
+                  <video
+                    src={url}
+                    controls
+                    autoPlay
+                    className="absolute inset-0 w-full h-full"
+                  >
+                    {t('common.videoNotSupported', 'Trình duyệt của bạn không hỗ trợ video')}
+                  </video>
+                );
+              })()}
+            </div>
+
+            {/* Instructions */}
+            <div className="mt-4 text-center">
+              <p className="text-white text-sm opacity-75">
+                💡 Nhấn <kbd className="px-2 py-1 bg-white bg-opacity-20 rounded">ESC</kbd> hoặc click bên ngoài để đóng
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      {selectedResource && resourceViewerType === 'pdf' && (
+        <PDFViewer
+          pdfUrl={selectedResource.url}
+          title={selectedResource.title}
+          onClose={closeResourceViewer}
+        />
+      )}
+      {selectedResource && resourceViewerType === 'image' && (
+        <ImageViewer
+          imageUrl={selectedResource.url}
+          title={selectedResource.title}
+          onClose={closeResourceViewer}
+        />
+      )}
+      {selectedResource && resourceViewerType === 'audio' && (
+        <AudioPlayer
+          audioUrl={selectedResource.url}
+          title={selectedResource.title}
+          onClose={closeResourceViewer}
+        />
+      )}
+      {selectedResource && (resourceViewerType === 'link' || resourceViewerType === 'slides') && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 p-4">
+          <div className="relative w-full max-w-6xl h-[90vh] bg-white dark:bg-slate-900 rounded-xl shadow-2xl flex flex-col overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-slate-700 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-slate-800 dark:to-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                  <LinkIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">{selectedResource.title}</h3>
+                  {selectedResource.description && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">{selectedResource.description}</p>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => window.open(selectedResource.url, '_blank', 'noopener,noreferrer')}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                >
+                  <LinkIcon className="w-4 h-4" />
+                  {t('common.openInNewTab', 'Mở tab mới')}
+                </button>
+                <button
+                  onClick={closeResourceViewer}
+                  className="p-2 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                  title={t('common.close')}
+                >
+                  <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            {/* Smart Iframe Content - Auto-detect URL type */}
+            <div className="flex-1 bg-gray-100 dark:bg-slate-800">
+              {(() => {
+                const url = selectedResource.url;
+                
+                // YouTube URL - convert to embed
+                const youtubeRegex = /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+                const youtubeMatch = url.match(youtubeRegex);
+                if (youtubeMatch) {
+                  const videoId = youtubeMatch[1];
+                  return (
+                    <iframe
+                      src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
+                      className="w-full h-full border-0"
+                      title={selectedResource.title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                    />
+                  );
+                }
+                
+                // Google Drive - convert to preview
+                const driveRegex = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/;
+                const driveMatch = url.match(driveRegex);
+                if (driveMatch) {
+                  const fileId = driveMatch[1];
+                  return (
+                    <iframe
+                      src={`https://drive.google.com/file/d/${fileId}/preview`}
+                      className="w-full h-full border-0"
+                      title={selectedResource.title}
+                      allow="autoplay; encrypted-media"
+                      allowFullScreen
+                    />
+                  );
+                }
+                
+                // Google Slides/Docs/Sheets - convert to embed
+                const googleDocsRegex = /docs\.google\.com\/(presentation|document|spreadsheets)\/d\/([a-zA-Z0-9_-]+)/;
+                const googleDocsMatch = url.match(googleDocsRegex);
+                if (googleDocsMatch) {
+                  const type = googleDocsMatch[1];
+                  const docId = googleDocsMatch[2];
+                  let embedUrl = '';
+                  if (type === 'presentation') {
+                    embedUrl = `https://docs.google.com/presentation/d/${docId}/embed?start=false&loop=false&delayms=3000`;
+                  } else if (type === 'document') {
+                    embedUrl = `https://docs.google.com/document/d/${docId}/preview`;
+                  } else if (type === 'spreadsheets') {
+                    embedUrl = `https://docs.google.com/spreadsheets/d/${docId}/preview`;
+                  }
+                  return (
+                    <iframe
+                      src={embedUrl}
+                      className="w-full h-full border-0"
+                      title={selectedResource.title}
+                      allowFullScreen
+                    />
+                  );
+                }
+                
+                // Vimeo - convert to embed
+                const vimeoRegex = /vimeo\.com\/(\d+)/;
+                const vimeoMatch = url.match(vimeoRegex);
+                if (vimeoMatch) {
+                  const videoId = vimeoMatch[1];
+                  return (
+                    <iframe
+                      src={`https://player.vimeo.com/video/${videoId}`}
+                      className="w-full h-full border-0"
+                      title={selectedResource.title}
+                      allow="autoplay; fullscreen; picture-in-picture"
+                      allowFullScreen
+                    />
+                  );
+                }
+                
+                // Default - try regular iframe
+                return (
+                  <iframe
+                    src={url}
+                    className="w-full h-full border-0"
+                    title={selectedResource.title}
+                    sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-top-navigation"
+                  />
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modals */}
       {quiz && showSettingsModal && (

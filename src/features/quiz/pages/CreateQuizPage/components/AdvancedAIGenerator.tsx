@@ -56,6 +56,7 @@ export const AdvancedAIGenerator: React.FC<AdvancedAIGeneratorProps> = ({
   const [step, setStep] = useState<Step>('input');
   const [inputMode, setInputMode] = useState<'prompt' | 'file'>('prompt');
   const [prompt, setPrompt] = useState('');
+  const [filePrompt, setFilePrompt] = useState(''); // 🆕 Prompt riêng cho file mode
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [config, setConfig] = useState<SimpleAIConfig>({
     numQuestions: 5,
@@ -111,7 +112,12 @@ export const AdvancedAIGenerator: React.FC<AdvancedAIGeneratorProps> = ({
           setStep('input');
           return;
         }
-        result = await simpleAIService.generateFromFile(selectedFile, config);
+        // 🆕 Pass filePrompt as additional instructions
+        const configWithPrompt = {
+          ...config,
+          topic: filePrompt.trim() || undefined // Pass user's additional instructions
+        };
+        result = await simpleAIService.generateFromFile(selectedFile, configWithPrompt);
       }
 
       if (result.error) {
@@ -166,6 +172,7 @@ export const AdvancedAIGenerator: React.FC<AdvancedAIGeneratorProps> = ({
 
   const handleClose = () => {
     setPrompt('');
+    setFilePrompt(''); // 🆕 Reset file prompt
     setSelectedFile(null);
     setInputMode('prompt');
     setStep('input');
@@ -297,17 +304,36 @@ export const AdvancedAIGenerator: React.FC<AdvancedAIGeneratorProps> = ({
                     </p>
                   </div>
                 ) : (
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                      {t('createQuiz.ai.fileLabel', 'Upload a file to analyze')}
-                    </label>
-                    <FileUploadSection
-                      selectedFile={selectedFile}
-                      onFileSelect={setSelectedFile}
-                    />
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                      {t('createQuiz.ai.fileHint', 'Upload an image, PDF, or document. AI will analyze and create questions.')}
-                    </p>
+                  <div className="space-y-4">
+                    {/* File Upload */}
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                        {t('createQuiz.ai.fileLabel', 'Upload a file to analyze')}
+                      </label>
+                      <FileUploadSection
+                        selectedFile={selectedFile}
+                        onFileSelect={setSelectedFile}
+                      />
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                        {t('createQuiz.ai.fileHint', 'Upload an image, PDF, or document. AI will analyze and create questions.')}
+                      </p>
+                    </div>
+                    
+                    {/* 🆕 Prompt for file - Optional instructions */}
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                        {t('createQuiz.ai.filePromptLabel', 'Additional instructions (optional)')}
+                      </label>
+                      <textarea
+                        value={filePrompt}
+                        onChange={(e) => setFilePrompt(e.target.value)}
+                        placeholder={t('createQuiz.ai.filePromptPlaceholder', 'E.g., "Focus on chapter 3 about database design" or "Create questions about the main concepts only"')}
+                        className="w-full h-24 px-4 py-3 border-2 border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-slate-800 dark:text-white resize-none"
+                      />
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                        {t('createQuiz.ai.filePromptHint', 'Specify what topics or sections to focus on for more accurate questions.')}
+                      </p>
+                    </div>
                   </div>
                 )}
 
@@ -507,7 +533,11 @@ export const AdvancedAIGenerator: React.FC<AdvancedAIGeneratorProps> = ({
                 </button>
                 <button
                   onClick={handleGenerate}
-                  disabled={!prompt.trim() || prompt.trim().length < 10}
+                  disabled={
+                    inputMode === 'prompt' 
+                      ? (!prompt.trim() || prompt.trim().length < 10)
+                      : !selectedFile
+                  }
                   className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   <Wand2 className="w-5 h-5" />

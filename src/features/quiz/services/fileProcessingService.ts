@@ -6,6 +6,9 @@ import * as pdfjsLib from 'pdfjs-dist';
 import mammoth from 'mammoth';
 import * as XLSX from 'xlsx';
 
+// Configure PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.js';
+
 export interface FileProcessingResult {
   extractedText: string;
   success: boolean;

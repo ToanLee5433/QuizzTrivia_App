@@ -72,7 +72,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ pdfUrl, title, onClose }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-95 z-50 flex flex-col"
+      className="fixed inset-0 bg-black bg-opacity-95 z-[200] flex flex-col"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();

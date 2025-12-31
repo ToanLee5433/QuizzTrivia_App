@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../lib/store';
@@ -32,12 +32,29 @@ const CreateQuizPage: React.FC = () => {
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
+  // Header visibility state for syncing with main header
+  const [headerVisible, setHeaderVisible] = useState(true);
+  const [prevScrollPos, setPrevScrollPos] = useState(0);
+  
   // 🔗 Share Link Modal
   const [showShareModal, setShowShareModal] = useState(false);
   const [publishedQuizId, setPublishedQuizId] = useState<string>('');
   const [publishedQuizTitle, setPublishedQuizTitle] = useState<string>('');
   const [publishedQuizHasPassword, setPublishedQuizHasPassword] = useState<boolean>(false);
   const [publishedQuizPassword, setPublishedQuizPassword] = useState<string>('');
+
+  // Sync with Header's hide/show behavior
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollPos = window.scrollY;
+      const isVisible = prevScrollPos > currentScrollPos || currentScrollPos < 10;
+      setHeaderVisible(isVisible);
+      setPrevScrollPos(currentScrollPos);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [prevScrollPos]);
 
   // Auto scroll to top when step changes
   React.useEffect(() => {
@@ -75,15 +92,6 @@ const CreateQuizPage: React.FC = () => {
     }
     return stepKeys.length - 1;
   }, [quiz.quizType]);
-
-  // Handle back navigation with confirmation
-  const handleBackNavigation = () => {
-    if (hasUnsavedChanges) {
-      setShowExitConfirm(true);
-    } else {
-      navigate(ROUTES.CREATOR_MY_QUIZZES);
-    }
-  };
 
   const confirmExit = () => {
     setShowExitConfirm(false);
@@ -696,25 +704,23 @@ const CreateQuizPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 py-10 md:py-14">
-      <div className="max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8">
-        {/* Back to Creator Button */}
-        <button
-          onClick={handleBackNavigation}
-          className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors group"
-        >
-          <span className="text-lg group-hover:-translate-x-1 transition-transform">←</span>
-          <span className="font-medium">{t('createQuiz.backToCreator')}</span>
-        </button>
-
-        {/* Header - Sticky Navigation */}
-        <div className="sticky top-16 sm:top-[72px] z-40 bg-white/95 backdrop-blur-md rounded-2xl shadow-md border border-gray-200 p-3 sm:p-4 md:p-6 mb-6">
-          <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold tracking-tight text-gray-900 mb-2 sm:mb-3 md:mb-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 pb-10 md:pb-14">
+      {/* Header - Fixed Navigation */}
+      <div 
+        className={`fixed left-0 right-0 z-30 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-200 transition-all duration-500 ${
+          headerVisible 
+            ? 'top-[148px] sm:top-[164px] lg:top-[172px]' 
+            : '-translate-y-full opacity-0 pointer-events-none'
+        }`}
+      >
+        <div className="max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8 py-2 md:py-3">
+          {/* Title */}
+          <h1 className="text-base sm:text-lg md:text-xl font-bold tracking-tight text-gray-900 mb-2 md:mb-3">
             ✨ {t('createQuiz.title')}
           </h1>
           
-          {/* Progress Steps - Better responsive */}
-          <div className="flex items-center justify-start sm:justify-between gap-1 sm:gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          {/* Progress Steps */}
+          <div className="flex items-center justify-start gap-1 sm:gap-2 overflow-x-auto scrollbar-hide">
             {(() => {
               const displayStepKeys = (() => {
                 if (quiz.quizType === 'standard') {
@@ -733,36 +739,60 @@ const CreateQuizPage: React.FC = () => {
 
               return displayStepKeys.map((stepKey, idx) => (
                 <div key={stepKey} className="flex items-center flex-shrink-0">
-                  <div className={`
-                    w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-lg sm:rounded-xl flex items-center justify-center text-xs sm:text-sm font-bold
-                    transition-all duration-300 transform
-                    ${idx <= step 
-                      ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg scale-105 sm:scale-110' 
-                      : 'bg-gray-200 text-gray-600'
-                    }
-                  `}>
-                    {idx < step ? '✓' : idx + 1}
-                  </div>
-                  <span className={`
-                    ml-1 sm:ml-2 text-[10px] sm:text-xs md:text-sm whitespace-nowrap hidden md:inline
-                    ${idx <= step ? 'text-purple-600 font-semibold' : 'text-gray-500'}
-                  `}>
-                    {t(stepKey)}
-                  </span>
-                  {idx < displayStepKeys.length - 1 && (
+                  {/* Mobile: Compact circle only */}
+                  <div className="md:hidden flex items-center">
                     <div className={`
-                      w-4 sm:w-8 md:w-12 lg:w-16 h-0.5 sm:h-1 mx-1 sm:mx-2 rounded-full transition-all duration-300
-                      ${idx < step ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-gray-200'}
-                    `} />
-                  )}
+                      w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300
+                      ${idx < step 
+                        ? 'bg-green-500 text-white' 
+                        : idx === step 
+                          ? 'bg-purple-500 text-white ring-2 ring-purple-300' 
+                          : 'bg-gray-200 text-gray-600'
+                      }
+                    `}>
+                      {idx < step ? '✓' : idx + 1}
+                    </div>
+                    {idx < displayStepKeys.length - 1 && (
+                      <div className={`w-4 sm:w-6 h-0.5 mx-1 rounded-full ${idx < step ? 'bg-green-400' : 'bg-gray-200'}`} />
+                    )}
+                  </div>
+                  
+                  {/* Desktop: Original design with labels */}
+                  <div className="hidden md:flex items-center">
+                    <div className={`
+                      w-8 h-8 lg:w-9 lg:h-9 rounded-xl flex items-center justify-center text-sm font-bold
+                      transition-all duration-300
+                      ${idx <= step 
+                        ? 'bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-md' 
+                        : 'bg-gray-200 text-gray-600'
+                      }
+                    `}>
+                      {idx < step ? '✓' : idx + 1}
+                    </div>
+                    <span className={`
+                      ml-2 text-xs lg:text-sm whitespace-nowrap
+                      ${idx <= step ? 'text-purple-600 font-semibold' : 'text-gray-500'}
+                    `}>
+                      {t(stepKey)}
+                    </span>
+                    {idx < displayStepKeys.length - 1 && (
+                      <div className={`
+                        w-8 lg:w-12 h-0.5 mx-2 rounded-full transition-all duration-300
+                        ${idx < step ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-gray-200'}
+                      `} />
+                    )}
+                  </div>
                 </div>
               ));
             })()}
           </div>
         </div>
+      </div>
 
+      {/* Content - Directly below stepper bar, no gap */}
+      <div className="max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8 pt-[178px] sm:pt-[192px] lg:pt-[200px]">
         {/* Content */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6">
           {/* Step content */}
           {step === 0 && (
             <QuizTypeStep

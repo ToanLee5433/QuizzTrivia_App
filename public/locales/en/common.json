@@ -1429,6 +1429,9 @@
       "promptHint": "Be specific for better results. Minimum 10 characters.",
       "fileLabel": "Upload a file to analyze",
       "fileHint": "Upload an image, PDF, or document. AI will analyze and create questions.",
+      "filePromptLabel": "Additional instructions (optional)",
+      "filePromptPlaceholder": "E.g., \"Focus on chapter 3 about database design\" or \"Create questions about the main concepts only\"",
+      "filePromptHint": "Specify what topics or sections to focus on for more accurate questions.",
       "typesLabel": "Question Types",
       "types": {
         "multiple": "Multiple Choice",

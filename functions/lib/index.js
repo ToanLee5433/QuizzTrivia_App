@@ -86,15 +86,20 @@ const getOTPEmailHTML = (otp) => {
 };
 /**
  * Firebase Function để generate câu hỏi sử dụng Vertex AI/Gemini
+ * 🆕 Updated: Supports multimodal (PDF, images) with Gemini 2.5 Flash Lite
  */
 exports.generateQuestions = functions
-    .runWith({ secrets: ['GOOGLE_AI_API_KEY'] })
+    .runWith({
+    secrets: ['GOOGLE_AI_API_KEY'],
+    memory: '1GB',
+    timeoutSeconds: 120 // Increase timeout for large files
+})
     .https.onCall(async (data, context) => {
     // Kiểm tra authentication
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'Phải đăng nhập để sử dụng tính năng này');
     }
-    const { prompt, content, config } = data;
+    const { prompt, content, config, fileData } = data;
     if (!prompt || !content) {
         throw new functions.https.HttpsError('invalid-argument', 'Thiếu prompt hoặc content');
     }
@@ -106,11 +111,32 @@ exports.generateQuestions = functions
                 temperature: (config === null || config === void 0 ? void 0 : config.temperature) || 0.7,
                 topP: 0.8,
                 topK: 40,
-                maxOutputTokens: (config === null || config === void 0 ? void 0 : config.maxTokens) || 32000, // ⚡ gemini-2.5-flash-lite: increased for long PDF/image + full Q&A with explanations
+                maxOutputTokens: (config === null || config === void 0 ? void 0 : config.maxTokens) || 32000,
             },
         });
-        const promptText = `${prompt}\n\nNội dung để tạo câu hỏi:\n\n${content}`;
-        const response = await model.generateContent(promptText);
+        let response;
+        // 🆕 Check if we have file data (multimodal request)
+        if (fileData && fileData.base64 && fileData.mimeType) {
+            console.log(`📎 Processing multimodal request with file: ${fileData.fileName} (${fileData.mimeType})`);
+            // Create multimodal parts
+            const parts = [
+                {
+                    inlineData: {
+                        mimeType: fileData.mimeType,
+                        data: fileData.base64
+                    }
+                },
+                {
+                    text: `${prompt}\n\nDựa trên nội dung file "${fileData.fileName}" ở trên, hãy tạo câu hỏi quiz.\n\nYêu cầu bổ sung: ${content}`
+                }
+            ];
+            response = await model.generateContent(parts);
+        }
+        else {
+            // Text-only request (original behavior)
+            const promptText = `${prompt}\n\nNội dung để tạo câu hỏi:\n\n${content}`;
+            response = await model.generateContent(promptText);
+        }
         const result = response.response;
         if (!result || !result.text()) {
             throw new Error('Không nhận được phản hồi từ AI');

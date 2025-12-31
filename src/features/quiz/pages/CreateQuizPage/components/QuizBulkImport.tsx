@@ -161,7 +161,9 @@ const QuizBulkImport: React.FC<QuizBulkImportProps> = ({ onQuestionsImported }) 
       .map(row => row.map(field => `"${field}"`).join(','))
       .join('\n');
     
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    // Add BOM (Byte Order Mark) for UTF-8 to ensure Excel displays Vietnamese characters correctly
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = `quiz_template.${fileType === 'csv' ? 'csv' : 'xlsx'}`;

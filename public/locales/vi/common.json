@@ -1429,6 +1429,9 @@
       "promptHint": "Hãy cụ thể để có kết quả tốt hơn. Tối thiểu 10 ký tự.",
       "fileLabel": "Tải file lên để phân tích",
       "fileHint": "Tải lên ảnh, PDF, hoặc tài liệu. AI sẽ phân tích và tạo câu hỏi.",
+      "filePromptLabel": "Hướng dẫn bổ sung (tùy chọn)",
+      "filePromptPlaceholder": "Ví dụ: \"Tập trung vào chương 3 về thiết kế cơ sở dữ liệu\" hoặc \"Chỉ tạo câu hỏi về các khái niệm chính\"",
+      "filePromptHint": "Chỉ định chủ đề hoặc phần cụ thể để có câu hỏi chính xác hơn.",
       "typesLabel": "Loại câu hỏi",
       "types": {
         "multiple": "Trắc nghiệm",

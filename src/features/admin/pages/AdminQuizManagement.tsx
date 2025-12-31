@@ -58,7 +58,8 @@ interface Quiz {
   isPublic: boolean;
   isPublished?: boolean;
   editRequests?: EditRequest[];
-  learningResources?: any[]; // Tài liệu học tập
+  resources?: any[]; // Tài liệu học tập (field mới)
+  learningResources?: any[]; // Tài liệu học tập (field cũ, backward compatible)
   duration?: number;
   tags?: string[];
   password?: string;
@@ -170,13 +171,14 @@ const AdminQuizManagement: React.FC = () => {
             category: data.category || 'general',
             isPublic: data.isPublic || false,
             isPublished: data.isPublished || false,
+            resources: data.resources || data.learningResources || [],
             learningResources: data.learningResources || data.resources || [],
             duration: data.duration || data.timeLimit,
             tags: data.tags || [],
             password: data.password,
             havePassword: data.havePassword,
             visibility: data.visibility
-          });
+          } as Quiz);
         } catch (error) {
           console.error('Error parsing quiz:', doc.id, error);
           // Skip invalid quiz
@@ -954,21 +956,24 @@ const AdminQuizManagement: React.FC = () => {
                         )}
                         
                         {/* Learning Resources Badge */}
-                        {quiz.learningResources && quiz.learningResources.length > 0 && (
-                          <>
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg">
-                              <FileText className="w-4 h-4 text-emerald-600" />
-                              <span className="text-xs font-medium text-emerald-700">
-                                {t('admin.quizManagement.learningResourcesCount', { count: quiz.learningResources.length })}
-                              </span>
-                            </div>
-                            {quiz.learningResources.some((r: any) => r.required) && (
-                              <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full font-medium">
-                                ⚠️ {t('admin.quizManagement.hasRequiredResources')}
-                              </span>
-                            )}
-                          </>
-                        )}
+                        {((quiz.resources && quiz.resources.length > 0) || (quiz.learningResources && quiz.learningResources.length > 0)) && (() => {
+                          const allResources = quiz.resources || quiz.learningResources || [];
+                          return (
+                            <>
+                              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg">
+                                <FileText className="w-4 h-4 text-emerald-600" />
+                                <span className="text-xs font-medium text-emerald-700">
+                                  {t('admin.quizManagement.learningResourcesCount', { count: allResources.length })}
+                                </span>
+                              </div>
+                              {allResources.some((r: any) => r.required) && (
+                                <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full font-medium">
+                                  ⚠️ {t('admin.quizManagement.hasRequiredResources')}
+                                </span>
+                              )}
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
 

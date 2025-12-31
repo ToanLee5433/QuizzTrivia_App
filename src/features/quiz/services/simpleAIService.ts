@@ -2,6 +2,7 @@
  * Simplified AI Service - Only using Firebase Cloud Functions with Google Generative AI
  * Replaces complex multi-provider aiQuestionService
  * 🆕 Enhanced with prompt-based generation and multiple question types support
+ * 🆕 Now supports direct file upload to Gemini (PDF, images) - multimodal
  */
 
 import { Question, QuestionType } from '../types';
@@ -98,58 +99,157 @@ class SimpleAIService {
 
   /**
    * 🆕 Generate questions from uploaded file
-   * Supports: Images, PDF, DOCX, TXT
+   * Gemini 2.5 Flash Lite supports: Text, Image, Video, Audio, PDF (multimodal)
+   * File is converted to base64 and sent directly to Gemini API
    */
   async generateFromFile(
     file: File,
     config: SimpleAIConfig = {}
   ): Promise<GenerateQuestionsResponse> {
     try {
-      // For now, we'll extract text from file and use generateFromPrompt
-      // In production, you would upload to Firebase Storage and use Vision API for images
-      
-      const fileType = file.type;
       const fileName = file.name.toLowerCase();
+      const fileType = file.type;
       
-      let extractedText = '';
+      // Supported file types for Gemini 2.5 Flash Lite multimodal
+      const supportedTypes = {
+        pdf: ['application/pdf'],
+        image: ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'],
+        // text files will be read as text
+        text: ['text/plain']
+      };
       
-      // Handle different file types
-      if (fileType.startsWith('image/')) {
-        // For images, we'll create a prompt asking AI to analyze
-        extractedText = `Analyze this image file: ${fileName}. Create educational quiz questions based on the visual content. If the image contains text, include questions about that text. Focus on important concepts and details visible in the image.`;
-      } else if (fileType === 'application/pdf' || fileName.endsWith('.pdf')) {
-        extractedText = `Analyze this PDF document: ${fileName}. Create quiz questions based on the document's content. Cover key concepts, definitions, and important information from the document.`;
-      } else if (
-        fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-        fileType === 'application/msword' ||
-        fileName.endsWith('.docx') ||
-        fileName.endsWith('.doc')
-      ) {
-        extractedText = `Analyze this Word document: ${fileName}. Create quiz questions based on the document's content. Focus on main ideas, key points, and important details from the text.`;
-      } else if (fileType === 'text/plain' || fileName.endsWith('.txt')) {
-        // For text files, we can actually read the content
-        try {
-          const text = await file.text();
-          extractedText = text;
-        } catch (error) {
-          console.error('Error reading text file:', error);
-          extractedText = `Analyze the content of text file: ${fileName}`;
-        }
-      } else {
+      const isPDF = supportedTypes.pdf.includes(fileType) || fileName.endsWith('.pdf');
+      const isImage = supportedTypes.image.some(t => fileType.startsWith(t.split('/')[0])) || 
+                      ['.png', '.jpg', '.jpeg', '.gif', '.webp'].some(ext => fileName.endsWith(ext));
+      const isText = supportedTypes.text.includes(fileType) || fileName.endsWith('.txt');
+      
+      // Check file size (limit 20MB for Gemini)
+      const maxSize = 20 * 1024 * 1024; // 20MB
+      if (file.size > maxSize) {
         return {
           questions: [],
-          error: `Unsupported file type: ${fileType}`
+          error: `File quá lớn (${(file.size / 1024 / 1024).toFixed(1)}MB). Giới hạn tối đa 20MB.`
         };
       }
 
-      // Use the extracted text/prompt to generate questions
-      return this.generateFromPrompt(extractedText, config);
+      console.log('📁 Processing file:', fileName, 'Type:', fileType, 'Size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+      
+      if (isPDF || isImage) {
+        // Convert file to base64 for Gemini multimodal
+        console.log('🔄 Converting file to base64 for Gemini multimodal...');
+        
+        const base64Data = await this.fileToBase64(file);
+        const mimeType = isPDF ? 'application/pdf' : fileType;
+        
+        console.log('✅ File converted. Sending to Gemini API...');
+        
+        // Call Firebase Function with file data
+        return await this.generateFromFileData(base64Data, mimeType, fileName, config);
+        
+      } else if (isText) {
+        // For text files, read content and use prompt-based generation
+        const text = await file.text();
+        if (text.trim().length < 50) {
+          return {
+            questions: [],
+            error: 'Nội dung file quá ngắn. Vui lòng chọn file có nhiều nội dung hơn.'
+          };
+        }
+        
+        const contextPrompt = `Dựa trên nội dung tài liệu sau đây, hãy tạo các câu hỏi quiz:
+
+=== NỘI DUNG TÀI LIỆU (${fileName}) ===
+${text.substring(0, 100000)}
+=== HẾT NỘI DUNG ===
+
+Yêu cầu: Tạo câu hỏi bám sát nội dung tài liệu trên.`;
+        
+        return this.generateFromPrompt(contextPrompt, config);
+        
+      } else {
+        return {
+          questions: [],
+          error: `Định dạng file không được hỗ trợ (${fileType}). Gemini hỗ trợ: PDF, PNG, JPG, GIF, WEBP, TXT`
+        };
+      }
       
     } catch (error) {
       console.error('Error generating questions from file:', error);
       return {
         questions: [],
-        error: error instanceof Error ? error.message : 'Cannot generate questions from file'
+        error: error instanceof Error ? error.message : 'Không thể xử lý file. Vui lòng thử lại.'
+      };
+    }
+  }
+
+  /**
+   * Convert File to base64 string
+   */
+  private async fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Remove data URL prefix (e.g., "data:application/pdf;base64,")
+        const base64 = result.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = (error) => reject(error);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  /**
+   * Generate questions from file data (base64) using Gemini multimodal
+   */
+  private async generateFromFileData(
+    base64Data: string,
+    mimeType: string,
+    fileName: string,
+    config: SimpleAIConfig = {}
+  ): Promise<GenerateQuestionsResponse> {
+    try {
+      // 🆕 Build content with user's additional instructions if provided
+      let contentPrompt = `Phân tích file "${fileName}" và tạo câu hỏi quiz dựa trên nội dung.`;
+      
+      if (config.topic) {
+        contentPrompt += `\n\nYÊU CẦU BỔ SUNG TỪ NGƯỜI DÙNG: ${config.topic}`;
+      }
+
+      const options: QuestionGenerationOptions = {
+        content: contentPrompt,
+        numQuestions: config.numQuestions || 5,
+        difficulty: config.difficulty || 'medium',
+        language: config.language || 'vi',
+        questionTypes: config.questionTypes,
+        // 🆕 Pass file data for multimodal
+        fileData: {
+          base64: base64Data,
+          mimeType: mimeType,
+          fileName: fileName
+        }
+      };
+
+      const firebaseConfig: FirebaseAIConfig = {
+        temperature: config.temperature || 0.7,
+        model: 'gemini-2.5-flash-lite' as const,
+        maxTokens: Math.max(16000, (config.numQuestions || 5) * 1000) // More tokens for file analysis
+      };
+
+      const questions = await FirebaseAIService.generateQuestions(
+        firebaseConfig,
+        options
+      );
+
+      return {
+        questions: questions,
+        error: undefined
+      };
+    } catch (error) {
+      console.error('Error generating questions from file data:', error);
+      return {
+        questions: [],
+        error: error instanceof Error ? error.message : 'Không thể tạo câu hỏi từ file'
       };
     }
   }

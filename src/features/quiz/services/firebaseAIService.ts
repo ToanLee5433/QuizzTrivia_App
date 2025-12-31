@@ -1,6 +1,6 @@
 // Firebase AI Service using Google Generative AI (Gemini)
 // Service để tạo câu hỏi tự động bằng AI
-// Updated: 2025-11 - Using gemini-2.5-flash-lite (RPM: 4000, TPM: 4M)
+// Updated: 2025-12 - Using gemini-2.5-flash-lite with multimodal support (PDF, images)
 
 import { Question, QuestionType } from '../types';
 import { getFunctions, httpsCallable } from 'firebase/functions';
@@ -12,6 +12,13 @@ export interface FirebaseAIConfig {
   maxTokens?: number;
 }
 
+// 🆕 File data for multimodal support
+export interface FileData {
+  base64: string;
+  mimeType: string;
+  fileName: string;
+}
+
 export interface QuestionGenerationOptions {
   content: string;
   customPrompt?: string;
@@ -19,6 +26,7 @@ export interface QuestionGenerationOptions {
   difficulty?: 'easy' | 'medium' | 'hard' | 'mixed';
   language?: 'vi' | 'en';
   questionTypes?: QuestionType[];
+  fileData?: FileData; // 🆕 Optional file data for multimodal
 }
 
 /**
@@ -37,7 +45,8 @@ export class FirebaseAIService {
       numQuestions = 5, 
       difficulty = 'mixed', 
       language = 'vi',
-      questionTypes
+      questionTypes,
+      fileData // 🆕 Optional file data for multimodal
     } = options;
 
     // Kiểm tra xác thực
@@ -57,21 +66,37 @@ export class FirebaseAIService {
         numQuestions,
         difficulty,
         language,
-        model: config.model || 'gemini-2.5-flash-lite'
+        model: config.model || 'gemini-2.5-flash-lite',
+        hasFileData: !!fileData,
+        fileType: fileData?.mimeType,
+        fileName: fileData?.fileName
       });
 
       // Gọi Firebase Function
       const generateQuestions = httpsCallable(this.functions, 'generateQuestions');
       
-      const result = await generateQuestions({
+      // 🆕 Build request with optional file data
+      const requestData: any = {
         prompt: systemPrompt,
         content: content,
         config: {
           model: config.model || 'gemini-2.5-flash-lite',
           temperature: config.temperature || 0.7,
-          maxTokens: config.maxTokens || 32000 // ⚡ gemini-2.5-flash-lite: 32K for long PDF/image input + full Q&A output
+          maxTokens: config.maxTokens || 32000
         }
-      });
+      };
+
+      // 🆕 Add file data if present (for multimodal PDF/image processing)
+      if (fileData) {
+        requestData.fileData = {
+          base64: fileData.base64,
+          mimeType: fileData.mimeType,
+          fileName: fileData.fileName
+        };
+        console.log('📎 Sending file data to Gemini multimodal API');
+      }
+
+      const result = await generateQuestions(requestData);
 
       const data = result.data as any;
       
@@ -168,13 +193,16 @@ ${allowedTypes.includes('short_answer') ? '- Đối với short_answer: trả v�
     };
     const difficultyDesc = difficultyMap[difficulty] || difficulty;
 
-    return `Generate ${numQuestions} quiz questions in ${lang} for the following topic.
+    return `Generate EXACTLY ${numQuestions} quiz questions in ${lang} for the following topic.
+
+⚠️ CRITICAL: You MUST generate EXACTLY ${numQuestions} questions - no more, no less!
 
 STRICT REQUIREMENTS (BẮT BUỘC):
-1. Language: ALL questions and answers MUST be in ${lang}. Do NOT mix languages.
-2. Difficulty: ${difficultyDesc}
+1. QUANTITY: Generate EXACTLY ${numQuestions} questions. This is mandatory!
+2. Language: ALL questions and answers MUST be in ${lang}. Do NOT mix languages.
+3. Difficulty: ${difficultyDesc}
 ${difficulty === 'mixed' ? '   - Đánh dấu từng câu hỏi với độ khó tương ứng trong field "difficulty": "easy" | "medium" | "hard"' : `   - TẤT CẢ câu hỏi phải có độ khó: ${difficulty}`}
-3. Format: Return ONLY valid JSON array, no markdown, no code blocks
+4. Format: Return ONLY valid JSON array, no markdown, no code blocks
 ${typesDescription}
 
 Structure requirements:

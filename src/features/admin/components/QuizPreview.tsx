@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Question } from '../../quiz/types';
 import RichTextViewer from '../../../shared/components/ui/RichTextViewer';
 import { useTranslation } from 'react-i18next';
 import SafeHTML from '../../../shared/components/ui/SafeHTML';
-import { Clock, Lock, Globe, Tag, Calendar, User, BookOpen, Award, FileText, BarChart2, Star, TrendingUp, Percent, Key } from 'lucide-react';
+import { Clock, Lock, Globe, Tag, Calendar, User, BookOpen, Award, FileText, BarChart2, Star, TrendingUp, Percent, Key, Video, Image as ImageIcon, Music, Link as LinkIcon, Presentation, ExternalLink, Eye } from 'lucide-react';
+import ImageViewer from '../../../shared/components/ui/ImageViewer';
+import PDFViewer from '../../../shared/components/ui/PDFViewer';
+import AudioPlayer from '../../../shared/components/ui/AudioPlayer';
 
 // Helper to detect and convert YouTube URLs to embed format
 const getVideoEmbedUrl = (url: string): { type: 'youtube' | 'direct'; embedUrl: string } => {
@@ -95,10 +98,48 @@ const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.Re
 
 const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, isOpen, onClose }) => {
   const { t } = useTranslation();
+  const [selectedResource, setSelectedResource] = useState<any>(null);
+  const [resourceViewerType, setResourceViewerType] = useState<string | null>(null);
+  
   // Guard clause to prevent null quiz errors
   if (!quiz) {
     return null;
   }
+
+  // Helper functions for resources
+  const getResourceIcon = (type: string) => {
+    switch (type) {
+      case 'video': return <Video className="w-5 h-5" />;
+      case 'pdf': return <FileText className="w-5 h-5" />;
+      case 'image': return <ImageIcon className="w-5 h-5" />;
+      case 'audio': return <Music className="w-5 h-5" />;
+      case 'link': return <LinkIcon className="w-5 h-5" />;
+      case 'slides': return <Presentation className="w-5 h-5" />;
+      default: return <FileText className="w-5 h-5" />;
+    }
+  };
+
+  const getResourceBadgeColor = (type: string) => {
+    switch (type) {
+      case 'video': return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'pdf': return 'bg-red-100 text-red-700 border-red-200';
+      case 'image': return 'bg-purple-100 text-purple-700 border-purple-200';
+      case 'audio': return 'bg-green-100 text-green-700 border-green-200';
+      case 'link': return 'bg-indigo-100 text-indigo-700 border-indigo-200';
+      case 'slides': return 'bg-orange-100 text-orange-700 border-orange-200';
+      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+  };
+
+  const handleViewResource = (resource: any) => {
+    setSelectedResource(resource);
+    setResourceViewerType(resource.type);
+  };
+
+  const closeResourceViewer = () => {
+    setSelectedResource(null);
+    setResourceViewerType(null);
+  };
 
   // Helper to format date
   const formatDate = (date: any) => {
@@ -116,11 +157,14 @@ const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, isOpen, onClose }) => {
   // Check if quiz has password protection
   const hasPassword = quiz.havePassword === 'password' || quiz.visibility === 'password';
   
+  // Get resources - check both fields
+  const quizResources = quiz.resources || quiz.learningResources || [];
+  
   // Get quiz type
-  const quizType = (quiz as any).quizType || ((quiz as any).resources?.length > 0 ? 'with-materials' : 'standard');
+  const quizType = (quiz as any).quizType || (quizResources.length > 0 ? 'with-materials' : 'standard');
   
   // Get resources count
-  const resourcesCount = (quiz as any).resources?.length || 0;
+  const resourcesCount = quizResources.length;
   
   // Calculate average score if available
   const avgScore = (quiz as any).averageScore || (quiz as any).avgScore || null;
@@ -130,6 +174,7 @@ const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, isOpen, onClose }) => {
   const ratingCount = (quiz as any).ratingCount || (quiz as any).ratingsCount || 0;
 
   return (
+    <>
     <Modal isOpen={isOpen} onClose={onClose}>
       {/* Header - Sticky */}
       <div className="sticky top-0 bg-gradient-to-r from-indigo-600 to-purple-600 z-10 p-4 sm:p-6 border-b border-gray-200 rounded-t-lg">
@@ -207,7 +252,7 @@ const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, isOpen, onClose }) => {
           {resourcesCount > 0 && (
             <div className="flex items-center gap-2 text-gray-600">
               <BookOpen className="w-4 h-4 text-blue-500 flex-shrink-0" />
-              <span className="font-medium">{t('admin.preview.resources', 'Tài liệu')}:</span>
+              <span className="font-medium">{t('admin.preview.learningMaterials', 'Tài liệu')}:</span>
               <span className="text-gray-900">{resourcesCount} {t('admin.preview.files', 'tệp')}</span>
             </div>
           )}
@@ -291,6 +336,60 @@ const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, isOpen, onClose }) => {
           </div>
         </div>
       </div>
+
+      {/* Learning Resources Section */}
+      {quizResources && quizResources.length > 0 && (
+        <div className="p-3 sm:p-6 bg-gradient-to-br from-emerald-50 to-teal-50 border-b border-emerald-200">
+          <h3 className="text-base sm:text-lg font-semibold mb-4 text-emerald-900 flex items-center gap-2">
+            <BookOpen className="w-5 h-5" />
+            {t('admin.preview.learningResources', '📚 Tài liệu học tập')}
+            <span className="px-2 py-0.5 bg-emerald-200 text-emerald-800 rounded-full text-xs font-bold">
+              {quizResources.length} {t('admin.preview.files', 'tệp')}
+            </span>
+          </h3>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {quizResources.map((resource: any, idx: number) => (
+              <div
+                key={resource.id || idx}
+                className="bg-white rounded-xl p-4 border-2 border-emerald-100 hover:border-emerald-300 hover:shadow-lg transition-all"
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`flex items-center justify-center w-12 h-12 rounded-xl border-2 ${getResourceBadgeColor(resource.type)}`}>
+                    {getResourceIcon(resource.type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-gray-900 text-sm truncate">{resource.title}</h4>
+                    <p className="text-xs text-gray-500 capitalize">{resource.type}</p>
+                    {resource.required && (
+                      <span className="inline-block mt-1 px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs font-medium">
+                        {t('createQuiz.review.requiredBadge', 'Bắt buộc')}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={() => handleViewResource(resource)}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium"
+                  >
+                    <Eye className="w-4 h-4" />
+                    {t('common.view', 'Xem')}
+                  </button>
+                  <a
+                    href={resource.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-1.5 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Scrollable Content */}
       <div className="p-3 sm:p-6">
@@ -777,6 +876,243 @@ const QuizPreview: React.FC<QuizPreviewProps> = ({ quiz, isOpen, onClose }) => {
         </div>
       </div>
     </Modal>
+
+    {/* Resource Viewers - Rendered outside Modal for proper z-index */}
+    {/* Universal Video Viewer - supports both YouTube and direct video */}
+    {selectedResource && resourceViewerType === 'video' && (
+      <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 p-4">
+        <div className="relative w-full max-w-6xl flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-4 px-2">
+            <div className="flex-1">
+              {selectedResource.title && (
+                <h2 className="text-white text-xl font-semibold truncate">
+                  {selectedResource.title}
+                </h2>
+              )}
+            </div>
+            <button
+              onClick={closeResourceViewer}
+              className="p-2 text-white hover:bg-red-600 rounded-lg transition-colors"
+              title={t('common.close')}
+            >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Video Player */}
+          <div className="relative bg-black rounded-lg overflow-hidden shadow-2xl" style={{ aspectRatio: '16/9' }}>
+            {(() => {
+              const url = selectedResource.url;
+              // Check if YouTube URL
+              const youtubeRegex = /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+              const youtubeMatch = url.match(youtubeRegex);
+              
+              if (youtubeMatch) {
+                const videoId = youtubeMatch[1];
+                return (
+                  <iframe
+                    src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
+                    title={selectedResource.title || "Video"}
+                    className="absolute inset-0 w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    style={{ border: 'none' }}
+                  />
+                );
+              }
+              
+              // Check if Google Drive URL
+              const driveRegex = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/;
+              const driveMatch = url.match(driveRegex);
+              
+              if (driveMatch) {
+                const fileId = driveMatch[1];
+                return (
+                  <iframe
+                    src={`https://drive.google.com/file/d/${fileId}/preview`}
+                    title={selectedResource.title || "Video"}
+                    className="absolute inset-0 w-full h-full"
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen
+                    style={{ border: 'none' }}
+                  />
+                );
+              }
+              
+              // Direct video file
+              return (
+                <video
+                  src={url}
+                  controls
+                  autoPlay
+                  className="absolute inset-0 w-full h-full"
+                >
+                  {t('common.videoNotSupported', 'Trình duyệt của bạn không hỗ trợ video')}
+                </video>
+              );
+            })()}
+          </div>
+
+          {/* Instructions */}
+          <div className="mt-4 text-center">
+            <p className="text-white text-sm opacity-75">
+              💡 Nhấn <kbd className="px-2 py-1 bg-white bg-opacity-20 rounded">ESC</kbd> hoặc click bên ngoài để đóng
+            </p>
+          </div>
+        </div>
+      </div>
+    )}
+    {selectedResource && resourceViewerType === 'pdf' && (
+      <PDFViewer
+        pdfUrl={selectedResource.url}
+        title={selectedResource.title}
+        onClose={closeResourceViewer}
+      />
+    )}
+    {selectedResource && resourceViewerType === 'image' && (
+      <ImageViewer
+        imageUrl={selectedResource.url}
+        title={selectedResource.title}
+        onClose={closeResourceViewer}
+      />
+    )}
+    {selectedResource && resourceViewerType === 'audio' && (
+      <AudioPlayer
+        audioUrl={selectedResource.url}
+        title={selectedResource.title}
+        onClose={closeResourceViewer}
+      />
+    )}
+    {selectedResource && (resourceViewerType === 'link' || resourceViewerType === 'slides') && (
+      <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 p-4">
+        <div className="relative w-full max-w-6xl h-[90vh] bg-white dark:bg-slate-900 rounded-xl shadow-2xl flex flex-col overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-slate-700 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-slate-800 dark:to-slate-800">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                <LinkIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 dark:text-white">{selectedResource.title}</h3>
+                {selectedResource.description && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">{selectedResource.description}</p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => window.open(selectedResource.url, '_blank', 'noopener,noreferrer')}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              >
+                <LinkIcon className="w-4 h-4" />
+                {t('common.openInNewTab', 'Mở tab mới')}
+              </button>
+              <button
+                onClick={closeResourceViewer}
+                className="p-2 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                title={t('common.close')}
+              >
+                <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          {/* Smart Iframe Content - Auto-detect URL type */}
+          <div className="flex-1 bg-gray-100 dark:bg-slate-800">
+            {(() => {
+              const url = selectedResource.url;
+              
+              // YouTube URL - convert to embed
+              const youtubeRegex = /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+              const youtubeMatch = url.match(youtubeRegex);
+              if (youtubeMatch) {
+                const videoId = youtubeMatch[1];
+                return (
+                  <iframe
+                    src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
+                    className="w-full h-full border-0"
+                    title={selectedResource.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                );
+              }
+              
+              // Google Drive - convert to preview
+              const driveRegex = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/;
+              const driveMatch = url.match(driveRegex);
+              if (driveMatch) {
+                const fileId = driveMatch[1];
+                return (
+                  <iframe
+                    src={`https://drive.google.com/file/d/${fileId}/preview`}
+                    className="w-full h-full border-0"
+                    title={selectedResource.title}
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen
+                  />
+                );
+              }
+              
+              // Google Slides/Docs/Sheets - convert to embed
+              const googleDocsRegex = /docs\.google\.com\/(presentation|document|spreadsheets)\/d\/([a-zA-Z0-9_-]+)/;
+              const googleDocsMatch = url.match(googleDocsRegex);
+              if (googleDocsMatch) {
+                const type = googleDocsMatch[1];
+                const docId = googleDocsMatch[2];
+                let embedUrl = '';
+                if (type === 'presentation') {
+                  embedUrl = `https://docs.google.com/presentation/d/${docId}/embed?start=false&loop=false&delayms=3000`;
+                } else if (type === 'document') {
+                  embedUrl = `https://docs.google.com/document/d/${docId}/preview`;
+                } else if (type === 'spreadsheets') {
+                  embedUrl = `https://docs.google.com/spreadsheets/d/${docId}/preview`;
+                }
+                return (
+                  <iframe
+                    src={embedUrl}
+                    className="w-full h-full border-0"
+                    title={selectedResource.title}
+                    allowFullScreen
+                  />
+                );
+              }
+              
+              // Vimeo - convert to embed
+              const vimeoRegex = /vimeo\.com\/(\d+)/;
+              const vimeoMatch = url.match(vimeoRegex);
+              if (vimeoMatch) {
+                const videoId = vimeoMatch[1];
+                return (
+                  <iframe
+                    src={`https://player.vimeo.com/video/${videoId}`}
+                    className="w-full h-full border-0"
+                    title={selectedResource.title}
+                    allow="autoplay; fullscreen; picture-in-picture"
+                    allowFullScreen
+                  />
+                );
+              }
+              
+              // Default - try regular iframe
+              return (
+                <iframe
+                  src={url}
+                  className="w-full h-full border-0"
+                  title={selectedResource.title}
+                  sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-top-navigation"
+                />
+              );
+            })()}
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 };
 

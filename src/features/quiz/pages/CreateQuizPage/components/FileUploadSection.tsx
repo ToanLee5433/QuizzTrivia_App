@@ -1,7 +1,6 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef } from 'react';
 import { Upload, X, FileText, FileImage, File } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import Button from '../../../../../shared/components/ui/Button';
 
 interface FileUploadSectionProps {
   onFileSelect: (file: File | null) => void;
@@ -25,6 +24,11 @@ export const FileUploadSection: React.FC<FileUploadSectionProps> = ({
   const { t } = useTranslation();
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleButtonClick = () => {
+    fileInputRef.current?.click();
+  };
 
   const validateFile = useCallback((file: File): string | null => {
     // Check file size
@@ -130,18 +134,16 @@ export const FileUploadSection: React.FC<FileUploadSectionProps> = ({
           }`}
         >
           <input
+            ref={fileInputRef}
             type="file"
             id="file-upload"
             className="hidden"
             onChange={handleChange}
             accept={Object.keys(ACCEPTED_TYPES).join(',')}
           />
-          <label
-            htmlFor="file-upload"
-            className="cursor-pointer flex flex-col items-center gap-3"
-          >
+          <div className="flex flex-col items-center gap-3">
             <Upload className="w-12 h-12 text-gray-400" aria-hidden="true" />
-            <div className="space-y-1">
+            <div className="space-y-1 text-center">
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 {t('fileUpload.dragDrop')}
               </p>
@@ -152,10 +154,14 @@ export const FileUploadSection: React.FC<FileUploadSectionProps> = ({
                 {t('fileUpload.maxSize', { size: '10MB' })}
               </p>
             </div>
-            <Button type="button" variant="outline" size="sm">
+            <button
+              type="button"
+              onClick={handleButtonClick}
+              className="px-4 py-2 text-sm font-medium border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
               {t('fileUpload.selectFile')}
-            </Button>
-          </label>
+            </button>
+          </div>
         </div>
       ) : (
         <div className="border rounded-xl p-4 bg-white dark:bg-gray-800">
@@ -169,15 +175,14 @@ export const FileUploadSection: React.FC<FileUploadSectionProps> = ({
                 {formatFileSize(selectedFile.size)}
               </p>
             </div>
-            <Button
+            <button
+              type="button"
               onClick={removeFile}
-              variant="outline"
-              size="sm"
-              className="text-red-600 border-red-300 hover:bg-red-50"
+              className="px-3 py-1.5 text-sm font-medium border-2 border-red-300 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               aria-label={t('fileUpload.removeFile')}
             >
               <X className="w-4 h-4" aria-hidden="true" />
-            </Button>
+            </button>
           </div>
         </div>
       )}
