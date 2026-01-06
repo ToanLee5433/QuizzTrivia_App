@@ -62,6 +62,10 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
   
   // Track question index to detect question changes
   const lastQuestionIndexRef = useRef(questionState?.questionIndex);
+  
+  // ✅ FIX: Define refs here before useEffect that uses them
+  const lastTickRef = useRef<number>(-1);
+  const hasPlayedRevealSound = useRef(false);
 
   // 🎵 Start game music when component mounts
   useEffect(() => {
@@ -69,7 +73,8 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
     musicService.crossfade('game', 2000);
     
     return () => {
-      // Music will be handled by next component (victory music or stop)
+      // ✅ FIX: Stop game music on unmount to prevent memory leak
+      musicService.stop();
     };
   }, []);
 
@@ -90,6 +95,9 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
       setShowResult(false);
       setIsCorrect(null);
       setPointsEarned(0);
+      // ✅ FIX: Reset sound refs when question changes to prevent multiple plays
+      lastTickRef.current = -1;
+      hasPlayedRevealSound.current = false;
     }
   }, [questionState?.questionIndex]);
 
@@ -158,7 +166,7 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
   }, [isRevealingPhase, player.hasAnswered, isCorrect]);
 
   // 🔊 SFX: Tick tắc khi còn 5s cuối (Live Mode tension)
-  const lastTickRef = useRef<number>(-1);
+  // ✅ FIX: Removed duplicate ref declaration - now defined at top of component
   useEffect(() => {
     // Chỉ play tick khi đang ở Answering phase và chưa trả lời
     if (gameStatus === 'answering' && !player.hasAnswered && timeLeft <= 5 && timeLeft > 0) {
@@ -171,7 +179,7 @@ const PlayerGameView: React.FC<PlayerGameViewProps> = ({
   }, [timeLeft, gameStatus, player.hasAnswered]);
 
   // 🔊 SFX: Transition sound khi vào Revealing Phase
-  const hasPlayedRevealSound = useRef(false);
+  // ✅ FIX: Removed duplicate ref declaration - now defined at top of component
   const STREAK_MILESTONES = [3, 5, 7, 10]; // Milestone levels
   
   useEffect(() => {

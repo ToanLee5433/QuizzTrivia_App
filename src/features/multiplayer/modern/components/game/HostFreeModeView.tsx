@@ -1,6 +1,6 @@
 /**
- * 👑 HOST GAME VIEW
- * Game view for host with controls
+ * 👑 HOST FREE MODE VIEW
+ * Game view for host in FREE mode with controls
  * Can switch between Player and Spectator modes
  */
 
@@ -11,38 +11,37 @@ import {
   Crown, 
   Play, 
   Pause, 
-  SkipForward, 
   StopCircle,
   Eye,
   Gamepad2,
   Settings
 } from 'lucide-react';
-import PlayerGameView from './PlayerGameView';
-import SpectatorGameView from './SpectatorGameView';
-import { ModernPlayer, QuestionState } from '../../types/game.types';
+import FreeModePlayerView from './FreeModePlayerView';
+import FreeModeSpectatorView from './FreeModeSpectatorView';
+import { ModernPlayer, GameState } from '../../types/game.types';
 import { gameEngine } from '../../services/gameEngine';
 
-interface HostGameViewProps {
+interface HostFreeModeViewProps {
   roomId: string;
   player: ModernPlayer;
-  questionState: QuestionState;
+  gameState: GameState;
   players: Record<string, ModernPlayer>;
+  leaderboard?: any;
   gameStatus: string;
-  onAnswerSubmit: (answer: any) => void;
 }
 
 type HostMode = 'player' | 'spectator';
 
-const HostGameView: React.FC<HostGameViewProps> = ({
+const HostFreeModeView: React.FC<HostFreeModeViewProps> = ({
   roomId,
   player,
-  questionState,
+  gameState,
   players,
+  leaderboard,
   gameStatus,
-  onAnswerSubmit,
 }) => {
   const { t } = useTranslation('multiplayer');
-  // ✅ FIX: Default to 'player' mode so host can play immediately
+  // ✅ Default to 'player' mode so host can play immediately
   const [hostMode, setHostMode] = useState<HostMode>('player');
   const [showControls, setShowControls] = useState(true);
 
@@ -52,11 +51,6 @@ const HostGameView: React.FC<HostGameViewProps> = ({
     } else {
       await gameEngine.pauseGame(roomId);
     }
-  };
-
-  const handleSkipQuestion = async () => {
-    // Direct skip without confirmation - instantly go to next question
-    await gameEngine.skipQuestion(roomId);
   };
 
   const handleEndGame = async () => {
@@ -69,20 +63,20 @@ const HostGameView: React.FC<HostGameViewProps> = ({
       {/* Main View */}
       <AnimatePresence mode="wait">
         {hostMode === 'player' ? (
-          <PlayerGameView
-            key="player-view"
+          <FreeModePlayerView
+            key="player-free-view"
             roomId={roomId}
             player={player}
-            questionState={questionState}
+            gameState={gameState}
             gameStatus={gameStatus}
-            onAnswerSubmit={onAnswerSubmit}
           />
         ) : (
-          <SpectatorGameView
-            key="spectator-view"
+          <FreeModeSpectatorView
+            key="spectator-free-view"
             roomId={roomId}
-            questionState={questionState}
+            gameState={gameState}
             players={players}
+            leaderboard={leaderboard}
             gameStatus={gameStatus}
           />
         )}
@@ -141,7 +135,7 @@ const HostGameView: React.FC<HostGameViewProps> = ({
                 {/* Divider */}
                 <div className="w-px h-10 bg-white/20" />
 
-                {/* Game Controls */}
+                {/* Game Controls - Free mode has fewer controls */}
                 <div className="flex items-center space-x-2">
                   {/* Pause/Resume */}
                   <motion.button
@@ -156,17 +150,6 @@ const HostGameView: React.FC<HostGameViewProps> = ({
                     ) : (
                       <Pause className="w-5 h-5 text-yellow-400 group-hover:text-yellow-300" />
                     )}
-                  </motion.button>
-
-                  {/* Skip Question */}
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={handleSkipQuestion}
-                    className="p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-all group"
-                    title={t('skipButton')}
-                  >
-                    <SkipForward className="w-5 h-5 text-blue-400 group-hover:text-blue-300" />
                   </motion.button>
 
                   {/* End Game */}
@@ -199,7 +182,7 @@ const HostGameView: React.FC<HostGameViewProps> = ({
               {/* Status Indicator */}
               <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 px-3 py-1 bg-gray-900 rounded-full border border-white/20">
                 <p className="text-xs text-white font-medium">
-                  {gameStatus === 'paused' ? `⏸️ ${t('gamePaused')}` : `▶️ ${t('gamePlaying')}`}
+                  {gameStatus === 'paused' ? `⏸️ ${t('gamePaused')}` : `🆓 ${t('freeMode', 'Free Mode')}`}
                 </p>
               </div>
             </div>
@@ -224,4 +207,4 @@ const HostGameView: React.FC<HostGameViewProps> = ({
   );
 };
 
-export default HostGameView;
+export default HostFreeModeView;

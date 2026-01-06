@@ -28,6 +28,8 @@ class RateLimiter {
     this.configs.set('submitAnswer', { maxRequests: 100, windowMs: 60000 }); // 100 per minute
     this.configs.set('toggleReady', { maxRequests: 10, windowMs: 30000 }); // 10 per 30s
     this.configs.set('kickPlayer', { maxRequests: 5, windowMs: 60000 }); // 5 per minute
+    // ✅ FIX: Add missing rate limit config for updateSharedScreen
+    this.configs.set('updateSharedScreen', { maxRequests: 10, windowMs: 60000 }); // 10 per minute
   }
 
   /**
@@ -170,11 +172,22 @@ class RateLimiter {
 // Singleton instance
 export const rateLimiter = new RateLimiter();
 
-// Cleanup every 5 minutes
+// ✅ FIX: Store cleanup interval for proper cleanup and clear on unload
+let cleanupIntervalId: NodeJS.Timeout | null = null;
+
 if (typeof window !== 'undefined') {
-  setInterval(() => {
+  // Cleanup every 5 minutes
+  cleanupIntervalId = setInterval(() => {
     rateLimiter.cleanup();
   }, 5 * 60 * 1000);
+  
+  // Clear interval on window unload to prevent memory leak
+  window.addEventListener('unload', () => {
+    if (cleanupIntervalId) {
+      clearInterval(cleanupIntervalId);
+      cleanupIntervalId = null;
+    }
+  });
 }
 
 export default rateLimiter;

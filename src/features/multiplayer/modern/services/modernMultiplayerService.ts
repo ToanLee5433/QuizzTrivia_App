@@ -1,3 +1,25 @@
+/**
+ * 🏠 MODERN MULTIPLAYER SERVICE
+ * 
+ * RESPONSIBILITY SEPARATION:
+ * ---------------------------
+ * modernMultiplayerService: Room & Lobby management
+ *   - createRoom, joinRoom, leaveRoom, quickRejoin
+ *   - kickPlayer, toggleReady, toggleRole, transferHost
+ *   - Host migration, presence management
+ *   - Firestore persistence (multiplayer_rooms, match_histories)
+ * 
+ * gameEngine (gameEngine.ts): In-game logic
+ *   - initializeGame, startGame, finishGame
+ *   - submitAnswer, goToNextQuestion
+ *   - pauseGame, resumeGame
+ *   - Timer management, scoring, leaderboard
+ *   - RTDB real-time sync during gameplay
+ * 
+ * NOTE: Some methods in this file (submitAnswer, pauseGame, resumeGame, endGame)
+ * are legacy and NOT used. Use gameEngine for in-game actions instead.
+ */
+
 import { 
   doc, 
   collection, 
@@ -23,6 +45,7 @@ import {
   get,
   push,
   onDisconnect,
+  OnDisconnect,
   Database,
   getDatabase,
   runTransaction
@@ -162,19 +185,23 @@ export class ModernMultiplayerService {
   private callbackIdCounter = 0;
   private networkMonitor = networkMonitor;
   // ✅ FIX: Store onDisconnect refs to cancel them when leaving properly
-  private presenceDisconnectRef: any = null;
-  private playerDisconnectRef: any = null;
+  // Type: OnDisconnect (not Reference) - returned by onDisconnect() function
+  private presenceDisconnectRef: OnDisconnect | null = null;
+  private playerDisconnectRef: OnDisconnect | null = null;
 
   constructor() {
     this.rtdb = getDatabase();
     this.db = getFirestore();
     this.auth = getAuth();
+    // ✅ FIX: Remove duplicate userId assignment
     this.userId = this.auth.currentUser?.uid || '';
-    this.userId = getAuth().currentUser?.uid || '';
     
     // Set up network monitoring
     this.setupNetworkMonitoring();
   }
+
+  // ✅ FIX: Store network listener IDs as class properties for proper cleanup
+  private networkListenerIds: string[] = [];
 
   private setupNetworkMonitoring(): void {
     // Listen to network changes
@@ -195,10 +222,13 @@ export class ModernMultiplayerService {
       logger.warn('Network connection lost');
     });
     
+    // ✅ Store listener IDs for cleanup
+    this.networkListenerIds = [onlineId, offlineId];
+    
     // Clean up network listeners on service cleanup
     this.on('cleanup', () => {
-      this.networkMonitor.off(onlineId);
-      this.networkMonitor.off(offlineId);
+      this.networkListenerIds.forEach(id => this.networkMonitor.off(id));
+      this.networkListenerIds = [];
     });
   }
 
@@ -1281,18 +1311,34 @@ export class ModernMultiplayerService {
                 console.log('👑 I am the new host candidate! Taking over...');
                 
                 try {
-                  // Direct update instead of transaction (rules now allow this)
+                  // ✅ FIX: Use transaction to prevent race conditions
+                  // Only one client will successfully become host
+                  const hostIdRef = ref(this.rtdb, `rooms/${roomId}/hostId`);
+                  
+                  const transactionResult = await runTransaction(hostIdRef, (currentHostId) => {
+                    // If host already changed (another client was faster), abort
+                    if (currentHostId !== freshRoomData.hostId) {
+                      console.log('⚠️ Host already changed by another client, aborting');
+                      return; // Abort transaction
+                    }
+                    // Set new host
+                    return this.userId;
+                  });
+                  
+                  // Check if transaction was successful
+                  if (!transactionResult.committed) {
+                    console.log('⚠️ Host migration transaction aborted (another client won)');
+                    hostMigrationTimeout = null;
+                    return;
+                  }
+                  
                   const rtdbRoomRef = ref(this.rtdb, `rooms/${roomId}`);
                   
                   // ✅ If owner lost host due to disconnect, reset flag so they can reclaim when back
-                  const updateData: Record<string, any> = { hostId: this.userId };
                   if (freshRoomData.hostId === freshOwnerId) {
-                    // Owner was host and went offline → reset flag so they can reclaim
-                    updateData.ownerTransferredHost = false;
+                    await update(rtdbRoomRef, { ownerTransferredHost: false });
                     console.log('📌 Owner lost host due to disconnect - they can reclaim when back');
                   }
-                  
-                  await update(rtdbRoomRef, updateData);
                   
                   // Update my role
                   const myPlayerRef = ref(this.rtdb, `rooms/${roomId}/players/${this.userId}`);
@@ -1431,6 +1477,23 @@ export class ModernMultiplayerService {
       lastSeen: Date.now(),
       username: player.name
     });
+    
+    // ✅ FIX: Cancel existing onDisconnect refs before setting new ones
+    // This prevents stale refs if reconnecting multiple times
+    if (this.presenceDisconnectRef) {
+      try {
+        await this.presenceDisconnectRef.cancel();
+      } catch (e) {
+        // Ignore cancel errors - ref may already be invalid
+      }
+    }
+    if (this.playerDisconnectRef) {
+      try {
+        await this.playerDisconnectRef.cancel();
+      } catch (e) {
+        // Ignore cancel errors - ref may already be invalid
+      }
+    }
     
     // Set up onDisconnect handlers to mark player as offline (NOT remove)
     // This allows players to reconnect after page reload
@@ -1617,6 +1680,11 @@ export class ModernMultiplayerService {
     }, retryStrategies.standard);
   }
 
+  /**
+   * @deprecated Use gameEngine.submitAnswer() instead.
+   * This method is kept for backward compatibility but not used in production.
+   * gameEngine handles all in-game logic including answer submission.
+   */
   // Submit answer
   async submitAnswer(questionId: string, answer: number, timeSpent: number): Promise<boolean> {
     return this.executeOperation(async () => {
@@ -1739,6 +1807,10 @@ export class ModernMultiplayerService {
     }, retryStrategies.standard);
   }
 
+  /**
+   * @deprecated Use gameEngine.pauseGame() instead.
+   * This method is kept for backward compatibility but not used in production.
+   */
   // Pause game (host only)
   async pauseGame(pausedBy?: string, reason?: string): Promise<void> {
     return this.executeOperation(async () => {
@@ -1773,6 +1845,10 @@ export class ModernMultiplayerService {
     }, retryStrategies.standard);
   }
 
+  /**
+   * @deprecated Use gameEngine.resumeGame() instead.
+   * This method is kept for backward compatibility but not used in production.
+   */
   // Resume game (host only)
   async resumeGame(): Promise<void> {
     return this.executeOperation(async () => {
@@ -1881,6 +1957,11 @@ export class ModernMultiplayerService {
     }, retryStrategies.standard);
   }
 
+  /**
+   * @deprecated Use gameEngine.finishGame() instead.
+   * This method is kept for backward compatibility.
+   * It's still used internally for Firestore persistence of match_histories.
+   */
   // End game and calculate final results
   async endGame(): Promise<void> {
     return this.executeOperation(async () => {
@@ -2128,14 +2209,18 @@ export class ModernMultiplayerService {
           sessionStorage.removeItem(`room_${roomCode}`);
           console.log('✅ Cleared room code cache:', roomCode);
         }
-        // Also clear by iterating through potential room codes
+        // ✅ FIX: Collect keys first, then remove to avoid iteration bug
+        const keysToRemove: string[] = [];
         for (let i = 0; i < sessionStorage.length; i++) {
           const key = sessionStorage.key(i);
           if (key?.startsWith('room_') && sessionStorage.getItem(key) === currentRoomId) {
-            sessionStorage.removeItem(key);
-            console.log('✅ Cleared room cache:', key);
+            keysToRemove.push(key);
           }
         }
+        keysToRemove.forEach(key => {
+          sessionStorage.removeItem(key);
+          console.log('✅ Cleared room cache:', key);
+        });
         
         this.roomId = ''; // Clear early to prevent any callback from using it
         

@@ -20,6 +20,10 @@ export class NetworkMonitor {
     
     // Also ping server periodically to verify connection
     this.checkInterval = setInterval(() => this.checkConnection(), 30000);
+    
+    // ✅ FIX: Clean up on window unload to prevent interval from persisting
+    window.addEventListener('unload', () => this.destroy());
+    window.addEventListener('beforeunload', () => this.destroy());
   }
   
   static getInstance(): NetworkMonitor {

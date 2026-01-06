@@ -134,8 +134,13 @@ const SpectatorGameView: React.FC<SpectatorGameViewProps> = ({
   const liveLeaderboard = useMemo(() => {
     if (leaderboard.length > 0) return leaderboard;
     
+    // ✅ FIX: Include players AND hosts who are participating
     return Object.values(players)
-      .filter(p => p.role === 'player')
+      .filter(p => {
+        if (p.role === 'player') return true;
+        if (p.role === 'host' && (p as any).isParticipating !== false) return true;
+        return false;
+      })
       .sort((a, b) => b.score - a.score)
       .map((player, index) => ({
         rank: index + 1,
@@ -158,8 +163,12 @@ const SpectatorGameView: React.FC<SpectatorGameViewProps> = ({
   const questionAnswers = questionState?.question?.answers;
   const hasQuestionData = questionState?.question && questionAnswers;
 
-  // Use spectatorData if available, otherwise use props directly
-  const playerCount = Object.values(players).filter(p => p.role === 'player').length;
+  // ✅ FIX: Count active players (not spectators) for progress calculation
+  const playerCount = Object.values(players).filter(p => {
+    if (p.role === 'player') return true;
+    if (p.role === 'host' && (p as any).isParticipating !== false) return true;
+    return false;
+  }).length;
   const answeredCount = spectatorData?.totalAnswered || questionState?.answerCount || 0;
   const progressPercent = playerCount > 0 ? (answeredCount / playerCount) * 100 : 0;
 

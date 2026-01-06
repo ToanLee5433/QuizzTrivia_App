@@ -63,6 +63,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
   const [liveGameMode, setLiveGameMode] = useState<'synced' | 'free'>('synced'); // Live game mode from RTDB
   const initializingRef = useRef(false); // Track if currently initializing
   const isLeavingRef = useRef(false); // Track if player is intentionally leaving
+  const isStartingGameRef = useRef(false); // ✅ FIX: Ref-based guard to prevent race condition
 
   // Enhanced features hooks
   const announcements = useGameAnnouncements(roomId);
@@ -194,6 +195,13 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
   };
 
   const handleStartGame = async () => {
+    // ✅ FIX: Use ref-based guard to prevent race condition from rapid clicks
+    if (isStartingGameRef.current) {
+      console.log('⚠️ Game start already in progress, ignoring');
+      return;
+    }
+    isStartingGameRef.current = true;
+    
     try {
       setIsStarting(true);
       console.log('🎮 Starting game with new engine...');
@@ -274,6 +282,7 @@ const ModernRoomLobby: React.FC<ModernRoomLobbyProps> = ({
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       alert(t('errors.cannotStartGame', 'Không thể bắt đầu trò chơi') + ': ' + errorMessage);
       setIsStarting(false);
+      isStartingGameRef.current = false; // ✅ Reset ref on error
     }
   };
 

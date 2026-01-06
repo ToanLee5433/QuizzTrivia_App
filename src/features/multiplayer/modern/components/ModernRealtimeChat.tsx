@@ -65,6 +65,7 @@ const ModernRealtimeChat: React.FC<ModernRealtimeChatProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null); // ✅ FIX: Store typing timeout for cleanup
 
   const db = getDatabase();
   const auth = getAuth();
@@ -152,13 +153,28 @@ const ModernRealtimeChat: React.FC<ModernRealtimeChatProps> = ({
         timestamp: serverTimestamp()
       });
 
+      // ✅ FIX: Clear existing timeout before setting new one
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      
       // Stop typing after 3 seconds of inactivity
-      setTimeout(() => {
+      typingTimeoutRef.current = setTimeout(() => {
         setIsTyping(false);
         remove(typingRef);
+        typingTimeoutRef.current = null;
       }, 3000);
     }
   }, [roomId, currentUserId, currentUsername, isTyping, db]);
+  
+  // ✅ FIX: Cleanup typing timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Listen to other users typing
   useEffect(() => {

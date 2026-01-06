@@ -17,7 +17,8 @@ import {
   STREAK_BONUSES,
   PlayerRole,
   SpectatorViewData,
-  DEFAULT_GAME_SETTINGS
+  DEFAULT_GAME_SETTINGS,
+  validateGameSettings
 } from '../types/game.types';
 import { Question } from '../../../quiz/types';
 import { logger } from '../utils/logger';
@@ -47,6 +48,9 @@ class GameEngine {
     try {
       logger.info('🎮 Initializing game', { roomId, quizId, questionCount: questions.length });
 
+      // ✅ Validate and clamp settings to valid bounds
+      const validatedSettings = validateGameSettings(settings);
+
       const gameState: Partial<GameState> = {
         roomId,
         gameId: `${roomId}_${Date.now()}`,
@@ -63,7 +67,7 @@ class GameEngine {
           canSkip: true,
           canKick: true,
         },
-        settings,
+        settings: validatedSettings,
         leaderboard: [],
         events: [],
       };
@@ -227,12 +231,16 @@ class GameEngine {
 
       if (roomPlayers) {
         Object.entries(roomPlayers).forEach(([playerId, player]) => {
+          // ✅ FIX: Determine effective role - host not participating is spectator
+          const isHostNotParticipating = player.role === 'host' && player.isParticipating === false;
+          const effectiveRole = isHostNotParticipating ? 'spectator' : (player.role || 'player');
+          
           gamePlayers[playerId] = {
             id: playerId,
             userId: player.id || playerId,
             name: player.name || 'Player',
             photoURL: player.photoURL,
-            role: player.role || 'player',
+            role: effectiveRole, // ✅ Use effective role
             status: 'playing',
             score: 0,
             correctAnswers: 0,
@@ -248,6 +256,8 @@ class GameEngine {
             hasAnswered: false,
             joinedAt: player.joinedAt || Date.now(),
             lastActiveAt: Date.now(),
+            // ✅ Preserve isParticipating for host
+            ...(player.role === 'host' && { isParticipating: player.isParticipating ?? true }),
           };
           playerOrder.push(playerId);
         });
@@ -283,8 +293,12 @@ class GameEngine {
 
       // ✅ STEP 4: Start first question after 3 second countdown
       // Now we can get question directly from RTDB
-      setTimeout(() => {
-        this.goToNextQuestion(roomId);
+      setTimeout(async () => {
+        try {
+          await this.goToNextQuestion(roomId);
+        } catch (error) {
+          logger.error('❌ Failed to start first question', { roomId, error });
+        }
       }, 3000);
 
       logger.success('✅ SYNCED mode game started', { roomId });
@@ -458,7 +472,11 @@ class GameEngine {
       
       if (remaining <= 0) {
         this.clearTimer(roomId);
-        await this.endQuestion(roomId);
+        try {
+          await this.endQuestion(roomId);
+        } catch (error) {
+          logger.error('❌ Failed to end question from timer', { roomId, error });
+        }
         return;
       }
 
@@ -516,10 +534,18 @@ class GameEngine {
 
       if (!players) return;
 
-      // Count only active players (not spectators, not disconnected)
-      const activePlayers = Object.values(players).filter(
-        p => p.role === 'player' && p.status !== 'disconnected' && p.isOnline
-      );
+      // ✅ FIX: Count active players (not spectators, not disconnected)
+      // Include players AND hosts who are participating
+      const activePlayers = Object.values(players).filter(p => {
+        // Must be online and not disconnected
+        if (p.status === 'disconnected' || !p.isOnline) return false;
+        // Include regular players
+        if (p.role === 'player') return true;
+        // Include hosts who are participating
+        if (p.role === 'host' && p.isParticipating !== false) return true;
+        // Exclude spectators
+        return false;
+      });
 
       const allAnswered = activePlayers.every(p => p.hasAnswered);
       
@@ -564,11 +590,19 @@ class GameEngine {
 
       // ⚡ FAST: Only 1s review + 1s leaderboard = 2s total (instead of 8s)
       setTimeout(async () => {
-        await update(gameRef, { status: 'leaderboard' });
-        
-        setTimeout(async () => {
-          await this.goToNextQuestion(roomId);
-        }, 1000); // 1s leaderboard
+        try {
+          await update(gameRef, { status: 'leaderboard' });
+          
+          setTimeout(async () => {
+            try {
+              await this.goToNextQuestion(roomId);
+            } catch (error) {
+              logger.error('❌ Failed to go to next question (fast)', { roomId, error });
+            }
+          }, 1000); // 1s leaderboard
+        } catch (error) {
+          logger.error('❌ Failed to update leaderboard status (fast)', { roomId, error });
+        }
       }, 1000); // 1s review
 
       logger.success('⚡ Fast question end triggered', { roomId });
@@ -604,13 +638,19 @@ class GameEngine {
 
       if (roomPlayers) {
         Object.entries(roomPlayers).forEach(([playerId, player]) => {
-          const isPlayer = player.role === 'player';
+          // ✅ FIX: Determine effective role - host not participating is spectator
+          const isHostNotParticipating = player.role === 'host' && player.isParticipating === false;
+          const effectiveRole = isHostNotParticipating ? 'spectator' : (player.role || 'player');
+          
+          // Only give freeMode data to actual players (not spectators, not host-spectating)
+          const isActualPlayer = effectiveRole === 'player' || (effectiveRole === 'host' && player.isParticipating !== false);
+          
           gamePlayers[playerId] = {
             id: playerId,
             userId: player.id || playerId,
             name: player.name || 'Player',
             photoURL: player.photoURL,
-            role: player.role || 'player',
+            role: effectiveRole, // ✅ Use effective role
             status: 'playing',
             score: 0,
             correctAnswers: 0,
@@ -626,8 +666,10 @@ class GameEngine {
             hasAnswered: false,
             joinedAt: player.joinedAt || Date.now(),
             lastActiveAt: Date.now(),
-            // 🆓 FREE MODE: Individual progress
-            freeMode: isPlayer ? {
+            // ✅ Preserve isParticipating for host
+            ...(player.role === 'host' && { isParticipating: player.isParticipating ?? true }),
+            // 🆓 FREE MODE: Individual progress (only for actual players)
+            freeMode: isActualPlayer ? {
               currentQuestionIndex: 0,
               timeRemaining: totalQuizTime,
               startedAt: Date.now(),
@@ -675,6 +717,9 @@ class GameEngine {
    * 🆓 FREE MODE: Start individual timers for all players
    */
   private async startFreeModeTimers(roomId: string): Promise<void> {
+    // ✅ FIX: Clear any existing timer before starting new one to prevent timer leaks
+    this.clearTimer(roomId);
+    
     const timerId = setInterval(async () => {
       try {
         const playersRef = ref(this.db, RTDB_PATHS.players(roomId));
@@ -855,9 +900,13 @@ class GameEngine {
 
       if (!players) return;
 
-      const activePlayers = Object.values(players).filter(
-        p => p.role === 'player' && p.isOnline
-      );
+      // ✅ FIX: Include players AND hosts who are participating (not spectators)
+      const activePlayers = Object.values(players).filter(p => {
+        if (!p.isOnline) return false;
+        if (p.role === 'player') return true;
+        if (p.role === 'host' && p.isParticipating !== false) return true;
+        return false;
+      });
 
       const allFinished = activePlayers.every(
         p => p.status === 'finished' || p.freeMode?.finishedAt
@@ -1058,14 +1107,22 @@ class GameEngine {
 
       // Wait for review duration, then show leaderboard, then move to next question
       setTimeout(async () => {
-        // Show leaderboard between questions
-        await update(gameRef, { status: 'leaderboard' });
-        
-        setTimeout(async () => {
-          // ✅ NEW: Use goToNextQuestion instead of emitting event
-          // This automatically handles getting question from RTDB
-          await this.goToNextQuestion(roomId);
-        }, gameState.settings.leaderboardDuration * 1000);
+        try {
+          // Show leaderboard between questions
+          await update(gameRef, { status: 'leaderboard' });
+          
+          setTimeout(async () => {
+            try {
+              // ✅ NEW: Use goToNextQuestion instead of emitting event
+              // This automatically handles getting question from RTDB
+              await this.goToNextQuestion(roomId);
+            } catch (error) {
+              logger.error('❌ Failed to go to next question', { roomId, error });
+            }
+          }, gameState.settings.leaderboardDuration * 1000);
+        } catch (error) {
+          logger.error('❌ Failed to update leaderboard status', { roomId, error });
+        }
       }, gameState.settings.reviewDuration * 1000);
 
       logger.success('✅ Question ended', { roomId });
@@ -1394,9 +1451,17 @@ class GameEngine {
       const prevRanks = new Map(prevLeaderboard.map(entry => [entry.playerId, entry.rank]));
       const prevScores = new Map(prevLeaderboard.map(entry => [entry.playerId, entry.score]));
 
-      // Create new leaderboard (only for players, not spectators)
+      // Create new leaderboard (only for active players, not spectators)
+      // ✅ FIX: Include players AND hosts who are participating
       const entries: LeaderboardEntry[] = Object.values(players)
-        .filter(p => p.role === 'player')
+        .filter(p => {
+          // Include regular players
+          if (p.role === 'player') return true;
+          // Include hosts who are participating (not spectating)
+          if (p.role === 'host' && p.isParticipating !== false) return true;
+          // Exclude spectators
+          return false;
+        })
         .map(player => ({
           rank: 0, // Will be set after sorting
           playerId: player.id,

@@ -131,6 +131,10 @@ export interface ModernPlayer {
   lastActiveAt: number;
   ping?: number;
   
+  // ✅ Host participation mode
+  // For host role: true = playing, false = spectating (only applies when role='host')
+  isParticipating?: boolean;
+  
   // 🆓 FREE MODE - Individual player progress
   freeMode?: {
     currentQuestionIndex: number;  // Which question this player is on
@@ -249,6 +253,49 @@ export const DEFAULT_GAME_SETTINGS: GameSettings = {
   spectatorMode: true,
   autoStart: false,
 };
+
+// ✅ Settings bounds validation
+export const GAME_SETTINGS_BOUNDS = {
+  timePerQuestion: { min: 5, max: 300 },      // 5s to 5min per question
+  totalQuizTime: { min: 60, max: 3600 },      // 1min to 1hour for free mode
+  reviewDuration: { min: 1, max: 30 },        // 1s to 30s review
+  leaderboardDuration: { min: 1, max: 30 },   // 1s to 30s leaderboard
+};
+
+/**
+ * Validate and clamp game settings to valid bounds
+ */
+export function validateGameSettings(settings: Partial<GameSettings>): GameSettings {
+  const validated = { ...DEFAULT_GAME_SETTINGS, ...settings };
+  
+  // Clamp numeric values to bounds
+  validated.timePerQuestion = Math.max(
+    GAME_SETTINGS_BOUNDS.timePerQuestion.min,
+    Math.min(GAME_SETTINGS_BOUNDS.timePerQuestion.max, validated.timePerQuestion || 30)
+  );
+  
+  validated.totalQuizTime = Math.max(
+    GAME_SETTINGS_BOUNDS.totalQuizTime.min,
+    Math.min(GAME_SETTINGS_BOUNDS.totalQuizTime.max, validated.totalQuizTime || 300)
+  );
+  
+  validated.reviewDuration = Math.max(
+    GAME_SETTINGS_BOUNDS.reviewDuration.min,
+    Math.min(GAME_SETTINGS_BOUNDS.reviewDuration.max, validated.reviewDuration || 5)
+  );
+  
+  validated.leaderboardDuration = Math.max(
+    GAME_SETTINGS_BOUNDS.leaderboardDuration.min,
+    Math.min(GAME_SETTINGS_BOUNDS.leaderboardDuration.max, validated.leaderboardDuration || 3)
+  );
+  
+  // Validate gameMode
+  if (!['synced', 'free'].includes(validated.gameMode)) {
+    validated.gameMode = 'synced';
+  }
+  
+  return validated;
+}
 
 // ============= LEADERBOARD =============
 export interface LeaderboardEntry {

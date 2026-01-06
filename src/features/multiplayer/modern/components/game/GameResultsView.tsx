@@ -63,8 +63,13 @@ const GameResultsView: React.FC<GameResultsViewProps> = ({
   const finalLeaderboard = useMemo(() => {
     if (leaderboard.length > 0) return leaderboard;
     
+    // ✅ FIX: Include players AND hosts who are participating
     return Object.values(players)
-      .filter(p => p.role === 'player')
+      .filter(p => {
+        if (p.role === 'player') return true;
+        if (p.role === 'host' && (p as any).isParticipating !== false) return true;
+        return false;
+      })
       .sort((a, b) => b.score - a.score)
       .map((player, index) => ({
         rank: index + 1,

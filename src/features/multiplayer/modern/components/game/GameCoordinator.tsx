@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import PlayerGameView from './PlayerGameView';
 import FreeModePlayerView from './FreeModePlayerView';
 import FreeModeSpectatorView from './FreeModeSpectatorView';
+import HostFreeModeView from './HostFreeModeView';
 import SpectatorGameView from './SpectatorGameView';
 import HostGameView from './HostGameView';
 import { GameState, RTDB_PATHS } from '../../types/game.types';
@@ -33,6 +34,9 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const hasCalledGameEnd = useRef(false); // Prevent multiple calls
+  // ✅ FIX: Store callback in ref to avoid useEffect dependency issues
+  const onGameEndRef = useRef(onGameEnd);
+  onGameEndRef.current = onGameEnd;
 
   const db = getDatabase();
 
@@ -42,10 +46,10 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
       hasCalledGameEnd.current = true;
       // Use setTimeout to defer the state update to after render completes
       setTimeout(() => {
-        onGameEnd();
+        onGameEndRef.current();
       }, 0);
     }
-  }, [gameState?.status, onGameEnd]);
+  }, [gameState?.status]); // ✅ Removed onGameEnd from deps - using ref instead
 
   // Listen to game state
   useEffect(() => {
@@ -79,7 +83,7 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
     return () => {
       unsubscribe();
     };
-  }, [roomId, db, onGameEnd]);
+  }, [roomId, db]); // ✅ Removed onGameEnd from deps - using ref instead
 
   // Submit answer handler
   const handleAnswerSubmit = async (answer: any) => {
@@ -209,26 +213,43 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
   // Get game mode
   const gameMode = gameState.settings?.gameMode || 'synced';
   
+  // ✅ FIX: Determine effective role
+  // Host with isParticipating=false should be treated as spectator
+  // Host with isParticipating=true (or undefined) is a participating host
+  const isHostPlayer = currentPlayer.id === gameState.hostId;
+  const isHostParticipating = (currentPlayer as any).isParticipating !== false;
+  const effectiveRole = currentPlayer.role === 'spectator' 
+    ? 'spectator' 
+    : (isHostPlayer && !isHostParticipating ? 'spectator' : currentPlayer.role);
+  
   // 🆓 FREE MODE: Different view logic
   if (gameMode === 'free') {
-    const isHost = currentPlayer.id === gameState.hostId;
-    const role = currentPlayer.role;
-
     // Free mode doesn't use currentQuestion - each player has their own progress
     return (
       <AnimatePresence mode="wait">
-        {isHost ? (
-          // Host in free mode sees Race Track overview of all players
+        {effectiveRole === 'spectator' ? (
+          // Spectators (including host not participating) see Race Track overview
           <FreeModeSpectatorView
-            key="host-free"
+            key="spectator-free"
             roomId={roomId}
             gameState={gameState}
             players={gameState.players}
             leaderboard={gameState.leaderboard}
             gameStatus={gameState.status}
           />
-        ) : role === 'player' ? (
-          // Player in free mode gets individual view
+        ) : isHostPlayer && isHostParticipating ? (
+          // ✅ Host who is participating gets host controls + can play/watch
+          <HostFreeModeView
+            key="host-free"
+            roomId={roomId}
+            player={currentPlayer}
+            gameState={gameState}
+            players={gameState.players}
+            leaderboard={gameState.leaderboard}
+            gameStatus={gameState.status}
+          />
+        ) : effectiveRole === 'player' ? (
+          // Regular player in free mode gets individual view
           <FreeModePlayerView
             key="player-free"
             roomId={roomId}
@@ -237,9 +258,9 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
             gameStatus={gameState.status}
           />
         ) : (
-          // Spectator sees Race Track with rolling leaderboard
+          // Fallback to spectator view
           <FreeModeSpectatorView
-            key="spectator-free"
+            key="fallback-spectator-free"
             roomId={roomId}
             gameState={gameState}
             players={gameState.players}
@@ -264,13 +285,20 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
     );
   }
 
-  // Route to appropriate view based on role
-  const isHost = currentPlayer.id === gameState.hostId;
-  const role = currentPlayer.role;
-
+  // ✅ Route to appropriate view based on effective role
   return (
     <AnimatePresence mode="wait">
-      {isHost ? (
+      {effectiveRole === 'spectator' ? (
+        // Spectators (including host not participating) see stats view
+        <SpectatorGameView
+          key="spectator"
+          roomId={roomId}
+          questionState={gameState.currentQuestion}
+          players={gameState.players}
+          gameStatus={gameState.status}
+        />
+      ) : isHostPlayer && isHostParticipating ? (
+        // Host who is participating gets host controls + can play
         <HostGameView
           key="host"
           roomId={roomId}
@@ -280,7 +308,8 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
           gameStatus={gameState.status}
           onAnswerSubmit={handleAnswerSubmit}
         />
-      ) : role === 'player' ? (
+      ) : effectiveRole === 'player' ? (
+        // Regular player gets player view
         <PlayerGameView
           key="player"
           roomId={roomId}
@@ -290,8 +319,9 @@ const GameCoordinator: React.FC<GameCoordinatorProps> = ({
           onAnswerSubmit={handleAnswerSubmit}
         />
       ) : (
+        // Fallback - shouldn't reach here
         <SpectatorGameView
-          key="spectator"
+          key="fallback-spectator"
           roomId={roomId}
           questionState={gameState.currentQuestion}
           players={gameState.players}

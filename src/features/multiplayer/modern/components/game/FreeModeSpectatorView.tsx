@@ -41,8 +41,13 @@ const FreeModeSpectatorView: React.FC<FreeModeSpectatorViewProps> = ({
   
   // Calculate player progress for race track
   const playerProgress = useMemo(() => {
+    // ✅ FIX: Include players AND hosts who are participating
     return Object.values(players)
-      .filter(p => p.role === 'player')
+      .filter(p => {
+        if (p.role === 'player') return true;
+        if (p.role === 'host' && (p as any).isParticipating !== false) return true;
+        return false;
+      })
       .map(player => {
         const freeMode = player.freeMode;
         const currentQ = freeMode?.currentQuestionIndex ?? 0;
