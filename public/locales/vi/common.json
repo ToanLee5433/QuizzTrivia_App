@@ -1410,7 +1410,11 @@
       "explanationLabel": "💡 Giải thích:",
       "orderingInstruction": "Arrange in correct order:",
       "matchingInstruction": "Match the pairs:",
-      "textWithBlanks": "Text with blanks:"
+      "textWithBlanks": "Text with blanks:",
+      "videoLabel": "Video câu hỏi",
+      "audioLabel": "Audio câu hỏi",
+      "explanationVideoLabel": "Video giải thích",
+      "explanationAudioLabel": "Audio giải thích"
     },
     "ai": {
       "title": "Tạo câu hỏi bằng AI",
@@ -5884,6 +5888,11 @@
     "end": "Kết thúc",
     "startHandle": "Điểm bắt đầu",
     "endHandle": "Điểm kết thúc",
-    "selectedDuration": "Độ dài đoạn cắt"
+    "selectedDuration": "Độ dài đoạn cắt",
+    "editTrim": "Chỉnh sửa",
+    "clearTrim": "Xóa cắt",
+    "trimSaved": "Đã lưu cài đặt cắt",
+    "trimCleared": "Đã xóa cài đặt cắt",
+    "save": "Lưu"
   }
 }

@@ -292,17 +292,8 @@ export const useQuizSession = ({ quiz }: UseQuizSessionProps) => {
           }
         }
 
-        // Track completion in quiz stats (non-blocking)
-        if (navigator.onLine) {
-          quizStatsService.trackCompletion(
-            quiz.id,
-            user.uid,
-            score.correct,
-            score.total
-          ).catch(statsError => {
-            console.error('⚠️ Failed to update quiz stats:', statsError);
-          });
-        }
+        // ✅ REMOVED: trackCompletion is now handled in submitQuizResult (base.ts) only
+        // This prevents duplicate counting when the same completion is tracked multiple times
       } catch (enqueueError) {
         console.error('❌ Failed to enqueue quiz result:', enqueueError);
         toast.error('Lỗi lưu kết quả. Vui lòng thử lại.', { autoClose: 3000 });

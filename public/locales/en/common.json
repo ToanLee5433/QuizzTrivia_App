@@ -1410,7 +1410,11 @@
       "explanationLabel": "💡 Explanation:",
       "orderingInstruction": "Arrange in correct order:",
       "matchingInstruction": "Match the pairs:",
-      "textWithBlanks": "Text with blanks:"
+      "textWithBlanks": "Text with blanks:",
+      "videoLabel": "Question video",
+      "audioLabel": "Question audio",
+      "explanationVideoLabel": "Explanation video",
+      "explanationAudioLabel": "Explanation audio"
     },
     "ai": {
       "title": "AI Question Generator",
@@ -5884,6 +5888,11 @@
     "end": "End",
     "startHandle": "Start point",
     "endHandle": "End point",
-    "selectedDuration": "Selected duration"
+    "selectedDuration": "Selected duration",
+    "editTrim": "Edit",
+    "clearTrim": "Clear trim",
+    "trimSaved": "Trim settings saved",
+    "trimCleared": "Trim settings cleared",
+    "save": "Save"
   }
 }

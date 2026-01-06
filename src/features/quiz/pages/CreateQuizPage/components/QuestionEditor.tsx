@@ -664,7 +664,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
               <MediaUploader
                 type="audio"
                 currentUrl={question.audioUrl}
-                onUploadComplete={(url) => onChange({ ...question, audioUrl: url })}
+                onUploadComplete={(url) => onChange({ ...question, audioUrl: url, mediaTrim: undefined })}
                 onRemove={() => onChange({ ...question, audioUrl: '', mediaTrim: undefined })}
                 onTrimChange={(trim) => onChange({ ...question, mediaTrim: trim || undefined })}
                 trimSettings={question.mediaTrim}
@@ -675,9 +675,14 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({ question, onChange, onD
               <MediaUploader
                 type="video"
                 currentUrl={question.videoUrl}
-                onUploadComplete={(url) => onChange({ ...question, videoUrl: url })}
+                onUploadComplete={(url) => {
+                  // Clear mediaTrim when URL changes (new video = no trim)
+                  onChange({ ...question, videoUrl: url, mediaTrim: undefined });
+                }}
                 onRemove={() => onChange({ ...question, videoUrl: '', mediaTrim: undefined })}
-                onTrimChange={(trim) => onChange({ ...question, mediaTrim: trim || undefined })}
+                onTrimChange={(trim) => {
+                  onChange({ ...question, mediaTrim: trim || undefined });
+                }}
                 trimSettings={question.mediaTrim}
                 maxSizeMB={100}
               />

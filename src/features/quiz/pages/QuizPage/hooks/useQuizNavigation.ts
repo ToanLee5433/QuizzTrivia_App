@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Question, AnswerMap } from '../../../types';
 import { isAnswerProvided } from '../utils';
 import soundService from '../../../../../services/soundService';
@@ -18,6 +18,7 @@ export const useQuizNavigation = ({
   answers
 }: UseQuizNavigationProps) => {
   const navigate = useNavigate();
+  const { id: quizId } = useParams<{ id: string }>();
   const [showExitModal, setShowExitModal] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [showUnansweredModal, setShowUnansweredModal] = useState(false);
@@ -49,8 +50,13 @@ export const useQuizNavigation = ({
   }, []);
 
   const confirmExitQuiz = useCallback(() => {
-    navigate('/quiz-list');
-  }, [navigate]);
+    // Navigate back to quiz preview page
+    if (quizId) {
+      navigate(`/quiz/${quizId}/preview`);
+    } else {
+      navigate('/quiz-list');
+    }
+  }, [navigate, quizId]);
 
   const handleSubmitQuiz = useCallback(() => {
     // Check for unanswered questions

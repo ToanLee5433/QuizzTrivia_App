@@ -1,15 +1,17 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FileText, Video, Image as ImageIcon, Music, Link as LinkIcon, Presentation, Clock, ExternalLink, CheckCircle2, AlertCircle, Eye } from 'lucide-react';
+import { FileText, Video, Image as ImageIcon, Music, Link as LinkIcon, Presentation, Clock, ExternalLink, CheckCircle2, AlertCircle, Eye, Scissors } from 'lucide-react';
 import RichTextViewer from '../../../../../shared/components/ui/RichTextViewer';
 import SafeHTML from '../../../../../shared/components/ui/SafeHTML';
 import { QuizFormData, Question } from '../types';
 import { LearningResource } from '../../../types/learning';
 import { VideoPlayer } from '../../../../../shared/components/ui/VideoPlayer';
+import { TrimmedAudio } from '../../../../../shared/components/ui/TrimmedAudio';
 import { useCategories } from '../hooks/useCategories';
 import ImageViewer from '../../../../../shared/components/ui/ImageViewer';
 import PDFViewer from '../../../../../shared/components/ui/PDFViewer';
 import AudioPlayer from '../../../../../shared/components/ui/AudioPlayer';
+import { formatTime } from '../../../../../utils/mediaTrimUtils';
 
 interface ReviewStepProps {
   quiz: QuizFormData;
@@ -305,26 +307,65 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ quiz }) => {
                   <div className="flex-1">
                     <h4 className="font-bold text-gray-900 text-base leading-tight mb-2">{q.text || t('createQuiz.review.emptyQuestionText')}</h4>
                     
-                    {/* Question Media Preview */}
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {q.imageUrl && (
+                    {/* Question Media Preview - Full display */}
+                    <div className="space-y-3 mt-3">
+                      {/* Image preview */}
+                      {q.imageUrl && q.imageUrl.length > 0 && (
                         <div className="relative group">
-                          <img src={q.imageUrl} alt="Question" className="w-24 h-24 object-cover rounded-lg border-2 border-gray-200" />
-                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all rounded-lg flex items-center justify-center">
-                            <ImageIcon className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <img src={q.imageUrl} alt="Question" className="max-w-full max-h-48 object-contain rounded-lg border-2 border-gray-200" />
+                        </div>
+                      )}
+                      
+                      {/* Audio preview with TrimmedAudio */}
+                      {q.audioUrl && q.audioUrl.length > 0 && (
+                        <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Music className="w-4 h-4 text-purple-600" />
+                            <span className="text-xs font-semibold text-purple-700">{t('createQuiz.review.audioLabel', 'Audio câu hỏi')}</span>
+                            {q.mediaTrim?.isTrimmed && (
+                              <span className="flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                                <Scissors className="w-3 h-3" />
+                                {formatTime(q.mediaTrim.startTime)}-{formatTime(q.mediaTrim.endTime)}
+                              </span>
+                            )}
                           </div>
+                          <TrimmedAudio 
+                            url={q.audioUrl} 
+                            trimSettings={q.mediaTrim}
+                            className="w-full"
+                          />
                         </div>
                       )}
-                      {q.audioUrl && (
-                        <div className="flex items-center gap-2 px-3 py-2 bg-purple-50 border-2 border-purple-200 rounded-lg">
-                          <Music className="w-4 h-4 text-purple-600" />
-                          <span className="text-xs font-semibold text-purple-700">Audio</span>
-                        </div>
-                      )}
-                      {q.videoUrl && (
-                        <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border-2 border-red-200 rounded-lg">
-                          <Video className="w-4 h-4 text-red-600" />
-                          <span className="text-xs font-semibold text-red-700">Video</span>
+                      
+                      {/* Video preview with VideoPlayer - 🎯 Clean layout, no autoplay */}
+                      {q.videoUrl && q.videoUrl.length > 0 && (
+                        <div className="bg-red-50 border-2 border-red-200 rounded-lg p-3">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Video className="w-4 h-4 text-red-600" />
+                            <span className="text-xs font-semibold text-red-700">{t('createQuiz.review.videoLabel', 'Video câu hỏi')}</span>
+                            {q.mediaTrim?.isTrimmed && (
+                              <span className="flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                                <Scissors className="w-3 h-3" />
+                                {formatTime(q.mediaTrim.startTime)}-{formatTime(q.mediaTrim.endTime)}
+                              </span>
+                            )}
+                          </div>
+                          {/* 🎨 Centered video container with consistent aspect ratio */}
+                          <div className="flex justify-center">
+                            <div className="w-full max-w-lg">
+                              <div className="relative" style={{ paddingBottom: '56.25%' /* 16:9 aspect ratio */ }}>
+                                <div className="absolute inset-0">
+                                  <VideoPlayer 
+                                    url={q.videoUrl} 
+                                    trimSettings={q.mediaTrim}
+                                    autoPlay={false}
+                                    showTrimBadge={false}
+                                    className="w-full h-full rounded-lg overflow-hidden"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -437,7 +478,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ quiz }) => {
                       </div>
                       
                       {/* Show media for image, audio, video, or multimedia types */}
-                      {(q.type === 'image' || q.type === 'multimedia') && a.imageUrl && (
+                      {(q.type === 'image' || q.type === 'multimedia') && a.imageUrl && a.imageUrl.length > 0 && (
                         <div className="mt-2">
                           <img
                             src={a.imageUrl}
@@ -446,20 +487,43 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ quiz }) => {
                           />
                         </div>
                       )}
-                      {(q.type === 'audio' || q.type === 'multimedia') && a.audioUrl && (
+                      {(q.type === 'audio' || q.type === 'multimedia') && a.audioUrl && a.audioUrl.length > 0 && (
                         <div className="mt-2">
-                          <audio controls className="w-full max-w-xs">
-                            <source src={a.audioUrl} />
-                          </audio>
+                          <TrimmedAudio 
+                            url={a.audioUrl} 
+                            trimSettings={a.mediaTrim}
+                            className="w-full max-w-xs"
+                          />
+                          {a.mediaTrim?.isTrimmed && (
+                            <span className="inline-flex items-center gap-1 mt-1 text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                              <Scissors className="w-3 h-3" />
+                              {formatTime(a.mediaTrim.startTime)}-{formatTime(a.mediaTrim.endTime)}
+                            </span>
+                          )}
                         </div>
                       )}
-                      {(q.type === 'video' || q.type === 'multimedia') && a.videoUrl && (
+                      {(q.type === 'video' || q.type === 'multimedia') && a.videoUrl && a.videoUrl.length > 0 && (
                         <div className="mt-2">
-                          <VideoPlayer 
-                            url={a.videoUrl} 
-                            className="w-full max-w-xs rounded-lg" 
-                            style={{ maxHeight: '150px' }}
-                          />
+                          {/* 🎨 Centered answer video with consistent aspect ratio */}
+                          <div className="w-full max-w-xs">
+                            <div className="relative" style={{ paddingBottom: '56.25%' }}>
+                              <div className="absolute inset-0">
+                                <VideoPlayer 
+                                  url={a.videoUrl} 
+                                  trimSettings={a.mediaTrim}
+                                  autoPlay={false}
+                                  showTrimBadge={false}
+                                  className="w-full h-full rounded-lg overflow-hidden"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          {a.mediaTrim?.isTrimmed && (
+                            <span className="inline-flex items-center gap-1 mt-1 text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                              <Scissors className="w-3 h-3" />
+                              {formatTime(a.mediaTrim.startTime)}-{formatTime(a.mediaTrim.endTime)}
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>
@@ -467,10 +531,75 @@ const ReviewStep: React.FC<ReviewStepProps> = ({ quiz }) => {
                 </div>
               )}
 
-              {q.explanation && (
+              {/* Explanation Section - shows if there's text OR media */}
+              {(q.explanation || (q.explanationImageUrl && q.explanationImageUrl.length > 0) || (q.explanationAudioUrl && q.explanationAudioUrl.length > 0) || (q.explanationVideoUrl && q.explanationVideoUrl.length > 0)) && (
                 <div className="mt-3 p-3 bg-amber-50 border-l-4 border-amber-400 rounded-lg">
                   <strong className="text-amber-900 text-sm">{t('createQuiz.review.explanationLabel')}</strong>
-                  <SafeHTML content={q.explanation} className="text-sm text-amber-800 mt-1" />
+                  {q.explanation && (
+                    <SafeHTML content={q.explanation} className="text-sm text-amber-800 mt-1" />
+                  )}
+                  
+                  {/* 🆕 Explanation Media Preview */}
+                  <div className="space-y-3 mt-3">
+                    {/* Explanation Image */}
+                    {q.explanationImageUrl && q.explanationImageUrl.length > 0 && (
+                      <div className="relative">
+                        <img src={q.explanationImageUrl} alt="Explanation" className="max-w-full max-h-40 object-contain rounded-lg border border-amber-200" />
+                      </div>
+                    )}
+                    
+                    {/* Explanation Audio */}
+                    {q.explanationAudioUrl && q.explanationAudioUrl.length > 0 && (
+                      <div className="bg-amber-100/50 border border-amber-300 rounded-lg p-2">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Music className="w-3 h-3 text-amber-700" />
+                          <span className="text-xs font-semibold text-amber-800">{t('createQuiz.review.explanationAudioLabel', 'Audio giải thích')}</span>
+                          {q.explanationMediaTrim?.isTrimmed && (
+                            <span className="flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                              <Scissors className="w-3 h-3" />
+                              {formatTime(q.explanationMediaTrim.startTime)}-{formatTime(q.explanationMediaTrim.endTime)}
+                            </span>
+                          )}
+                        </div>
+                        <TrimmedAudio 
+                          url={q.explanationAudioUrl} 
+                          trimSettings={q.explanationMediaTrim}
+                          className="w-full"
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Explanation Video - 🎨 Centered with consistent aspect ratio */}
+                    {q.explanationVideoUrl && q.explanationVideoUrl.length > 0 && (
+                      <div className="bg-amber-100/50 border border-amber-300 rounded-lg p-3">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Video className="w-3 h-3 text-amber-700" />
+                          <span className="text-xs font-semibold text-amber-800">{t('createQuiz.review.explanationVideoLabel', 'Video giải thích')}</span>
+                          {q.explanationMediaTrim?.isTrimmed && (
+                            <span className="flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                              <Scissors className="w-3 h-3" />
+                              {formatTime(q.explanationMediaTrim.startTime)}-{formatTime(q.explanationMediaTrim.endTime)}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex justify-center">
+                          <div className="w-full max-w-md">
+                            <div className="relative" style={{ paddingBottom: '56.25%' }}>
+                              <div className="absolute inset-0">
+                                <VideoPlayer 
+                                  url={q.explanationVideoUrl} 
+                                  trimSettings={q.explanationMediaTrim}
+                                  autoPlay={false}
+                                  showTrimBadge={false}
+                                  className="w-full h-full rounded-lg overflow-hidden"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

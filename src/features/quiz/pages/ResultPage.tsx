@@ -9,7 +9,6 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
 import { toast } from 'react-toastify';
 import QuickReviewSection from '../../../shared/components/QuickReviewSection';
-import { quizStatsService } from '../../../services/quizStatsService';
 import SafeHTML from '../../../shared/components/ui/SafeHTML';
 import { useTranslation } from 'react-i18next';
 import soundService from '../../../services/soundService';
@@ -25,7 +24,6 @@ interface ResultState {
   isTimeUp?: boolean;
   timeSpent?: number;
   quizId?: string;
-  tracked?: boolean; // Add this to prevent duplicate tracking
 }
 
 interface LeaderboardEntry {
@@ -293,19 +291,8 @@ export const ResultPage: React.FC = () => {
     }
   }, [quizId, quizzes, navigate]);
 
-  // Track completion when result and quiz are both available
-  useEffect(() => {
-    if (result && quiz && user && !result.tracked) {
-      console.log('📊 Tracking quiz completion for user:', user.uid);
-      const score = safeNumber(result.correct, 0);
-      const total = safeNumber(result.total, quiz.questions.length);
-      
-      quizStatsService.trackCompletion(quiz.id, user.uid, score, total);
-      
-      // Mark as tracked to prevent duplicate tracking
-      setResult(prev => prev ? { ...prev, tracked: true } : null);
-    }
-  }, [result, quiz, user]);
+  // ✅ REMOVED: trackCompletion is now handled in submitQuizResult (base.ts) only
+  // This prevents duplicate counting when the same completion is tracked multiple times
 
   const userId = useMemo(() => user?.uid, [user?.uid]);
   const isFetchingRef = React.useRef(false);

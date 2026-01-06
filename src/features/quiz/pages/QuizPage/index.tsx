@@ -864,6 +864,7 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
                   (!settings.practiceConfig.retryOnWrong || feedbackState[currentQuestion.id]?.isCorrect === true)
               } : undefined}
               disabled={shouldShowInstantFeedback() && feedbackState[currentQuestion.id]?.isAnswered}
+              isPracticeMode={shouldShowInstantFeedback()}
             />
           </div>
 

@@ -423,11 +423,13 @@ const CreateQuizPage: React.FC = () => {
         imageUrl: baseQuizData.questions[0]?.imageUrl,
         audioUrl: baseQuizData.questions[0]?.audioUrl,
         videoUrl: baseQuizData.questions[0]?.videoUrl,
+        mediaTrim: baseQuizData.questions[0]?.mediaTrim, // 🎬 Debug trim settings
         answers: baseQuizData.questions[0]?.answers?.map((a: any) => ({
           text: a.text,
           imageUrl: a.imageUrl,
           audioUrl: a.audioUrl,
-          videoUrl: a.videoUrl
+          videoUrl: a.videoUrl,
+          mediaTrim: a.mediaTrim // 🎬 Debug trim settings for answers
         }))
       });
 

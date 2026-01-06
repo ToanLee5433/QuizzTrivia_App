@@ -173,13 +173,19 @@ export const useQuizData = () => {
             const questionsRef = collection(db, 'quizzes', id, 'questions');
             const questionsSnap = await getDocs(questionsRef);
             
-            // Load questions from Firestore
-            const questions = questionsSnap.docs.map(doc => ({
+            // Load questions from Firestore subcollection
+            let questions = questionsSnap.docs.map(doc => ({
               id: doc.id,
               ...doc.data()
             })) as Question[];
 
-            console.log('✅ User has access to password-protected quiz, loaded', questions.length, 'questions');
+            console.log('✅ User has access to password-protected quiz, loaded', questions.length, 'questions from subcollection');
+            
+            // 🔄 Fallback: If no questions in subcollection, try document field
+            if (questions.length === 0 && foundQuiz.questions && foundQuiz.questions.length > 0) {
+              console.log('📋 Using questions from document field (legacy format):', foundQuiz.questions.length);
+              questions = foundQuiz.questions;
+            }
             
             if (questions.length === 0) {
               setError('Quiz này chưa có câu hỏi. Vui lòng quay lại sau!');
@@ -253,12 +259,27 @@ export const useQuizData = () => {
             const questionsRef = collection(db, 'quizzes', id, 'questions');
             const questionsSnap = await getDocs(questionsRef);
             
-            const questions = questionsSnap.docs.map(doc => ({
+            let questions = questionsSnap.docs.map(doc => ({
               id: doc.id,
               ...doc.data()
             })) as Question[];
             
-            console.log('✅ Loaded questions from Firestore:', questions.length);
+            console.log('✅ Loaded questions from Firestore subcollection:', questions.length);
+            
+            // 🔄 Fallback: If no questions in subcollection, try document field
+            if (questions.length === 0 && foundQuiz.questions && foundQuiz.questions.length > 0) {
+              console.log('📋 Using questions from document field (legacy format):', foundQuiz.questions.length);
+              questions = foundQuiz.questions;
+            }
+            
+            // 🎬 Debug: Check mediaTrim in loaded questions
+            if (questions.length > 0) {
+              console.log('🎬 [DEBUG] First question mediaTrim:', questions[0].mediaTrim);
+              console.log('🎬 [DEBUG] First question videoUrl:', questions[0].videoUrl);
+              if (questions[0].answers?.length > 0) {
+                console.log('🎬 [DEBUG] First answer mediaTrim:', questions[0].answers[0].mediaTrim);
+              }
+            }
             
             if (questions.length === 0) {
               setError('Quiz này chưa có câu hỏi. Vui lòng quay lại sau!');
@@ -355,12 +376,25 @@ export const useQuizData = () => {
         const questionsRef = collection(db, 'quizzes', id, 'questions');
         const questionsSnap = await getDocs(questionsRef);
 
-        const questions = questionsSnap.docs.map(doc => ({
+        let questions = questionsSnap.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         })) as Question[];
 
-        console.log('✅ Loaded questions:', questions.length);
+        console.log('✅ Loaded questions from subcollection:', questions.length);
+        
+        // 🔄 Fallback: If no questions in subcollection, try document field from metadata
+        if (questions.length === 0 && (enrichedMetadata as any).questions && (enrichedMetadata as any).questions.length > 0) {
+          console.log('📋 Using questions from document field (legacy format):', (enrichedMetadata as any).questions.length);
+          questions = (enrichedMetadata as any).questions;
+        }
+
+        if (questions.length === 0) {
+          console.error('❌ No questions found in subcollection or document field');
+          setError('Quiz này chưa có câu hỏi. Vui lòng quay lại sau!');
+          setLoading(false);
+          return;
+        }
 
         const completeQuiz = {
           ...enrichedMetadata,

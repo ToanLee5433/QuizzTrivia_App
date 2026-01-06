@@ -573,20 +573,9 @@ async function processQuizResult(item: PendingAction, userId: string): Promise<v
     // Non-critical, result is already in Firebase
   }
   
-  // Track completion in quiz stats
-  try {
-    const { quizStatsService } = await import('../../services/quizStatsService');
-    await quizStatsService.trackCompletion(
-      quizId,
-      userId,
-      correctAnswers,
-      totalQuestions
-    );
-    console.log('✅ Quiz stats updated');
-  } catch (statsError) {
-    console.warn('⚠️ Failed to update quiz stats:', statsError);
-    // Non-critical
-  }
+  // ✅ REMOVED: trackCompletion is now handled in submitQuizResult (base.ts) only
+  // submitQuizResult is called above, which already handles stats tracking
+  // This prevents duplicate counting when syncing offline results
 }
 
 async function processQuizAnswer(item: PendingAction, userId: string): Promise<void> {

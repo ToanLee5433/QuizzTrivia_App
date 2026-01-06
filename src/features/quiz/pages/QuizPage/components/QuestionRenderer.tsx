@@ -39,6 +39,7 @@ interface QuestionRendererProps {
   feedback?: FeedbackState;
   disabled?: boolean; // Disable input after answering (for instant feedback)
   onCheckAnswer?: () => void; // Callback to check answer (for Enter key support)
+  isPracticeMode?: boolean; // Whether in practice mode (for auto-play explanation video)
 }
 
 const QuestionRenderer: React.FC<QuestionRendererProps> = ({
@@ -49,6 +50,7 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
   feedback,
   disabled = false,
   onCheckAnswer,
+  isPracticeMode = false,
 }) => {
   const { t } = useTranslation();
   
@@ -518,11 +520,17 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
             </div>
             <p className="text-gray-600 font-medium">{t('quiz.questionRenderer.videoHint', '🎬 Xem video và trả lời câu hỏi:')}</p>
           </div>
-          <VideoPlayer 
-            url={question.videoUrl} 
-            className="w-full rounded-lg"
-            trimSettings={question.mediaTrim}
-          />
+          <div className="flex justify-center">
+            <div className="w-full max-w-2xl">
+              <VideoPlayer 
+                url={question.videoUrl} 
+                className="w-full rounded-lg"
+                trimSettings={question.mediaTrim}
+                autoPlay={true}
+                muted={false}
+              />
+            </div>
+          </div>
         </div>
       )}
       {renderMultipleChoice()}
@@ -904,40 +912,66 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
               />
             )}
             {question.videoUrl && (
-              <VideoPlayer 
-                url={question.videoUrl} 
-                className="w-full rounded-xl shadow-md" 
-                style={{ maxHeight: '500px' }}
-                trimSettings={question.mediaTrim}
-              />
+              <div className="flex justify-center">
+                <div className="w-full max-w-2xl">
+                  <VideoPlayer 
+                    url={question.videoUrl} 
+                    className="w-full rounded-xl shadow-md" 
+                    style={{ maxHeight: '400px' }}
+                    trimSettings={question.mediaTrim}
+                    autoPlay={true}
+                    muted={false}
+                  />
+                </div>
+              </div>
             )}
           </div>
         )}
 
-        {/* Answers */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Answers - Use single column when any answer has video for better viewing */}
+        <div className={`grid gap-3 ${question.answers.some(a => a.videoUrl) ? 'grid-cols-1' : 'grid-cols-2'}`}>
           {question.answers.map((answer, index) => {
             const isSelected = singleAnswerValue === answer.id;
             const letter = String.fromCharCode(65 + index);
+            const hasVideo = !!answer.videoUrl;
             
             return (
               <button
                 key={answer.id}
                 onClick={() => onChange(answer.id)}
-                className={`group p-4 rounded-xl border-2 transition-all ${
+                className={`group p-3 rounded-xl border-2 transition-all text-left ${
                   isSelected
                     ? 'border-purple-500 bg-purple-50 shadow-lg'
                     : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50/30'
                 }`}
               >
-                {/* Answer Media */}
+                {/* Answer Label - Always on top */}
+                <div className="flex items-center gap-2 mb-2">
+                  <div className={`w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full font-bold text-sm ${
+                    isSelected ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-600'
+                  }`}>
+                    {letter}
+                  </div>
+                  <span className="font-medium text-base flex-1">{answer.text}</span>
+                  <div className={`w-5 h-5 flex-shrink-0 rounded-full border-2 flex items-center justify-center ${
+                    isSelected ? 'border-purple-500 bg-purple-500' : 'border-gray-300'
+                  }`}>
+                    {isSelected && (
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Answer Media - Below label */}
                 {answer.imageUrl && (
-                  <div className="w-full h-48 mb-3 rounded-lg overflow-hidden bg-gray-100">
+                  <div className="w-full h-32 rounded-lg overflow-hidden bg-gray-100">
                     <img src={answer.imageUrl} alt={answer.text} className="w-full h-full object-contain" />
                   </div>
                 )}
                 {answer.audioUrl && (
-                  <div className="mb-3" onClick={(e) => e.stopPropagation()}>
+                  <div className="mt-2" onClick={(e) => e.stopPropagation()}>
                     <TrimmedAudio 
                       url={answer.audioUrl} 
                       trimSettings={answer.mediaTrim}
@@ -945,37 +979,19 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
                     />
                   </div>
                 )}
-                {answer.videoUrl && (
-                  <div className="mb-3" onClick={(e) => e.stopPropagation()}>
+                {hasVideo && answer.videoUrl && (
+                  <div className="mt-2 w-full aspect-video rounded-lg overflow-hidden bg-black" onClick={(e) => e.stopPropagation()}>
                     <VideoPlayer 
                       url={answer.videoUrl} 
                       trimSettings={answer.mediaTrim}
-                      className="w-full rounded-lg" 
-                      style={{ maxHeight: '200px' }}
+                      className="w-full h-full" 
+                      autoPlay={false}
+                      muted={true}
+                      controls={true}
+                      showTrimBadge={false}
                     />
                   </div>
                 )}
-
-                {/* Answer Label */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-8 h-8 flex items-center justify-center rounded-full font-bold ${
-                      isSelected ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-600'
-                    }`}>
-                      {letter}
-                    </div>
-                    <span className="font-medium">{answer.text}</span>
-                  </div>
-                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                    isSelected ? 'border-purple-500 bg-purple-500' : 'border-gray-300'
-                  }`}>
-                    {isSelected && (
-                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                </div>
               </button>
             );
           })}
@@ -1130,13 +1146,15 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
                     />
                   )}
                   
-                  {/* Explanation Video - with trim support */}
+                  {/* Explanation Video - with trim support, auto-play in practice mode */}
                   {question.explanationVideoUrl && (
                     <div className="rounded-lg overflow-hidden">
                       <VideoPlayer
                         url={question.explanationVideoUrl}
                         trimSettings={question.explanationMediaTrim}
                         className="max-h-64"
+                        autoPlay={isPracticeMode}
+                        muted={false}
                       />
                     </div>
                   )}

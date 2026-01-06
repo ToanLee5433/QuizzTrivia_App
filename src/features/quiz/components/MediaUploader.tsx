@@ -4,8 +4,9 @@
  * Supports video/audio trimming
  */
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Upload, X, Loader2, Image as ImageIcon, Music, Video, Scissors, Edit2 } from 'lucide-react';
+import { useDebouncedCallback } from 'use-debounce';
 import { storageService } from '../../../services/firebase/storageService';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
@@ -42,7 +43,36 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
   const [progress, setProgress] = useState(0);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentUrl || null);
   const [showTrimModal, setShowTrimModal] = useState(false);
+  const [urlInputValue, setUrlInputValue] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 🔧 Sync previewUrl when currentUrl changes from parent
+  useEffect(() => {
+    if (currentUrl && currentUrl.length > 0) {
+      setPreviewUrl(currentUrl);
+    }
+  }, [currentUrl]);
+
+  // 🚀 Debounced URL submit - only trigger after 500ms of no typing
+  const debouncedUrlSubmit = useDebouncedCallback(
+    (url: string) => {
+      if (url && isValidUrl(url)) {
+        setPreviewUrl(url);
+        onUploadComplete(url);
+      }
+    },
+    500
+  );
+
+  // Simple URL validation
+  const isValidUrl = (url: string) => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   // Check if current media can be trimmed
   const canTrim = (type === 'video' || type === 'audio') && previewUrl && canTrimMedia(previewUrl);
@@ -284,7 +314,7 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
         </div>
       )}
 
-      {/* URL input fallback */}
+      {/* URL input fallback - with debounce for performance */}
       <div className="flex items-center gap-2">
         <span className="text-xs text-gray-500 dark:text-gray-400">
           {t('mediaUploader.orUseUrl')}
@@ -292,13 +322,31 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
         <input
           type="url"
           placeholder={t(`mediaUploader.urlPlaceholder.${type}`)}
-          value={!uploading && !previewUrl && currentUrl ? currentUrl : ''}
+          value={urlInputValue}
           onChange={(e) => {
+            const url = e.target.value;
+            setUrlInputValue(url);
+            // Debounce the actual submission
+            debouncedUrlSubmit(url.trim());
+          }}
+          onBlur={(e) => {
+            // Also submit on blur for immediate feedback when user tabs away
             const url = e.target.value.trim();
-            if (url) {
+            if (url && isValidUrl(url)) {
+              debouncedUrlSubmit.cancel();
               setPreviewUrl(url);
               onUploadComplete(url);
-              onTrimChange?.(undefined); // Clear trim on URL change
+            }
+          }}
+          onKeyDown={(e) => {
+            // Submit immediately on Enter
+            if (e.key === 'Enter') {
+              const url = urlInputValue.trim();
+              if (url && isValidUrl(url)) {
+                debouncedUrlSubmit.cancel();
+                setPreviewUrl(url);
+                onUploadComplete(url);
+              }
             }
           }}
           className="flex-1 text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
