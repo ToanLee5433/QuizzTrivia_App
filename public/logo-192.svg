@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6"/>
+      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="192" height="192" rx="36" fill="url(#bgGradient)"/>
+  <!-- Quiz Icon - Question mark with circle -->
+  <circle cx="96" cy="96" r="60" fill="white" fill-opacity="0.2"/>
+  <text x="96" y="122" font-family="Arial, sans-serif" font-size="90" font-weight="bold" fill="white" text-anchor="middle">?</text>
+  <!-- Decorative dots -->
+  <circle cx="52" cy="52" r="8" fill="white" fill-opacity="0.4"/>
+  <circle cx="140" cy="52" r="6" fill="white" fill-opacity="0.3"/>
+  <circle cx="52" cy="140" r="6" fill="white" fill-opacity="0.3"/>
+  <circle cx="140" cy="140" r="8" fill="white" fill-opacity="0.4"/>
+</svg>

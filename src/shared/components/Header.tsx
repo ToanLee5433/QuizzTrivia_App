@@ -11,8 +11,9 @@ import { logout } from '../../features/auth/store';
 import { toast } from 'react-toastify';
 import NotificationCenter from './NotificationCenter';
 import LanguageSwitcher from './LanguageSwitcher';
-import { LogOut, Settings, Crown, GraduationCap, Home, BookOpen, Heart, Trophy, UserCircle, Plus, ChevronDown, HardDrive } from 'lucide-react';
+import { LogOut, Settings, Crown, GraduationCap, Home, BookOpen, Heart, Trophy, UserCircle, Plus, ChevronDown, HardDrive, Download } from 'lucide-react';
 import { setUserOffline } from '../../utils/presenceUtils';
+import { usePWAInstall } from '../../hooks/usePWAInstall';
 
 interface HeaderProps {
   user?: any;
@@ -32,6 +33,9 @@ const Header: React.FC<HeaderProps> = () => {
   const userMenuRef = useRef<HTMLDivElement>(null);
   const userMenuButtonRef = useRef<HTMLButtonElement>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
+  
+  // PWA Install hook
+  const { canInstall, isInstalling, promptInstall } = usePWAInstall();
 
   // Calculate dropdown position for Portal
   const getDropdownPosition = () => {
@@ -338,6 +342,24 @@ const Header: React.FC<HeaderProps> = () => {
                           </svg>
                           <span className="font-medium text-sm">{t('feedback:title')}</span>
                         </button>
+                        
+                        {/* PWA Install Button - Only show when installable */}
+                        {canInstall && (
+                          <button
+                            onClick={async () => {
+                              await promptInstall();
+                              setIsUserMenuOpen(false);
+                            }}
+                            disabled={isInstalling}
+                            className="w-full flex items-center px-4 py-2.5 text-slate-700 dark:text-slate-200 hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50 dark:hover:from-cyan-900/30 dark:hover:to-blue-900/30 transition-all duration-200 group disabled:opacity-50"
+                          >
+                            <Download className={`w-4 h-4 mr-2.5 text-cyan-600 dark:text-cyan-400 group-hover:scale-110 transition-transform ${isInstalling ? 'animate-bounce' : ''}`} />
+                            <span className="font-medium text-sm">
+                              {isInstalling ? t('pwa.install.installing') : t('pwa.install.buttonText')}
+                            </span>
+                          </button>
+                        )}
+                        
                         <button
                           onClick={() => {
                             handleLogout();

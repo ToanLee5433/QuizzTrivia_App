@@ -31,6 +31,7 @@ import QuizSettingsModal, { QuizSettings } from '../components/QuizSettingsModal
 import ImageViewer from '../../../shared/components/ui/ImageViewer';
 import PDFViewer from '../../../shared/components/ui/PDFViewer';
 import AudioPlayer from '../../../shared/components/ui/AudioPlayer';
+import { QuizLeaderboardPreview } from '../components/QuizLeaderboardPreview';
 
 type QuizResource = NonNullable<Quiz['resources']>[number];
 
@@ -842,6 +843,11 @@ const QuizPreviewPage: React.FC = () => {
                   ))}
                 </div>
               </motion.div>
+
+              {/* 🏆 Leaderboard Section */}
+              {id && (
+                <QuizLeaderboardPreview quizId={id} maxDisplay={5} />
+              )}
 
               {hasResources && (
                 <motion.div

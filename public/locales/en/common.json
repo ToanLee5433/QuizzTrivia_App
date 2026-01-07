@@ -5658,6 +5658,17 @@
       "ready": "Ready to start",
       "noRestrictions": "No restrictions"
     },
+    "leaderboard": {
+      "title": "Leaderboard",
+      "subtitle": "Top {{count}} best players",
+      "loading": "Loading...",
+      "noResults": "No results yet!",
+      "beFirst": "Be the first to complete this quiz!",
+      "correct": "correct",
+      "attempts": "attempts",
+      "showMore": "Show {{count}} more",
+      "showLess": "Show less"
+    },
     "errors": {
       "title": "Quiz Not Found",
       "description": "The quiz you are looking for does not exist or has been removed.",
@@ -5894,5 +5905,14 @@
     "trimSaved": "Trim settings saved",
     "trimCleared": "Trim settings cleared",
     "save": "Save"
+  },
+  "pwa": {
+    "install": {
+      "buttonText": "Install App",
+      "installing": "Installing...",
+      "installed": "App Installed",
+      "bannerTitle": "Install Quiz App",
+      "bannerDescription": "Add to home screen for offline access & faster loading"
+    }
   }
 }

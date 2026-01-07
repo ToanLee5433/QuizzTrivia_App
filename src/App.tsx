@@ -70,6 +70,7 @@ const ConditionalOfflineIndicator: React.FC = () => {
   if (!showSyncNotifications) return null;
   return <OfflineIndicator className="fixed top-4 right-4 z-50" />;
 };
+
 const CategoryManagement = React.lazy(() => import('./features/admin/pages/CategoryManagement'));
 const AdminStats = React.lazy(() => import('./features/admin/components/AdminStats'));
 const AdminUtilities = React.lazy(() => import('./features/admin/components/AdminUtilities'));

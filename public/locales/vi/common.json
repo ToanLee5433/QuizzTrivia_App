@@ -329,7 +329,7 @@
       },
       "rejectReasonPrompt": "Lý do từ chối (tùy chọn):"
     },
-    "realDataLoadError": "Error loading real data",
+    "realDataLoadError": "Không thể tải dữ liệu thống kê",
     "roleUpdateError": "Error occurred while updating role!",
     "roleUpdateSuccess": "Role updated successfully!",
     "settings": "Cài đặt",
@@ -360,7 +360,6 @@
     "noDataToExport": "Không có dữ liệu để xuất",
     "exportSuccess": "Xuất dữ liệu thành công!",
     "exportError": "Không thể xuất dữ liệu",
-    "realDataLoadError": "Không thể tải dữ liệu thống kê",
     "header": {
       "title": "Tiêu đề Admin",
       "subtitle": "Phụ đề Admin"
@@ -462,7 +461,6 @@
       "quizActivityDesc": "Quiz tạo mới vs Lượt chơi",
       "plays": "lượt",
       "completed": "đã hoàn thành",
-      "reviews": "Đánh giá",
       "vsLastMonth": "so với tháng trước",
       "newUsersThisMonth": "Người dùng mới tháng này",
       "ofTotal": "trên tổng số",
@@ -3486,7 +3484,12 @@
   "name": "Tên",
   "date": "Ngày",
   "plays": "Lượt chơi",
-  "users": "Người chơi",
+  "users": {
+    "confirmDelete": "Xác nhận xóa người dùng?",
+    "confirmRoleChange": "Are you sure you want to change this user role to {{role}}?",
+    "confirmDeactivate": "Are you sure you want to deactivate this account?",
+    "confirmActivate": "Are you sure you want to activate this account?"
+  },
   "completion": "Hoàn thành",
   "avgScore": "Điểm TB",
   "totalPlays": "Tổng lượt chơi",
@@ -4559,12 +4562,6 @@
   },
   "errors": {
     "unauthorized": "Unauthorized"
-  },
-  "users": {
-    "confirmDelete": "Xác nhận xóa người dùng?",
-    "confirmRoleChange": "Are you sure you want to change this user role to {{role}}?",
-    "confirmDeactivate": "Are you sure you want to deactivate this account?",
-    "confirmActivate": "Are you sure you want to activate this account?"
   },
   "resources": {
     "title": "Tài liệu học tập",
@@ -5658,6 +5655,17 @@
       "ready": "Sẵn sàng bắt đầu",
       "noRestrictions": "Không có hạn chế"
     },
+    "leaderboard": {
+      "title": "Bảng xếp hạng",
+      "subtitle": "Top {{count}} người chơi xuất sắc nhất",
+      "loading": "Đang tải...",
+      "noResults": "Chưa có kết quả nào!",
+      "beFirst": "Hãy là người đầu tiên hoàn thành quiz này!",
+      "correct": "đúng",
+      "attempts": "lượt chơi",
+      "showMore": "Xem thêm {{count}} người",
+      "showLess": "Thu gọn"
+    },
     "errors": {
       "title": "Không tìm thấy Quiz",
       "description": "Quiz bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.",
@@ -5894,5 +5902,14 @@
     "trimSaved": "Đã lưu cài đặt cắt",
     "trimCleared": "Đã xóa cài đặt cắt",
     "save": "Lưu"
+  },
+  "pwa": {
+    "install": {
+      "buttonText": "Cài đặt ứng dụng",
+      "installing": "Đang cài đặt...",
+      "installed": "Đã cài đặt",
+      "bannerTitle": "Cài đặt Quiz App",
+      "bannerDescription": "Thêm vào màn hình chính để truy cập offline & tải nhanh hơn"
+    }
   }
 }
