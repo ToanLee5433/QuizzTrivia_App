@@ -529,17 +529,17 @@ interface QuizCardProps {
       </div>
 
       {/* Content */}
-      <div className="p-6 flex-1 flex flex-col">
-        <div className="flex items-start justify-between mb-4">
-          <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 flex-1">
+      <div className="p-6 flex-1 flex flex-col min-h-[320px]">
+        <div className="flex items-start justify-between mb-3">
+          <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 flex-1 min-h-[3.5rem]">
             {quiz.title}
           </h3>
         </div>
         
-        <SafeHTML content={quiz.description} className="text-gray-600 text-sm mb-6 line-clamp-2 leading-relaxed" plainText />
+        <SafeHTML content={quiz.description} className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed min-h-[2.5rem]" plainText />
 
         {/* **THÊM MỚI**: Quiz metadata */}
-        <div className="space-y-4 mb-6">
+        <div className="space-y-2 mb-4">
           <div className="flex items-center justify-between text-sm text-gray-500">
             <div className="flex items-center">
               <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -573,7 +573,7 @@ interface QuizCardProps {
 
         {/* **THÊM MỚI**: Completion status */}
         {quiz.isCompleted && (
-          <div className="flex items-center text-green-600 text-sm mb-4 bg-green-50 px-3 py-2 rounded-2xl border border-green-200">
+          <div className="flex items-center text-green-600 text-sm mb-3 bg-green-50 px-3 py-2 rounded-2xl border border-green-200">
             <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
             </svg>
@@ -583,17 +583,17 @@ interface QuizCardProps {
 
         {/* **THÊM MỚI**: Tags */}
         {quiz.tags && quiz.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-6">
+          <div className="flex flex-wrap gap-1.5 mb-4">
             {quiz.tags.slice(0, 3).map((tag, index) => (
               <span
                 key={index}
-                className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs rounded-2xl font-medium transition-colors"
+                className="px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs rounded-xl font-medium transition-colors truncate max-w-[100px]"
               >
                 #{tag}
               </span>
             ))}
             {quiz.tags.length > 3 && (
-              <span className="px-3 py-1.5 bg-gray-100 text-gray-600 text-xs rounded-2xl font-medium">
+              <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-xl font-medium">
                 {getTagsRemainingLabel(quiz.tags.length - 3)}
               </span>
             )}
@@ -602,14 +602,14 @@ interface QuizCardProps {
 
         {/* 🆕 Learning Resources Badge */}
         {hasResources && (
-          <div className="mb-4 p-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-xl">
+          <div className="mb-3 p-2.5 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl">
             <div className="flex items-center gap-2 text-emerald-800">
-              <span className="text-lg">📚</span>
-              <span className="font-bold text-sm">
+              <span className="text-base">📚</span>
+              <span className="font-bold text-xs">
                 {getResourceLabel(resourceCount)}
               </span>
             </div>
-            <p className="text-xs text-emerald-600 mt-1">
+            <p className="text-xs text-emerald-600 mt-0.5 line-clamp-1">
               {resourcesHint}
             </p>
           </div>

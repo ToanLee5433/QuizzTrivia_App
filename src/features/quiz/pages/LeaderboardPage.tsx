@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
 import { db } from '../../../lib/firebase/config';
-import SafeHTML from '../../../shared/components/ui/SafeHTML';
-import { FaCrown, FaUserCircle, FaTrophy, FaMedal, FaAward, FaFire, FaStar } from 'react-icons/fa';
+import { FaCrown, FaUserCircle, FaTrophy, FaMedal, FaAward, FaStar } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../lib/store';
 import { formatDate } from '../../../lib/utils/helpers';
 import { toast } from 'react-toastify';
+import RecommendedSection from '../components/RecommendedSection';
 
 interface UserStat {
   userId: string;
@@ -24,20 +23,6 @@ interface UserStat {
   rank?: number;
 }
 
-interface QuizStat {
-  id: string;
-  title: string;
-  description?: string;
-  category: string;
-  difficulty: string;
-  totalAttempts: number;
-  averageScore: number;
-  totalCompletions: number;
-  createdBy?: string;
-  isPublished: boolean;
-  recentActivity: string;
-}
-
 interface OverallStats {
   totalUsers: number;
   totalQuizzes: number;
@@ -50,10 +35,8 @@ interface OverallStats {
 const LeaderboardPage: React.FC = () => {
   // Safe translation hook with error handling
   const { t, ready } = useTranslation();
-  const navigate = useNavigate();
   
   const [topUsers, setTopUsers] = useState<UserStat[]>([]);
-  const [topQuizzes, setTopQuizzes] = useState<QuizStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<OverallStats | null>(null);
   const { user } = useSelector((state: RootState) => state.auth);
@@ -63,7 +46,6 @@ const LeaderboardPage: React.FC = () => {
   
   // Pagination states
   const [showAllUsers, setShowAllUsers] = useState(false);
-  const [showAllQuizzes, setShowAllQuizzes] = useState(false);
 
   // Calculate comprehensive leaderboard data - Move before conditional return
   useEffect(() => {
@@ -130,7 +112,6 @@ const LeaderboardPage: React.FC = () => {
 
         // Calculate user statistics
         const userStats = new Map<string, UserStat & { lastActivityDate: Date }>();
-        const quizStats = new Map<string, QuizStat>();
         let totalScore = 0;
         let totalAttempts = 0;
         let perfectScoresCount = 0;
@@ -184,7 +165,7 @@ const LeaderboardPage: React.FC = () => {
             userStat.lastActivityDate = completedAt;
           }
 
-          // Quiz statistics - ONLY include quizzes that still exist in quizzesMap
+          // Check if quiz exists - skip results for deleted quizzes
           const quizId = result.quizId;
           const quizData = quizzesMap.get(quizId);
           
@@ -193,32 +174,6 @@ const LeaderboardPage: React.FC = () => {
             skippedDeletedQuizResults++;
             skippedQuizIds.add(quizId);
             return; // Skip this iteration - don't count results for deleted quizzes
-          }
-          
-          if (!quizStats.has(quizId)) {
-            quizStats.set(quizId, {
-              id: quizId,
-              title: quizData.title || t('leaderboard.unknownQuiz'),
-              description: quizData.description || '',
-              category: quizData.category || 'general',
-              difficulty: quizData.difficulty || 'medium',
-              totalAttempts: 0,
-              averageScore: 0,
-              totalCompletions: 0,
-              createdBy: quizData.createdBy,
-              isPublished: quizData.isPublished,
-              recentActivity: formatDate(completedAt, 'short')
-            });
-          }
-
-          const quizStat = quizStats.get(quizId)!;
-          quizStat.totalAttempts++;
-          quizStat.totalCompletions++;
-          
-          quizStat.averageScore = ((quizStat.averageScore * (quizStat.totalAttempts - 1)) + normalizedScore) / quizStat.totalAttempts;
-          
-          if (completedAt > new Date(quizStat.recentActivity)) {
-            quizStat.recentActivity = formatDate(completedAt, 'short');
           }
 
           totalScore += normalizedScore;
@@ -279,12 +234,7 @@ const LeaderboardPage: React.FC = () => {
           })
           .map((user, index) => ({ ...user, rank: index + 1 }));
 
-        // Sort quizzes by popularity
-        const sortedQuizzes = Array.from(quizStats.values())
-          .sort((a, b) => b.totalAttempts - a.totalAttempts);
-
         setTopUsers(sortedUsers);
-        setTopQuizzes(sortedQuizzes);
 
         // Find current user rank
         if (user) {
@@ -320,7 +270,6 @@ const LeaderboardPage: React.FC = () => {
         
         // Set empty data to prevent UI crash
         setTopUsers([]);
-        setTopQuizzes([]);
         setStats({
           totalUsers: 0,
           totalQuizzes: 0,
@@ -379,14 +328,6 @@ const LeaderboardPage: React.FC = () => {
       case 'advanced': return 'bg-blue-100 text-blue-800 border-blue-300';
       case 'intermediate': return 'bg-green-100 text-green-800 border-green-300';
       default: return 'bg-gray-100 text-gray-800 border-gray-300';
-    }
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'bg-green-100 text-green-800';
-      case 'hard': return 'bg-red-100 text-red-800';
-      default: return 'bg-yellow-100 text-yellow-800';
     }
   };
 
@@ -608,72 +549,10 @@ const LeaderboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Top Quizzes Section - Mobile Grid */}
-        <div>
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mb-4 sm:mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-center flex items-center gap-2">
-              <FaFire className="text-red-500" />
-              {t('leaderboard.topQuizzes')}
-            </h2>
-            {topQuizzes.length > 12 && (
-              <button
-                onClick={() => setShowAllQuizzes(!showAllQuizzes)}
-                className="px-3 sm:px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold text-sm sm:text-base"
-              >
-                {showAllQuizzes ? t('leaderboard.collapse') : t('leaderboard.viewAllCount')}
-              </button>
-            )}
-          </div>
-          
-          {topQuizzes.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">
-              <p className="text-gray-500">{t('leaderboard.createFirstQuiz')}</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-              {(showAllQuizzes ? topQuizzes : topQuizzes.slice(0, 12)).map((quiz, idx) => (
-                <div key={quiz.id} className="bg-white rounded-xl shadow-lg p-4 sm:p-6 hover:shadow-xl transition-shadow border-l-4 border-blue-500">
-                  <div className="flex items-start justify-between mb-3 sm:mb-4">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-base sm:text-lg text-gray-900 mb-1 sm:mb-2 line-clamp-2">{quiz.title}</h3>
-                      <SafeHTML content={quiz.description} className="text-gray-600 text-xs sm:text-sm line-clamp-2 mb-2 sm:mb-3" plainText />
-                    </div>
-                    <span className="bg-blue-100 text-blue-800 text-[10px] sm:text-xs font-bold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full flex-shrink-0 ml-2">
-                      #{idx + 1}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between mb-3 sm:mb-4">
-                    <span className={`px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium ${getDifficultyColor(quiz.difficulty)}`}>
-                      {quiz.difficulty === 'easy' ? t('difficulty.easy') : quiz.difficulty === 'hard' ? t('difficulty.hard') : t('difficulty.medium')}
-                    </span>
-                    <span className="text-gray-500 text-xs sm:text-sm capitalize truncate ml-2">{quiz.category}</span>
-                  </div>
-                  
-                  <div className="space-y-1 sm:space-y-2 mb-3 sm:mb-4 text-xs sm:text-sm">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">{t('leaderboard.plays')}:</span>
-                      <span className="font-semibold text-blue-600">{quiz.totalAttempts}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">{t('leaderboard.avgScore')}:</span>
-                      <span className="font-semibold text-green-600">{Math.round(quiz.averageScore)}%</span>
-                    </div>
-                  </div>
-                  
-                  {/* Navigation Button */}
-                  <button
-                    onClick={() => navigate(`/quiz/${quiz.id}/preview`)}
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg text-sm sm:text-base"
-                  >
-                    <FaFire className="w-3 sm:w-4 h-3 sm:h-4" />
-                    {t('leaderboard.playNow')}
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Recommended Quizzes Section */}
+        {user && (
+          <RecommendedSection userId={user.uid} />
+        )}
       </div>
     </div>
   );

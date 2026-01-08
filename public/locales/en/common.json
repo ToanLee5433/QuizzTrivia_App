@@ -2772,6 +2772,12 @@
   "quayLaiProfile": "Back Profile",
   "quenMatKhau": "Forgot password",
   "quiz": {
+    "recommendations": {
+      "title": "Recommended for you",
+      "refresh": "Refresh",
+      "error": "Failed to load recommendations",
+      "empty": "No recommendations yet"
+    },
     "answer": "Answer",
     "author": "Author",
     "averageScore": "Average Score",

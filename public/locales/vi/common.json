@@ -2770,6 +2770,12 @@
   "quayLaiProfile": "Quay lại Profile",
   "quenMatKhau": "Quên mật khẩu",
   "quiz": {
+    "recommendations": {
+      "title": "Gợi ý dành riêng cho bạn",
+      "refresh": "Làm mới",
+      "error": "Không thể tải gợi ý",
+      "empty": "Chưa có gợi ý nào"
+    },
     "answer": "Đáp án",
     "author": "Tác giả",
     "averageScore": "Điểm trung bình",
