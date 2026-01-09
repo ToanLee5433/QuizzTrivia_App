@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     VitePWA({
@@ -155,6 +155,8 @@ export default defineConfig({
     assetsDir: 'assets',
     // Generate sourcemaps for debugging
     sourcemap: false,
+    // 🔥 Remove console.* and debugger in production
+    minify: 'esbuild',
     // Optimize chunks
     rollupOptions: {
       output: {
@@ -165,5 +167,9 @@ export default defineConfig({
         }
       }
     }
+  },
+  // 🔥 Drop console.* and debugger in production build
+  esbuild: {
+    drop: mode === 'production' ? ['console', 'debugger'] : []
   }
-});
+}));
