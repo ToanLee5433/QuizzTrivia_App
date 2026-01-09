@@ -713,6 +713,10 @@
       "subtitle": "Trợ lý học tập thông minh được hỗ trợ bởi Google AI",
       "welcome": "Chào mừng đến với AI Learning Assistant! 👋",
       "welcomeMessage": "Hỏi tôi bất cứ điều gì về các quiz bạn đã học. Tôi sẽ trả lời chi tiết và gợi ý quiz phù hợp cho bạn.",
+      "inputPlaceholder": "Hỏi gì đó...",
+      "suggestion1": "Tìm quiz phù hợp với tôi",
+      "suggestion2": "Gợi ý chủ đề học hôm nay",
+      "suggestion3": "Giải thích khái niệm này",
       "suggestions": {
         "explain": {
           "title": "Giải thích khái niệm",
@@ -732,12 +736,14 @@
         }
       },
       "error": "Đã xảy ra lỗi",
-      "tip": "💡 Tip: Hỏi về nội dung bạn đã học trong các quiz đã mở khóa",
+      "tip": "Tip: Hỏi về nội dung bạn đã học trong các quiz đã mở khóa",
       "citations": "📚 Nguồn tham khảo:",
       "processingTime": "⚡ {{ms}}ms",
       "chunksUsed": "📄 {{count}} chunks",
       "quizSuggestions": "🎯 Quiz gợi ý cho bạn",
-      "clickToStart": "Click vào quiz để bắt đầu làm bài ngay! 👇"
+      "clickToStart": "Click vào quiz để bắt đầu làm bài ngay! 👇",
+      "showLess": "Thu gọn",
+      "moreQuizzes": "quiz khác"
     },
     "users": {
       "cannotChangeSelfRole": "Không thể thay đổi quyền của chính mình",
@@ -3059,12 +3065,12 @@
     "discoverDescription": "Tìm hiểu kiến thức mới qua các quiz thú vị",
     "hideStats": "Ẩn thống kê",
     "showStats": "Hiện thống kê",
-    "retake_quiz": "Retake Quiz",
-    "view_more_quizzes": "View More Quizzes",
-    "back_to_dashboard": "Back to Dashboard",
-    "share_result": "Share Result",
-    "view_all_results": "View All Results",
-    "result_copied": "Result copied to clipboard!",
+    "retake_quiz": "Làm lại Quiz",
+    "view_more_quizzes": "Xem thêm Quiz",
+    "back_to_dashboard": "Về trang chủ",
+    "share_result": "Chia sẻ kết quả",
+    "view_all_results": "Xem tất cả kết quả",
+    "result_copied": "Đã sao chép kết quả!",
     "playWithFriends": "Chơi với bạn bè",
     "createNew": "Tạo quiz mới",
     "hotBadge": "Nổi bật",
@@ -5771,6 +5777,10 @@
     "subtitle": "Trợ lý học tập thông minh được hỗ trợ bởi Google AI",
     "welcome": "Chào mừng đến với AI Learning Assistant! 👋",
     "welcomeMessage": "Hỏi tôi bất cứ điều gì về các quiz bạn đã học. Tôi sẽ trả lời chi tiết và gợi ý quiz phù hợp cho bạn.",
+    "inputPlaceholder": "Hỏi gì đó...",
+    "suggestion1": "Tìm quiz phù hợp với tôi",
+    "suggestion2": "Gợi ý chủ đề học hôm nay",
+    "suggestion3": "Giải thích khái niệm này",
     "suggestions": {
       "explain": {
         "title": "Giải thích khái niệm",
@@ -5790,12 +5800,18 @@
       }
     },
     "error": "Đã xảy ra lỗi",
-    "tip": "💡 Tip: Hỏi về nội dung bạn đã học trong các quiz đã mở khóa",
+    "errorGeneric": "Đã xảy ra lỗi. Vui lòng thử lại sau.",
+    "errorTimeout": "Yêu cầu quá thời gian. Vui lòng thử câu hỏi ngắn hơn hoặc thử lại.",
+    "errorRateLimit": "Quá nhiều yêu cầu. Vui lòng đợi một chút rồi thử lại.",
+    "errorAuth": "Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.",
+    "errorNetwork": "Lỗi kết nối mạng. Vui lòng kiểm tra kết nối và thử lại.",
+    "tip": "Tip: Hỏi về nội dung bạn đã học trong các quiz đã mở khóa",
     "citations": "📚 Nguồn tham khảo:",
     "processingTime": "⚡ {{ms}}ms",
     "chunksUsed": "📄 {{count}} chunks",
     "quizSuggestions": "🎯 Quiz gợi ý cho bạn",
     "clickToStart": "Click vào quiz để bắt đầu làm bài ngay! 👇",
+    "streaming": "Đang xử lý...",
     "quizRecommendation": {
       "questions": "câu",
       "startQuiz": "Làm quiz ngay"

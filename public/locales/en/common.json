@@ -739,7 +739,9 @@
       "processingTime": "⚡ {{ms}}ms",
       "chunksUsed": "📄 {{count}} chunks",
       "quizSuggestions": "🎯 Suggested quizzes for you",
-      "clickToStart": "Click on a quiz to start right away! 👇"
+      "clickToStart": "Click on a quiz to start right away! 👇",
+      "showLess": "Show less",
+      "moreQuizzes": "more quizzes"
     },
     "users": {
       "cannotChangeSelfRole": "Cannot change your own role",
@@ -5793,12 +5795,18 @@
       }
     },
     "error": "An error occurred",
+    "errorGeneric": "An error occurred. Please try again later.",
+    "errorTimeout": "Request timed out. Please try a shorter question or try again.",
+    "errorRateLimit": "Too many requests. Please wait a moment and try again.",
+    "errorAuth": "Session expired. Please log in again.",
+    "errorNetwork": "Network connection error. Please check your connection and try again.",
     "tip": "💡 Tip: Ask about content you've learned in unlocked quizzes",
     "citations": "📚 References:",
     "processingTime": "⚡ {{ms}}ms",
     "chunksUsed": "📄 {{count}} chunks",
     "quizSuggestions": "🎯 Suggested quizzes for you",
     "clickToStart": "Click on a quiz to start right away! 👇",
+    "streaming": "Processing...",
     "quizRecommendation": {
       "questions": "questions",
       "startQuiz": "Start quiz now"

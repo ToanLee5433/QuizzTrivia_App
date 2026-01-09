@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.manualCleanupRooms = exports.onPlayerStatusChange = exports.cleanupAbandonedRooms = exports.kickPlayer = exports.archiveCompletedRooms = exports.checkRateLimit = exports.getPlayerQuestions = exports.validateAnswer = exports.getPendingTagReviews = exports.reviewTags = exports.batchGenerateTags = exports.regenerateTags = exports.autoTagOnApproval = exports.getIndexStats = exports.rebuildFullIndex = exports.askRAGHealth = exports.askRAG = exports.analyzeQuizResult = exports.processFile = exports.sendOTP = exports.generateQuestionsHTTP = exports.testAI = exports.generateQuestions = void 0;
+exports.manualCleanupRooms = exports.onPlayerStatusChange = exports.cleanupAbandonedRooms = exports.kickPlayer = exports.archiveCompletedRooms = exports.checkRateLimit = exports.getPlayerQuestions = exports.validateAnswer = exports.getPendingTagReviews = exports.reviewTags = exports.batchGenerateTags = exports.regenerateTags = exports.autoTagOnApproval = exports.getIndexStats = exports.rebuildFullIndex = exports.cleanupStreamingSessions = exports.askRAGStreaming = exports.askRAGHealth = exports.askRAG = exports.analyzeQuizResult = exports.processFile = exports.sendOTP = exports.generateQuestionsHTTP = exports.testAI = exports.generateQuestions = void 0;
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const generative_ai_1 = require("@google/generative-ai");
@@ -540,6 +540,9 @@ Chỉ trả lời JSON, không giải thích thêm.`;
 var ask_1 = require("./rag/ask");
 Object.defineProperty(exports, "askRAG", { enumerable: true, get: function () { return ask_1.askRAG; } });
 Object.defineProperty(exports, "askRAGHealth", { enumerable: true, get: function () { return ask_1.askRAGHealth; } });
+var askStreaming_1 = require("./rag/askStreaming");
+Object.defineProperty(exports, "askRAGStreaming", { enumerable: true, get: function () { return askStreaming_1.askRAGStreaming; } });
+Object.defineProperty(exports, "cleanupStreamingSessions", { enumerable: true, get: function () { return askStreaming_1.cleanupStreamingSessions; } });
 var rebuildIndex_1 = require("./rag/rebuildIndex");
 Object.defineProperty(exports, "rebuildFullIndex", { enumerable: true, get: function () { return rebuildIndex_1.rebuildFullIndex; } });
 Object.defineProperty(exports, "getIndexStats", { enumerable: true, get: function () { return rebuildIndex_1.getIndexStats; } });

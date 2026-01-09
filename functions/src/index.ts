@@ -652,6 +652,7 @@ Chỉ trả lời JSON, không giải thích thêm.`;
 // 🤖 RAG (Retrieval-Augmented Generation) Functions
 // ============================================================
 export { askRAG, askRAGHealth } from './rag/ask';
+export { askRAGStreaming, cleanupStreamingSessions } from './rag/askStreaming';
 export { rebuildFullIndex, getIndexStats } from './rag/rebuildIndex';
 
 // ============================================================

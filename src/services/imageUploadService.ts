@@ -1,9 +1,8 @@
 /**
- * Image Upload Service với tích hợp Resize Images Extension
+ * Image Upload Service - Direct Upload to Firebase Storage
  * 
- * Extension sẽ tự động resize ảnh khi upload vào Storage
- * - Original image: /images/original/{filename}
- * - Thumbnails: /thumbnails/{filename}_200x200, _400x400, _800x800
+ * Upload ảnh trực tiếp lên Firebase Storage mà không cần resize
+ * - Original image: /images/{folder}/{filename}
  */
 
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject, UploadMetadata } from 'firebase/storage';
@@ -15,16 +14,16 @@ export interface ImageUploadOptions {
   folder?: 'avatars' | 'quizzes' | 'covers' | 'temp';
   maxSizeKB?: number;
   allowedTypes?: string[];
-  generateThumbnails?: boolean;
+  generateThumbnails?: boolean; // Kept for backward compatibility but ignored
 }
 
 export interface ImageUploadResult {
   success: boolean;
   originalUrl?: string;
   thumbnailUrls?: {
-    small?: string;    // 200x200
-    medium?: string;   // 400x400
-    large?: string;    // 800x800
+    small?: string;    // Not used anymore
+    medium?: string;   // Not used anymore
+    large?: string;    // Not used anymore
   };
   fileName?: string;
   filePath?: string;
@@ -79,71 +78,6 @@ const generateFileName = (originalName: string, userId: string): string => {
 };
 
 /**
- * Get thumbnail URLs based on original filename
- * Extension tự động tạo thumbnails với format: {filename}_200x200.{ext}
- * Retry multiple times vì extension cần thời gian xử lý
- */
-const getThumbnailUrls = async (
-  fileName: string
-): Promise<{ small?: string; medium?: string; large?: string }> => {
-  const thumbnailSizes = [
-    { key: 'small', size: '200x200', maxRetries: 8 },
-    { key: 'medium', size: '400x400', maxRetries: 8 },
-    { key: 'large', size: '800x800', maxRetries: 10 }
-  ];
-
-  const thumbnailUrls: any = {};
-  const nameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.'));
-  const extension = fileName.split('.').pop();
-
-  // Function để retry lấy thumbnail URL
-  const getThumbnailWithRetry = async (
-    thumbnailPath: string,
-    maxRetries: number,
-    size: string
-  ): Promise<string | null> => {
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        const thumbnailRef = ref(storage, thumbnailPath);
-        const url = await getDownloadURL(thumbnailRef);
-        console.log(`✅ Thumbnail ${size} ready after ${attempt} attempts`);
-        return url;
-      } catch (error: any) {
-        if (attempt < maxRetries) {
-          // Đợi lâu hơn cho mỗi lần retry (2s, 3s, 4s, ...)
-          const waitTime = 2000 + (attempt * 1000);
-          console.log(`⏳ Waiting for thumbnail ${size}... attempt ${attempt}/${maxRetries}`);
-          await new Promise(resolve => setTimeout(resolve, waitTime));
-        } else {
-          console.log(`⚠️ Thumbnail ${size} not available after ${maxRetries} attempts (Extension may still be processing)`);
-          return null;
-        }
-      }
-    }
-    return null;
-  };
-
-  // Lấy tất cả thumbnails song song
-  const thumbnailPromises = thumbnailSizes.map(async ({ key, size, maxRetries }) => {
-    const thumbnailFileName = `${nameWithoutExt}_${size}.${extension}`;
-    const thumbnailPath = `thumbnails/${thumbnailFileName}`;
-    const url = await getThumbnailWithRetry(thumbnailPath, maxRetries, size);
-    return { key, url };
-  });
-
-  const results = await Promise.all(thumbnailPromises);
-  
-  // Map results to object
-  results.forEach(({ key, url }) => {
-    if (url) {
-      thumbnailUrls[key] = url;
-    }
-  });
-
-  return thumbnailUrls;
-};
-
-/**
  * Upload image to Firebase Storage với Progress Callback
  */
 export const uploadImage = async (
@@ -164,8 +98,8 @@ export const uploadImage = async (
   const {
     folder = 'temp',
     maxSizeKB = 5120,
-    allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
-    generateThumbnails = true
+    allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+    // generateThumbnails is no longer used - kept in interface for backward compatibility
   } = options;
 
   // Validate image
@@ -222,21 +156,14 @@ export const uploadImage = async (
           });
         },
         async () => {
-          // Upload completed
+          // Upload completed - return immediately without waiting for thumbnails
           try {
             const originalUrl = await getDownloadURL(uploadTask.snapshot.ref);
-            
-            let thumbnailUrls = {};
-            
-            // Đợi Extension tạo thumbnails (nếu enabled)
-            if (generateThumbnails) {
-              thumbnailUrls = await getThumbnailUrls(fileName);
-            }
 
             resolve({
               success: true,
               originalUrl,
-              thumbnailUrls,
+              thumbnailUrls: {}, // No longer using resize extension
               fileName,
               filePath
             });
@@ -299,8 +226,8 @@ export const instantUploadImage = async (
     const {
       folder = 'temp',
       maxSizeKB = 5120,
-      allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
-      generateThumbnails = true
+      allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+      // generateThumbnails is no longer used
     } = options;
 
     // Validate
@@ -372,16 +299,8 @@ export const instantUploadImage = async (
               originalUrl,
               fileName,
               filePath,
-              thumbnailUrls: {} // Sẽ có sau 5-30s
+              thumbnailUrls: {} // No longer using resize extension
             });
-
-            // 🔄 Background: Đợi thumbnails sau (không block)
-            if (generateThumbnails) {
-              setTimeout(async () => {
-                const thumbnails = await getThumbnailUrls(fileName);
-                console.log('🖼️ Thumbnails ready (background):', Object.keys(thumbnails));
-              }, 10000); // Đợi 10s rồi check
-            }
 
             if (onProgress) {
               onProgress({

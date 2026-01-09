@@ -11,10 +11,12 @@ import { Database, PlayCircle, CheckCircle, XCircle, Loader, AlertTriangle, Refr
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import type { RootState } from '../../../lib/store';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { getFunctions, httpsCallable, HttpsCallableOptions } from 'firebase/functions';
 import app from '../../../lib/firebase/config';
 
 const functions = getFunctions(app, 'us-central1');
+// Extended timeout for long-running index operations (10 minutes)
+const longTimeoutOptions: HttpsCallableOptions = { timeout: 600000 };
 
 interface IndexStats {
   exists: boolean;
@@ -109,7 +111,7 @@ export function BuildIndexPage() {
     });
 
     try {
-      const rebuildIndex = httpsCallable<unknown, RebuildResult>(functions, 'rebuildFullIndex');
+      const rebuildIndex = httpsCallable<unknown, RebuildResult>(functions, 'rebuildFullIndex', longTimeoutOptions);
       const result = await rebuildIndex({});
       
       if (result.data.success) {

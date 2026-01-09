@@ -144,6 +144,60 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
     return 'bg-gray-100 text-gray-500 group-hover:bg-blue-100 group-hover:text-blue-600';
   };
 
+  // Helper for checkbox (multiple correct answers) - uses array comparison
+  const getCheckboxAnswerState = (answerId: string) => {
+    const currentValues = Array.isArray(value) ? value : [];
+    const isSelected = currentValues.includes(answerId);
+    const correctAnswers = Array.isArray(feedback?.correctAnswer) ? feedback.correctAnswer : [];
+    const isCorrectAnswer = correctAnswers.includes(answerId);
+    const showFeedback = feedback?.isAnswered && feedback.isCorrect !== null;
+    
+    return {
+      isSelected,
+      isCorrectAnswer,
+      showFeedback,
+      // Visual states
+      isCorrectAndSelected: showFeedback && isSelected && isCorrectAnswer,
+      isWrongAndSelected: showFeedback && isSelected && !isCorrectAnswer,
+      isCorrectNotSelected: showFeedback && !isSelected && isCorrectAnswer,
+    };
+  };
+
+  // Get classes for checkbox options with feedback
+  const getCheckboxOptionClasses = (answerId: string) => {
+    const state = getCheckboxAnswerState(answerId);
+    
+    if (state.isCorrectAndSelected) {
+      return 'border-green-500 bg-green-50/50 shadow-md ring-2 ring-green-200';
+    }
+    if (state.isWrongAndSelected) {
+      return 'border-red-500 bg-red-50/50 shadow-md ring-2 ring-red-200';
+    }
+    if (state.isCorrectNotSelected) {
+      return 'border-green-400 bg-green-50/30 shadow-sm';
+    }
+    if (state.isSelected) {
+      return 'border-blue-500 bg-blue-50/50 shadow-md';
+    }
+    return 'border-gray-100 bg-white hover:border-blue-200 hover:bg-blue-50/30 hover:shadow-sm';
+  };
+
+  // Get badge classes for checkbox
+  const getCheckboxBadgeClasses = (answerId: string) => {
+    const state = getCheckboxAnswerState(answerId);
+    
+    if (state.isCorrectAndSelected || state.isCorrectNotSelected) {
+      return 'bg-green-500 text-white';
+    }
+    if (state.isWrongAndSelected) {
+      return 'bg-red-500 text-white';
+    }
+    if (state.isSelected) {
+      return 'bg-blue-500 text-white';
+    }
+    return 'bg-gray-100 text-gray-500 group-hover:bg-blue-100 group-hover:text-blue-600';
+  };
+
   const renderMultipleChoice = () => (
     <div className="space-y-4">
       {question.answers.map((answer, index) => {
@@ -419,49 +473,57 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
           {checkboxHint}
         </div>
         {question.answers.map((answer, index) => {
-          const isSelected = currentValues.includes(answer.id);
+          const state = getCheckboxAnswerState(answer.id);
           const letter = String.fromCharCode(65 + index);
           return (
             <button
               key={answer.id}
               onClick={() => {
-                const newValue = isSelected
+                if (disabled) return;
+                const newValue = state.isSelected
                   ? currentValues.filter(id => id !== answer.id)
                   : [...currentValues, answer.id];
                 onChange(newValue);
               }}
-              className={`group relative w-full p-5 text-left rounded-2xl border-2 transition-all duration-200 ${
-                isSelected
-                  ? 'border-blue-500 bg-blue-50/50 shadow-md'
-                  : 'border-gray-100 bg-white hover:border-blue-200 hover:bg-blue-50/30 hover:shadow-sm'
-              }`}
+              disabled={disabled}
+              className={`group relative w-full p-5 text-left rounded-2xl border-2 transition-all duration-200 ${getCheckboxOptionClasses(answer.id)} ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
             >
               <div className="flex items-center space-x-4">
                  {/* Letter Badge */}
-                <div className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg text-lg font-bold transition-colors ${
-                  isSelected
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-100 text-gray-500 group-hover:bg-blue-100 group-hover:text-blue-600'
-                }`}>
+                <div className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg text-lg font-bold transition-colors ${getCheckboxBadgeClasses(answer.id)}`}>
                   {letter}
                 </div>
 
                 <div className="flex-1">
                   <span
                     className={`text-lg leading-relaxed transition-colors ${
-                      isSelected ? 'text-gray-900 font-medium' : 'text-gray-700 group-hover:text-gray-900'
+                      state.isSelected ? 'text-gray-900 font-medium' : 'text-gray-700 group-hover:text-gray-900'
                     }`}
                     dangerouslySetInnerHTML={{ __html: answer.text || '' }}
                   />
                 </div>
 
-                 {/* Checkbox Indicator */}
+                 {/* Checkbox Indicator with Feedback */}
                 <div className={`flex-shrink-0 w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
-                  isSelected
-                    ? 'border-blue-500 bg-blue-500'
-                    : 'border-gray-300 group-hover:border-blue-300'
+                  state.isCorrectAndSelected || state.isCorrectNotSelected
+                    ? 'border-green-500 bg-green-500'
+                    : state.isWrongAndSelected
+                      ? 'border-red-500 bg-red-500'
+                      : state.isSelected
+                        ? 'border-blue-500 bg-blue-500'
+                        : 'border-gray-300 group-hover:border-blue-300'
                 }`}>
-                  {isSelected && (
+                  {(state.isCorrectAndSelected || state.isCorrectNotSelected) && (
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                  {state.isWrongAndSelected && (
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  )}
+                  {state.isSelected && !state.showFeedback && (
                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                     </svg>
@@ -883,7 +945,7 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
 
   const renderMultimedia = () => {
     // Render multimedia question with flexible media types
-    const singleAnswerValue = typeof value === 'string' ? value : '';
+    // Note: singleAnswerValue is already defined at component scope (line 92)
     
     return (
       <div className="space-y-6">
@@ -931,32 +993,73 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
         {/* Answers - Use single column when any answer has video for better viewing */}
         <div className={`grid gap-3 ${question.answers.some(a => a.videoUrl) ? 'grid-cols-1' : 'grid-cols-2'}`}>
           {question.answers.map((answer, index) => {
-            const isSelected = singleAnswerValue === answer.id;
+            const state = getAnswerState(answer.id);
             const letter = String.fromCharCode(65 + index);
             const hasVideo = !!answer.videoUrl;
+            
+            // Get classes based on feedback state for multimedia
+            const getMultimediaOptionClasses = () => {
+              if (state.isCorrectAndSelected) {
+                return 'border-green-500 bg-green-50 shadow-lg ring-2 ring-green-200';
+              }
+              if (state.isWrongAndSelected) {
+                return 'border-red-500 bg-red-50 shadow-lg ring-2 ring-red-200';
+              }
+              if (state.isCorrectNotSelected) {
+                return 'border-green-400 bg-green-50/30 shadow-sm';
+              }
+              if (state.isSelected) {
+                return 'border-purple-500 bg-purple-50 shadow-lg';
+              }
+              return 'border-gray-200 hover:border-purple-300 hover:bg-purple-50/30';
+            };
+
+            const getMultimediaBadgeClasses = () => {
+              if (state.isCorrectAndSelected || state.isCorrectNotSelected) {
+                return 'bg-green-500 text-white';
+              }
+              if (state.isWrongAndSelected) {
+                return 'bg-red-500 text-white';
+              }
+              if (state.isSelected) {
+                return 'bg-purple-500 text-white';
+              }
+              return 'bg-gray-100 text-gray-600';
+            };
             
             return (
               <button
                 key={answer.id}
-                onClick={() => onChange(answer.id)}
-                className={`group p-3 rounded-xl border-2 transition-all text-left ${
-                  isSelected
-                    ? 'border-purple-500 bg-purple-50 shadow-lg'
-                    : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50/30'
-                }`}
+                onClick={() => !disabled && onChange(answer.id)}
+                disabled={disabled}
+                className={`group p-3 rounded-xl border-2 transition-all text-left ${getMultimediaOptionClasses()} ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
               >
                 {/* Answer Label - Always on top */}
                 <div className="flex items-center gap-2 mb-2">
-                  <div className={`w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full font-bold text-sm ${
-                    isSelected ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-600'
-                  }`}>
+                  <div className={`w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full font-bold text-sm ${getMultimediaBadgeClasses()}`}>
                     {letter}
                   </div>
                   <span className="font-medium text-base flex-1">{answer.text}</span>
                   <div className={`w-5 h-5 flex-shrink-0 rounded-full border-2 flex items-center justify-center ${
-                    isSelected ? 'border-purple-500 bg-purple-500' : 'border-gray-300'
+                    state.isCorrectAndSelected || state.isCorrectNotSelected
+                      ? 'border-green-500 bg-green-500'
+                      : state.isWrongAndSelected
+                        ? 'border-red-500 bg-red-500'
+                        : state.isSelected
+                          ? 'border-purple-500 bg-purple-500'
+                          : 'border-gray-300'
                   }`}>
-                    {isSelected && (
+                    {(state.isCorrectAndSelected || state.isCorrectNotSelected) && (
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                    {state.isWrongAndSelected && (
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    )}
+                    {state.isSelected && !state.showFeedback && (
                       <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                       </svg>
@@ -1111,7 +1214,7 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
       )}
       
       {/* Explanation - Practice Mode */}
-      {feedback?.showExplanation && question.explanation && (
+      {feedback?.showExplanation && (question.explanation || question.explanationImageUrl || question.explanationAudioUrl || question.explanationVideoUrl) && (
         <div className="mt-4 p-5 bg-blue-50 border border-blue-200 rounded-xl animate-fadeIn">
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
@@ -1121,7 +1224,9 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
             </div>
             <div className="flex-1">
               <p className="font-bold text-blue-800 mb-1">{t('quiz.feedback.explanation', 'Giải thích')}</p>
-              <p className="text-blue-700" dangerouslySetInnerHTML={{ __html: question.explanation }} />
+              {question.explanation && (
+                <p className="text-blue-700" dangerouslySetInnerHTML={{ __html: question.explanation }} />
+              )}
               
               {/* 🆕 Explanation Media */}
               {(question.explanationImageUrl || question.explanationAudioUrl || question.explanationVideoUrl) && (

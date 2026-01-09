@@ -5,6 +5,16 @@
 @tailwind utilities;
 
 /* ========================================
+   CHATBOT MESSAGE WORD WRAP FIX (v5.1)
+   ======================================== */
+
+.overflow-wrap-anywhere {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* ========================================
    CRITICAL: Override Tailwind Preflight for Quill Editor
    Must be placed AFTER @tailwind directives
    ======================================== */

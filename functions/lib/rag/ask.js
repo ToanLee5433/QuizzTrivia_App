@@ -148,9 +148,10 @@ function validateQuestion(question) {
     }
     return trimmed;
 }
-// AI operation timeout (15 seconds for better UX)
-// Users typically leave after 8-10s without response
-const AI_TIMEOUT_MS = 15000;
+// AI operation timeout (60 seconds for complex queries)
+// Cold starts can take 3-5s, index loading 1-2s, AI calls 5-30s
+// Learning Path queries with multiple searches need more time
+const AI_TIMEOUT_MS = 60000;
 /**
  * Main Cloud Function: Ask RAG v4.3
  *
@@ -163,7 +164,7 @@ exports.askRAG = functions.region('us-central1').runWith({
     // v4.3.1: Increased from 256MB to prevent OOM with large indexes
     // 2025 standard: Node.js AI SDKs + JSON loading require more RAM
     memory: '512MB',
-    timeoutSeconds: 60,
+    timeoutSeconds: 120,
     maxInstances: 20,
     secrets: ['GOOGLE_AI_API_KEY'],
 }).https.onCall(async (data, context) => {

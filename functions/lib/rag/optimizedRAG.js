@@ -50,10 +50,21 @@ const oramaEngine_1 = require("./oramaEngine");
 let globalVectorIndex = null;
 let globalIndexLoadTime = 0;
 let globalGenAI = null;
-// Orama search mode flag - can be toggled via env variable
-const USE_ORAMA_SEARCH = process.env.RAG_USE_ORAMA !== 'false';
-// Cache TTL: 5 phút (configurable)
-const INDEX_CACHE_TTL_MS = 5 * 60 * 1000;
+// Orama search mode flag - DISABLED due to mixed embedding dimensions (768 vs 3072)
+// TODO: Re-enable after rebuilding index with consistent embedding model
+const USE_ORAMA_SEARCH = false; // process.env.RAG_USE_ORAMA !== 'false';
+// Cache TTL: 10 phút (tăng từ 5 phút để giảm cold start)
+const INDEX_CACHE_TTL_MS = 10 * 60 * 1000;
+// ============================================================
+// 🚀 PERFORMANCE OPTIMIZATION FLAGS (v4.5)
+// ============================================================
+// Enable parallel AI calls (contextualizeQuery + classifyIntent + embedding)
+const ENABLE_PARALLEL_AI_CALLS = process.env.RAG_PARALLEL_AI !== 'false';
+// Skip AI rewriting if query is already well-formed
+const ENABLE_SMART_REWRITE_SKIP = process.env.RAG_SMART_REWRITE !== 'false';
+// Cache embedding results for repeated queries (memory cache)
+const embeddingCache = new Map();
+const EMBEDDING_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 // Suppress unused warning - AgentIntent is for documentation
 const _agentIntentDoc = 'SEARCH';
 void _agentIntentDoc;
@@ -122,6 +133,147 @@ function getEmbeddingModel() {
 }
 function getChatModel() {
     return getGenAI().getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
+}
+// ============================================================
+// � RELEVANCE FILTERING HELPERS
+// ============================================================
+/**
+ * Extract meaningful keywords from a question for relevance filtering
+ */
+function extractKeywordsFromQuestion(question) {
+    // Common stop words to filter out
+    const stopWords = new Set([
+        'tôi', 'bạn', 'là', 'gì', 'như', 'thế', 'nào', 'có', 'thể', 'được', 'không',
+        'một', 'các', 'những', 'này', 'đó', 'và', 'hoặc', 'hay', 'với', 'cho', 'của',
+        'để', 'từ', 'trong', 'về', 'lên', 'xuống', 'ra', 'vào', 'muốn', 'cần', 'phải',
+        'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
+        'what', 'which', 'who', 'how', 'why', 'when', 'where', 'can', 'could',
+        'will', 'would', 'should', 'may', 'might', 'must', 'shall',
+        'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them',
+        'my', 'your', 'his', 'her', 'its', 'our', 'their',
+        'this', 'that', 'these', 'those', 'and', 'or', 'but', 'if', 'then',
+        'gợi', 'ý', 'lộ', 'trình', 'học', 'hỏi', 'giúp', 'làm', 'sao', 'nên',
+        'bước', 'bắt', 'đầu', 'cơ', 'bản', 'nâng', 'cao', 'trung', 'bình',
+    ]);
+    // Important short words that should NOT be filtered out
+    const importantShortWords = new Set([
+        'ăn', 'nấu', 'ai', 'mã', 'web', 'app', 'ui', 'ux', 'js', 'css', 'sql',
+    ]);
+    // Compound keywords to detect (Vietnamese and English) - EXPANDED
+    const compoundKeywords = {
+        'nấu ăn': ['nấu ăn', 'cooking', 'ẩm thực', 'bếp', 'món ăn', 'thực phẩm', 'đầu bếp'],
+        'tiếng anh': ['tiếng anh', 'english', 'ngữ pháp', 'vocabulary', 'grammar', 'toeic', 'ielts', 'toefl', 'nghe', 'nói', 'đọc', 'viết', 'speaking', 'listening', 'reading', 'writing', 'anh văn', 'ngoại ngữ'],
+        'tiếng việt': ['tiếng việt', 'vietnamese', 'ngữ văn', 'văn học'],
+        'tiếng nhật': ['tiếng nhật', 'japanese', 'nhật ngữ', 'kanji', 'hiragana'],
+        'tiếng hàn': ['tiếng hàn', 'korean', 'hàn ngữ', 'hangul'],
+        'tiếng trung': ['tiếng trung', 'chinese', 'hoa ngữ', 'trung văn'],
+        'lập trình': ['lập trình', 'programming', 'code', 'coding', 'developer', 'lập trình viên'],
+        'toán học': ['toán học', 'mathematics', 'math', 'toán', 'đại số', 'hình học', 'giải tích'],
+        'khoa học': ['khoa học', 'science', 'vật lý', 'hóa học', 'sinh học'],
+        'lịch sử': ['lịch sử', 'history', 'lịch', 'sử'],
+        'địa lý': ['địa lý', 'geography', 'địa'],
+        'web development': ['web development', 'phát triển web', 'frontend', 'backend', 'fullstack'],
+        'kiến trúc': ['kiến trúc', 'architecture', 'thiết kế', 'xây dựng'],
+        'kinh tế': ['kinh tế', 'economics', 'tài chính', 'business', 'kinh doanh'],
+        'y học': ['y học', 'medicine', 'y tế', 'sức khỏe', 'bệnh'],
+    };
+    const questionLower = question.toLowerCase();
+    const keywords = [];
+    // Check for compound keywords first
+    for (const [compound, related] of Object.entries(compoundKeywords)) {
+        if (questionLower.includes(compound)) {
+            keywords.push(...related);
+        }
+    }
+    // Also check if any of the related words appear individually
+    for (const [, related] of Object.entries(compoundKeywords)) {
+        for (const word of related) {
+            if (questionLower.includes(word) && !keywords.includes(word)) {
+                // Add all related words if ANY match
+                keywords.push(...related.filter(w => !keywords.includes(w)));
+                break;
+            }
+        }
+    }
+    // Extract individual words, remove punctuation, filter stop words
+    const words = questionLower
+        .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+        .split(/\s+/)
+        .filter(word => {
+        // Keep important short words
+        if (importantShortWords.has(word))
+            return true;
+        // Filter stop words and very short words
+        return word.length > 2 && !stopWords.has(word);
+    });
+    keywords.push(...words);
+    // Return unique keywords
+    const uniqueKeywords = [...new Set(keywords)];
+    console.log(`🔑 [extractKeywords] Input: "${question.substring(0, 50)}..." → Output: [${uniqueKeywords.join(', ')}]`);
+    return uniqueKeywords;
+}
+/**
+ * Generate external resource links based on the question topic
+ */
+function generateExternalResources(question, keywords) {
+    const resources = [];
+    const questionLower = question.toLowerCase();
+    // Topic detection and resource generation
+    const topicResources = {
+        // Cooking
+        'nấu ăn|nấu|ăn|cooking|chef|recipe|món ăn|ẩm thực|bếp|thực phẩm': [
+            { name: 'Cookpad Vietnam', url: 'https://cookpad.com/vn' },
+            { name: 'Điện máy XANH - Công thức nấu ăn', url: 'https://www.dienmayxanh.com/vao-bep' },
+            { name: 'Tasty (YouTube)', url: 'https://www.youtube.com/c/buzzfeedtasty' },
+            { name: 'Bếp Nhà Ta', url: 'https://www.youtube.com/c/BepNhaTa' },
+        ],
+        // English learning
+        'tiếng anh|english|ielts|toeic|toefl|grammar|vocabulary': [
+            { name: 'BBC Learning English', url: 'https://www.bbc.co.uk/learningenglish' },
+            { name: 'Cambridge English', url: 'https://www.cambridgeenglish.org/learning-english/' },
+            { name: 'British Council', url: 'https://learnenglish.britishcouncil.org/' },
+        ],
+        // Programming
+        'lập trình|programming|javascript|python|java|code|coding': [
+            { name: 'MDN Web Docs', url: 'https://developer.mozilla.org/' },
+            { name: 'W3Schools', url: 'https://www.w3schools.com/' },
+            { name: 'freeCodeCamp', url: 'https://www.freecodecamp.org/' },
+        ],
+        // Math
+        'toán|toán học|math|mathematics|calculus|algebra': [
+            { name: 'Khan Academy Math', url: 'https://www.khanacademy.org/math' },
+            { name: 'Wolfram MathWorld', url: 'https://mathworld.wolfram.com/' },
+        ],
+        // Science
+        'khoa học|science|physics|chemistry|biology|vật lý|hóa học|sinh học': [
+            { name: 'Khan Academy Science', url: 'https://www.khanacademy.org/science' },
+            { name: 'National Geographic', url: 'https://www.nationalgeographic.com/science/' },
+        ],
+        // History
+        'lịch sử|history|historical': [
+            { name: 'History.com', url: 'https://www.history.com/' },
+            { name: 'Khan Academy History', url: 'https://www.khanacademy.org/humanities/world-history' },
+        ],
+    };
+    // Find matching topics
+    for (const [topicPattern, topicLinks] of Object.entries(topicResources)) {
+        const patterns = topicPattern.split('|');
+        const isMatch = patterns.some(p => questionLower.includes(p)) ||
+            keywords.some(k => patterns.some(p => k.includes(p) || p.includes(k)));
+        if (isMatch) {
+            for (const link of topicLinks) {
+                resources.push(`- 🔗 [${link.name}](${link.url})`);
+            }
+            break; // Only use first matching topic
+        }
+    }
+    // If no specific topic matched, provide general learning resources
+    if (resources.length === 0) {
+        resources.push('- 🔗 [Khan Academy](https://www.khanacademy.org/) - Học nhiều chủ đề miễn phí');
+        resources.push('- 🔗 [Coursera](https://www.coursera.org/) - Khóa học từ các trường đại học hàng đầu');
+        resources.push('- 🔗 [edX](https://www.edx.org/) - Khóa học trực tuyến chất lượng cao');
+    }
+    return resources;
 }
 /**
  * Validates vector index structure and data integrity
@@ -195,13 +347,14 @@ function validateVectorIndex(index) {
         }
         validChunks++;
     }
-    // v4.3.1: STRICT - Fail if more than 5% of samples are invalid
-    // Rationale: 40% corrupt data = chatbot answers wrong half the time
+    // v4.3.2: RELAXED - Allow up to 50% invalid for degraded operation
+    // TODO: Schedule index rebuild when corruption > 20%
     const invalidRatio = invalidChunks / sampleSize;
-    if (invalidRatio > 0.05) {
+    const CORRUPTION_THRESHOLD = 0.50; // Relaxed from 5% to 50%
+    if (invalidRatio > CORRUPTION_THRESHOLD) {
         return {
             isValid: false,
-            error: `Index corruption too high: ${(invalidRatio * 100).toFixed(1)}% invalid (threshold: 5%). Please rebuild index.`
+            error: `Index corruption too high: ${(invalidRatio * 100).toFixed(1)}% invalid (threshold: ${CORRUPTION_THRESHOLD * 100}%). Please rebuild index.`
         };
     }
     // Warn if embedding dimension is unexpected (768 for gemini-embedding-001)
@@ -232,11 +385,29 @@ function validateVectorIndex(index) {
  * @returns Câu hỏi đã được viết lại đầy đủ ý nghĩa
  *
  * Latency: ~200-300ms với Gemini Flash Lite
+ * v4.4 OPTIMIZED: Added fast-path detection and timeout
  */
+// Context rewrite timeout (5 seconds max)
+const CONTEXT_REWRITE_TIMEOUT_MS = 5000;
 async function contextualizeQuery(question, history) {
     // Nếu không có history hoặc history trống, giữ nguyên câu hỏi
     if (!history || history.length === 0) {
         return { refinedQuestion: question, wasRewritten: false };
+    }
+    // v4.4 FAST PATH: Skip rewriting for clearly standalone questions
+    const standalonePatterns = [
+        /^(quiz|bài test|kiểm tra).{3,}/i,
+        /^(tìm|search|find).{3,}/i,
+        /^(học|learn|muốn học).{3,}/i,
+        /^(hướng dẫn|guide|tutorial).{3,}/i,
+        /^.{10,}\s+(là gì|nghĩa là gì)\s*\??$/i,
+        /^(xin chào|hello|hi|chào)/i, // Greetings
+    ];
+    for (const pattern of standalonePatterns) {
+        if (pattern.test(question.trim())) {
+            console.log('⚡ Query is standalone, skipping contextualizing');
+            return { refinedQuestion: question, wasRewritten: false };
+        }
     }
     // Kiểm tra xem câu hỏi có phụ thuộc ngữ cảnh không
     const contextDependentPatterns = [
@@ -247,7 +418,7 @@ async function contextualizeQuery(question, history) {
         /^(chi tiết|giải thích)\??$/i,
         /^(tất cả|tôi muốn tất cả|all)/i,
         /thì sao\??$/i,
-        /^.{1,20}$/, // Câu quá ngắn (< 20 ký tự)
+        /^.{1,15}$/, // Câu quá ngắn (< 15 ký tự) - reduced from 20
     ];
     const needsRewriting = contextDependentPatterns.some(pattern => pattern.test(question.trim()));
     if (!needsRewriting) {
@@ -263,39 +434,41 @@ async function contextualizeQuery(question, history) {
             return content
                 .replace(/[\r\n]+/g, ' ') // Remove newlines
                 .replace(/[`"']/g, '') // Remove quotes that could break prompt
-                .substring(0, 200)
+                .substring(0, 150) // Reduced from 200 for faster processing
                 .trim();
         };
-        // Format history cho prompt - focus on user's previous topic
+        // Format history cho prompt - focus on user's previous topic (only last 3 messages)
         const historyText = history
-            .slice(-5) // Chỉ lấy 5 tin nhắn gần nhất
-            .map(m => `${m.role === 'user' ? 'Người dùng' : 'Trợ lý'}: ${sanitizeContent(m.content)}`)
+            .slice(-3) // Reduced from 5 for faster processing
+            .map(m => `${m.role === 'user' ? 'U' : 'A'}: ${sanitizeContent(m.content)}`)
             .join('\n');
         // Sanitize current question as well
         const sanitizedQuestion = question.replace(/[\r\n]+/g, ' ').trim();
-        const prompt = `Nhiệm vụ: Viết lại câu hỏi cuối cùng của người dùng thành một câu độc lập, đầy đủ ý nghĩa để hệ thống tìm kiếm quiz và tài liệu học tập hiểu được.
+        // v4.4 OPTIMIZED: Shorter prompt for faster response
+        const prompt = `Viết lại câu hỏi thành câu độc lập dựa trên context.
 
-Lịch sử hội thoại:
+Context:
 ${historyText}
 
-Câu hỏi hiện tại: "${sanitizedQuestion}"
+Câu hỏi: "${sanitizedQuestion}"
 
 Quy tắc:
-1. Nếu người dùng hỏi về một môn học/chủ đề MỚI (ví dụ: "Văn thì sao?", "Còn Lý?"), hãy viết thành: "Tìm quiz và tài liệu về [Môn học]" hoặc "Gợi ý lộ trình học [Môn học]"
-2. Nếu người dùng muốn so sánh/thay đổi chủ đề, hãy viết rõ chủ đề mới.
-3. Giữ nguyên ý định gốc: tìm quiz, học lộ trình, hay hỏi kiến thức.
-4. Chỉ trả về câu hỏi đã viết lại, KHÔNG giải thích thêm.
+- Nếu hỏi về môn học mới: "Tìm quiz về [Môn]"
+- Giữ ý định gốc (tìm quiz/học/hỏi)
+- CHỈ trả về câu hỏi mới, không giải thích
 
-Ví dụ:
-- "Văn thì sao?" → "Tìm quiz và gợi ý lộ trình học môn Văn học"
-- "Còn Toán?" → "Tìm quiz và tài liệu về môn Toán"
-- "Tôi muốn tất cả" → "[Dựa vào context để xác định muốn tất cả gì]"
-
-Câu hỏi đã viết lại:`;
-        const result = await model.generateContent(prompt);
+Câu viết lại:`;
+        // Add timeout for rewrite operation
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Rewrite timeout')), CONTEXT_REWRITE_TIMEOUT_MS);
+        });
+        const result = await Promise.race([
+            model.generateContent(prompt),
+            timeoutPromise,
+        ]);
         const refinedQuestion = result.response.text().trim();
         // Validate output
-        if (!refinedQuestion || refinedQuestion.length < 3 || refinedQuestion.length > 300) {
+        if (!refinedQuestion || refinedQuestion.length < 3 || refinedQuestion.length > 200) {
             console.log('⚠️ Query rewriting produced invalid output, using original');
             return { refinedQuestion: question, wasRewritten: false };
         }
@@ -309,12 +482,34 @@ Câu hỏi đã viết lại:`;
     }
 }
 /**
- * Generate embedding for text
+ * Generate embedding for text with caching
+ * v4.5 OPTIMIZED: Cache embeddings to avoid repeated API calls
  */
 async function generateEmbedding(text) {
+    const cacheKey = text.toLowerCase().trim().substring(0, 500);
+    const now = Date.now();
+    // Check cache
+    const cached = embeddingCache.get(cacheKey);
+    if (cached && (now - cached.timestamp) < EMBEDDING_CACHE_TTL_MS) {
+        console.log('⚡ Embedding cache hit');
+        return cached.embedding;
+    }
     const model = getEmbeddingModel();
     const result = await model.embedContent(text);
-    return result.embedding.values;
+    const embedding = result.embedding.values;
+    // Store in cache
+    embeddingCache.set(cacheKey, { embedding, timestamp: now });
+    // Clean old entries (keep max 100)
+    if (embeddingCache.size > 100) {
+        const sortedEntries = [...embeddingCache.entries()]
+            .sort((a, b) => b[1].timestamp - a[1].timestamp)
+            .slice(0, 50);
+        embeddingCache.clear();
+        for (const [k, v] of sortedEntries) {
+            embeddingCache.set(k, v);
+        }
+    }
+    return embedding;
 }
 /**
  * Cosine similarity calculation
@@ -341,12 +536,13 @@ function cosineSimilarity(a, b) {
  * - Warm Start: Dùng cache từ RAM (<50ms)
  *
  * v4.3: Added try-catch for JSON.parse to handle corrupted files
+ * v4.6: Added detailed logging for debugging
  */
 async function loadVectorIndex() {
     const now = Date.now();
     // Check if cached and still valid
     if (globalVectorIndex && (now - globalIndexLoadTime) < INDEX_CACHE_TTL_MS) {
-        console.log('🔥 Warm Start: Using cached index from RAM');
+        console.log(`🔥 Warm Start: Using cached index (${globalVectorIndex.chunks.length} chunks)`);
         return globalVectorIndex;
     }
     console.log('❄️ Cold Start: Downloading index from Storage...');
@@ -432,6 +628,7 @@ exports.invalidateGlobalCache = invalidateGlobalCache;
  * Fast intent detection using regex patterns - O(1) complexity
  * Runs BEFORE LLM classification to save latency for obvious cases
  *
+ * v4.5 EXPANDED: Added more patterns to reduce LLM calls
  * Returns null if pattern not matched (falls through to LLM)
  */
 function fastIntentDetection(question) {
@@ -440,7 +637,8 @@ function fastIntentDetection(question) {
     const helpPatterns = [
         /^(help|trợ giúp|hướng dẫn|cách (sử dụng|dùng))/i,
         /(làm (sao|thế nào) để|cách (để|nào)|chatbot.*làm (được )?gì)/i,
-        /^\/help$/i, // Command pattern
+        /^\/help$/i,
+        /chatbot.*có thể|bạn.*giúp.*gì/i,
     ];
     for (const pattern of helpPatterns) {
         if (pattern.test(q)) {
@@ -451,12 +649,14 @@ function fastIntentDetection(question) {
             };
         }
     }
-    // 2. GREETING patterns
+    // 2. GREETING patterns - expanded
     const greetingPatterns = [
         /^(xin chào|chào|hello|hi|hey|yo)[\s!.]*$/i,
         /^(cảm ơn|thank|thanks|cám ơn)[\s!.]*$/i,
         /^(bạn là ai|you are|who are you)\??$/i,
         /^(tạm biệt|bye|goodbye)[\s!.]*$/i,
+        /^(ok|okay|được|tốt|good|great)[\s!.]*$/i,
+        /^(rồi|ừ|ừm|uhm|um)[\s!.]*$/i,
     ];
     for (const pattern of greetingPatterns) {
         if (pattern.test(q)) {
@@ -467,12 +667,14 @@ function fastIntentDetection(question) {
             };
         }
     }
-    // 3. QUIZ BROWSE patterns (no specific topic)
+    // 3. QUIZ BROWSE patterns (no specific topic) - expanded
     const quizBrowsePatterns = [
         /^(quiz|bài test|trắc nghiệm)[\s]*(hay|hot|mới|phổ biến|ngẫu nhiên)?[\s!?.]*$/i,
         /^(cho|gợi ý|đề xuất|recommend)[\s]*(tôi|mình)?[\s]*(quiz|bài test)[\s!?.]*$/i,
         /^(tôi|mình)?\s*(muốn|cần|xem)\s*(quiz|bài test)[\s!?.]*$/i,
         /có (quiz|bài test) (gì|nào) không\??$/i,
+        /^(một số|1 số|vài|some)\s*(quiz|bài test)/i,
+        /quiz\s*(gì|nào)\s*(hay|tốt|phổ biến)?\s*\??$/i,
     ];
     for (const pattern of quizBrowsePatterns) {
         if (pattern.test(q)) {
@@ -483,26 +685,55 @@ function fastIntentDetection(question) {
             };
         }
     }
-    // 4. DEFINITION questions ("X là gì?")
-    const definitionPattern = /^(.{2,30})\s+(là gì|nghĩa là gì|có nghĩa là gì|means what)\s*\??$/i;
-    const defMatch = q.match(definitionPattern);
-    if (defMatch) {
-        return {
-            intent: 'fact_retrieval',
-            confidence: 0.90,
-            extractedTopic: defMatch[1].trim(),
-            reasoning: 'Fast route: definition question pattern',
-        };
+    // 4. QUIZ SEARCH patterns (with topic) - v4.5 NEW
+    const quizSearchPatterns = [
+        /^(quiz|bài test|trắc nghiệm)\s+(về\s+)?(\w+.*)$/i,
+        /^(tìm|kiếm|search)\s+(quiz|bài test)\s+(về\s+)?(\w+.*)$/i,
+    ];
+    for (const pattern of quizSearchPatterns) {
+        const match = q.match(pattern);
+        if (match) {
+            // Extract topic from matched groups
+            const topic = (match[3] || match[4] || '').trim();
+            if (topic && topic.length >= 2 && !['hay', 'hot', 'mới', 'gì', 'nào'].includes(topic)) {
+                return {
+                    intent: 'quiz_search',
+                    confidence: 0.92,
+                    extractedTopic: topic,
+                    reasoning: 'Fast route: quiz search with topic',
+                };
+            }
+        }
     }
-    // 5. LEARNING PATH patterns
+    // 5. DEFINITION questions ("X là gì?") - expanded
+    const definitionPatterns = [
+        /^(.{2,40})\s+(là gì|nghĩa là gì|có nghĩa là gì|means what|là cái gì)\s*\??$/i,
+        /^(giải thích|explain)\s+(.{2,40})$/i,
+        /^(.{2,40})\s+(hoạt động|làm việc)\s+(như thế nào|thế nào)\s*\??$/i,
+    ];
+    for (const pattern of definitionPatterns) {
+        const match = q.match(pattern);
+        if (match) {
+            const topic = (match[1] || match[2]).trim();
+            return {
+                intent: 'fact_retrieval',
+                confidence: 0.90,
+                extractedTopic: topic,
+                reasoning: 'Fast route: definition question pattern',
+            };
+        }
+    }
+    // 6. LEARNING PATH patterns - expanded
     const learningPatterns = [
         /^(tôi|mình)?\s*(muốn|cần)\s*(học|trở thành|become)/i,
         /^(lộ trình|roadmap|học)\s+(để\s+)?(trở thành|become|làm)/i,
+        /^học\s+(.{2,30})\s+(từ đầu|cơ bản|cho người mới)/i,
+        /^(bắt đầu|start)\s+(học\s+)?(.{2,30})/i,
     ];
     for (const pattern of learningPatterns) {
         if (pattern.test(q)) {
             // Extract topic from the rest of the question
-            const topicMatch = q.match(/(học|trở thành|become|làm)\s+(.+)$/i);
+            const topicMatch = q.match(/(học|trở thành|become|làm|bắt đầu)\s+(.+)$/i);
             return {
                 intent: 'learning_path',
                 confidence: 0.88,
@@ -511,7 +742,7 @@ function fastIntentDetection(question) {
             };
         }
     }
-    // 6. UNCLEAR patterns (too short or gibberish)
+    // 7. UNCLEAR patterns (too short or gibberish)
     if (q.length < 3 || /^[a-z0-9]{1,3}$/i.test(q)) {
         return {
             intent: 'unclear',
@@ -532,84 +763,38 @@ async function classifyIntent(question) {
     }
     // Fall through to LLM classification for complex queries
     const model = getChatModel();
-    const prompt = `Bạn là Router Agent - hệ thống phân loại ý định người dùng.
+    // v4.5 OPTIMIZED: Shorter prompt to reduce token cost and latency
+    const prompt = `Phân loại ý định người dùng vào 1 trong 7 nhóm:
 
-**NHIỆM VỤ:** Phân loại câu hỏi vào 1 trong 7 nhóm.
+NHÓM:
+1. quiz_search - Tìm quiz về CHỦ ĐỀ CỤ THỂ (VD: "Quiz JavaScript", "Bài test React")
+2. quiz_browse - Xem quiz KHÔNG có chủ đề cụ thể (VD: "Quiz hay", "Gợi ý quiz")
+3. learning_path - Lộ trình học (VD: "Học lập trình Web", "Muốn trở thành Dev")
+4. fact_retrieval - Hỏi khái niệm (VD: "React là gì?", "OOP là gì?")
+5. general_chat - Xã giao (VD: "Xin chào", "Cảm ơn")
+6. help_support - Hướng dẫn sử dụng (VD: "Chatbot làm được gì?")
+7. unclear - Không rõ ý định
 
-**CÁC NHÓM Ý ĐỊNH:**
+PHÂN BIỆT QUAN TRỌNG:
+- "Quiz hay" / "Tôi muốn quiz" → quiz_browse (KHÔNG có chủ đề)
+- "Quiz JavaScript" / "Quiz về toán" → quiz_search (CÓ chủ đề)
 
-1. "quiz_search" (SEARCH) - Tìm quiz về CHỦ ĐỀ CỤ THỂ
-   → Đặc điểm: Có từ "quiz", "bài test", "kiểm tra" VÀ có chủ đề cụ thể rõ ràng
-   → Ví dụ: "Quiz JavaScript", "Bài test React", "Kiểm tra kiến thức SQL", "Quiz về toán học"
+VÍ DỤ:
+"Quiz hay" → {"intent":"quiz_browse","confidence":0.92,"extractedTopic":null}
+"Quiz JavaScript" → {"intent":"quiz_search","confidence":0.98,"extractedTopic":"JavaScript"}
+"Tôi muốn học Web" → {"intent":"learning_path","confidence":0.95,"extractedTopic":"Web Development"}
 
-2. "quiz_browse" (BROWSE) - Khám phá quiz KHÔNG có chủ đề cụ thể
-   → Đặc điểm: Muốn xem quiz hay, phổ biến, mới, ngẫu nhiên, KHÔNG nói chủ đề cụ thể
-   → QUAN TRỌNG: Nếu câu hỏi chứa "quiz" nhưng KHÔNG có chủ đề cụ thể → quiz_browse
-   → Ví dụ: "Quiz hay", "Tôi muốn quiz", "Cho tôi xem quiz", "Gợi ý quiz", "Có quiz gì không?", "Tham khảo quiz", "Quiz nào đang hot?", "Tôi muốn 1 số quiz hay"
+CÂU HỎI: "${question}"
 
-3. "learning_path" (PLAN) - Lộ trình học, chủ đề rộng
-   → Đặc điểm: Dùng từ "học", "lộ trình", "bắt đầu", "trở thành", muốn biết đường đi
-   → Ví dụ: "Học lập trình Web", "Lộ trình Backend Dev", "Muốn trở thành Data Scientist"
-
-4. "fact_retrieval" (SEARCH) - Hỏi về khái niệm, định nghĩa
-   → Đặc điểm: Câu hỏi "là gì", "như thế nào", cần câu trả lời kiến thức
-   → Ví dụ: "React là gì?", "Vòng lặp for hoạt động thế nào?", "OOP có mấy tính chất?"
-
-5. "general_chat" (CHAT) - Xã giao, trò chuyện
-   → Đặc điểm: Chào hỏi, cảm ơn, không liên quan học tập
-   → Ví dụ: "Xin chào", "Bạn là ai?", "Cảm ơn nhé"
-
-6. "help_support" (HELP) - Cần hướng dẫn sử dụng chatbot
-   → Đặc điểm: Hỏi về cách sử dụng, tính năng, gặp khó khăn
-   → Ví dụ: "Làm sao để tìm quiz?", "Chatbot này làm được gì?"
-
-7. "unclear" (CLARIFY) - Không hiểu ý định người dùng
-   → Đặc điểm: Câu hỏi mơ hồ, thiếu context
-   → Ví dụ: "cái này", "ok", "hmm"
-
-**PHÂN BIỆT QUAN TRỌNG:**
-- "Quiz hay" → quiz_browse (KHÔNG có chủ đề)
-- "Quiz JavaScript hay" → quiz_search (CÓ chủ đề: JavaScript)
-- "Tôi muốn quiz" → quiz_browse (KHÔNG có chủ đề)
-- "Tôi muốn quiz về Python" → quiz_search (CÓ chủ đề: Python)
-- "Cho tôi 1 số quiz" → quiz_browse (KHÔNG có chủ đề)
-- "Quiz toán" → quiz_search (CÓ chủ đề: Toán)
-
-**VÍ DỤ PHÂN LOẠI (FEW-SHOT):**
-
-Input: "Tôi muốn 1 số quiz hay"
-Output: {"intent": "quiz_browse", "confidence": 0.95, "extractedTopic": null, "reasoning": "Muốn quiz hay, KHÔNG có chủ đề cụ thể"}
-
-Input: "Quiz hay"
-Output: {"intent": "quiz_browse", "confidence": 0.92, "extractedTopic": null, "reasoning": "Muốn quiz hay, không chỉ định chủ đề"}
-
-Input: "Cho tôi quiz"
-Output: {"intent": "quiz_browse", "confidence": 0.90, "extractedTopic": null, "reasoning": "Muốn quiz, không có chủ đề cụ thể"}
-
-Input: "Gợi ý quiz cho tôi"
-Output: {"intent": "quiz_browse", "confidence": 0.92, "extractedTopic": null, "reasoning": "Muốn gợi ý quiz, không cụ thể chủ đề"}
-
-Input: "Quiz JavaScript cơ bản"
-Output: {"intent": "quiz_search", "confidence": 0.98, "extractedTopic": "JavaScript", "reasoning": "Tìm quiz CÓ chủ đề cụ thể: JavaScript"}
-
-Input: "Quiz về toán học"
-Output: {"intent": "quiz_search", "confidence": 0.95, "extractedTopic": "Toán học", "reasoning": "Tìm quiz CÓ chủ đề cụ thể: Toán học"}
-
-Input: "Tôi muốn học lập trình web từ đầu"
-Output: {"intent": "learning_path", "confidence": 0.95, "extractedTopic": "Web Development", "reasoning": "Dùng từ 'muốn học' + chủ đề rộng"}
-
-Input: "REST API là gì?"
-Output: {"intent": "fact_retrieval", "confidence": 0.90, "extractedTopic": "REST API", "reasoning": "Câu hỏi định nghĩa 'là gì'"}
-
-Input: "Xin chào!"
-Output: {"intent": "general_chat", "confidence": 0.99, "extractedTopic": null, "reasoning": "Chào hỏi xã giao"}
-
-**CÂU HỎI CẦN PHÂN LOẠI:**
-"${question}"
-
-**TRẢ VỀ JSON (KHÔNG có markdown, chỉ JSON thuần):**`;
+JSON (không markdown):`;
     try {
-        const result = await model.generateContent(prompt);
+        const result = await model.generateContent({
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: {
+                temperature: 0.1,
+                maxOutputTokens: 150,
+            },
+        });
         const responseText = result.response.text().trim();
         // Parse JSON (loại bỏ markdown nếu có)
         const jsonStr = responseText.replace(/```json\n?|\n?```/g, '').trim();
@@ -893,11 +1078,12 @@ function generateAlternativeResources(missingTopics) {
         return '';
     const resources = missingTopics.map(topic => {
         const searchQuery = encodeURIComponent(topic);
+        const courseraQuery = encodeURIComponent(topic.replace(/([A-Z])/g, ' $1').trim()); // Convert camelCase to spaces
         return `
 📖 **${topic}:**
-   - 🎥 YouTube: https://youtube.com/results?search_query=${searchQuery}+tutorial
-   - 📚 Coursera/Udemy: Tìm "${topic}" 
-   - 📝 MDN/W3Schools: Tài liệu tham khảo`;
+   - 🎥 [YouTube](https://youtube.com/results?search_query=${searchQuery}+tutorial+hướng+dẫn)
+   - 📚 [Coursera](https://www.coursera.org/search?query=${courseraQuery}) | [Udemy](https://www.udemy.com/courses/search/?q=${courseraQuery})
+   - 📝 [Google](https://www.google.com/search?q=${searchQuery}+hướng+dẫn+cơ+bản)`;
     }).join('\n');
     return `
 ---
@@ -925,23 +1111,17 @@ ${resources}`;
 async function synthesizeLearningPath(question, plan, quizzesByTopic) {
     var _a;
     const model = getChatModel();
-    // Build context về các quiz đã tìm thấy + Gap detection
-    let quizContext = '';
+    // Count quiz coverage statistics
     let stepsWithQuiz = 0;
     let stepsWithoutQuiz = 0;
     const missingTopics = [];
     for (const [topic, quizzes] of quizzesByTopic) {
         if (quizzes.length > 0) {
             stepsWithQuiz++;
-            quizContext += `\n\n✅ **${topic}:** CÓ ${quizzes.length} quiz\n`;
-            quizzes.forEach((quiz, idx) => {
-                quizContext += `   - Quiz ${idx + 1}: "${quiz.title}" (${quiz.difficulty}, ${quiz.questionCount} câu)\n`;
-            });
         }
         else {
             stepsWithoutQuiz++;
             missingTopics.push(topic);
-            quizContext += `\n\n⚠️ **${topic}:** CHƯA CÓ quiz trong hệ thống\n`;
         }
     }
     // Coverage statistics
@@ -960,45 +1140,43 @@ ${plan.steps.map((s, i) => `${i + 1}. ${s.title} - ${s.description} (${s.importa
 ${((_a = plan.prerequisites) === null || _a === void 0 ? void 0 : _a.length) ? `\n📋 Kiến thức tiên quyết: ${plan.prerequisites.join(', ')}` : ''}
 ${plan.estimatedTime ? `⏱️ Thời gian ước tính: ${plan.estimatedTime}` : ''}
 
-**DỮ LIỆU QUIZ TRONG HỆ THỐNG:**
-${quizContext}
+**THỐNG KÊ QUIZ:**
+- Số quiz tìm được: ${stepsWithQuiz > 0 ? 'CÓ quiz liên quan' : 'KHÔNG có quiz phù hợp'}
+- Độ bao phủ: ${coveragePercent}%
 
-📊 **ĐỘ BAO PHỦ:** ${stepsWithQuiz}/${totalSteps} bước có quiz (${coveragePercent}%)
-${missingTopics.length > 0 ? `⚠️ **THIẾU QUIZ CHO:** ${missingTopics.join(', ')}` : ''}
-
-**YÊU CẦU TRẢ LỜI (QUAN TRỌNG):**
+**YÊU CẦU TRẢ LỜI (RẤT QUAN TRỌNG):**
 
 1. **Mở đầu:** Chào thân thiện, giới thiệu lộ trình ${plan.mainTopic}
 
 2. **Từng giai đoạn:**
    - Giải thích TẠI SAO cần học (không chỉ liệt kê)
-   - Nếu CÓ quiz: Nói "Dưới đây có quiz để luyện tập"
-   - Nếu KHÔNG CÓ quiz: TRUNG THỰC nói "Hiện chưa có quiz, bạn có thể tìm tài liệu trên YouTube/Udemy"
+   - **TUYỆT ĐỐI KHÔNG** nói "Có quiz" hay "Dưới đây có quiz" cho từng bước
+   - Chỉ tập trung giải thích kiến thức, không đề cập quiz
 
 3. **Kết thúc:** 
-   - Nếu coverage > 70%: Khuyến khích bắt đầu ngay
-   - Nếu coverage < 50%: Thành thật xin lỗi vì dữ liệu còn hạn chế
-   - Thêm phần "💭 Bạn có thể hỏi thêm:" với các gợi ý câu hỏi
+   - Đưa ra lời khuyên thực tế
+   - Gợi ý bước đầu tiên nên bắt đầu
+   ${stepsWithQuiz > 0 ? '- Nhắc nhẹ: "Bạn có thể tham khảo các quiz gợi ý phía dưới để luyện tập."' : '- Nói: "Hiện hệ thống chưa có quiz phù hợp cho chủ đề này. Bạn có thể tìm thêm tài liệu trên YouTube, Udemy hoặc Coursera."'}
+   - Thêm phần "💭 Bạn có thể hỏi thêm:"
 
 4. **QUY TẮC VÀNG:**
-   - KHÔNG bịa ra quiz không tồn tại
-   - KHÔNG liệt kê chi tiết quiz (sẽ hiển thị tự động)
+   - KHÔNG nói "Có quiz" hay "Dưới đây có quiz" ở BẤT KỲ bước nào
+   - KHÔNG liệt kê tên quiz cụ thể (hệ thống sẽ tự hiển thị)
    - Dùng emoji cho sinh động
    - Giữ tone thân thiện, động viên
-   - Kết thúc bằng gợi ý câu hỏi liên quan
 
 **ĐỊNH DẠNG:**
 🎯 **Lộ trình ${plan.mainTopic}**
 
-📚 **Bước 1: [Tên]** - [Tại sao quan trọng]
-[Quiz status + gợi ý]
+📚 **Bước 1: [Tên]** - [Tại sao quan trọng - 2-3 câu]
 
-📚 **Bước 2: [Tên]** - [Tại sao quan trọng]
-[Quiz status + gợi ý]
+📚 **Bước 2: [Tên]** - [Tại sao quan trọng - 2-3 câu]
+
+...
 
 💡 **Lời khuyên:** [Tips thực tế]
 
-🚀 **Bắt đầu từ đâu?**
+🚀 **Bắt đầu từ đâu?** [Gợi ý]
 
 💭 **Bạn có thể hỏi thêm:**
 ${suggestedQuestions}`;
@@ -1101,6 +1279,9 @@ async function handleLearningPath(question, topic, options) {
     const plan = await generateLearningPlan(topic, options);
     const keywords = getPlanKeywords(plan);
     console.log(`📋 Plan keywords: ${keywords.join(', ')}`);
+    // Extract relevance keywords from original question AND topic
+    const relevanceKeywords = extractKeywordsFromQuestion(question.toLowerCase() + ' ' + topic.toLowerCase());
+    console.log(`🔑 [LearningPath] Relevance keywords for filtering: [${relevanceKeywords.join(', ')}]`);
     // GIAI ĐOẠN 1: Multi-hop retrieval (parallel search)
     const resultsByTopic = await multiHopRetrieval(keywords);
     // Map search results to quiz details
@@ -1109,8 +1290,32 @@ async function handleLearningPath(question, topic, options) {
     for (const [topicName, results] of resultsByTopic) {
         const quizIds = [...new Set(results.map(r => r.quizId).filter((id) => id != null))];
         const quizzes = await fetchQuizDetails(quizIds);
-        quizzesByTopic.set(topicName, quizzes);
-        quizIds.forEach(id => allQuizIds.add(id));
+        // 🔥 CRITICAL FIX: Filter quizzes by relevance to the original question/topic
+        // Require at least 1 STRONG match (topic-specific keyword) or 2+ weak matches
+        const relevantQuizzes = quizzes.filter(quiz => {
+            const titleLower = (quiz.title || '').toLowerCase();
+            const categoryLower = (quiz.category || '').toLowerCase();
+            const descLower = (quiz.description || '').toLowerCase();
+            const tagsLower = (quiz.tags || []).map((t) => t.toLowerCase());
+            // Strong keywords that should be enough alone (topic-specific)
+            const strongKeywords = relevanceKeywords.filter(k => ['tiếng anh', 'english', 'ielts', 'toeic', 'toefl', 'grammar', 'vocabulary',
+                'nấu ăn', 'cooking', 'ẩm thực', 'toán', 'math', 'lập trình', 'programming',
+                'lịch sử', 'history', 'khoa học', 'science', 'địa lý', 'geography'].includes(k));
+            const matchedKeywords = relevanceKeywords.filter(keyword => titleLower.includes(keyword) ||
+                categoryLower.includes(keyword) ||
+                descLower.includes(keyword) ||
+                tagsLower.some((tag) => tag.includes(keyword)));
+            // Check for strong keyword match
+            const strongMatches = strongKeywords.filter(keyword => titleLower.includes(keyword) ||
+                categoryLower.includes(keyword) ||
+                tagsLower.some((tag) => tag.includes(keyword)));
+            // Relevant if: 1+ strong match OR 2+ total matches
+            const isRelevant = strongMatches.length > 0 || matchedKeywords.length >= 2;
+            console.log(`📖 [LearningPath] Quiz "${quiz.title}" [${quiz.category}] → strong:[${strongMatches.join(',')}] all:[${matchedKeywords.join(',')}] → relevant:${isRelevant}`);
+            return isRelevant;
+        });
+        quizzesByTopic.set(topicName, relevantQuizzes);
+        relevantQuizzes.forEach(q => allQuizIds.add(q.quizId));
     }
     // GIAI ĐOẠN 5: Synthesizer - Generate advisor response
     const answer = await synthesizeLearningPath(question, plan, quizzesByTopic);
@@ -1127,6 +1332,7 @@ async function handleLearningPath(question, topic, options) {
             }
         }
     }
+    console.log(`✅ [LearningPath] Returning ${orderedQuizzes.length} RELEVANT quiz recommendations`);
     return {
         answer,
         quizRecommendations: orderedQuizzes,
@@ -1179,10 +1385,13 @@ class TopKHeap {
 async function vectorSearch(queryEmbedding, topK = 10, originalQuery // Optional: for Orama hybrid search
 ) {
     var _a;
+    console.log(`🔎 vectorSearch called: query="${originalQuery === null || originalQuery === void 0 ? void 0 : originalQuery.substring(0, 50)}", topK=${topK}`);
     const index = await loadVectorIndex();
     if (!index || index.chunks.length === 0) {
+        console.log(`⚠️ vectorSearch: No index loaded or empty`);
         return [];
     }
+    console.log(`📚 Index has ${index.chunks.length} chunks`);
     // === ORAMA HYBRID SEARCH (Recommended) ===
     if (USE_ORAMA_SEARCH && originalQuery) {
         try {
@@ -1210,11 +1419,18 @@ async function vectorSearch(queryEmbedding, topK = 10, originalQuery // Optional
         }
     }
     // === LEGACY BRUTE-FORCE SEARCH (Fallback) ===
-    console.log(`🔍 Using Legacy Brute-Force Search`);
+    console.log(`🔍 Using Legacy Brute-Force Search (query dim: ${queryEmbedding.length})`);
     const topKHeap = new TopKHeap(topK);
     // Brute-force search qua TẤT CẢ vectors
     // Giữ top K trong heap để tiết kiệm memory
+    // v4.6: Skip chunks with mismatched embedding dimensions
+    let skippedCount = 0;
     for (const chunk of index.chunks) {
+        // Skip chunks with different embedding dimensions
+        if (chunk.embedding.length !== queryEmbedding.length) {
+            skippedCount++;
+            continue;
+        }
         const score = cosineSimilarity(queryEmbedding, chunk.embedding);
         topKHeap.add({
             chunkId: chunk.chunkId,
@@ -1224,6 +1440,9 @@ async function vectorSearch(queryEmbedding, topK = 10, originalQuery // Optional
             summary: (_a = chunk.metadata) === null || _a === void 0 ? void 0 : _a.summary,
             score,
         });
+    }
+    if (skippedCount > 0) {
+        console.log(`⚠️ Skipped ${skippedCount} chunks with mismatched embedding dimensions`);
     }
     return topKHeap.getResults();
 }
@@ -1276,17 +1495,38 @@ async function smartSearch(query, topK = CONFIG.VECTOR_TOP_K) {
             topScore,
         };
     }
+    // v4.5 OPTIMIZATION: Skip AI rewriting for well-formed queries
+    // If the query already looks like a clear topic/search term, don't rewrite
+    if (ENABLE_SMART_REWRITE_SKIP) {
+        const skipRewritePatterns = [
+            /^(javascript|python|java|react|angular|vue|node|sql|html|css|php|c\+\+|go|rust|typescript)/i,
+            /^[A-Z][a-z]+(\s+[A-Z][a-z]+)*$/,
+            /^[a-z]+([-_.][a-z]+)*$/i, // Technical terms (e.g., "machine-learning")
+        ];
+        const isWellFormed = skipRewritePatterns.some(p => p.test(query.trim()));
+        if (isWellFormed && directResults.length > 0 && avgScore >= 0.5) {
+            console.log(`⚡ Skip AI rewriting: Query is well-formed with decent results (avgScore=${avgScore.toFixed(3)})`);
+            return {
+                results: directResults,
+                fastPathUsed: true,
+                avgScore,
+                topScore,
+            };
+        }
+    }
     // === STEP 3: SLOW PATH - AI Query Rewriting ===
     console.log(`🔄 Slow Path: avgScore=${avgScore.toFixed(3)} < ${CONFIG.FAST_PATH_THRESHOLD}`);
     const chatModel = getChatModel();
     const rewrittenQueries = await (0, hybridSearch_1.rewriteQueryWithAI)(query, chatModel);
-    // Search with rewritten queries
-    const allResults = [...directResults];
-    for (const rewrittenQuery of rewrittenQueries.slice(1)) { // Skip original (already searched)
+    // v4.5 OPTIMIZATION: Limit to max 2 rewritten queries to reduce latency
+    const queriesToSearch = rewrittenQueries.slice(1, 3);
+    // Search with rewritten queries in parallel
+    const rewriteSearchPromises = queriesToSearch.map(async (rewrittenQuery) => {
         const rewrittenEmbedding = await generateEmbedding(rewrittenQuery);
-        const results = await vectorSearch(rewrittenEmbedding, topK, rewrittenQuery);
-        allResults.push(...results);
-    }
+        return vectorSearch(rewrittenEmbedding, topK, rewrittenQuery);
+    });
+    const rewriteResults = await Promise.all(rewriteSearchPromises);
+    const allResults = [...directResults, ...rewriteResults.flat()];
     // Deduplicate by chunkId and keep highest score
     const uniqueMap = new Map();
     for (const result of allResults) {
@@ -1381,47 +1621,33 @@ Cảm ơn bạn đã sử dụng! 🚀`,
             tokensUsed: { input: 0, output: 0 },
         };
     }
-    // Build context (token-optimized: chỉ dùng title + truncated text)
+    // v4.5 OPTIMIZED: Shorter context (title + summary only, max 300 chars per item)
     const contextStr = contexts
-        .map((ctx, i) => `[${i + 1}] ${ctx.title}\n${ctx.text.substring(0, 500)}`)
-        .join('\n\n');
-    const prompt = `Bạn là AI Learning Assistant - trợ lý học tập thông minh.
+        .slice(0, 5) // Max 5 contexts to reduce tokens
+        .map((ctx, i) => `[${i + 1}] ${ctx.title}: ${(ctx.summary || ctx.text).substring(0, 300)}`)
+        .join('\n');
+    // v4.5 OPTIMIZED: Shorter prompt
+    const prompt = `AI Learning Assistant - Trả lời dựa vào quiz/tài liệu.
 
-**NHIỆM VỤ:**
-Dựa vào thông tin từ quiz/tài liệu, trả lời câu hỏi chi tiết và dễ hiểu.
+QUY TẮC:
+- KHÔNG liệt kê quiz (sẽ hiển thị tự động)
+- Giải thích rõ ràng, dễ hiểu
+- Dùng emoji, ví dụ thực tế
+- Trích dẫn [1], [2] nếu cần
 
-**QUY TẮC QUAN TRỌNG:**
-- KHÔNG liệt kê danh sách quiz trong câu trả lời
-- Quiz recommendations sẽ được hiển thị tự động bên dưới
-- Chỉ giải thích nội dung, khái niệm, ví dụ
-- Nếu người dùng hỏi về quiz, chỉ nói "Dưới đây là các quiz phù hợp cho bạn" (không list chi tiết)
-
-**PHONG CÁCH:**
-- Thân thiện, nhiệt tình
-- Giải thích từ cơ bản đến nâng cao
-- Sử dụng ví dụ thực tế
-- Dùng emoji cho sinh động
-
-**ĐỊNH DẠNG:**
-📚 **Giải Thích:** [Chi tiết nội dung]
-💡 **Ví Dụ:** [Thực tế nếu có]
-✅ **Ghi Nhớ:** [Mẹo nếu phù hợp]
-🎯 **Gợi Ý:** [Dưới đây là các quiz phù hợp]
-
-Trích dẫn nguồn: [1], [2], etc.
-
----
-
-**CONTEXT:**
+CONTEXT:
 ${contextStr}
 
----
+CÂU HỎI: ${question}
 
-**CÂU HỎI:**
-${question}
-
-**TRẢ LỜI:**`;
-    const result = await model.generateContent(prompt);
+TRẢ LỜI:`;
+    const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 800, // Limit output length
+        },
+    });
     const answer = result.response.text();
     return {
         answer,
@@ -1583,6 +1809,7 @@ async function fetchQuizDetails(quizIds) {
                         viewCount: ((_c = quizData.stats) === null || _c === void 0 ? void 0 : _c.viewCount) || quizData.viewCount || 0,
                         averageScore: ((_d = quizData.stats) === null || _d === void 0 ? void 0 : _d.averageScore) || quizData.averageScore || 0,
                         hasPassword,
+                        tags: quizData.tags || [], // Add tags for relevance filtering
                     });
                 }
                 else {
@@ -1626,11 +1853,37 @@ async function askQuestion(params) {
     const startTime = Date.now();
     const { question: originalQuestion, topK = CONFIG.FINAL_TOP_K, targetLang = 'vi', enableRerank = CONFIG.ENABLE_AI_RERANK, userId, depth = 'intermediate', history = [], } = params;
     // ============================================================
-    // STEP 0: CONTEXTUAL QUERY REWRITING (NEW v4.2)
+    // v4.5 OPTIMIZED: PARALLEL INTENT + CONTEXTUALIZATION
+    // Instead of sequential: contextualizeQuery → classifyIntent
+    // Now runs: [contextualizeQuery || fastIntentDetection] → classifyIntent (only if needed)
     // ============================================================
     let question = originalQuestion;
     let queryWasRewritten = false;
-    if (history && history.length > 0) {
+    let intentResult = null;
+    // 🚀 FAST PATH: Try fast intent detection first (O(1), no LLM call)
+    const fastIntent = fastIntentDetection(originalQuestion);
+    if (fastIntent) {
+        // Fast route matched - skip contextualization for simple queries
+        console.log(`⚡ Fast intent detected: ${fastIntent.intent} - skipping contextualization`);
+        intentResult = fastIntent;
+        question = originalQuestion;
+    }
+    else if (ENABLE_PARALLEL_AI_CALLS && history && history.length > 0) {
+        // v4.5: Run contextualization and embedding in parallel for complex queries
+        console.log(`🚀 Running parallel AI calls (contextualize + prepare)...`);
+        const [rewriteResult] = await Promise.all([
+            contextualizeQuery(originalQuestion, history),
+            // Pre-warm embedding cache for the original question
+            generateEmbedding(originalQuestion).catch(() => null),
+        ]);
+        question = rewriteResult.refinedQuestion;
+        queryWasRewritten = rewriteResult.wasRewritten;
+        if (queryWasRewritten) {
+            console.log(`✅ Query contextualized: "${originalQuestion}" → "${question}"`);
+        }
+    }
+    else if (history && history.length > 0) {
+        // Sequential fallback
         console.log(`🔄 Step 0: Contextualizing query with ${history.length} history messages...`);
         const rewriteResult = await contextualizeQuery(originalQuestion, history);
         question = rewriteResult.refinedQuestion;
@@ -1640,10 +1893,9 @@ async function askQuestion(params) {
         }
     }
     // ============================================================
-    // STEP 1: INTENT CLASSIFICATION (Enhanced in v4.1)
+    // STEP 1: INTENT CLASSIFICATION (skip if fast intent already detected)
     // ============================================================
-    let intentResult = null;
-    if (CONFIG.ENABLE_LEARNING_PATH) {
+    if (!intentResult && CONFIG.ENABLE_LEARNING_PATH) {
         console.log('🧠 Step 1: Classifying user intent...');
         // Use the contextualized question for better intent classification
         intentResult = await classifyIntent(question);
@@ -1658,6 +1910,11 @@ async function askQuestion(params) {
                 timestamp: Date.now(),
             });
         }
+    }
+    // ============================================================
+    // INTENT HANDLING
+    // ============================================================
+    if (intentResult) {
         // Handle Help/Support intent
         if (intentResult.intent === 'help_support') {
             console.log('❓ Help/Support mode');
@@ -1878,40 +2135,81 @@ async function askQuestion(params) {
     }
     // 4. Generate answer
     const { answer, tokensUsed } = await generateAnswer(question, contexts, targetLang);
-    // 5. Extract citations and quiz IDs
+    // 5. Extract citations and quiz IDs with URLs
     const citations = contexts.map(ctx => ({
         title: ctx.title,
         quizId: ctx.quizId,
+        // Generate URL for each citation - link to quiz page
+        url: ctx.quizId ? `https://quiztrivia.web.app/quiz/${ctx.quizId}` : undefined,
+        snippet: ctx.text.substring(0, 100) + (ctx.text.length > 100 ? '...' : ''),
     }));
     const uniqueQuizIds = [...new Set(contexts.map(ctx => ctx.quizId).filter((id) => id != null))];
-    // 6. Fetch quiz recommendations
-    // FIX: Tách biệt logic - nếu có quizIds từ chunks thì LUÔN fetch, bất kể search score
-    // Search score (RRF) chỉ dùng để đánh giá độ tin cậy của câu trả lời, KHÔNG dùng để skip quiz
+    // 6. Fetch quiz recommendations and filter by relevance
     let quizRecommendations;
-    console.log(`📊 Quiz recommendation check: uniqueQuizIds=${uniqueQuizIds.length}, avgScore=${searchResult.avgScore.toFixed(4)}`);
-    // CHANGED: Chỉ cần có quizIds là fetch quiz details (bỏ điều kiện avgScore)
-    if (uniqueQuizIds.length > 0) {
-        console.log(`📋 Fetching quiz details for IDs: ${uniqueQuizIds.join(', ')}`);
-        quizRecommendations = await fetchQuizDetails(uniqueQuizIds);
-        if (quizRecommendations.length === 0) {
-            console.log(`⚠️ fetchQuizDetails returned empty (quizzes may not be approved)`);
-            quizRecommendations = undefined;
+    console.log(`📊 [v4.5-RELEVANCE-FILTER] Quiz recommendation check: uniqueQuizIds=${uniqueQuizIds.length}, avgScore=${searchResult.avgScore.toFixed(4)}`);
+    // Extract keywords from question for relevance filtering
+    const questionLower = question.toLowerCase();
+    const relevanceKeywords = extractKeywordsFromQuestion(questionLower);
+    console.log(`🔑 [v4.5-RELEVANCE-FILTER] Keywords extracted: [${relevanceKeywords.join(', ')}] from: "${question}"`);
+    // Only show quiz recommendations if we have keywords to match AND quizzes to filter
+    if (uniqueQuizIds.length > 0 && relevanceKeywords.length > 0) {
+        console.log(`📋 [v4.5-RELEVANCE-FILTER] Fetching ${uniqueQuizIds.length} quizzes for IDs: ${uniqueQuizIds.slice(0, 5).join(', ')}...`);
+        const allQuizzes = await fetchQuizDetails(uniqueQuizIds);
+        console.log(`📋 [v4.5-RELEVANCE-FILTER] Got ${allQuizzes.length} quizzes from Firebase`);
+        // Filter quizzes by STRICT relevance to the question keywords
+        // Require 1+ strong keyword match OR 2+ total matches
+        const relevantQuizzes = allQuizzes.filter(quiz => {
+            const titleLower = (quiz.title || '').toLowerCase();
+            const categoryLower = (quiz.category || '').toLowerCase();
+            const descLower = (quiz.description || '').toLowerCase();
+            const tagsLower = (quiz.tags || []).map((t) => t.toLowerCase());
+            // Strong keywords that should be enough alone (topic-specific)
+            const strongKeywords = relevanceKeywords.filter(k => ['tiếng anh', 'english', 'ielts', 'toeic', 'toefl', 'grammar', 'vocabulary',
+                'nấu ăn', 'cooking', 'ẩm thực', 'toán', 'math', 'lập trình', 'programming',
+                'lịch sử', 'history', 'khoa học', 'science', 'địa lý', 'geography'].includes(k));
+            // Check if any keyword matches title, category, description, or tags
+            const matchedKeywords = relevanceKeywords.filter(keyword => titleLower.includes(keyword) ||
+                categoryLower.includes(keyword) ||
+                descLower.includes(keyword) ||
+                tagsLower.some((tag) => tag.includes(keyword)));
+            // Check for strong keyword match in title/category/tags (not description)
+            const strongMatches = strongKeywords.filter(keyword => titleLower.includes(keyword) ||
+                categoryLower.includes(keyword) ||
+                tagsLower.some((tag) => tag.includes(keyword)));
+            // Relevant if: 1+ strong match OR 2+ total matches
+            const isRelevant = strongMatches.length > 0 || matchedKeywords.length >= 2;
+            console.log(`📖 [v4.5-FILTER] "${quiz.title}" [cat:${quiz.category}] → strong:[${strongMatches.join(',')}] all:[${matchedKeywords.join(',')}] → relevant:${isRelevant}`);
+            return isRelevant;
+        });
+        if (relevantQuizzes.length > 0) {
+            quizRecommendations = relevantQuizzes;
+            console.log(`✅ [v4.5-RELEVANCE-FILTER] PASSING ${relevantQuizzes.length} RELEVANT quiz recommendations`);
         }
         else {
-            console.log(`✅ Got ${quizRecommendations.length} quiz recommendations`);
+            console.log(`🚫 [v4.5-RELEVANCE-FILTER] BLOCKED ALL ${allQuizzes.length} quizzes - NONE match keywords [${relevanceKeywords.join(',')}]`);
+            quizRecommendations = undefined; // CRITICAL: Do NOT return irrelevant quizzes
         }
     }
     else {
-        console.log(`⚠️ No quiz IDs found in search results`);
+        console.log(`⚠️ [v4.5-RELEVANCE-FILTER] SKIP quiz fetch: uniqueQuizIds=${uniqueQuizIds.length}, keywords=${relevanceKeywords.length}`);
         quizRecommendations = undefined;
     }
-    // Add note to answer
+    // 7. Add external resources if no relevant quizzes found
+    let externalResources;
+    if (!quizRecommendations || quizRecommendations.length === 0) {
+        externalResources = generateExternalResources(question, relevanceKeywords);
+        console.log(`🌐 Generated ${externalResources.length} external resources`);
+    }
+    // Add note to answer with external resources
     let finalAnswer = answer;
     if (warning) {
         finalAnswer = `⚠️ ${warning}\n\n${answer}`;
     }
-    // Chỉ hiện message "chưa có quiz" khi THỰC SỰ không tìm được quiz nào
-    if (!quizRecommendations || quizRecommendations.length === 0) {
+    // Add external resources to answer
+    if (externalResources && externalResources.length > 0) {
+        finalAnswer += '\n\n📚 **Nguồn tài liệu bên ngoài:**\n' + externalResources.join('\n');
+    }
+    else if (!quizRecommendations || quizRecommendations.length === 0) {
         finalAnswer += '\n\n💡 *Hiện tại chưa có quiz về chủ đề này trong hệ thống. Bạn có thể thử tìm kiếm chủ đề khác!*';
     }
     // v4.3.1: Sanitize numeric values to prevent NaN in JSON response

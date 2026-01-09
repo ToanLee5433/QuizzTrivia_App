@@ -238,56 +238,56 @@ export const useQuizData = () => {
 
         setNeedsPassword(false);
         
-        // Check if quiz has questions, if not, load them from Firestore
-        if (!foundQuiz.questions || foundQuiz.questions.length === 0) {
-          console.log('⚠️ Quiz from Redux has no questions, loading from Firestore...');
+        // 🔄 ALWAYS load questions from Firestore subcollection to ensure latest data
+        // This ensures admin edits to answers are reflected immediately
+        console.log('📚 Loading questions from Firestore subcollection (ensures latest data)...');
+        
+        // Check status before loading questions
+        // Allow quiz creator and admins to access quiz regardless of status
+        const isCreator = user && (foundQuiz.createdBy === user.uid || foundQuiz.authorId === user.uid);
+        const isAdmin = user && user.role === 'admin';
+        const canAccess = foundQuiz.status === 'approved' || isCreator || isAdmin;
+        
+        if (!canAccess) {
+          console.error('❌ Quiz not approved:', foundQuiz.status);
+          setError('Quiz này đang chờ phê duyệt hoặc chưa có câu hỏi. Vui lòng quay lại sau!');
+          setLoading(false);
+          return;
+        }
+        
+        try {
+          const questionsRef = collection(db, 'quizzes', id, 'questions');
+          const questionsSnap = await getDocs(questionsRef);
           
-          // Check status before loading questions
-          // Allow quiz creator and admins to access quiz regardless of status
-          const isCreator = user && (foundQuiz.createdBy === user.uid || foundQuiz.authorId === user.uid);
-          const isAdmin = user && user.role === 'admin';
-          const canAccess = foundQuiz.status === 'approved' || isCreator || isAdmin;
+          let questions = questionsSnap.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          })) as Question[];
           
-          if (!canAccess) {
-            console.error('❌ Quiz not approved:', foundQuiz.status);
-            setError('Quiz này đang chờ phê duyệt hoặc chưa có câu hỏi. Vui lòng quay lại sau!');
+          console.log('✅ Loaded questions from Firestore subcollection:', questions.length);
+          
+          // 🔄 Fallback: If no questions in subcollection, try document field
+          if (questions.length === 0 && foundQuiz.questions && foundQuiz.questions.length > 0) {
+            console.log('📋 Using questions from document field (legacy format):', foundQuiz.questions.length);
+            questions = foundQuiz.questions;
+          }
+          
+          // 🎬 Debug: Check mediaTrim in loaded questions
+          if (questions.length > 0) {
+            console.log('🎬 [DEBUG] First question mediaTrim:', questions[0].mediaTrim);
+            console.log('🎬 [DEBUG] First question videoUrl:', questions[0].videoUrl);
+            if (questions[0].answers?.length > 0) {
+              console.log('🎬 [DEBUG] First answer mediaTrim:', questions[0].answers[0].mediaTrim);
+            }
+          }
+          
+          if (questions.length === 0) {
+            setError('Quiz này chưa có câu hỏi. Vui lòng quay lại sau!');
             setLoading(false);
             return;
           }
           
-          try {
-            const questionsRef = collection(db, 'quizzes', id, 'questions');
-            const questionsSnap = await getDocs(questionsRef);
-            
-            let questions = questionsSnap.docs.map(doc => ({
-              id: doc.id,
-              ...doc.data()
-            })) as Question[];
-            
-            console.log('✅ Loaded questions from Firestore subcollection:', questions.length);
-            
-            // 🔄 Fallback: If no questions in subcollection, try document field
-            if (questions.length === 0 && foundQuiz.questions && foundQuiz.questions.length > 0) {
-              console.log('📋 Using questions from document field (legacy format):', foundQuiz.questions.length);
-              questions = foundQuiz.questions;
-            }
-            
-            // 🎬 Debug: Check mediaTrim in loaded questions
-            if (questions.length > 0) {
-              console.log('🎬 [DEBUG] First question mediaTrim:', questions[0].mediaTrim);
-              console.log('🎬 [DEBUG] First question videoUrl:', questions[0].videoUrl);
-              if (questions[0].answers?.length > 0) {
-                console.log('🎬 [DEBUG] First answer mediaTrim:', questions[0].answers[0].mediaTrim);
-              }
-            }
-            
-            if (questions.length === 0) {
-              setError('Quiz này chưa có câu hỏi. Vui lòng quay lại sau!');
-              setLoading(false);
-              return;
-            }
-            
-            // Update quiz with questions
+          // Update quiz with questions
             const quizWithQuestions = { ...foundQuiz, questions };
             
             // Convert Timestamps/Dates to ISO strings for Redux serialization
@@ -315,25 +315,6 @@ export const useQuizData = () => {
             setLoading(false);
             return;
           }
-        } else {
-          // Quiz already has questions from Redux
-          console.log('✅ Quiz has questions from Redux:', foundQuiz.questions.length);
-          
-          // Convert Timestamps/Dates to ISO strings for Redux serialization
-          const serializableQuiz = {
-            ...foundQuiz,
-            createdAt: foundQuiz.createdAt instanceof Date ? foundQuiz.createdAt.toISOString() : 
-              (foundQuiz.createdAt as any)?.toDate?.()?.toISOString() || new Date().toISOString(),
-            updatedAt: foundQuiz.updatedAt instanceof Date ? foundQuiz.updatedAt.toISOString() : 
-              (foundQuiz.updatedAt as any)?.toDate?.()?.toISOString() || new Date().toISOString(),
-            approvedAt: foundQuiz.approvedAt ? 
-              (foundQuiz.approvedAt instanceof Date ? foundQuiz.approvedAt.toISOString() : 
-                (foundQuiz.approvedAt as any)?.toDate?.()?.toISOString() || new Date().toISOString()) : undefined
-          };
-          
-          setQuiz(serializableQuiz);
-          dispatch(setCurrentQuiz(serializableQuiz));
-        }
 
         if (user) {
           quizStatsService.trackView(id, user.uid);

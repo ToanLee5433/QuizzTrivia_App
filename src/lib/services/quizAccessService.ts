@@ -99,6 +99,21 @@ export async function unlockQuiz(
   let proofHash: string = '';
 
   try {
+    // 🔍 Check if user already has access (from previous unlock)
+    const existingAccess = await hasQuizAccess(quizId, userId);
+    if (existingAccess) {
+      console.log('✅ User already has access to this quiz (unlocked previously)');
+      // Verify password is still correct by generating hash and comparing
+      proofHash = await generateProofHash(salt, password);
+      if (proofHash === expectedHash) {
+        console.log('✅ Password verified for existing access');
+        return true;
+      } else {
+        console.log('❌ Password incorrect for existing access');
+        return false;
+      }
+    }
+    
     // CRITICAL DEBUG: Verify auth state before attempting write
     const currentUser = auth.currentUser;
     console.log('🔐 Auth check:', {

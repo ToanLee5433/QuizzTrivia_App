@@ -451,8 +451,11 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
   const getCorrectAnswer = (question: Question): string | string[] | Record<string, string> | null => {
     if (!question) return null;
     
-    // For multiple choice / boolean
-    if (question.type === 'multiple' || question.type === 'boolean') {
+    // For multiple choice / boolean / multimedia / image / audio / video
+    // These all have answers array with isCorrect flag
+    if (question.type === 'multiple' || question.type === 'boolean' || 
+        question.type === 'multimedia' || question.type === 'image' || 
+        question.type === 'audio' || question.type === 'video') {
       const correctAnswer = question.answers?.find(a => a.isCorrect);
       return correctAnswer?.id || null;
     }
@@ -508,11 +511,13 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
         correctAnswer.every((id, index) => id === answer[index]);
     }
     
-    // For checkbox type - unordered array comparison
+    // For checkbox type - unordered array comparison (must match useQuizSession.isAnswerCorrect)
     if (question.type === 'checkbox' && Array.isArray(correctAnswer)) {
       if (!Array.isArray(answer)) return false;
-      return correctAnswer.length === answer.length && 
-        correctAnswer.every(id => answer.includes(id));
+      // Sort both arrays and compare as JSON to ensure consistent comparison
+      const sortedCorrect = [...correctAnswer].sort();
+      const sortedAnswer = [...answer].sort();
+      return JSON.stringify(sortedCorrect) === JSON.stringify(sortedAnswer);
     }
     
     // For short_answer - case insensitive comparison with trim
@@ -597,9 +602,9 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
     }
     
     // Practice Mode: Instant Feedback
-    // Only auto-trigger for simple question types (multiple choice, boolean)
+    // Auto-trigger for simple question types (single answer selection)
     // Complex types (checkbox, short_answer, fill_blanks, matching, ordering) need manual "Check" button
-    const simpleQuestionTypes = ['multiple', 'boolean'];
+    const simpleQuestionTypes = ['multiple', 'boolean', 'multimedia', 'image', 'audio', 'video'];
     const isSimpleQuestion = simpleQuestionTypes.includes(question.type);
     
     if (shouldShowInstantFeedback() && isSimpleQuestion) {
@@ -858,9 +863,10 @@ const QuizPageContent: React.FC<QuizPageContentProps> = ({ quiz }) => {
                 correctAnswer: (settings.practiceConfig.retryOnWrong && !feedbackState[currentQuestion.id]?.isCorrect) 
                   ? null 
                   : feedbackState[currentQuestion.id]?.correctAnswer ?? null,
-                // Hide explanation when retry is enabled AND answer is wrong (don't reveal answer)
-                showExplanation: shouldShowExplanation() && 
-                  (feedbackState[currentQuestion.id]?.isAnswered || false) &&
+                // Show explanation after answering (unless retry on wrong is enabled and answer is wrong)
+                // Logic: show if answered AND (retryOnWrong is OFF OR answer is correct)
+                showExplanation: (feedbackState[currentQuestion.id]?.isAnswered || false) && 
+                  shouldShowExplanation() &&
                   (!settings.practiceConfig.retryOnWrong || feedbackState[currentQuestion.id]?.isCorrect === true)
               } : undefined}
               disabled={shouldShowInstantFeedback() && feedbackState[currentQuestion.id]?.isAnswered}

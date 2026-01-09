@@ -494,6 +494,15 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
+    /* ===== RAG Streaming Sessions ===== */
+    // Used for real-time streaming responses from chatbot
+    match /ragStreamingSessions/{sessionId} {
+      // Users can read their own sessions (for real-time listener)
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      // Only Cloud Functions can create/update/delete (via admin SDK)
+      allow write: if false;
+    }
+    
     /* ===== Feedback Collection ===== */
     match /feedbacks/{feedbackId} {
       // Users can read their own feedbacks; admins can read all
